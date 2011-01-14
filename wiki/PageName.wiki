@@ -1,0 +1,12 @@
+#summary The coding standards we will use during this project
+#labels codingstandards
+
+= Introduction =
+
+I found some standards on CodeProject.com
+
+
+= Details =
+
+We will use the coding standards defined here:
+http://www.codeproject.com/KB/cs/c__coding_standards.aspx
