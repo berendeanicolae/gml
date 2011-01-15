@@ -16,9 +16,6 @@
     <ClInclude Include="targetver.h">
       <Filter>exe</Filter>
     </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>exe</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\inc\Compat.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -31,11 +28,11 @@
     <ClInclude Include="..\..\..\inc\LocalDefines.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\inc\gml.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>exe</Filter>
-    </ClCompile>
     <ClCompile Include="gml.cpp">
       <Filter>exe</Filter>
     </ClCompile>
