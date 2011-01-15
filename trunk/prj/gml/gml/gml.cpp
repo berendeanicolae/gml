@@ -8,6 +8,7 @@
 Int32 main(Int32 argc, Int8* argv[])
 {
 
+	ConsoleNotifier cn;
 
 
 	return 0;
