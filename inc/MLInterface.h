@@ -36,6 +36,19 @@ public:
  *
  */
 
+enum DbDataType
+{
+	UINT8VAL = 0,
+	UINT16VAL,
+	UINT32VAL,
+	UINT64VAL,
+	RAWPTRVAL,
+	BYTESVAL,
+	ASCIISTTVAL,
+	UNICSTRVAL,
+	HASHVAL
+};
+
 typedef struct _DbRecord 
 {
 	UInt32	Type;
