@@ -1,13 +1,15 @@
 // gml.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
-#include "Compat.h"
+#include "gml.h"
 
-#include <vector>
+#include <stdio.h>
 
-Int32 _tmain(Int32 argc, _TCHAR* argv[])
+Int32 main(Int32 argc, Int8* argv[])
 {
+
+
+
 	return 0;
 }
 

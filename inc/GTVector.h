@@ -1,7 +1,6 @@
 #ifndef __GTVECTOR_H
 #define __GTVECTOR_H
 
-#include "stdafx.h"
 #include "Compat.h"
 
 #define DIR_FORWARD		0	
@@ -23,7 +22,7 @@ private:
 	UInt8				*Data;
 	Int32				(*compFnc)(TemplateObject &element1,TemplateObject &element2);
 	
-	UInt32				PosToIndex(UInt32 index);
+	UInt32 PosToIndex(Int32 index);
 	bool				Grow(UInt32 newSize=0);
 public:
 	GTVector(void);
@@ -108,7 +107,7 @@ template <class TemplateObject> GTVector<TemplateObject>::~GTVector(void)
 {
 	DeleteAll();
 	if (Data!=NULL)
-		FREE(Data)		
+		free(Data);		
 		Data=NULL;
 	AlocatedElements=ElementsCount=0;
 }
@@ -134,7 +133,7 @@ template <class TemplateObject> bool GTVector<TemplateObject>::Grow(UInt32 newSi
 
 	return true;
 }
-template <class TemplateObject> UInt32 GTVector<TemplateObject>::PosToIndex(UInt32 index)
+template <class TemplateObject> UInt32 GTVector<TemplateObject>::PosToIndex(Int32 index)
 {
 	if (index>=0)
 	{
