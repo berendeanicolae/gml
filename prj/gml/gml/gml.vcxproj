@@ -80,11 +80,12 @@
     <ClInclude Include="..\..\..\inc\MLInterface.h" />
     <ClInclude Include="..\..\..\src\sample\ConsoleNotifier.h" />
     <ClInclude Include="..\..\..\src\sample\XorElemsDatabase.h" />
-    <ClInclude Include="targetver.h" />
+    <ClInclude Include="..\..\..\src\sample\XorMLDatabase.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\sample\ConsoleNotifier.cpp" />
     <ClCompile Include="..\..\..\src\sample\XorElemsDatabase.cpp" />
+    <ClCompile Include="..\..\..\src\sample\XorMLDatabase.cpp" />
     <ClCompile Include="gml.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

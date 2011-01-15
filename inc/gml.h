@@ -9,5 +9,6 @@
 
 #include "ConsoleNotifier.h"
 #include "XorElemsDatabase.h"
+#include "XorMLDatabase.h"
 
 #endif
