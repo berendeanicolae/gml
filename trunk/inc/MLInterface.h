@@ -4,6 +4,21 @@
 #include "gml.h"
 
 //-----------------------------------------------------------------------------------------------------------------------
+// Specification Interface for the Notifier object classes
+// 
+class INotifier 
+{
+public:
+	virtual bool Init (void * data)=0;
+	virtual bool UnInit();
+
+	virtual bool Notify(char* msg) =0;
+	virtual bool Notify(char* msg, ...)=0;
+};
+
+
+//-----------------------------------------------------------------------------------------------------------------------
+// Specification Interface for Machine Learning Database Classes
 
 // Standard HASH (MD5) for all MLRecords
 typedef struct _MLHash
@@ -44,10 +59,18 @@ public:
 };
 
 //-----------------------------------------------------------------------------------------------------------------------
+// Specification Interface for Generic Database Classes
+
+
+/*
+ * The main structure that we will use for fetching database data
+ *
+ */
 
 typedef struct _DbRecord 
 {
 	UInt32	Type;
+	char*	Name;
 	union	Data
 	{
 		UInt8		UInt8Val;
@@ -65,14 +88,19 @@ typedef struct _DbRecord
 typedef GTVector<DbRecord>	DbRecordVect;
 
 /*
- * mcimpoesu: 15.01.2011
- * - first version of the Database connection interface specification
- * to add: a notifier object, init function, 
+ * mcimpoesu: 15.01.2011 - first version of the Database connection interface specification 
  *
  */
 
 class IDatabase 
 {
+private:
+	/*
+	 * Generic Notifier object for passing messages
+	 *  - in the case of this class mostly errors 
+	 */
+	INotifier *notifier;
+
 public:
 	/*
 	 * Constructor of the class
@@ -83,6 +111,17 @@ public:
 	 * Destructor of the class
 	 */
 	~IDatabase();
+
+	/*
+	 *Usage: specify initialization parameters
+	 *Param:
+	 *	- INPUT INotifier * notifier: notifier object where all messages can be sent (pay attention, it can be NULL)
+	 *	- INPUT OPT char* Database: the database name to connect to
+	 *	- INPUT OPT char* Username: the username credential
+	 *	- INPUT OPT char* Password: the password credential
+	 *	- INPUT OPT UInt Port: an optional parameter that specified the port 
+	 */
+	virtual bool Init (INotifier * notifier, char* Database="", char* Username="", char* Password="", UInt32 Port=0)=0;
 
 	/*
 	 * Usage: 
