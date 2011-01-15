@@ -53,7 +53,7 @@ typedef struct _DbRecord
 {
 	UInt32	Type;
 	char*	Name;
-	union	Data
+	union
 	{
 		UInt8		UInt8Val;
 		UInt16		UInt16Val;
