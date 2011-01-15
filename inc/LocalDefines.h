@@ -3,4 +3,6 @@
 
 #define OS_WINDOWS
 
+#pragma warning (disable: 4996)
+
 #endif

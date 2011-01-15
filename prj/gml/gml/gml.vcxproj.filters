@@ -31,10 +31,10 @@
     <ClInclude Include="..\..\..\inc\gml.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="ConsoleNotifier.h">
+    <ClInclude Include="..\..\..\src\sample\ConsoleNotifier.h">
       <Filter>exe</Filter>
     </ClInclude>
-    <ClInclude Include="XorElemsDatabase.h">
+    <ClInclude Include="..\..\..\src\sample\XorElemsDatabase.h">
       <Filter>exe</Filter>
     </ClInclude>
   </ItemGroup>
@@ -42,10 +42,10 @@
     <ClCompile Include="gml.cpp">
       <Filter>exe</Filter>
     </ClCompile>
-    <ClCompile Include="ConsoleNotifier.cpp">
+    <ClCompile Include="..\..\..\src\sample\ConsoleNotifier.cpp">
       <Filter>exe</Filter>
     </ClCompile>
-    <ClCompile Include="XorElemsDatabase.cpp">
+    <ClCompile Include="..\..\..\src\sample\XorElemsDatabase.cpp">
       <Filter>exe</Filter>
     </ClCompile>
   </ItemGroup>
