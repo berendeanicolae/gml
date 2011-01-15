@@ -34,12 +34,18 @@
     <ClInclude Include="ConsoleNotifier.h">
       <Filter>exe</Filter>
     </ClInclude>
+    <ClInclude Include="XorElemsDatabase.h">
+      <Filter>exe</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gml.cpp">
       <Filter>exe</Filter>
     </ClCompile>
     <ClCompile Include="ConsoleNotifier.cpp">
+      <Filter>exe</Filter>
+    </ClCompile>
+    <ClCompile Include="XorElemsDatabase.cpp">
       <Filter>exe</Filter>
     </ClCompile>
   </ItemGroup>

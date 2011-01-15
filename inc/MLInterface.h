@@ -22,7 +22,7 @@ class INotifier
 {
 public:
 	virtual bool Init (void * data)=0;
-	virtual bool UnInit();
+	virtual bool UnInit()=0;
 
 	virtual bool Notify(char* msg) =0;
 	virtual bool Notify(char* msg, ...)=0;
@@ -82,12 +82,12 @@ public:
 	/*
 	 * Constructor of the class
 	 */
-	IDatabase();
+	IDatabase() {};
 
 	/*
 	 * Destructor of the class
 	 */
-	~IDatabase();
+	~IDatabase() {};
 
 	/*
 	 *Usage: specify initialization parameters
@@ -124,7 +124,7 @@ public:
 	 *	- INPUT char* SqlStatement: the sql select statement
 	 * Return: the number of records fetched during the statement execution
 	 */
-	virtual UInt32 SqlSelect (char* SqlStatement="*")=0;
+	virtual UInt32 Select (char* Statement="*")=0;
 
 	/*
 	 * Usage: emit a sql select statement that is broken in 3 pieces
