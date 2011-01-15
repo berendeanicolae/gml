@@ -4,8 +4,20 @@
 #include "gml.h"
 
 //-----------------------------------------------------------------------------------------------------------------------
+// Generic type definitions
+// 
+
+
+// Standard HASH (MD5) for all MLRecords
+typedef struct _MLHash
+{
+	UInt32	Value[4];
+} MLHash;
+
+//-----------------------------------------------------------------------------------------------------------------------
 // Specification Interface for the Notifier object classes
 // 
+
 class INotifier 
 {
 public:
@@ -16,51 +28,8 @@ public:
 	virtual bool Notify(char* msg, ...)=0;
 };
 
-
-//-----------------------------------------------------------------------------------------------------------------------
-// Specification Interface for Machine Learning Database Classes
-
-// Standard HASH (MD5) for all MLRecords
-typedef struct _MLHash
-{
-	UInt32	Value[4];
-} MLHash;
-
-// MLRecords
-typedef struct _MLRecord
-{
-	UInt32	FeaturesCount;
-	double*	Features;
-	double	Weight;
-	MLHash	Hash;	
-	double	Label;
-} MLRecord;
-
-class IMLGenericDatabase
-{
-
-public:
-	// pentru paralelizare o sa dam cel mai probabil la initializare si intervale 
-	// aici mai trebuie un pic discutata treaba	
-	// nu am inca o interfata pentru notifier , dar o sa il primesti si pe ala , ca sa poti sa
-	// notifici si tu daca sunt probleme sau alte chestii 
-	
-	virtual bool		Init(void *Notifier,char *dbName,char *user="",char *password="",UInt32 port=0)=0;
-	virtual bool		Close();
-	
-	virtual bool		CreateMLRecord(MLRecord &record)=0;
-	virtual bool		DestroyMLRecords(MLRecord &record)=0;
-	virtual bool		GetRecord(MLRecord &record,UInt32 index)=0;
-	virtual UInt32		GetFeaturesCount()=0;
-	virtual UInt32		GetRecordsCount()=0;
-	
-	// daca avem paralelizare , GetRecordsCount() va returna doar recordurile utilizate de unitatea curenta de paraleliare  
-	virtual UInt32		GetTotalRecordsCount()=0;
-};
-
 //-----------------------------------------------------------------------------------------------------------------------
 // Specification Interface for Generic Database Classes
-
 
 /*
  * The main structure that we will use for fetching database data
@@ -86,11 +55,6 @@ typedef struct _DbRecord
 } DbRecord, *PDbRecord;
 
 typedef GTVector<DbRecord>	DbRecordVect;
-
-/*
- * mcimpoesu: 15.01.2011 - first version of the Database connection interface specification 
- *
- */
 
 class IDatabase 
 {
@@ -213,5 +177,92 @@ public:
 	 */
 	virtual bool Update (char* SqlStatement, DbRecordVect* WhereVals, DbRecordVect* UpdateVals)=0;
 };
+
+
+//-----------------------------------------------------------------------------------------------------------------------
+// Specification Interface for Machine Learning Database Classes
+
+// MLRecords
+typedef struct _MLRecord
+{
+	UInt32	FeatCount;
+	double*	Feat;
+	double	Weight;
+	MLHash	Hash;	
+	double	Label;
+} MLRecord;
+
+class IMLDatabase
+{
+private:
+	/*
+	 * The all mighty notifier object
+	 */
+	INotifier *Notifier;
+
+	/*
+	 * The actual database connection object
+	 */
+	IDatabase *database;
+
+public:	
+
+	/*
+	 * Usage: Initialization function
+	 * Params:
+	 *	- INPUT INotifier *Notifier: notifier object for passing debugging information
+	 *			!!! it can be NULL
+	 *	- INPUT IDatabase *Database: the database object to work with 
+	 *			!!! this object is already initialized
+	 */	
+	virtual bool Init(INotifier *Notifier,IDatabase *Database)=0;
+
+	/*	 
+	 * Usage: uninit stuff
+	 */
+	virtual bool Close();
+	
+	/*
+	 *Usage: set the interval for this paralel unit's database
+	 *Params:
+	 *	-  UInt32 start: the start unit
+	 *			!!! this parameter is 0 indexed (not 1)
+	 *	-  UInt32 end: the end unit (this unit will not be included in the interval)	 
+	 */
+	virtual bool SetRecordInterval(UInt32 start, UInt32 end)=0;
+
+	/*
+	 *Usage: Get a single record of data
+	 *Params:
+	 *	- OUTPUT MLRecord &record: the record to be fetched
+	 *	- INPUT  UInt32 index: the record index
+	 */
+	virtual bool GetRecord(MLRecord **record,UInt32 index)=0;
+
+	/*
+	 * Usage: Free a MLRecord structure
+	 * Params:
+	 *	- INPUT MLRecord *record: a pointer to a structure received through a GetRecord call
+	 */
+	virtual bool FreeMLRecord(MLRecord *record)=0;
+
+
+	/*
+	 * Usage: Get the number of features 
+	 */
+	virtual UInt32 GetFeatureCount()=0;
+
+	/*
+	 * Usage:	- Get the number of records in the database	for the current paralel unit
+	 *			- if no interval has been specified it returns the total number of records
+	 */
+	virtual UInt32 GetRecordCount()=0;
+	
+	/*
+	 * Usage Get the total number of records in the database
+	 */
+	virtual UInt32 GetTotalRecordCount()=0;
+};
+
 
 #endif
