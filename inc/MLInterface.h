@@ -124,7 +124,7 @@ public:
 	 *	- INPUT char* SqlStatement: the sql select statement
 	 * Return: the number of records fetched during the statement execution
 	 */
-	virtual UInt32 SqlSelect (char* SqlStatement="*") = 0;
+	virtual UInt32 SqlSelect (char* SqlStatement="*")=0;
 
 	/*
 	 * Usage: emit a sql select statement that is broken in 3 pieces
@@ -134,7 +134,7 @@ public:
 	 *  - INPUT char* From:  what table to select from
 	 *  Return: the number of rows fetched during statement executution
 	 */
-	virtual UInt32 SqlSelect (char* What="*", char* Where="", char* From="") = 0;
+	virtual UInt32 SqlSelect (char* What="*", char* Where="", char* From="")=0;
 	
 	/*
 	 * Usage: fetch a new record after a previous SqlSelect call
@@ -142,7 +142,7 @@ public:
 	 *	- INPUT/OUTPUT DbRecordVect **VectPtr: a double pointer to the calee alocated vector of records			
 	 * Return: true/false if there was a record to fetch or not	 
 	 */
-	virtual bool FetchNextRow (DbRecordVect **VectPtr);
+	virtual bool FetchNextRow (DbRecordVect **VectPtr)=0;
 
 	/*
 	 * Usage: fetch a new record after a previous SqlSelect call
@@ -151,7 +151,7 @@ public:
 	 *	- INPUT UInt32 RowNr: the row number to be fetched
 	 * Return: true/false if there was a record to fetch or not	 
 	 */
-	virtual bool FetchRowNr (DbRecordVect **VectPtr, UInt32 RowNr);
+	virtual bool FetchRowNr (DbRecordVect **VectPtr, UInt32 RowNr)=0;
 
 	/*
 	 *Usage: free the calee allocated vector of records given in a FetchRow call
@@ -159,7 +159,7 @@ public:
 	 *	- INPUT DbRecordVect* Vect: a pointer to a DbRecordVect to be freed
 	 *Return: true/false if the memory free succeded or not
 	 */
-	virtual bool FreeRow(DbRecordVect* Vect);
+	virtual bool FreeRow(DbRecordVect* Vect)=0;
 
 	 /*
 	  *Usage: insert a new ENTIRE row into the database
