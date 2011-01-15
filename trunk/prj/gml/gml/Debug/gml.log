@@ -1,8 +1,6 @@
-﻿Build started 1/15/2011 2:05:09 PM.
-     1>Project "D:\Research\gml\prj\gml\gml\gml.vcxproj" on node 2 (rebuild target(s)).
-     1>_PrepareForClean:
-         Deleting file "Debug\gml.lastbuildstate".
-       InitializeBuildStatus:
+﻿Build started 1/15/2011 2:18:23 PM.
+     1>Project "D:\Research\gml\prj\gml\gml\gml.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
          Creating "Debug\gml.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
          C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I..\..\..\inc /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"StdAfx.h" /Fp"Debug\gml.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
@@ -10,25 +8,22 @@
          C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I..\..\..\inc /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt gml.cpp
          gml.cpp
        ManifestResourceCompile:
-         C:\Program Files\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /nologo /fo"Debug\gml.exe.embed.manifest.res" Debug\gml_manifest.rc 
+         All outputs are up-to-date.
        Link:
          C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Research\gml\prj\gml\Debug\gml.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\gml.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"D:\Research\gml\prj\gml\Debug\gml.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Research\gml\prj\gml\Debug\gml.lib" /MACHINE:X86 Debug\gml.exe.embed.manifest.res
          Debug\gml.obj
          Debug\stdafx.obj
        Manifest:
-         Deleting file "Debug\gml.exe.embed.manifest".
          C:\Program Files\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /out:"Debug\gml.exe.embed.manifest" /manifest Debug\gml.exe.intermediate.manifest
-         C:\Program Files\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /nologo /fo"Debug\gml.exe.embed.manifest.res" Debug\gml_manifest.rc 
+         All outputs are up-to-date.
        LinkEmbedManifest:
-         C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Research\gml\prj\gml\Debug\gml.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\gml.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"D:\Research\gml\prj\gml\Debug\gml.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Research\gml\prj\gml\Debug\gml.lib" /MACHINE:X86 Debug\gml.exe.embed.manifest.res
-         Debug\gml.obj
-         Debug\stdafx.obj
+         All outputs are up-to-date.
          gml.vcxproj -> D:\Research\gml\prj\gml\Debug\gml.exe
        FinalizeBuildStatus:
          Deleting file "Debug\gml.unsuccessfulbuild".
          Touching "Debug\gml.lastbuildstate".
-     1>Done Building Project "D:\Research\gml\prj\gml\gml\gml.vcxproj" (rebuild target(s)).
+     1>Done Building Project "D:\Research\gml\prj\gml\gml\gml.vcxproj" (build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:02.75
+Time Elapsed 00:00:02.96
