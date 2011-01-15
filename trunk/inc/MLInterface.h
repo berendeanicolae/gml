@@ -24,8 +24,7 @@ public:
 	virtual bool Init (void * data)=0;
 	virtual bool UnInit()=0;
 
-	virtual bool Notify(char* msg) =0;
-	virtual bool Notify(char* msg, ...)=0;
+	virtual bool Notify(char* msg) =0;	
 };
 
 //-----------------------------------------------------------------------------------------------------------------------
@@ -98,7 +97,7 @@ public:
 	 *	- INPUT OPT char* Password: the password credential
 	 *	- INPUT OPT UInt Port: an optional parameter that specified the port 
 	 */
-	virtual bool Init (INotifier * notifier, char* Database="", char* Username="", char* Password="", UInt32 Port=0)=0;
+	virtual bool Init (INotifier &notifier, char* Database="", char* Username="", char* Password="", UInt32 Port=0)=0;
 
 	/*
 	 * Usage: 
@@ -110,7 +109,7 @@ public:
 	 *	- INPUT OPT UInt Port: an optional parameter that specified the port 
 	 *	Return: true/false if we have a connection or not
 	 */
-	virtual bool Connect (char* Database, char* Username="", char* Password="", UInt32 Port=0)=0;
+	virtual bool Connect ()=0;
 
 	/*
 	 * Usage: Disconnect from the database
@@ -142,7 +141,7 @@ public:
 	 *	- INPUT/OUTPUT DbRecordVect **VectPtr: a double pointer to the calee alocated vector of records			
 	 * Return: true/false if there was a record to fetch or not	 
 	 */
-	virtual bool FetchNextRow (DbRecordVect **VectPtr)=0;
+	virtual bool FetchNextRow (DbRecordVect &VectPtr)=0;
 
 	/*
 	 * Usage: fetch a new record after a previous SqlSelect call
@@ -151,7 +150,7 @@ public:
 	 *	- INPUT UInt32 RowNr: the row number to be fetched
 	 * Return: true/false if there was a record to fetch or not	 
 	 */
-	virtual bool FetchRowNr (DbRecordVect **VectPtr, UInt32 RowNr)=0;
+	virtual bool FetchRowNr (DbRecordVect &VectPtr, UInt32 RowNr)=0;
 
 	/*
 	 *Usage: free the calee allocated vector of records given in a FetchRow call
@@ -159,7 +158,7 @@ public:
 	 *	- INPUT DbRecordVect* Vect: a pointer to a DbRecordVect to be freed
 	 *Return: true/false if the memory free succeded or not
 	 */
-	virtual bool FreeRow(DbRecordVect* Vect)=0;
+	virtual bool FreeRow(DbRecordVect &Vect)=0;
 
 	 /*
 	  *Usage: insert a new ENTIRE row into the database
@@ -168,7 +167,7 @@ public:
 	  *	- INPUT DbRecordVect * Vect: a vector of Record objects to be inserted
 	  *	Return: true/false if the action succeded or not
 	  */
-	virtual bool InsertRow (char* Table, DbRecordVect* Vect)=0;
+	virtual bool InsertRow (char* Table, DbRecordVect &Vect)=0;
 
 	/*
 	  *Usage: insert a new ENTIRE row into the database
@@ -178,7 +177,7 @@ public:
 	  *	- INPUT DbRecordVect * Vect: a vector of Record objects to be inserted
 	  *	Return: true/false if the action succeded or not
 	  */
-	virtual bool InsertRow (char* Table, char* Fields, DbRecordVect * Vect)=0;
+	virtual bool InsertRow (char* Table, char* Fields, DbRecordVect &Vect)=0;
 
 	/*
 	 * Usage: execute a sql update statement 
@@ -188,7 +187,7 @@ public:
 	 *  - INPUT DbRecordVect* UpdateVals: the values used to replace the old values
 	 * Return: true/false if the operation succeded or not
 	 */
-	virtual bool Update (char* SqlStatement, DbRecordVect* WhereVals, DbRecordVect* UpdateVals)=0;
+	virtual bool Update (char* SqlStatement, DbRecordVect &WhereVals, DbRecordVect &UpdateVals)=0;
 };
 
 
@@ -228,7 +227,7 @@ public:
 	 *	- INPUT IDatabase *Database: the database object to work with 
 	 *			!!! this object is already initialized but not connected
 	 */	
-	virtual bool Init(INotifier *Notifier,IDatabase *Database)=0;
+	virtual bool Init(INotifier &Notifier,IDatabase &Database)=0;
 
 	/*	 
 	 * Usage: uninit stuff
@@ -250,14 +249,14 @@ public:
 	 *	- OUTPUT MLRecord &record: the record to be fetched
 	 *	- INPUT  UInt32 index: the record index
 	 */
-	virtual bool GetRecord(MLRecord **record,UInt32 index)=0;
+	virtual bool GetRecord(MLRecord &record,UInt32 index)=0;
 
 	/*
 	 * Usage: Free a MLRecord structure
 	 * Params:
 	 *	- INPUT MLRecord *record: a pointer to a structure received through a GetRecord call
 	 */
-	virtual bool FreeMLRecord(MLRecord *record)=0;
+	virtual bool FreeMLRecord(MLRecord &record)=0;
 
 
 	/*
