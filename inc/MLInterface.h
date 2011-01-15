@@ -67,6 +67,7 @@ typedef GTVector<DbRecord>	DbRecordVect;
 /*
  * mcimpoesu: 15.01.2011
  * - first version of the Database connection interface specification
+ * to add: a notifier object, init function, 
  *
  */
 
@@ -107,7 +108,7 @@ public:
 	 *	- INPUT char* SqlStatement: the sql select statement
 	 * Return: the number of records fetched during the statement execution
 	 */
-	virtual UInt32 SqlSelect (char* SqlStatement) = 0;
+	virtual UInt32 SqlSelect (char* SqlStatement="*") = 0;
 
 	/*
 	 * Usage: emit a sql select statement that is broken in 3 pieces
@@ -117,7 +118,7 @@ public:
 	 *  - INPUT char* From:  what table to select from
 	 *  Return: the number of rows fetched during statement executution
 	 */
-	virtual UInt32 SqlSelect (char* What, char* Where, char* From) = 0;
+	virtual UInt32 SqlSelect (char* What="*", char* Where="", char* From="") = 0;
 	
 	/*
 	 * Usage: fetch a new record after a previous SqlSelect call
@@ -125,7 +126,7 @@ public:
 	 *	- INPUT/OUTPUT DbRecordVect **VectPtr: a double pointer to the calee alocated vector of records			
 	 * Return: true/false if there was a record to fetch or not	 
 	 */
-	virtual bool FetchRow (DbRecordVect **VectPtr);
+	virtual bool FetchNextRow (DbRecordVect **VectPtr);
 
 	/*
 	 * Usage: fetch a new record after a previous SqlSelect call
