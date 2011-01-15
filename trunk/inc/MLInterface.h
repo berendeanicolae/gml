@@ -198,7 +198,7 @@ public:
 typedef struct _MLRecord
 {
 	UInt32	FeatCount;
-	double*	Feat;
+	double*	Features;
 	double	Weight;
 	MLHash	Hash;	
 	double	Label;
@@ -210,7 +210,7 @@ protected:
 	/*
 	 * The all mighty notifier object
 	 */
-	INotifier *Notifier;
+	INotifier *notifier;
 
 	/*
 	 * The actual database connection object
@@ -232,7 +232,7 @@ public:
 	/*	 
 	 * Usage: uninit stuff
 	 */
-	virtual bool Close();
+	virtual bool Close()=0;
 	
 	/*
 	 *Usage: set the interval for this paralel unit's database
@@ -242,6 +242,12 @@ public:
 	 *	-  UInt32 end: the end unit (this unit will not be included in the interval)	 
 	 */
 	virtual bool SetRecordInterval(UInt32 start, UInt32 end)=0;
+
+	/*
+	 * Usage: allocated, create and return a MLRecord structure instance
+	 * Return: the allocated MlRecord structure or NULL if out of memory
+	 */
+	virtual MLRecord * CreateMlRecord ()=0;
 
 	/*
 	 *Usage: Get a single record of data

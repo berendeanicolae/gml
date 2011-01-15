@@ -13,9 +13,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="targetver.h">
-      <Filter>exe</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\inc\Compat.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -37,6 +34,9 @@
     <ClInclude Include="..\..\..\src\sample\XorElemsDatabase.h">
       <Filter>exe</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\sample\XorMLDatabase.h">
+      <Filter>exe</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gml.cpp">
@@ -46,6 +46,9 @@
       <Filter>exe</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\sample\XorElemsDatabase.cpp">
+      <Filter>exe</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\sample\XorMLDatabase.cpp">
       <Filter>exe</Filter>
     </ClCompile>
   </ItemGroup>

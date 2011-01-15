@@ -7,25 +7,33 @@
 #include <string.h>
 
 Int32 main(Int32 argc, Int8* argv[])
-{
-	char temp[128];
+{	
 
-	ConsoleNotifier cn;
+	ConsoleNotifier		cn;
+	XorElemsDatabase	db;
+	XorMlDatabase xorml;
 
-	XorElemsDatabase db;
-	DbRecordVect vect;
+	db.Init(cn);
+	xorml.Init(cn, db);
 
-	db.SqlSelect();
+	MLRecord *mlr1, *mlr0;
 	
-	db.FetchNextRow(vect);
-	sprintf(temp, "%d %d\n", (DbRecord*)vect.GetPtrToObject(0)->UInt32Val, (DbRecord*)vect.GetPtrToObject(1)->UInt32Val);
-	cn.Notify(temp);
+	mlr0 = xorml.CreateMlRecord();
+	xorml.GetRecord(*mlr0, 0);
 
-	vect.DeleteAll();
-	db.FetchNextRow(vect);
-	sprintf(temp, "%d %d\n", (DbRecord*)vect.GetPtrToObject(0)->UInt32Val, (DbRecord*)vect.GetPtrToObject(1)->UInt32Val);
+	mlr1 = xorml.CreateMlRecord();
+	xorml.GetRecord(*mlr1, 1);
+
+	char temp[100];
+
+	sprintf(temp, "record %d -> %.02f %.02f\n", 0, mlr0->Features[0], mlr0->Features[1]);
 	cn.Notify(temp);
-	
+	xorml.FreeMLRecord(*mlr0);
+
+	sprintf(temp, "record %d -> %.02f %.02f\n", 1, mlr1->Features[0], mlr1->Features[1]);
+	cn.Notify(temp);
+	xorml.FreeMLRecord(*mlr1);
+
 
 	return 0;
 }
