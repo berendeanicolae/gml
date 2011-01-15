@@ -31,9 +31,15 @@
     <ClInclude Include="..\..\..\inc\gml.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="ConsoleNotifier.h">
+      <Filter>exe</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gml.cpp">
+      <Filter>exe</Filter>
+    </ClCompile>
+    <ClCompile Include="ConsoleNotifier.cpp">
       <Filter>exe</Filter>
     </ClCompile>
   </ItemGroup>

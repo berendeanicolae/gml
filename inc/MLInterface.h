@@ -58,7 +58,7 @@ typedef GTVector<DbRecord>	DbRecordVect;
 
 class IDatabase 
 {
-private:
+protected:
 	/*
 	 * Generic Notifier object for passing messages
 	 *  - in the case of this class mostly errors 
@@ -194,7 +194,7 @@ typedef struct _MLRecord
 
 class IMLDatabase
 {
-private:
+protected:
 	/*
 	 * The all mighty notifier object
 	 */
@@ -213,7 +213,7 @@ public:
 	 *	- INPUT INotifier *Notifier: notifier object for passing debugging information
 	 *			!!! it can be NULL
 	 *	- INPUT IDatabase *Database: the database object to work with 
-	 *			!!! this object is already initialized
+	 *			!!! this object is already initialized but not connected
 	 */	
 	virtual bool Init(INotifier *Notifier,IDatabase *Database)=0;
 

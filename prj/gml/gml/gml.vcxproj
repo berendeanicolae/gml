@@ -78,9 +78,11 @@
     <ClInclude Include="..\..\..\inc\GTVector.h" />
     <ClInclude Include="..\..\..\inc\LocalDefines.h" />
     <ClInclude Include="..\..\..\inc\MLInterface.h" />
+    <ClInclude Include="ConsoleNotifier.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ConsoleNotifier.cpp" />
     <ClCompile Include="gml.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
