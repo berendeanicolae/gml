@@ -248,7 +248,7 @@ public:
 	 * Usage: allocated, create and return a MLRecord structure instance
 	 * Return: the allocated MlRecord structure or NULL if out of memory
 	 */
-	virtual MLRecord * CreateMlRecord ()=0;
+	virtual bool CreateMlRecord (MLRecord &record)=0;
 
 	/*
 	 *Usage: Get a single record of data

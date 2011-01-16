@@ -21,7 +21,7 @@ public:
 
 	 virtual bool Disconnect();
 
-	 virtual bool Init(INotifier &notifier, char* Database="", char* Username="", char* Password="", UInt32 Port=0 );
+	 virtual bool Init(INotifier &notifier, char* Database="", char* Server="", char* Username="", char* Password="", UInt32 Port=0 );
 
 	 virtual bool Connect();
 

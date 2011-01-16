@@ -29,7 +29,7 @@ public:
 
 	virtual UInt32 GetTotalRecordCount();
 
-	virtual MLRecord * CreateMlRecord ();
+	virtual bool CreateMlRecord (MLRecord& record);
 
 };
 

@@ -28,7 +28,7 @@ bool XorElemsDatabase::Disconnect()
 	return true;
 }
 
-bool XorElemsDatabase::Init(INotifier &notifier, char* Database, char* Username, char* Password, UInt32 Port)
+bool XorElemsDatabase::Init(INotifier &notifier, char* Database, char* Server, char* Username, char* Password, UInt32 Port)
 {
 	this->notifier = &notifier;
 	return true;
@@ -76,7 +76,7 @@ bool XorElemsDatabase::FetchRowNr( DbRecordVect &vect, UInt32 RowNr )
 		rec2.Type = DbDataType::UINT32VAL;
 
 		vect.Push(rec1);
-		vect.Push(rec2);
+		vect.Push(rec2);		
 
 		notifier->Notify("fetched record number 0\n");
 
