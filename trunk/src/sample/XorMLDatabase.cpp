@@ -35,6 +35,7 @@ bool XorMlDatabase::GetRecord( MLRecord &record,UInt32 index )
 	record.FeatCount = vect.GetCount();
 	record.Features[0] = (double)vect[0].UInt32Val;
 	record.Features[1] = (double)vect[1].UInt32Val;
+	record.Label = (index==0)?0:1;
 
 	return true;
 }
@@ -48,9 +49,6 @@ bool XorMlDatabase::FreeMLRecord( MLRecord &record )
 {
 	if (record.Features)
 		free(record.Features);
-	if (&record)
-		free(&record);
-
 	return true;
 }
 
@@ -74,27 +72,23 @@ XorMlDatabase::~XorMlDatabase()
 
 }
 
-MLRecord* XorMlDatabase::CreateMlRecord ()
-{
-	MLRecord * mlr = (MLRecord*) malloc(sizeof(MLRecord));
-	if (mlr == NULL) return NULL;
-
+bool XorMlDatabase::CreateMlRecord (MLRecord& record)
+{	
 	double * feat = (double*) malloc(2*sizeof(double));
 	if (feat == NULL) 
 	{
-		free(mlr);
 		return NULL;;
 	}
 
-	mlr->Features = feat;
-	mlr->FeatCount = 2;
+	record.Features = feat;
+	record.FeatCount = 2;
 	
-	mlr->Hash.Value[0] = 0;
-	mlr->Hash.Value[1] = 0;
-	mlr->Hash.Value[2] = 0;
-	mlr->Hash.Value[3] = 0;
+	record.Hash.Value[0] = 0;
+	record.Hash.Value[1] = 0;
+	record.Hash.Value[2] = 0;
+	record.Hash.Value[3] = 0;
 
-	mlr->Weight = 1;	
+	record.Weight = 1;	
 
-	return mlr;
+	return true;
 }
