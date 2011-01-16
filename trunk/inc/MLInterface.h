@@ -92,12 +92,13 @@ public:
 	 *Usage: specify initialization parameters
 	 *Param:
 	 *	- INPUT INotifier * notifier: notifier object where all messages can be sent (pay attention, it can be NULL)
+	 *      - INPUT OPT char* Server: ip address of a remote server
 	 *	- INPUT OPT char* Database: the database name to connect to
 	 *	- INPUT OPT char* Username: the username credential
 	 *	- INPUT OPT char* Password: the password credential
 	 *	- INPUT OPT UInt Port: an optional parameter that specified the port 
 	 */
-	virtual bool Init (INotifier &notifier, char* Database="", char* Username="", char* Password="", UInt32 Port=0)=0;
+	virtual bool Init (INotifier &notifier, char* Server="", char* Database="", char* Username="", char* Password="", UInt32 Port=0)=0;
 
 	/*
 	 * Usage: 
