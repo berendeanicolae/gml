@@ -416,7 +416,7 @@ template <class TemplateObject> bool GTVector<TemplateObject>::BinarySearch(Temp
 
 	ptrData = (PTemplateElement<TemplateObject> *)Data;
 
-	if ((Data==NULL) || (NrElemente==0))
+	if ((Data==NULL) || (ElementsCount==0))
 		return false;
 	if ((poz=GTVector_BinSearch(ptrData,Element,myCompFunction,0,ElementsCount-1))==-1)
 		return false;
@@ -447,7 +447,7 @@ template <class TemplateObject> Int32  GTVector<TemplateObject>::Find(TemplateOb
 	else
 		myCompFunction = compFnc;
 
-	if ((Data==NULL) || (NrElemente==0))
+	if ((Data==NULL) || (ElementsCount==0))
 		return -1;
 	if (direction==DIR_FORWARD)
 	{
