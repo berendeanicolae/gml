@@ -37,7 +37,8 @@ public:
 
 enum DbDataType
 {
-	UINT8VAL = 0,
+	NULLVAL = 0,
+	UINT8VAL,
 	UINT16VAL,
 	UINT32VAL,
 	UINT64VAL,
