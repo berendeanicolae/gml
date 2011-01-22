@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 #include "GString.h"
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 #include "ThreadParalelUnit.h"
 
 DWORD WINAPI ThreadParalelUnit_ThreadProc(LPVOID lpParameter)

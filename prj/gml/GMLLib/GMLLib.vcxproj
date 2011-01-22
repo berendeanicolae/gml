@@ -45,12 +45,11 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;GMLLIB_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\lucru\GML\gml\Code\GmlLib\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -90,7 +89,6 @@
     <ClInclude Include="..\..\..\Code\GmlLib\inc\md5.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\MLInterface.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\MLRecord.h" />
-    <ClInclude Include="..\..\..\Code\GmlLib\inc\stdafx.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\targetver.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\ThreadParalelUnit.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\Timer.h" />
@@ -102,7 +100,6 @@
     <ClCompile Include="..\..\..\Code\GmlLib\src\IParalelUnit.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\GString.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\md5.cpp" />
-    <ClCompile Include="..\..\..\Code\GmlLib\src\stdafx.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\ThreadParalelUnit.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\Timer.cpp" />
   </ItemGroup>

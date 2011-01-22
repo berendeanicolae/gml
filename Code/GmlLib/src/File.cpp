@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 #include "File.h"
 
 GML::Utils::File::File(void)

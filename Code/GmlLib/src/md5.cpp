@@ -1,4 +1,4 @@
-#include "stdafx.h"
+
 #include "md5.h"
 
 #define uint32	unsigned int
