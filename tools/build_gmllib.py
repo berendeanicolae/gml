@@ -9,11 +9,11 @@ list_headers = [
 	"AlgorithmResult.h",
 	"IParalelUnit.h",
 	"ThreadParalelUnit.h",
+	"INotify.h",
 	"DBRecord.h",
 	"MLRecord.h",
 	"IDataBase.h",
-	"MLInterface.h",
-	"INotify.h",
+	"MLInterface.h",	
 ]
 
 c_path = sys.argv[1]
