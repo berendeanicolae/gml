@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 #include "IParalelUnit.h"
 
 bool GML::Utils::IParalelUnit::Init(unsigned int _ID,void *_context, void (*_fnThread)(IParalelUnit *,void *))

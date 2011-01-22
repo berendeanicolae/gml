@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 #include "AlgorithmResult.h"
 
 GML::Utils::AlgorithmResult::AlgorithmResult(void)

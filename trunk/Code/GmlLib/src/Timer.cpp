@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 #include "Timer.h"
 
 UInt32 GetTimeInMiliSeconds()
