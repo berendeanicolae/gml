@@ -42,6 +42,8 @@ enum DbDataType
 	UINT16VAL,
 	UINT32VAL,
 	UINT64VAL,
+	FLOATVAL,
+	DOUBLEVAL,
 	RAWPTRVAL,
 	BYTESVAL,
 	ASCIISTTVAL,
@@ -59,6 +61,8 @@ typedef struct _DbRecord
 		UInt16		UInt16Val;
 		UInt32		UInt32Val;
 		UInt64		UInt64Val;
+		float       FloatVal;
+		double      DoubleVal;
 		void*		RawPtrVal;
 		UInt8*		BytesVal;
 		char*		AsciiStrVal;
