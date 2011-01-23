@@ -500,7 +500,6 @@ bool GML::Utils::GString::Grow(int newSize)
 bool GML::Utils::GString::Add(TCHAR *ss,int txSize)
 {
 	GSTRING_TEST_AND_INIT;	
-	bool	res;
 
 	if (txSize<0)
 		txSize = Len(ss);
@@ -522,7 +521,6 @@ bool GML::Utils::GString::AddChar(TCHAR ch)
 bool GML::Utils::GString::Add(GString *ss,int txSize)
 {
 	GSTRING_TEST_AND_INIT;
-	bool	res;
 
 	if (ss==NULL)
 		return false;
