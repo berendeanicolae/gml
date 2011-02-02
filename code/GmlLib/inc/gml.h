@@ -3,7 +3,6 @@
 
 #include "Compat.h"
 #include "AlgorithmResult.h"
-//#include "AttributeList.h"
 #include "File.h"
 #include "DBRecord.h"
 #include "IParalelUnit.h"
@@ -16,5 +15,6 @@
 #include "MLRecord.h"
 #include "ThreadParalelUnit.h"
 #include "Timer.h"
+#include "AttributeList.h"
 
 #endif

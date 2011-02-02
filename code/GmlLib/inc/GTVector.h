@@ -25,8 +25,13 @@ namespace GML
 			UInt8				*Data;
 			Int32				(*compFnc)(TemplateObject &element1,TemplateObject &element2);
 	
-			UInt32 PosToIndex(Int32 index);
+			UInt32				PosToIndex(Int32 index);
 			bool				Grow(UInt32 newSize=0);
+
+			// internal functions
+			Int32				__Compare(TemplateObject &Element1,TemplateObject &Element2,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2));
+			void				__QSort(PTemplateElement<TemplateObject> *Data,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2),Int32 lo,Int32 hi,bool ascendent);
+			Int32				__BinSearch(PTemplateElement<TemplateObject> *Data,TemplateObject& Element,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2),Int32 lo,Int32 hi);
 		public:
 			GTVector(void);
 			GTVector(UInt32 alocElements);
@@ -75,6 +80,8 @@ namespace GML
 			Int32						Find(TemplateObject &Element,Int32 start=POS_START,Int32 direction=DIR_FORWARD,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2)=NULL);
 			bool						Contains(TemplateObject &Element,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2)=NULL);
 		};
+		#define GTVECTOR_SWAP(e1,e2)	{ aux = e1.Element;e1.Element = e2.Element;e2.Element = aux; }
+
 
 		template <class TemplateObject> GTVector<TemplateObject>::GTVector(void)
 		{
@@ -168,7 +175,7 @@ namespace GML
 		}
 		template <class TemplateObject> bool GTVector<TemplateObject>::Insert(TemplateObject Element,Int32 pos)
 		{
-			return _Insert(Element,pos);
+			return InsertByRef(Element,pos);
 		}
 		template <class TemplateObject> bool GTVector<TemplateObject>::InsertByRef(TemplateObject &Element,Int32 pos)
 		{
@@ -317,15 +324,11 @@ namespace GML
 			}
 			return *this;	
 		}
-
-
-		//====================================================================================================================
-		template <class TemplateObject> void GTVector<TemplateObject>::SetCompareFunction(Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2))
+		template <class TemplateObject> void   GTVector<TemplateObject>::SetCompareFunction(Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2))
 		{
 			compFnc = compFunction;
 		}
-
-		template <class TemplateObject> Int32  GTVector_Compare(TemplateObject &Element1,TemplateObject &Element2,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2))
+		template <class TemplateObject> Int32  GTVector<TemplateObject>::__Compare(TemplateObject &Element1,TemplateObject &Element2,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2))
 		{
 			if (compFunction!=NULL)
 			{
@@ -337,14 +340,12 @@ namespace GML
 					return 1;
 				return 0;
 			}	
-		}
-
-		#define GTVECTOR_SWAP(e1,e2)	{ aux = e1.Element;e1.Element = e2.Element;e2.Element = aux.Element; }
-		template <class TemplateObject> void GTVector_QSort(PTemplateElement<TemplateObject> *Data,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2),Int32 lo,Int32 hi,bool ascendent)
+		}		
+		template <class TemplateObject> void   GTVector<TemplateObject>::__QSort(PTemplateElement<TemplateObject> *pData,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2),Int32 lo,Int32 hi,bool ascendent)
 		{
-			Int32									left,right,mid;
+			Int32								left,right,mid;
 			PTemplateElement<TemplateObject>	*pivot;
-			PTemplateElement<TemplateObject>	aux;
+			TemplateObject						*aux;
 
 			if (lo>=hi) 
 				return;
@@ -352,37 +353,37 @@ namespace GML
 			left=lo;
 			right=hi;
 			mid=(lo+hi)/2;
-			GTVECTOR_SWAP(Data[left],Data[mid]);
-			pivot=&Data[left];
+			GTVECTOR_SWAP(pData[left],pData[mid]);
+			pivot=&pData[left];
 			lo++;
 
 			while (lo<=hi)
 			{
 				if (ascendent)
 				{
-					while ((lo<=right) && (GTVector_Compare(Data[lo].Element,pivot->Element,compFunction)<=0))
+					while ((lo<=right) && (__Compare(*(pData[lo].Element),*pivot->Element,compFunction)<=0))
 						++lo;
-					while ((hi>=left) &&  (GTVector_Compare(Data[hi].Element,pivot->Element,compFunction)>0))
+					while ((hi>=left) &&  (__Compare(*(pData[hi].Element),*pivot->Element,compFunction)>0))
 						--hi;
 				} else {
-					while ((lo<=right) && (GTVector_Compare(Data[lo].Element,pivot->Element,compFunction)>=0))
+					while ((lo<=right) && (__Compare(*(pData[lo].Element),*pivot->Element,compFunction)>=0))
 						++lo;
-					while ((hi>=left) &&  (GTVector_Compare(Data[hi].Element,pivot->Element,compFunction)<0))
+					while ((hi>=left) &&  (__Compare(*(pData[hi].Element),*pivot->Element,compFunction)<0))
 						--hi;
 				}
 				if (lo<hi)
 				{
-					GTVECTOR_SWAP(Data[lo],Data[hi]);
+					GTVECTOR_SWAP(pData[lo],pData[hi]);
 
 				}
 			} 
-			GTVECTOR_SWAP(Data[left],Data[hi]);
+			GTVECTOR_SWAP(pData[left],pData[hi]);
 
 			// apelurile recursive
-			GTVector_QSort(Data,compFunction,left,hi-1,ascendent);
-			GTVector_QSort(Data,compFunction,hi+1,right,ascendent);
+			__QSort(pData,compFunction,left,hi-1,ascendent);
+			__QSort(pData,compFunction,hi+1,right,ascendent);
 		}
-		template <class TemplateObject> Int32  GTVector_BinSearch(PTemplateElement<TemplateObject> *Data,TemplateObject& Element,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2),Int32 lo,Int32 hi)
+		template <class TemplateObject> Int32  GTVector<TemplateObject>::__BinSearch(PTemplateElement<TemplateObject> *Data,TemplateObject& Element,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2),Int32 lo,Int32 hi)
 		{
 			Int32 mij;
 			Int32 res;
@@ -390,23 +391,23 @@ namespace GML
 			do
 			{
 				mij=(lo+hi)/2;
-				if ((res=GTVector_Compare(Element,Data[mij].Element,compFunction))==0) 
+				if ((res=__Compare(Element,*Data[mij].Element,compFunction))==0) 
 					return mij;
 				if (res<0) hi=mij-1;
 				if (res>0) lo=mij+1;
 			} while ((lo<=hi) && (hi>=0));
 			return -1;
 		}
-		template <class TemplateObject> void GTVector<TemplateObject>::Sort(bool ascendent,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2))
+		template <class TemplateObject> void   GTVector<TemplateObject>::Sort(bool ascendent,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2))
 		{
 			if ((Data==NULL) || (ElementsCount==0)) 
 				return;
 			if (compFunction)
-				GTVector_QSort(Data,compFunction,0,ElementsCount-1,ascendent);
+				__QSort((PTemplateElement<TemplateObject> *)Data,compFunction,0,ElementsCount-1,ascendent);
 			else
-				GTVector_QSort(Data,compFnc,0,ElementsCount-1,ascendent);
+				__QSort((PTemplateElement<TemplateObject> *)Data,compFnc,0,ElementsCount-1,ascendent);
 		}
-		template <class TemplateObject> bool GTVector<TemplateObject>::BinarySearch(TemplateObject &Element, Int32 *left_location, Int32 *right_location,Int32 (*compFunctionToUse)(TemplateObject &element1,TemplateObject &element2))
+		template <class TemplateObject> bool   GTVector<TemplateObject>::BinarySearch(TemplateObject &Element, Int32 *left_location, Int32 *right_location,Int32 (*compFunctionToUse)(TemplateObject &element1,TemplateObject &element2))
 		{
 			Int32								poz;
 			PTemplateElement<TemplateObject>	*ptrData;
@@ -421,13 +422,13 @@ namespace GML
 
 			if ((Data==NULL) || (ElementsCount==0))
 				return false;
-			if ((poz=GTVector_BinSearch(ptrData,Element,myCompFunction,0,ElementsCount-1))==-1)
+			if ((poz=__BinSearch(ptrData,Element,myCompFunction,0,ElementsCount-1))==-1)
 				return false;
 			// merg in stanga daca e nevoie
 			if (left_location!=NULL)
 			{
 				*left_location = poz-1;
-				while (((*left_location)>=0) && (GTVector_Compare(ptrData[(*left_location)],Element,myCompFunction)==0))
+				while (((*left_location)>=0) && (__Compare(*(ptrData[(*left_location)].Element),Element,myCompFunction)==0))
 					(*left_location)--;
 				(*left_location)++;
 			}
@@ -435,7 +436,7 @@ namespace GML
 			if (right_location!=NULL)
 			{
 				*right_location = poz+1;
-				while (((*right_location)<(Int32)ElementsCount) && (GTVector_Compare(ptrData[(*right_location)],Element,myCompFunction)==0))
+				while (((*right_location)<(Int32)ElementsCount) && (__Compare(*(ptrData[(*right_location)].Element),Element,myCompFunction)==0))
 					(*right_location)++;
 				(*right_location)--;
 			}
@@ -443,6 +444,7 @@ namespace GML
 		}
 		template <class TemplateObject> Int32  GTVector<TemplateObject>::Find(TemplateObject &Element, Int32 start, Int32 direction,Int32 (*compFunctionToUse)(TemplateObject &element1,TemplateObject &element2))
 		{
+			PTemplateElement<TemplateObject>	*ptrData;
 			Int32 (*myCompFunction)(TemplateObject &element1,TemplateObject &element2) = NULL;
 
 			if (compFunctionToUse!=NULL)
@@ -452,12 +454,14 @@ namespace GML
 
 			if ((Data==NULL) || (ElementsCount==0))
 				return -1;
+			ptrData = (PTemplateElement<TemplateObject> *)Data;
+
 			if (direction==DIR_FORWARD)
 			{
 				if (start<0) start=0;
 				while ((start<ElementsCount))
 				{			
-					if (GTVector_Compare(Data[start],Element,myCompFunction)==0) 
+					if (__Compare(*(ptrData[start].Element),Element,myCompFunction)==0) 
 						return start;
 					start++;
 				}
@@ -467,14 +471,14 @@ namespace GML
 				if ((start<0) || (start>=ElementsCount)) start=ElementsCount-1;
 				while ((start>=0))
 				{			
-					if (GTVector_Compare(Data[start],Element,myCompFunction)==0) 
+					if (__Compare(*(ptrData[start].Element),Element,myCompFunction)==0) 
 						return start;
 					start--;
 				}
 			}
 			return -1;
 		}
-		template <class TemplateObject> bool GTVector<TemplateObject>::Contains(TemplateObject &Element,Int32 (*compFunctionToUse)(TemplateObject &element1,TemplateObject &element2))
+		template <class TemplateObject> bool   GTVector<TemplateObject>::Contains(TemplateObject &Element,Int32 (*compFunctionToUse)(TemplateObject &element1,TemplateObject &element2))
 		{
 			return (Find(Element,POS_START,DIR_FORWARD,compFunctionToUse)>=0);
 		}
