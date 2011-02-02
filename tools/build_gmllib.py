@@ -13,7 +13,8 @@ list_headers = [
 	"DBRecord.h",
 	"MLRecord.h",
 	"IDataBase.h",
-	"MLInterface.h",	
+	"MLInterface.h",
+	"AttributeList.h"	
 ]
 
 c_path = sys.argv[1]
