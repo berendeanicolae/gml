@@ -113,6 +113,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClCompile Include="..\..\..\code\GmlLib\src\AttributeList.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\dllmain.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\File.cpp" />
+    <ClCompile Include="..\..\..\code\GmlLib\src\INotify.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\IParalelUnit.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\GString.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\md5.cpp" />
