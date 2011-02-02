@@ -8,18 +8,23 @@
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	GML::Utils::Timer	t;
+	int x[10]; //= { 1,5,2,6,3,4,8,9,0,11 };
+	GML::Utils::AttributeList	a;
 
-	t.Start();
-	for (int tr=0;tr<100000;tr++)
-	{
-		for (int gr=0;gr<10000;gr++)
-		{
-			_asm nop;
-		}
-	}
-	t.Stop();
-	printf("ETA = [%s]\n",t.GetPeriodAsString());
+	a.Load("E:\\test.txt");
+
+	double value;
+	for (int tr=0;tr<a.GetCount();tr++)
+		printf("%s\n",a.Get(tr)->Name);
+
+	a.Update("Vector",&x[0],sizeof(int)*10);
+
+	//a.AddString("Value","Salut","Valoare Value");
+	//a.AddBool("Ok",true);
+	//a.AddDouble("DoubleValue",1.100);
+	//a.AddAttribute("Vector",&x[0],GML::Utils::AttributeList::INT32,10);
+	//a.Save("E:\\test.txt");
+
 	return 0;
 }
 
