@@ -92,6 +92,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Code\GmlLib\inc\AlgorithmResult.h" />
+    <ClInclude Include="..\..\..\code\GmlLib\inc\AttributeList.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\compat.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\DBRecord.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\File.h" />
@@ -109,6 +110,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Code\GmlLib\src\AlgorithmResult.cpp" />
+    <ClCompile Include="..\..\..\code\GmlLib\src\AttributeList.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\dllmain.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\File.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\IParalelUnit.cpp" />
