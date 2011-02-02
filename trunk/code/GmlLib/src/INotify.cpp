@@ -5,7 +5,7 @@
 
 #define TEMP_STACK_BUFFER_SIZE		2048
 
-bool GML::Notify::INotify::NotifyString(UInt32 messageID,char *format,...)
+bool GML::Utils::INotify::NotifyString(UInt32 messageID,char *format,...)
 {
     va_list		args;
     int			len;

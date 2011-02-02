@@ -4,7 +4,7 @@
 
 namespace GML
 {
-	namespace Notify
+	namespace Utils
 	{
 		class EXPORT INotify
 		{
