@@ -13,6 +13,9 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	a.Load("E:\\test.txt");
 
+	
+
+
 	double value;
 	for (int tr=0;tr<a.GetCount();tr++)
 		printf("%s\n",a.Get(tr)->Name);
