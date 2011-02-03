@@ -61,6 +61,9 @@
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>ConsoleNotifyer.def</ModuleDefinitionFile>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(OutDir)*.ntf $(SolutionDir)..\..\lib\*.*</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -80,6 +83,9 @@
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib</AdditionalDependencies>
       <ModuleDefinitionFile>ConsoleNotifyer.def</ModuleDefinitionFile>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(OutDir)*.ntf $(SolutionDir)..\..\lib\*.*</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="ConsoleNotifyer.def" />
