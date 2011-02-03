@@ -1,0 +1,4 @@
+LIBRARY "ConsoleNotifyer.ntf"
+
+EXPORTS
+Create=CreateNewNotifyer
