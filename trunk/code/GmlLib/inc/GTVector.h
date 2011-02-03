@@ -207,7 +207,7 @@ namespace GML
 		template <class TemplateObject> bool GTVector<TemplateObject>::Copy(GTVector<TemplateObject> &dest,Int32 startPos,Int32 endPos)
 		{
 			PTemplateElement<TemplateObject>	*ptr;
-			UInt32						start,end,index;
+			UInt32								start,end;
 
 			if (Data==NULL)
 				return false;
