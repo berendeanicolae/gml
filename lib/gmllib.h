@@ -4,6 +4,11 @@
 #ifndef __COMPAT_H
 #define __COMPAT_H
 
+#define NOTIFYER_EXT	".ntf"
+#define DATABASE_EXT	".db"
+#define CONNECTOR_EXT	".dbc"
+#define ALGORITHM_EXT	".alg"
+
 #ifdef WIN32
 	#define OS_WINDOWS
 #endif
@@ -841,7 +846,7 @@ namespace GML
 
 namespace GML
 {
-	namespace Notify
+	namespace Utils
 	{
 		class  INotify
 		{
@@ -933,7 +938,7 @@ namespace GML
 			 * Generic Notifier object for passing messages
 			 *  - in the case of this class mostly errors 
 			 */
-			GML::Notify::INotify *notifier;
+			GML::Utils::INotify *notifier;
 
 		public:
 			/*
@@ -956,7 +961,7 @@ namespace GML
 			 *	- INPUT OPT char* Password: the password credential
 			 *	- INPUT OPT UInt Port: an optional parameter that specified the port 
 			 */
-			virtual bool Init (GML::Notify::INotify &notifier, char* Server="", char* Database="", char* Username="", char* Password="", UInt32 Port=0)=0;
+			virtual bool Init (GML::Utils::INotify &notifier, char* Server="", char* Database="", char* Username="", char* Password="", UInt32 Port=0)=0;
 
 			/*
 			 * Usage: 
@@ -1068,7 +1073,7 @@ namespace GML
 			/*
 			 * The all mighty notifier object
 			 */
-			GML::Notify::INotify *notifier;
+			GML::Utils::INotify *notifier;
 
 			/*
 			 * The actual database connection object
@@ -1085,7 +1090,7 @@ namespace GML
 			 *	- INPUT IDatabase *Database: the database object to work with 
 			 *			!!! this object is already initialized but not connected
 			 */	
-			virtual bool Init(GML::Notify::INotify &Notifier,GML::DB::IDatabase &Database)=0;
+			virtual bool Init(GML::Utils::INotify &Notifier,GML::DB::IDatabase &Database)=0;
 
 			/*	 
 			 * Usage: uninit stuff
@@ -1203,5 +1208,21 @@ namespace GML
 		};
 	}
 }
+//===================== Builder.h =================================================================================
+#ifndef __BUILDER__H__
+#define __BUILDER__H__
+
+
+namespace GML
+{
+	class  Builder
+	{
+	public:
+		static GML::Utils::INotify* CreateNotifyer(char *pluginName,void *objectData = NULL);		
+	};
+}
+
+#endif
+
 #endif
 
