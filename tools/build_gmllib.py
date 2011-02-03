@@ -40,6 +40,8 @@ for name in list_headers:
 		#	continue
 		if (" EXPORT " in line) and ("class" in line):
 			line = line.replace("EXPORT","")
+		if (" EXPORT " in line) and ("struct" in line):
+			line = line.replace("EXPORT","")
 		f.write(line)
 	f.write("\n")
 #f.write("};\n")
