@@ -1,6 +1,11 @@
 #ifndef __COMPAT_H
 #define __COMPAT_H
 
+#define NOTIFYER_EXT	".ntf"
+#define DATABASE_EXT	".db"
+#define CONNECTOR_EXT	".dbc"
+#define ALGORITHM_EXT	".alg"
+
 #ifdef WIN32
 	#define OS_WINDOWS
 #endif

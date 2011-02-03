@@ -17,7 +17,7 @@ namespace GML
 			/*
 			 * The all mighty notifier object
 			 */
-			GML::Notify::INotify *notifier;
+			GML::Utils::INotify *notifier;
 
 			/*
 			 * The actual database connection object
@@ -34,7 +34,7 @@ namespace GML
 			 *	- INPUT IDatabase *Database: the database object to work with 
 			 *			!!! this object is already initialized but not connected
 			 */	
-			virtual bool Init(GML::Notify::INotify &Notifier,GML::DB::IDatabase &Database)=0;
+			virtual bool Init(GML::Utils::INotify &Notifier,GML::DB::IDatabase &Database)=0;
 
 			/*	 
 			 * Usage: uninit stuff
