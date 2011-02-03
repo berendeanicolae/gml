@@ -5,6 +5,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gml", "gml\gml.vcxproj", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GMLLib", "GMLLib\GMLLib.vcxproj", "{D218E74E-F7BB-40F8-9791-D2DEC548EE2A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Notifyers", "Notifyers", "{54E1725C-7B50-4C30-A28A-0262D7EBFC15}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConsoleNotifyer", "ConsoleNotifyer\ConsoleNotifyer.vcxproj", "{EB787576-09FE-4AD3-9953-6FA1AA64D612}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,8 +23,15 @@ Global
 		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A}.Debug|Win32.Build.0 = Debug|Win32
 		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A}.Release|Win32.ActiveCfg = Release|Win32
 		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A}.Release|Win32.Build.0 = Release|Win32
+		{EB787576-09FE-4AD3-9953-6FA1AA64D612}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EB787576-09FE-4AD3-9953-6FA1AA64D612}.Debug|Win32.Build.0 = Debug|Win32
+		{EB787576-09FE-4AD3-9953-6FA1AA64D612}.Release|Win32.ActiveCfg = Release|Win32
+		{EB787576-09FE-4AD3-9953-6FA1AA64D612}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EB787576-09FE-4AD3-9953-6FA1AA64D612} = {54E1725C-7B50-4C30-A28A-0262D7EBFC15}
 	EndGlobalSection
 EndGlobal
