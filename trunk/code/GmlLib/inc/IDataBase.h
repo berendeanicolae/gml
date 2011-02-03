@@ -15,7 +15,7 @@ namespace GML
 			 * Generic Notifier object for passing messages
 			 *  - in the case of this class mostly errors 
 			 */
-			GML::Notify::INotify *notifier;
+			GML::Utils::INotify *notifier;
 
 		public:
 			/*
@@ -38,7 +38,7 @@ namespace GML
 			 *	- INPUT OPT char* Password: the password credential
 			 *	- INPUT OPT UInt Port: an optional parameter that specified the port 
 			 */
-			virtual bool Init (GML::Notify::INotify &notifier, char* Server="", char* Database="", char* Username="", char* Password="", UInt32 Port=0)=0;
+			virtual bool Init (GML::Utils::INotify &notifier, char* Server="", char* Database="", char* Username="", char* Password="", UInt32 Port=0)=0;
 
 			/*
 			 * Usage: 
