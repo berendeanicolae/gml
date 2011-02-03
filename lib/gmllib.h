@@ -281,7 +281,7 @@ namespace GML
 		template <class TemplateObject> bool GTVector<TemplateObject>::Copy(GTVector<TemplateObject> &dest,Int32 startPos,Int32 endPos)
 		{
 			PTemplateElement<TemplateObject>	*ptr;
-			UInt32						start,end,index;
+			UInt32								start,end;
 
 			if (Data==NULL)
 				return false;
@@ -933,7 +933,7 @@ namespace GML
 {
 	namespace DB
 	{
-		class IDatabase 
+		class  IDatabase 
 		{
 		protected:
 			/*
@@ -946,7 +946,7 @@ namespace GML
 			/*
 			 * Constructor of the class
 			 */
-			IDatabase() {};
+			IDatabase();
 
 			/*
 			 * Destructor of the class
@@ -963,7 +963,7 @@ namespace GML
 			 *	- INPUT OPT char* Password: the password credential
 			 *	- INPUT OPT UInt Port: an optional parameter that specified the port 
 			 */
-			virtual bool Init (GML::Utils::INotify &notifier, char* Server="", char* Database="", char* Username="", char* Password="", UInt32 Port=0)=0;
+			virtual bool Init (GML::Utils::INotify &notifier, char *connectionString)=0;
 
 			/*
 			 * Usage: 
@@ -1211,8 +1211,7 @@ namespace GML
 	}
 }
 //===================== Builder.h =================================================================================
-#ifndef __BUILDER__H__
-#define __BUILDER__H__
+
 
 
 namespace GML
@@ -1220,11 +1219,11 @@ namespace GML
 	class  Builder
 	{
 	public:
-		static GML::Utils::INotify* CreateNotifyer(char *pluginName,void *objectData = NULL);		
+		static GML::Utils::INotify*		CreateNotifyer(char *pluginName,void *objectData = NULL);	
+		static GML::DB::IDatabase*		CreateDataBase(char *pluginName,GML::Utils::INotify &notify,char *connectionString);
 	};
 }
 
-#endif
 
 #endif
 

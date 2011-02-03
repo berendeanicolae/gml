@@ -17,4 +17,6 @@
 #include "Timer.h"
 #include "AttributeList.h"
 
+#include "builder.h"
+
 #endif

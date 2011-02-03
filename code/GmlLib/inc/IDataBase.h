@@ -1,14 +1,16 @@
 #pragma once
 
-#include "Compat.h"
+#include "compat.h"
 #include "INotify.h"
+#include "GTVector.h"
+#include "DBRecord.h"
 
 
 namespace GML
 {
 	namespace DB
 	{
-		class IDatabase 
+		class EXPORT IDatabase 
 		{
 		protected:
 			/*
@@ -21,7 +23,7 @@ namespace GML
 			/*
 			 * Constructor of the class
 			 */
-			IDatabase() {};
+			IDatabase();
 
 			/*
 			 * Destructor of the class

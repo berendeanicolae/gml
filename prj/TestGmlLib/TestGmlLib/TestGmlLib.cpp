@@ -4,10 +4,23 @@
 #include "stdafx.h"
 #include "gmllib.h"
 
+class Test
+{
+public:
+	int x,y,z,t,a,b,c;
+};
 
+Test& Get()
+{
+	Test *t = new Test();
+	t->x = t->y = 10;
+	return (*t);
+}
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	Test t = Get();
+
 	int x[10]; //= { 1,5,2,6,3,4,8,9,0,11 };
 	GML::Utils::AttributeList	a;
 
@@ -18,6 +31,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	a.Load("E:\\test.txt");
 	double value;
+	a.Update("DoubleValue",&value,sizeof(value));
 	for (int tr=0;tr<a.GetCount();tr++)
 		printf("%s\n",a.Get(tr)->Name);
 
