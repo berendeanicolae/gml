@@ -1,4 +1,3 @@
-
 #include "ConsoleNotifier.h"
 
 bool ConsoleNotifier::Init(void * data)
@@ -12,7 +11,7 @@ bool ConsoleNotifier::Notify( char* msg )
 	return true;
 }
 
-bool ConsoleNotifier::UnInit()
+bool ConsoleNotifier::UnInit(
 {
 	return true;
 }

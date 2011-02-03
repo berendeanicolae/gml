@@ -2,7 +2,7 @@
 #include "gmllib.h"
 #include "ConsoleNotifyer.h"
 
-GML::Utils::INotify*	Create(void *objData)
+GML::Utils::INotify*	CreateNewNotifyer(void *objData)
 {
 	ConsoleNotifyer		*notif = new ConsoleNotifyer();
 
