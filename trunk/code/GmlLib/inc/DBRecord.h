@@ -35,6 +35,8 @@ namespace GML
 				UInt64		UInt64Val;
 				void*		RawPtrVal;
 				UInt8*		BytesVal;
+				double		DoubleVal;
+				float		FloatVal;
 				char*		AsciiStrVal;
 				wchar_t*	UnicStrVal;
 				RecordHash	Hash;
