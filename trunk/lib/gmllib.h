@@ -879,11 +879,11 @@ namespace GML
 			UNICSTRVAL,
 			HASHVAL
 		};
-		struct EXPORT RecordHash
+		struct  RecordHash
 		{
 			UInt8		Value[16];
 		};
-		struct EXPORT DBRecord 
+		struct  DBRecord 
 		{
 			UInt32			Type;
 			char*			Name;
@@ -911,7 +911,7 @@ namespace GML
 {
 	namespace ML
 	{
-		struct EXPORT MLRecord
+		struct  MLRecord
 		{
 			UInt32				FeatCount;
 			double*				Features;
@@ -1157,7 +1157,7 @@ namespace GML
 {
 	namespace Utils
 	{
-		struct EXPORT Attribute
+		struct  Attribute
 		{
 			char*			Name;
 			char*			Description;
