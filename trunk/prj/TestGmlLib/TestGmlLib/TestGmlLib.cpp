@@ -11,11 +11,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	int x[10]; //= { 1,5,2,6,3,4,8,9,0,11 };
 	GML::Utils::AttributeList	a;
 
+	GML::Utils::INotify *notif = GML::Builder::CreateNotifyer("E:\\lucru\\GML\\gml\\lib\\ConsoleNotifyer.ntf");
+	if (notif)
+		notif->NotifyString(0,"Mesaj de pe data de %s",__DATE__);
+
+
 	a.Load("E:\\test.txt");
-
-	
-
-
 	double value;
 	for (int tr=0;tr<a.GetCount();tr++)
 		printf("%s\n",a.Get(tr)->Name);
