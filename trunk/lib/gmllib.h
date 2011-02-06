@@ -1175,6 +1175,8 @@ namespace GML
 		class  AttributeList
 		{
 			GML::Utils::GTVector<GML::Utils::Attribute>	list;
+			
+			bool			FromString(GML::Utils::GString &text);
 		public:
 			enum 
 			{
@@ -1198,7 +1200,7 @@ namespace GML
 			bool			AddInt32(char *Name, Int32 value, char *Description = NULL);
 
 			bool			Update(char *Name,void *Data,UInt32 DataSize);
-			bool			UpdateString(char *Name,GML::Utils::GString *text);
+			bool			UpdateString(char *Name,GML::Utils::GString &text);
 
 			void			Clear();
 			Attribute*		Get(unsigned int index);
@@ -1207,6 +1209,7 @@ namespace GML
 
 			bool			Save(char *fileName);
 			bool			Load(char *fileName);
+			bool			Create(char *text,char separator=';');
 		};
 	}
 }

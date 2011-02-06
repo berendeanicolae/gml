@@ -114,7 +114,14 @@ bool AttributeToStringForm(GML::Utils::Attribute *a,GML::Utils::GString *tmp)
 bool AttributeProcessType(GML::Utils::GString *value,unsigned int *type,unsigned int *elementsCount)
 {
 	GML::Utils::GString		tmp;
-	if (value->StartsWith("\""))
+	Int64					int64Value;
+	Int32					int32Value;
+	UInt64					uint64Value;
+	UInt32					uint32Value;
+	double					doubleValue;
+	
+	// stringuri
+	if ((value->StartsWith("\"")) || (value->StartsWith("'")))
 	{
 		value->Truncate(value->Len()-1);
 		if (value->Delete(0,1)==false)
@@ -123,6 +130,7 @@ bool AttributeProcessType(GML::Utils::GString *value,unsigned int *type,unsigned
 		(*elementsCount) = 1;
 		return true;
 	}
+	// tipuri predefinite
 	for (int tr=0;tr<GML::Utils::AttributeList::ATTRIBUTES_COUNT;tr++)
 	{
 		if (tmp.SetFormated("(%s)",AttributeTypeName[tr])==false)
@@ -147,7 +155,54 @@ bool AttributeProcessType(GML::Utils::GString *value,unsigned int *type,unsigned
 			return true;
 		}
 	}
-	return false;
+	// boolean
+	if ((value->Equals("True",true)) || (value->Equals("False",true)) || (value->Equals("Yes",true)) || (value->Equals("No",true)))
+	{
+		(*type) = GML::Utils::AttributeList::BOOLEAN;
+		(*elementsCount) = 1;
+		return true;
+	}
+	// verific daca e un numar negativ
+	if (value->StartsWith("-"))
+	{
+		if (value->ConvertToInt64(&int64Value))
+		{
+			if ((value->ConvertToInt32(&int32Value)) && (int32Value==(Int32)int64Value))
+			{
+				(*type) = GML::Utils::AttributeList::INT32;
+				(*elementsCount) = 1;
+				return true;
+			}
+			(*type) = GML::Utils::AttributeList::INT64;
+			(*elementsCount) = 1;
+			return true;
+		}
+	}
+	// verific daca nu e un numar pozitiv
+	if (value->ConvertToUInt64(&uint64Value))
+	{
+		if ((value->ConvertToUInt32(&uint32Value)) && (uint32Value==(UInt32)uint64Value))
+		{
+			(*type) = GML::Utils::AttributeList::UINT32;
+			(*elementsCount) = 1;
+			return true;
+		}
+		(*type) = GML::Utils::AttributeList::UINT64;
+		(*elementsCount) = 1;
+		return true;
+	}
+	// verific daca e un double
+	if (value->ConvertToDouble(&doubleValue))
+	{
+		(*type) = GML::Utils::AttributeList::DOUBLE;
+		(*elementsCount) = 1;
+		return true;
+	}
+
+	// daca nu e nici unul dintre acestea , presupun ca este un string
+	(*type) = GML::Utils::AttributeList::STRING;
+	(*elementsCount) = 1;
+	return true;
 }
 bool AttributeProcessValues(GML::Utils::GString *value,unsigned char *Data,unsigned int elemensCount,unsigned int type)
 {
@@ -260,15 +315,15 @@ bool GML::Utils::AttributeList::Update(char *Name,void *Data,UInt32 DataSize)
 	MEMCOPY(Data,a->Data,a->DataSize);
 	return true;
 }
-bool GML::Utils::AttributeList::UpdateString(char *Name,GML::Utils::GString *text)
+bool GML::Utils::AttributeList::UpdateString(char *Name,GML::Utils::GString &text)
 {
 	GML::Utils::Attribute		*a;
 
-	if ((text==NULL) || ((a=Get(Name))==NULL))
+	if ((a=Get(Name))==NULL)
 		return false;
 	if (a->Data==NULL)
 		return false;
-	return text->Set((char*)a->Data,a->DataSize);
+	return text.Set((char*)a->Data,a->DataSize);
 }
 bool GML::Utils::AttributeList::AddAttribute(char* Name,void *Data,unsigned int AttributeType,unsigned int ElementsCount,char *Description)
 {
@@ -390,21 +445,18 @@ bool GML::Utils::AttributeList::Save(char *fileName)
 	f.Close();
 	return true;
 }
-bool GML::Utils::AttributeList::Load(char *fileName)
+bool GML::Utils::AttributeList::FromString(GML::Utils::GString &text)
 {
-	GML::Utils::GString			temp,line,desc,name,value,Buffer;
-	int				index=0,eq_poz,tr;
-	unsigned int	Type,ElementsCount,Size;
-
-	Clear();
+	GML::Utils::GString			line,desc,name,value,Buffer;
+	int							index=0,eq_poz,tr;
+	unsigned int				Type,ElementsCount,Size;
 
 	if (line.Create(2048)==false)
 		return false;
 	if (Buffer.Create(2048)==false)
 		return false;
-	if (temp.LoadFromFile(fileName)==false)
-		return false;
-	while (temp.CopyNextLine(&line,&index))
+
+	while (text.CopyNextLine(&line,&index))
 	{
 		if (line.Strip()==false)
 			return false;
@@ -473,6 +525,40 @@ bool GML::Utils::AttributeList::Load(char *fileName)
 		return false;
 	}
 	list.Sort(true,AttributeCompare);
-	// resortam
+
 	return true;
+}
+bool GML::Utils::AttributeList::Load(char *fileName)
+{
+	GML::Utils::GString			temp;
+
+	Clear();
+
+	if (temp.LoadFromFile(fileName)==false)
+		return false;
+	if (FromString(temp)==false)
+		return false;
+
+	return true;
+}
+bool GML::Utils::AttributeList::Create(char *text,char separator)
+{
+	GML::Utils::GString			temp;
+	char						sep[2];
+
+	Clear();
+
+	if (text==NULL)
+		return false;
+	if (temp.Set(text)==false)
+		return false;
+	if ((separator!=0) && (separator!='\n'))
+	{
+		sep[0]=separator;
+		sep[1]=0;
+		if (temp.Replace(sep,"\n")==false)
+			return false;
+	}
+
+	return FromString(temp);
 }
