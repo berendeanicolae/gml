@@ -17,7 +17,7 @@ namespace GML
 			GML::ML::IConector			*conector;
 
 		public:	
-
+			IConector();
 			virtual bool				OnInit() = 0;
 			bool						Init(GML::Utils::INotify &Notifier,GML::DB::IDataBase &Database);
 			bool						Init(GML::ML::IConector &conector);
