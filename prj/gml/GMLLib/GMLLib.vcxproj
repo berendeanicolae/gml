@@ -120,6 +120,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClCompile Include="..\..\..\Code\GmlLib\src\IParalelUnit.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\GString.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\md5.cpp" />
+    <ClCompile Include="..\..\..\code\GmlLib\src\MLInterface.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\ThreadParalelUnit.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\Timer.cpp" />
   </ItemGroup>
