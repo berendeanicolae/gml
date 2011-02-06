@@ -22,7 +22,7 @@ namespace GML
 			/*
 			 * The actual database connection object
 			 */
-			GML::DB::IDatabase *database;
+			GML::DB::IDataBase *database;
 
 		public:	
 
@@ -34,7 +34,7 @@ namespace GML
 			 *	- INPUT IDatabase *Database: the database object to work with 
 			 *			!!! this object is already initialized but not connected
 			 */	
-			virtual bool Init(GML::Utils::INotify &Notifier,GML::DB::IDatabase &Database)=0;
+			virtual bool Init(GML::Utils::INotify &Notifier,GML::DB::IDataBase &Database)=0;
 
 			/*	 
 			 * Usage: uninit stuff

@@ -11,7 +11,7 @@ namespace GML
 	{
 	public:
 		static GML::Utils::INotify*		CreateNotifyer(char *pluginName,void *objectData = NULL);	
-		static GML::DB::IDatabase*		CreateDataBase(char *pluginName,GML::Utils::INotify &notify,char *connectionString);
+		static GML::DB::IDataBase*		CreateDataBase(char *pluginName,GML::Utils::INotify &notify,char *connectionString);
 	};
 }
 
