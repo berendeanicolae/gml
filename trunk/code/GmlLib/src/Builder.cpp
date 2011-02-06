@@ -35,11 +35,11 @@ GML::Utils::INotify*	GML::Builder::CreateNotifyer(char *pluginName,void *objectD
 	// am incarcat si totul e ok -> cer o interfata
 	return fnCreate(objectData);
 }
-GML::DB::IDatabase*		GML::Builder::CreateDataBase(char *pluginName,GML::Utils::INotify &notify,char *connectionString)
+GML::DB::IDataBase*		GML::Builder::CreateDataBase(char *pluginName,GML::Utils::INotify &notify,char *connectionString)
 {
 	GML::Utils::GString		path;
 	HMODULE					hModule;
-	GML::DB::IDatabase*		(*fnCreate)(GML::Utils::INotify &notify,char *connectionString);
+	GML::DB::IDataBase*		(*fnCreate)(GML::Utils::INotify &notify,char *connectionString);
 
 	if (path.Set(pluginName)==false)
 		return NULL;
