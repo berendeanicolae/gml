@@ -12,9 +12,9 @@ list_headers = [
 	"INotify.h",
 	"DBRecord.h",
 	"MLRecord.h",
-	"IDataBase.h",
-	"MLInterface.h",
 	"AttributeList.h",
+	"IDataBase.h",
+	"MLInterface.h",	
 	"Builder.h",	
 ]
 
