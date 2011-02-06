@@ -851,11 +851,17 @@ namespace GML
 		class  INotify
 		{
 		public:
+			enum {
+				NOTIFY_ERROR = 0,
+				NOTIFY_INFO,
+			};
 			virtual bool	Init(void *initData) = 0;
 			virtual bool	Uninit() = 0;
 			virtual bool	Notify(UInt32 messageID,void *Data,UInt32 DataSize) = 0;
 
 			bool			NotifyString(UInt32 messageID,char* format,...);
+			bool			Info(char *format,...);
+			bool			Error(char *format,...);
 		};
 	}
 }
@@ -1111,8 +1117,6 @@ namespace GML
 //===================== MLInterface.h =================================================================================
 
 
-//typedef GTVector<DbRecord>	DbRecordVect;
-
 namespace GML
 {
 	namespace ML
@@ -1120,27 +1124,15 @@ namespace GML
 		class IConector
 		{
 		protected:
-			/*
-			 * The all mighty notifier object
-			 */
-			GML::Utils::INotify *notifier;
-
-			/*
-			 * The actual database connection object
-			 */
-			GML::DB::IDataBase *database;
+			GML::Utils::INotify			*notifier;
+			GML::DB::IDataBase			*database;
+			GML::ML::IConector			*conector;
 
 		public:	
 
-			/*
-			 * Usage: Initialization function
-			 * Params:
-			 *	- INPUT INotifier *Notifier: notifier object for passing debugging information
-			 *			!!! it can be NULL
-			 *	- INPUT IDatabase *Database: the database object to work with 
-			 *			!!! this object is already initialized but not connected
-			 */	
-			virtual bool Init(GML::Utils::INotify &Notifier,GML::DB::IDataBase &Database)=0;
+			virtual bool				OnInit() = 0;
+			bool						Init(GML::Utils::INotify &Notifier,GML::DB::IDataBase &Database);
+			bool						Init(GML::ML::IConector &conector);
 
 			/*	 
 			 * Usage: uninit stuff
