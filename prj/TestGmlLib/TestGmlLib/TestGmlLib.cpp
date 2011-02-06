@@ -24,6 +24,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	int x[10]; //= { 1,5,2,6,3,4,8,9,0,11 };
 	GML::Utils::AttributeList	a;
 
+	a.Create("Name='database';value=-20;action=true;learningRate=0.05;iteratii=100;string=Ce mai faci zilele astea;contor=100");
+	a.Save("E:\\test2.txt");
+
+
+
 	GML::Utils::INotify *notif = GML::Builder::CreateNotifyer("E:\\lucru\\GML\\gml\\lib\\ConsoleNotifyer.ntf");
 	if (notif)
 		notif->NotifyString(0,"Mesaj de pe data de %s",__DATE__);

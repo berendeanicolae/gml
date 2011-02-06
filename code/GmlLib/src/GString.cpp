@@ -436,6 +436,12 @@ bool GML::Utils::GString::ConvertToDouble(TCHAR *text,double *value,int textSize
 	if (Set(temp,text,127,textSize)==false)
 		return false;
 	(*value) = atof(text);
+	if ((*value)==0.0)
+	{
+		if ((Equals(text,"0")) || (Equals(text,"0.0")))
+			return true;
+		return false;
+	}
 	return true;
 }
 bool GML::Utils::GString::ConvertToFloat(TCHAR *text,float *value,int textSize)
@@ -447,6 +453,12 @@ bool GML::Utils::GString::ConvertToFloat(TCHAR *text,float *value,int textSize)
 	if (Set(temp,text,127,textSize)==false)
 		return false;
 	(*value) = (float)atof(text);
+	if ((*value)==0.0)
+	{
+		if ((Equals(text,"0")) || (Equals(text,"0.0")))
+			return true;
+		return false;
+	}
 	return true;
 }
 //--------------------------------------------------- CONSTRUCTORI OBIECT ----------------------------------------------------------------
