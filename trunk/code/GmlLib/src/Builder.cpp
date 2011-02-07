@@ -56,4 +56,54 @@ GML::DB::IDataBase*		GML::Builder::CreateDataBase(char *pluginName,GML::Utils::I
 	// am incarcat si totul e ok -> cer o interfata
 	return fnCreate(notify,connectionString);	
 }
+GML::ML::IConector*		GML::Builder::CreateConectors(char *conectorsList,GML::Utils::INotify &notify,GML::DB::IDataBase &database)
+{
+	GML::Utils::GString		list,path;
+	int						poz;
+	HMODULE					hModule;
+	GML::ML::IConector*		(*fnCreate)();
+	GML::ML::IConector		*con,*last;
+	bool					first;
+
+	if (list.Set(conectorsList)==false)
+		return NULL;
+	if (list.Len()==0)
+		return NULL;
+	// vad daca mai am elemente in lista
+	first = true;
+	while (list.Len()>0)
+	{
+		poz = list.FindLast("=>");
+		if (poz<0)
+			poz = 0;
+		else
+			poz++;
+		if (path.Set(&list.GetText()[poz])==false)
+			return NULL;
+		if (AdjustNameWithExtensionAndPath(&path,CONNECTOR_EXT)==false)
+			return NULL;
+		// incarc libraria
+		if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
+			return NULL;
+		// incarc functia Create
+		*(FARPROC *)&fnCreate = GetProcAddress(hModule,"Create");
+		if (fnCreate==NULL)
+			return NULL;
+		if ((con = fnCreate())==NULL)
+			return NULL;
+		if (first)
+		{
+			last = con;
+			if (last->Init(notify,database)==false)
+				return NULL;
+		} else {
+			if (con->Init(*last)==false)
+				return NULL;
+			last = con;
+		}
+		first = false;
+		list.Truncate(poz);
+	}
+	return last;
+}
 
