@@ -1,7 +1,8 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include "sqlite.h"
 #include <stdio.h>
 #include "gmllib.h"
+#include "sqlite.h"
+#include "sqlite3.h"
 using namespace GML::DB;
 
 SqliteDatabase::SqliteDatabase()
