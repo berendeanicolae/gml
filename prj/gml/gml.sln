@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Databases", "Databases", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sqlite", "Sqlite\Sqlite.vcxproj", "{B560B716-6C44-487D-96E3-315230CEEAB4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleTextFileDB", "SimpleTextFileDB\SimpleTextFileDB.vcxproj", "{089301A7-B086-4B1F-943B-9C110F719835}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -32,6 +34,10 @@ Global
 		{B560B716-6C44-487D-96E3-315230CEEAB4}.Debug|Win32.Build.0 = Debug|Win32
 		{B560B716-6C44-487D-96E3-315230CEEAB4}.Release|Win32.ActiveCfg = Release|Win32
 		{B560B716-6C44-487D-96E3-315230CEEAB4}.Release|Win32.Build.0 = Release|Win32
+		{089301A7-B086-4B1F-943B-9C110F719835}.Debug|Win32.ActiveCfg = Debug|Win32
+		{089301A7-B086-4B1F-943B-9C110F719835}.Debug|Win32.Build.0 = Debug|Win32
+		{089301A7-B086-4B1F-943B-9C110F719835}.Release|Win32.ActiveCfg = Release|Win32
+		{089301A7-B086-4B1F-943B-9C110F719835}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -39,5 +45,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{EB787576-09FE-4AD3-9953-6FA1AA64D612} = {54E1725C-7B50-4C30-A28A-0262D7EBFC15}
 		{B560B716-6C44-487D-96E3-315230CEEAB4} = {5239E43E-CF89-497B-A9F5-20F4581FB7C3}
+		{089301A7-B086-4B1F-943B-9C110F719835} = {5239E43E-CF89-497B-A9F5-20F4581FB7C3}
 	EndGlobalSection
 EndGlobal
