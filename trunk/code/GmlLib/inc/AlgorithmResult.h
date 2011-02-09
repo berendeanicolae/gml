@@ -16,6 +16,7 @@ namespace GML
 		public:
 			AlgorithmResult(void);
 
+			void		Update(bool classType,bool corectellyClasified,double updateValue = 1);
 			void		Clear();
 			void		Copy(AlgorithmResult *res);
 			void		Add(AlgorithmResult *res);

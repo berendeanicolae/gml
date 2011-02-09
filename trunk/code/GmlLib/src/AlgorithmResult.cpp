@@ -4,7 +4,21 @@ GML::Utils::AlgorithmResult::AlgorithmResult(void)
 {
 	Clear();
 }
-
+void GML::Utils::AlgorithmResult::Update(bool classType,bool corectellyClasified,double updateValue)
+{
+	if (corectellyClasified)
+	{
+		if (classType)
+			tp+=updateValue;
+		else
+			tn+=updateValue;
+	} else {
+		if (classType)
+			fn+=updateValue;
+		else
+			fp+=updateValue;
+	}
+}
 void GML::Utils::AlgorithmResult::Clear()
 {
     tp = tn = fp = fn = 0;
