@@ -59,7 +59,7 @@
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)GMLLib.lib $(SolutionDir)..\..\lib\*.*
-copy $(OutDir)GMLLib.dll $(SolutionDir)..\..\lib\*.*
+copy $(OutDir)GMLLib.dll $(SolutionDir)..\..\Bin\*.*
 $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(SolutionDir)..\..\lib 
 </Command>
     </PostBuildEvent>
@@ -82,7 +82,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)GMLLib.lib $(SolutionDir)..\..\lib\*.*
-copy $(OutDir)GMLLib.dll $(SolutionDir)..\..\lib\*.*
+copy $(OutDir)GMLLib.dll $(SolutionDir)..\..\Bin\*.*
 $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(SolutionDir)..\..\lib 
 </Command>
     </PostBuildEvent>
