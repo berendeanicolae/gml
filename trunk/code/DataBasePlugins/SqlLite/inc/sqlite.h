@@ -2,9 +2,6 @@
 #define __SQLITEDATABASE_H
 #include "sqlite3.h"
 #include "gmllib.h"
-using namespace GML::DB;
-
-
 
 class SqliteDatabase: public GML::DB::IDataBase
 {
