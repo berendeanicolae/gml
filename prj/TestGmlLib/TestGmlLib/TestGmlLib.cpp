@@ -21,6 +21,16 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	Test t = Get();
 
+	GML::Utils::File	f;
+	GML::Utils::GString	str;
+
+	f.OpenRead("E:\\test.txt");
+	while (f.ReadNextLine(str))
+	{
+		printf("%s\n",str.GetText());
+	}
+
+
 	int x[10]; //= { 1,5,2,6,3,4,8,9,0,11 };
 	GML::Utils::AttributeList	a;
 
