@@ -24,12 +24,12 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\code\SimpleTextFileDB\src\SimpleTextFileDB.cpp">
+    <ClCompile Include="..\..\..\code\DataBasePlugins\SimpleTextFileDB\src\SimpleTextFileDB.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\code\SimpleTextFileDB\inc\SimpleTextFileDB.h">
+    <ClInclude Include="..\..\..\code\DataBasePlugins\SimpleTextFileDB\inc\SimpleTextFileDB.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
