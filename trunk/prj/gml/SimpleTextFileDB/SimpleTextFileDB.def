@@ -1,0 +1,4 @@
+LIBRARY "SimpleTextFileDB.db"
+
+EXPORTS
+Create=CreateNewDataBase
