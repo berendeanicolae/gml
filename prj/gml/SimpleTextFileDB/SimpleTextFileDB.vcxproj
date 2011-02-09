@@ -62,7 +62,7 @@
       <ModuleDefinitionFile>SimpleTextFileDB.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)*.ntf $(SolutionDir)..\..\lib\*.*</Command>
+      <Command>copy $(OutDir)*.ntf $(SolutionDir)..\..\Bin\*.*</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -84,7 +84,7 @@
       <ModuleDefinitionFile>SimpleTextFileDB.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)*.db $(SolutionDir)..\..\lib\*.*</Command>
+      <Command>copy $(OutDir)*.db $(SolutionDir)..\..\Bin\*.*</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
