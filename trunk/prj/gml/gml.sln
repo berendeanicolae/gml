@@ -13,6 +13,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Databases", "Databases", "{5239E43E-CF89-497B-A9F5-20F4581FB7C3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sqlite", "Sqlite\Sqlite.vcxproj", "{B560B716-6C44-487D-96E3-315230CEEAB4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleTextFileDB", "SimpleTextFileDB\SimpleTextFileDB.vcxproj", "{089301A7-B086-4B1F-943B-9C110F719835}"
 EndProject

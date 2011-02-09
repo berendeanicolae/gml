@@ -1,19 +1,25 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
-#include "stdafx.h"
+#include "gmllib.h"
+#include "SQLite.h"
 
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-					 )
+GML::DB::IDataBase*	CreateNewDataBase(GML::Utils::INotify &notify,char *connectionString)
 {
-	switch (ul_reason_for_call)
+	SqliteDatabase	*db = new SqliteDatabase();
+
+	if (db==NULL)
+		return NULL;
+	if (db->Init(notify,connectionString)==false)
 	{
-	case DLL_PROCESS_ATTACH:
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
-	case DLL_PROCESS_DETACH:
-		break;
+		delete db;
+		return NULL;
 	}
+	return db;
+}
+
+BOOL APIENTRY DllMain( HMODULE hModule,DWORD  ul_reason_for_call,LPVOID lpReserved)
+{
 	return TRUE;
 }
+
+
 

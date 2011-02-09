@@ -1,0 +1,4 @@
+LIBRARY "SQLite.db"
+
+EXPORTS
+Create=CreateNewDataBase
