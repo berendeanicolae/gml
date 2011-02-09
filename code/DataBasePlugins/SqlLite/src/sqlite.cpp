@@ -3,7 +3,7 @@
 #include "gmllib.h"
 #include "sqlite.h"
 #include "sqlite3.h"
-using namespace GML::DB;
+//using namespace GML::DB;
 
 SqliteDatabase::SqliteDatabase()
 {
@@ -124,22 +124,22 @@ bool SqliteDatabase::FetchNextRow(GML::Utils::GTVector<GML::DB::DBRecord> &VectP
 			{
 				
 				case SQLITE_TEXT:
-                    current_type = ASCIISTTVAL;
+                    current_type = GML::DB::ASCIISTTVAL;
                     rec.AsciiStrVal = (char*)sqlite3_column_text(this->res, i);
                     break;
 				case SQLITE_FLOAT:
-                    current_type = UINT32VAL;					
+                    current_type = GML::DB::UINT32VAL;					
                     rec.FloatVal = (float)sqlite3_column_double(this->res, i); // To be replaced with floatval
                     break;
 				case SQLITE_NULL:
-                    current_type = NULLVAL;
+                    current_type = GML::DB::NULLVAL;
                     break;
 				case SQLITE_BLOB:
-                    current_type = UNICSTRVAL;
+                    current_type = GML::DB::UNICSTRVAL;
                     rec.UnicStrVal = (wchar_t*)sqlite3_column_blob(this->res, i);
                     break;
 				case SQLITE_INTEGER:
-                    current_type = UINT32VAL;
+                    current_type = GML::DB::UINT32VAL;
                     rec.UInt32Val = (int)sqlite3_column_int(this->res, i);
                     break;
 				default:
@@ -197,13 +197,13 @@ bool SqliteDatabase::FreeRow( GML::Utils::GTVector<GML::DB::DBRecord> &Vect )
         UInt32 type = Vect[i].Type;
         switch(type)
         {
-			case RAWPTRVAL:
+			case GML::DB::RAWPTRVAL:
                 free(Vect[i].RawPtrVal);
                 break;
-            case BYTESVAL:
+            case GML::DB::BYTESVAL:
                 free(Vect[i].BytesVal);
                 break;
-            case UNICSTRVAL:
+            case GML::DB::UNICSTRVAL:
                 free(Vect[i].UnicStrVal);
                 break;
             default:
@@ -237,13 +237,13 @@ bool SqliteDatabase::_InsertRow(char* Table, GML::Utils::GTVector<GML::DB::DBRec
 	{
 	    switch(Vect[i].Type)
 	    {			
-	        case UINT8VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt8Val); break;
-	        case UINT16VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt16Val); break;
-	        case UINT32VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt32Val); break;
-	        case UINT64VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt64Val); break;
-	        case ASCIISTTVAL: sprintf(statement, "%s '%s', ", statement, Vect[i].AsciiStrVal); break;
-	        case UNICSTRVAL: sprintf(statement, "%s '%s', ", statement, Vect[i].UnicStrVal); break;
-	        case NULLVAL: sprintf(statement, "%sNULL, ", statement); break;
+	        case GML::DB::UINT8VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt8Val); break;
+	        case GML::DB::UINT16VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt16Val); break;
+	        case GML::DB::UINT32VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt32Val); break;
+	        case GML::DB::UINT64VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt64Val); break;
+	        case GML::DB::ASCIISTTVAL: sprintf(statement, "%s '%s', ", statement, Vect[i].AsciiStrVal); break;
+	        case GML::DB::UNICSTRVAL: sprintf(statement, "%s '%s', ", statement, Vect[i].UnicStrVal); break;
+	        case GML::DB::NULLVAL: sprintf(statement, "%sNULL, ", statement); break;
 	        default: continue;
 	    }
     }
@@ -284,13 +284,13 @@ bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTVector<GML::DB::DB
 	{
         switch(WhereVals[i].Type)
         {
-	        case UINT8VAL: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UInt8Val); break;
-	        case UINT16VAL: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UInt16Val); break;
-	        case UINT32VAL: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UInt32Val); break;
-	        case UINT64VAL: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UInt64Val); break;
-	        case ASCIISTTVAL: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].AsciiStrVal); break;
-	        case UNICSTRVAL: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UnicStrVal); break;
-	        case NULLVAL: sprintf(buffer_w, "%s %s %s = NULL ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name); break;
+	        case GML::DB::UINT8VAL: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UInt8Val); break;
+	        case GML::DB::UINT16VAL: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UInt16Val); break;
+	        case GML::DB::UINT32VAL: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UInt32Val); break;
+	        case GML::DB::UINT64VAL: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UInt64Val); break;
+	        case GML::DB::ASCIISTTVAL: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].AsciiStrVal); break;
+	        case GML::DB::UNICSTRVAL: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UnicStrVal); break;
+	        case GML::DB::NULLVAL: sprintf(buffer_w, "%s %s %s = NULL ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name); break;
 	        default: continue;
 
         }
@@ -299,13 +299,13 @@ bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTVector<GML::DB::DB
 	{
         switch(UpdateVals[i].Type)
         {
-	        case UINT8VAL: sprintf(buffer_u, "%s %s %s = %d ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UInt8Val); break;
-	        case UINT16VAL: sprintf(buffer_u, "%s %s %s = %d ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UInt16Val); break;
-	        case UINT32VAL: sprintf(buffer_u, "%s %s %s = %d ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UInt32Val); break;
-	        case UINT64VAL: sprintf(buffer_u, "%s %s %s = %lld ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UInt64Val); break;
-	        case ASCIISTTVAL: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].AsciiStrVal); break;
-	        case UNICSTRVAL: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UnicStrVal); break;
-	        case NULLVAL: sprintf(buffer_u, "%s %s %s = NULL ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name); break;
+	        case GML::DB::UINT8VAL: sprintf(buffer_u, "%s %s %s = %d ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UInt8Val); break;
+	        case GML::DB::UINT16VAL: sprintf(buffer_u, "%s %s %s = %d ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UInt16Val); break;
+	        case GML::DB::UINT32VAL: sprintf(buffer_u, "%s %s %s = %d ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UInt32Val); break;
+	        case GML::DB::UINT64VAL: sprintf(buffer_u, "%s %s %s = %lld ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UInt64Val); break;
+	        case GML::DB::ASCIISTTVAL: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].AsciiStrVal); break;
+	        case GML::DB::UNICSTRVAL: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UnicStrVal); break;
+	        case GML::DB::NULLVAL: sprintf(buffer_u, "%s %s %s = NULL ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name); break;
 	        default: continue;
 
         }
@@ -328,17 +328,4 @@ bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTVector<GML::DB::DB
 	return error != SQLITE_OK ? false : true;
 }
 
-extern "C" __declspec(dllexport) SqliteDatabase&  Create(GML::Utils::INotify* notifier, char* connectionString)
-{	
-	SqliteDatabase* newobj = new SqliteDatabase();
-	newobj->Init(*notifier, connectionString);
-	return *newobj;
-}
-
- extern "C" __declspec(dllexport) bool Destroy(SqliteDatabase& db)
-{
-	return db.Disconnect();
-	delete &db;
-	return true;
-}
 
