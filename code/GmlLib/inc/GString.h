@@ -8,6 +8,7 @@
 #define TYPE_UINT64			unsigned __int64
 #define TYPE_INT64			__int64	
 
+class File;
 namespace GML
 {
 	namespace Utils

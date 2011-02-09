@@ -14,7 +14,7 @@ bool AdjustNameWithExtensionAndPath(GML::Utils::GString *path,char *extension)
 }
 
 //==========================================================================================
-GML::Utils::INotify*	GML::Builder::CreateNotifyer(char *pluginName,void *objectData)
+GML::Utils::INotify*		GML::Builder::CreateNotifyer(char *pluginName,void *objectData)
 {
 	GML::Utils::GString		path;
 	HMODULE					hModule;
@@ -35,7 +35,7 @@ GML::Utils::INotify*	GML::Builder::CreateNotifyer(char *pluginName,void *objectD
 	// am incarcat si totul e ok -> cer o interfata
 	return fnCreate(objectData);
 }
-GML::DB::IDataBase*		GML::Builder::CreateDataBase(char *pluginName,GML::Utils::INotify &notify,char *connectionString)
+GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::INotify &notify,char *connectionString)
 {
 	GML::Utils::GString		path;
 	HMODULE					hModule;
@@ -56,7 +56,7 @@ GML::DB::IDataBase*		GML::Builder::CreateDataBase(char *pluginName,GML::Utils::I
 	// am incarcat si totul e ok -> cer o interfata
 	return fnCreate(notify,connectionString);	
 }
-GML::ML::IConector*		GML::Builder::CreateConectors(char *conectorsList,GML::Utils::INotify &notify,GML::DB::IDataBase &database)
+GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Utils::INotify &notify,GML::DB::IDataBase &database)
 {
 	GML::Utils::GString		list,path;
 	int						poz;
@@ -106,4 +106,45 @@ GML::ML::IConector*		GML::Builder::CreateConectors(char *conectorsList,GML::Util
 	}
 	return last;
 }
+GML::Algorithm::IAlgorithm*	GML::Builder::CreateAlgorithm(char *algorithmPath,char *algorithmName)
+{
+	GML::Utils::GString			path;
+	HMODULE						hModule;
+	GML::Algorithm::IAlgorithm*	(*fnCreate)(char *algorithmName);
 
+	if (path.Set(algorithmPath)==false)
+		return NULL;
+	if (AdjustNameWithExtensionAndPath(&path,ALGORITHM_EXT)==false)
+		return NULL;
+
+	// incarc libraria
+	if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
+		return NULL;
+	// incarc functia Create
+	*(FARPROC *)&fnCreate = GetProcAddress(hModule,"Create");
+	if (fnCreate==NULL)
+		return NULL;
+	// am incarcat si totul e ok -> cer o interfata
+	return fnCreate(algorithmName);
+}
+char*						GML::Builder::GetAlgorithmList(char *algorithmLib)
+{
+	GML::Utils::GString			path;
+	HMODULE						hModule;
+	char*						(*fnGetAlgorithmList)();
+
+	if (path.Set(algorithmLib)==false)
+		return NULL;
+	if (AdjustNameWithExtensionAndPath(&path,ALGORITHM_EXT)==false)
+		return NULL;
+
+	// incarc libraria
+	if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
+		return NULL;
+	// incarc functia Create
+	*(FARPROC *)&fnGetAlgorithmList = GetProcAddress(hModule,"GetAlgorithmList");
+	if (fnGetAlgorithmList==NULL)
+		return NULL;
+	// am incarcat si totul e ok -> cer o interfata
+	return fnGetAlgorithmList();
+}

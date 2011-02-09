@@ -1,5 +1,7 @@
 #include "File.h"
 
+#define MAX_LINE_BUFFER_SIZE	512
+
 GML::Utils::File::File(void)
 {
 #ifdef OS_WINDOWS
@@ -107,4 +109,43 @@ bool GML::Utils::File::Write(void *Buffer,UInt32 size,UInt32 *writeSize)
 	return (bool)((UInt32)nrWrite==size);
 #endif
 	return false;
+}
+bool GML::Utils::File::ReadNextLine(GString &line,bool skipEmpyLines)
+{
+	char	temp[MAX_LINE_BUFFER_SIZE];
+	UInt32	cPos,sizeRead,tr;	
+
+	if (line.Set("")==false)
+		return false;
+	cPos = GetFilePos();
+
+	while (true)
+	{
+		if (Read(temp,MAX_LINE_BUFFER_SIZE,&sizeRead)==false)
+			return false;
+		if (sizeRead==0)
+			return false;
+		for (tr=0;(tr<sizeRead) && (temp[tr]!='\n') && (temp[tr]!='\r');tr++,cPos++)
+		{
+			if (temp[tr]!=0)
+			{
+				if (line.AddChar(temp[tr])==false)
+					return false;
+			}
+		}
+		if ((temp[tr]=='\n') || (temp[tr]=='\r'))
+		{
+			cPos++;
+			if ((temp[tr]=='\n') && (tr+1<sizeRead) && (temp[tr+1]=='\r'))
+				cPos++;
+			if ((temp[tr]=='\r') && (tr+1<sizeRead) && (temp[tr+1]=='\n'))
+				cPos++;			
+		}
+		if (SetFilePos(cPos)==false)
+			return false;
+		if ((skipEmpyLines) && (line.Len()==0))
+			continue;
+		break;
+	}
+	return true;
 }

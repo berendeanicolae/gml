@@ -1,6 +1,8 @@
 #pragma once
 #include "compat.h"
+#include "GString.h"
 
+class GString;
 namespace GML
 {
 	namespace Utils
@@ -21,6 +23,7 @@ namespace GML
 			bool			SetFilePos(UInt32 pos);
 			bool			Read(void *Buffer,UInt32 size,UInt32 *readSize=NULL);
 			bool			Write(void *Buffer,UInt32 size,UInt32 *writeSize=NULL);
+			bool			ReadNextLine(GString &line,bool skipEmpyLines=true);
 		};
 	}
 }
