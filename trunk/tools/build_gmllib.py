@@ -1,21 +1,24 @@
 import sys,os
 
 list_headers = [	
-	"GTVector.h",
-	"File.h",
+	"GTVector.h",	
 	"md5.h",
 	"GString.h",
+	"File.h",
 	"Timer.h",
 	"AlgorithmResult.h",
 	"IParalelUnit.h",
 	"ThreadParalelUnit.h",
 	"INotify.h",
+	"VectorOp.h",
 	"DBRecord.h",
 	"MLRecord.h",
 	"AttributeList.h",
 	"IDataBase.h",
-	"MLInterface.h",	
-	"Builder.h",	
+	"MLInterface.h",
+	"IAlgorithm.h",	
+	"Builder.h",
+		
 ]
 
 c_path = sys.argv[1]
