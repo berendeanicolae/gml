@@ -559,32 +559,6 @@ namespace GML
 	}
 }
 #endif
-//===================== File.h =================================================================================
-
-namespace GML
-{
-	namespace Utils
-	{
-		class  File
-		{
-			FILE_HANDLE		hFile;
-		public:
-			File(void);
-			~File(void);
-
-			bool			Create(char *name);
-			bool			OpenRead(char *name);
-			bool			OpenReadWrite(char *name,bool append=false);
-			void			Close();
-			UInt32			GetFileSize();
-			UInt32			GetFilePos();
-			bool			SetFilePos(UInt32 pos);
-			bool			Read(void *Buffer,UInt32 size,UInt32 *readSize=NULL);
-			bool			Write(void *Buffer,UInt32 size,UInt32 *writeSize=NULL);
-		};
-	}
-}
-
 //===================== md5.h =================================================================================
 
 
@@ -622,6 +596,7 @@ namespace GML
 #define TYPE_UINT64			unsigned __int64
 #define TYPE_INT64			__int64	
 
+class File;
 namespace GML
 {
 	namespace Utils
@@ -746,6 +721,34 @@ namespace GML
 	}
 }
 
+//===================== File.h =================================================================================
+
+class GString;
+namespace GML
+{
+	namespace Utils
+	{
+		class  File
+		{
+			FILE_HANDLE		hFile;
+		public:
+			File(void);
+			~File(void);
+
+			bool			Create(char *name);
+			bool			OpenRead(char *name);
+			bool			OpenReadWrite(char *name,bool append=false);
+			void			Close();
+			UInt32			GetFileSize();
+			UInt32			GetFilePos();
+			bool			SetFilePos(UInt32 pos);
+			bool			Read(void *Buffer,UInt32 size,UInt32 *readSize=NULL);
+			bool			Write(void *Buffer,UInt32 size,UInt32 *writeSize=NULL);
+			bool			ReadNextLine(GString &line,bool skipEmpyLines=true);
+		};
+	}
+}
+
 //===================== Timer.h =================================================================================
 
 
@@ -787,6 +790,7 @@ namespace GML
 		public:
 			AlgorithmResult(void);
 
+			void		Update(bool classType,bool corectellyClasified,double updateValue = 1);
 			void		Clear();
 			void		Copy(AlgorithmResult *res);
 			void		Add(AlgorithmResult *res);
@@ -865,6 +869,32 @@ namespace GML
 		};
 	}
 }
+//===================== VectorOp.h =================================================================================
+#ifndef __VECTOR__OP__
+#define __VECTOR__OP__
+
+
+namespace GML
+{
+	namespace ML
+	{
+		class  VectorOp
+		{
+		public:
+			static void		AddVectors(double *v1,double *v2,UInt32 elements);
+			static double	ComputeVectorsSum(double *v1,double *v2,UInt32 elements);
+			// perceptron specific
+			static bool		IsPerceptronTrained(double *features,double *weights,UInt32 elements,double label);
+			static void		AdjustTwoStatePerceptronWeights(double *features,double *weights,UInt32 elements,double error);
+			static void		AdjustPerceptronWeights(double *features,double *weights,UInt32 elements,double error);
+
+		};
+	}
+}
+
+
+#endif
+
 //===================== DBRecord.h =================================================================================
 
 
@@ -879,10 +909,15 @@ namespace GML
 			UINT16VAL,
 			UINT32VAL,
 			UINT64VAL,
+			INT8VAL,
+			INT16VAL,
+			INT32VAL,
 			RAWPTRVAL,
 			BYTESVAL,
 			ASCIISTTVAL,
 			UNICSTRVAL,
+			DOUBLEVAL,
+			FLOATVAL,
 			HASHVAL
 		};
 		struct  RecordHash
@@ -1192,6 +1227,29 @@ namespace GML
 
 
 
+//===================== IAlgorithm.h =================================================================================
+#ifndef __I_ALGORITHM__
+#define __I_ALGORITHM__
+
+
+namespace GML
+{
+	namespace Algorithm
+	{
+		class  IAlgorithm
+		{
+		public:
+			virtual bool	SetConfiguration(GML::Utils::AttributeList &config) = 0;
+			virtual bool	GetConfiguration(GML::Utils::AttributeList &config) = 0;
+			virtual bool	Init() = 0;
+			virtual void	Execute(UInt32 command)=0;
+		};
+	}
+}
+
+
+#endif
+
 //===================== Builder.h =================================================================================
 
 
@@ -1201,9 +1259,11 @@ namespace GML
 	class  Builder
 	{
 	public:
-		static GML::Utils::INotify*		CreateNotifyer(char *pluginName,void *objectData = NULL);	
-		static GML::DB::IDataBase*		CreateDataBase(char *pluginName,GML::Utils::INotify &notify,char *connectionString);
-		static GML::ML::IConector*		CreateConectors(char *conectorsList,GML::Utils::INotify &notify,GML::DB::IDataBase &database);
+		static GML::Utils::INotify*			CreateNotifyer(char *pluginName,void *objectData = NULL);	
+		static GML::DB::IDataBase*			CreateDataBase(char *pluginName,GML::Utils::INotify &notify,char *connectionString);
+		static GML::ML::IConector*			CreateConectors(char *conectorsList,GML::Utils::INotify &notify,GML::DB::IDataBase &database);
+		static GML::Algorithm::IAlgorithm*	CreateAlgorithm(char *algorithmLib,char *algorithmName=NULL);
+		static char*						GetAlgorithmList(char *algorithmLib);
 	};
 }
 
