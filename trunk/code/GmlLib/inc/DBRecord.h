@@ -9,6 +9,7 @@ namespace GML
 		enum DBRecordDataType
 		{
 			NULLVAL = 0,
+			BOOLVAL,
 			UINT8VAL,
 			UINT16VAL,
 			UINT32VAL,
@@ -34,6 +35,7 @@ namespace GML
 			char*			Name;
 			union
 			{
+				bool		BoolVal;
 				UInt8		UInt8Val;
 				UInt16		UInt16Val;
 				UInt32		UInt32Val;

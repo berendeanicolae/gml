@@ -85,6 +85,7 @@ UInt32	SimpleTextFileDB::Select (char* Statement)
 			return false;
 		}
 	}
+	cIndex = 0;
 	// totul e ok
 	return true;
 }
@@ -107,20 +108,40 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &Ve
 	// daca nu mai am linii
 	if (file.ReadNextLine(tempStr)==false)
 		return false;
+	// adaug ID-ul
+	rec.Name = "ID";
+	rec.UInt32Val = cIndex;
+	rec.Type = GML::DB::UINT32VAL;
+	if (VectPtr.PushByRef(rec)==false)
+	{
+		notifier->Error("Unable to add ID to vector !");
+		return false;
+	}
+	cIndex++;
+	// adaug si un hash
+	rec.Name = "HASH";
+	rec.Type = GML::DB::HASHVAL;
+	memset(rec.Hash.Value,0,sizeof(rec.Hash));
+	if (VectPtr.PushByRef(rec)==false)
+	{
+		notifier->Error("Unable to add HASH to vector !");
+		return false;
+	}
+
 	// formatul este label:lista flaguri
 	tempStr.Strip();
 	tempStr.Replace(" ","");
 	tempStr.Replace("\t","");
 	rec.Name = "Label";
-	rec.Type = GML::DB::DOUBLEVAL;
+	rec.Type = GML::DB::BOOLVAL;
 	if (tempStr.StartsWith("1:"))
 	{
-		rec.DoubleVal = 1;
+		rec.BoolVal = true;
 		tempStr.ReplaceOnPos(0,2,"");
 	} else {
 		if (tempStr.StartsWith("-1:"))
 		{
-			rec.DoubleVal = -1;
+			rec.BoolVal = false;
 			tempStr.ReplaceOnPos(0,3,"");
 		} else {
 			notifier->Error("Invalid format : %s",tempStr.GetText());
@@ -158,9 +179,11 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &Ve
 			notifier->Error("Index outside range[0..%d] (%d) => %s",nrFeatures,index,tempStr.GetText());
 			return false;
 		}
-		// VectPtr[0] = Label-ul
-		// VectPtr[1] = Feature[0]
-		VectPtr[index+1].DoubleVal = 1;
+		// VectPtr[0] = ID
+		// VectPtr[1] = Hash
+		// VectPtr[2] = Label
+		// VectPtr[3] = Feature[0]
+		VectPtr[index+3].DoubleVal = 1;
 	}
 	return true;
 }
