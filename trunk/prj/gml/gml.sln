@@ -26,6 +26,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Algorithm", "Algorithm", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimplePerceptronAlgorithm", "SimplePerceptronAlgorithm\SimplePerceptronAlgorithm.vcxproj", "{B22767AC-0081-4DE9-8969-A0E8713CCF37}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Connectors", "Connectors", "{CB091987-2341-425C-835B-C77596F5ABB0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FullCacheConnector", "FullCacheConnector\FullCacheConnector.vcxproj", "{1ECE0CF3-CB18-43D2-B8C8-F910F224CD97}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -52,6 +56,10 @@ Global
 		{B22767AC-0081-4DE9-8969-A0E8713CCF37}.Debug|Win32.Build.0 = Debug|Win32
 		{B22767AC-0081-4DE9-8969-A0E8713CCF37}.Release|Win32.ActiveCfg = Release|Win32
 		{B22767AC-0081-4DE9-8969-A0E8713CCF37}.Release|Win32.Build.0 = Release|Win32
+		{1ECE0CF3-CB18-43D2-B8C8-F910F224CD97}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1ECE0CF3-CB18-43D2-B8C8-F910F224CD97}.Debug|Win32.Build.0 = Debug|Win32
+		{1ECE0CF3-CB18-43D2-B8C8-F910F224CD97}.Release|Win32.ActiveCfg = Release|Win32
+		{1ECE0CF3-CB18-43D2-B8C8-F910F224CD97}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -61,5 +69,6 @@ Global
 		{B560B716-6C44-487D-96E3-315230CEEAB4} = {5239E43E-CF89-497B-A9F5-20F4581FB7C3}
 		{089301A7-B086-4B1F-943B-9C110F719835} = {5239E43E-CF89-497B-A9F5-20F4581FB7C3}
 		{B22767AC-0081-4DE9-8969-A0E8713CCF37} = {EDF5ED9C-8524-443D-9C31-AB2C5DA3341D}
+		{1ECE0CF3-CB18-43D2-B8C8-F910F224CD97} = {CB091987-2341-425C-835B-C77596F5ABB0}
 	EndGlobalSection
 EndGlobal

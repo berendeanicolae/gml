@@ -9,7 +9,7 @@ namespace GML
 {
 	namespace ML
 	{
-		class IConector
+		class EXPORT IConector
 		{
 		protected:
 			GML::Utils::INotify			*notifier;
@@ -18,9 +18,10 @@ namespace GML
 
 		public:	
 			IConector();
+
 			virtual bool				OnInit() = 0;
-			bool						Init(GML::Utils::INotify &Notifier,GML::DB::IDataBase &Database);
-			bool						Init(GML::ML::IConector &conector);
+			virtual bool				Init(GML::Utils::INotify &Notifier,GML::DB::IDataBase &Database);
+			virtual bool				Init(GML::ML::IConector &conector);
 
 			/*	 
 			 * Usage: uninit stuff
