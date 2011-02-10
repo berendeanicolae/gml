@@ -9,6 +9,11 @@
 int _tmain(int argc, _TCHAR* argv[])
 {
 	GML::Utils::AttributeList	attr;
+	GML::Utils::GString			str;
+
+	attr.Clear();
+	attr.Create("dbPath=E:\\mcu.db");
+	attr.UpdateString("dbPath",str);
 
 	attr.AddString("DbName","E:\\lucru\\GML\\gml\\bin\\Sqlite.db");
 	attr.AddString("DbConnString","IP=127.0.0.1;Port=80;");
