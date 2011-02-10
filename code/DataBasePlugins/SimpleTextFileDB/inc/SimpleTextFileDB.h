@@ -25,6 +25,7 @@ class SimpleTextFileDB: public GML::DB::IDataBase
 	GML::Utils::File		file;
 	GML::Utils::GString		fileName,tempStr,featureIndex;
 	UInt32					nrRecords,nrFeatures;
+	UInt32					cIndex;
 
 public:
 	bool				OnInit();
