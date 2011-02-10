@@ -22,6 +22,7 @@ namespace GML
 			GML::Utils::AttributeList	Attr;
 
 		public:
+			virtual ~IDataBase();
 			/*
 			 * Cand se apeleaza OnInit() , notifier-ul este deja setat iar in Attr sunt incarcate toate atributele
 			 * din conectionString 
