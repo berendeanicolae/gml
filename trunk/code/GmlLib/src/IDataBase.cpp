@@ -1,6 +1,8 @@
 #include "IDataBase.h"
 
-
+GML::DB::IDataBase::~IDataBase()
+{
+}
 bool GML::DB::IDataBase::Init(GML::Utils::INotify &_notifier, char *connectionString)
 {
 	notifier = &_notifier;
