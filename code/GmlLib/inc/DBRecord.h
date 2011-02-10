@@ -33,6 +33,7 @@ namespace GML
 		{
 			UInt32			Type;
 			char*			Name;
+			UInt32			Size;
 			union
 			{
 				bool		BoolVal;
