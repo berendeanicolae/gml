@@ -1,0 +1,4 @@
+LIBRARY "SimplePerceptronAlgorithm.db"
+
+EXPORTS
+Create=CreateNewAlgorithm
