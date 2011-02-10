@@ -8,7 +8,7 @@ GML::Utils::INotify*	CreateNewNotifyer(void *objData)
 
 	if (notif==NULL)
 		return NULL;
-	if (notif->Init(objData)==NULL)
+	if (notif->Init(objData)==false)
 	{
 		delete notif;
 		return NULL;

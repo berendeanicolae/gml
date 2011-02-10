@@ -30,14 +30,14 @@ bool	SimplePerceptronAlgorithm::GetConfiguration(GML::Utils::AttributeList &conf
 bool	SimplePerceptronAlgorithm::Init()
 {
 	// creez obiectele:
-	if ((notif == GML::Builder::CreateNotifyer(notifString.GetText()))==NULL)
+	if ((notif = GML::Builder::CreateNotifyer(notifString.GetText()))==NULL)
 		return false;
-	if ((db == GML::Builder::CreateDataBase(dbName.GetText(),*notif,conString.GetText()))==NULL)
+	if ((db = GML::Builder::CreateDataBase(dbName.GetText(),*notif,conString.GetText()))==NULL)
 	{
 		notif->Error("Unable to create Database (%s,%s)",dbName.GetText(),conString.GetText());
 		return false;
 	}
-	if ((con == GML::Builder::CreateConectors(conectorString.GetText(),*notif,*db))==NULL)
+	if ((con = GML::Builder::CreateConectors(conectorString.GetText(),*notif,*db))==NULL)
 	{
 		notif->Error("Unable to create Conector (%s)",conectorString.GetText());
 		return false;
