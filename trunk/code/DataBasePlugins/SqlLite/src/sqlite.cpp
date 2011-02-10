@@ -135,8 +135,8 @@ bool SqliteDatabase::FetchNextRow(GML::Utils::GTVector<GML::DB::DBRecord> &VectP
                     current_type = GML::DB::NULLVAL;
                     break;
 				case SQLITE_BLOB:
-                    current_type = GML::DB::UNICSTRVAL;
-                    rec.UnicStrVal = (wchar_t*)sqlite3_column_blob(this->res, i);
+                    current_type = GML::DB::BYTESVAL;
+					rec.BytesVal = (unsigned char*)sqlite3_column_blob(this->res, i);                    
                     break;
 				case SQLITE_INTEGER:
                     current_type = GML::DB::UINT32VAL;
@@ -236,7 +236,7 @@ bool SqliteDatabase::_InsertRow(char* Table, GML::Utils::GTVector<GML::DB::DBRec
 	for(UInt32 i = 0; i < Vect.GetCount(); i++)
 	{
 	    switch(Vect[i].Type)
-	    {			
+	    {		
 	        case GML::DB::UINT8VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt8Val); break;
 	        case GML::DB::UINT16VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt16Val); break;
 	        case GML::DB::UINT32VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt32Val); break;
@@ -244,6 +244,7 @@ bool SqliteDatabase::_InsertRow(char* Table, GML::Utils::GTVector<GML::DB::DBRec
 	        case GML::DB::ASCIISTTVAL: sprintf(statement, "%s '%s', ", statement, Vect[i].AsciiStrVal); break;
 	        case GML::DB::UNICSTRVAL: sprintf(statement, "%s '%s', ", statement, Vect[i].UnicStrVal); break;
 	        case GML::DB::NULLVAL: sprintf(statement, "%sNULL, ", statement); break;
+			case GML::DB::BYTESVAL: sprintf(statement, "%s '%s', ", statement, Vect[i].BytesVal); break;
 	        default: continue;
 	    }
     }
@@ -291,6 +292,7 @@ bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTVector<GML::DB::DB
 	        case GML::DB::ASCIISTTVAL: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].AsciiStrVal); break;
 	        case GML::DB::UNICSTRVAL: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UnicStrVal); break;
 	        case GML::DB::NULLVAL: sprintf(buffer_w, "%s %s %s = NULL ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name); break;
+			case GML::DB::BYTESVAL: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : ",", WhereVals[i].Name, WhereVals[i].BytesVal); break;
 	        default: continue;
 
         }
@@ -306,6 +308,7 @@ bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTVector<GML::DB::DB
 	        case GML::DB::ASCIISTTVAL: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].AsciiStrVal); break;
 	        case GML::DB::UNICSTRVAL: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UnicStrVal); break;
 	        case GML::DB::NULLVAL: sprintf(buffer_u, "%s %s %s = NULL ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name); break;
+			case GML::DB::BYTESVAL: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].BytesVal); break;
 	        default: continue;
 
         }
