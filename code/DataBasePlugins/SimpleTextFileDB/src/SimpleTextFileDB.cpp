@@ -7,7 +7,7 @@ bool	SimpleTextFileDB::OnInit()
 		notifier->Error("Missing 'FileName' attribute");
 		return false;
 	}
-	return false;
+	return true;
 }
 bool	SimpleTextFileDB::Connect ()
 {
@@ -69,12 +69,12 @@ UInt32	SimpleTextFileDB::Select (char* Statement)
 	if (GML::Utils::GString::Equals(Statement,"*")==false)
 	{
 		notifier->Error("Only 'Select(*)' is suported !");
-		return false;
+		return 0;
 	}
 	if (file.SetFilePos(0)==false)
 	{
 		notifier->Error("File::Seek(0) error !!!");
-		return false;
+		return 0;
 	}
 	// skipez primele 2 linii
 	for (int tr=0;tr<2;tr++)
@@ -82,12 +82,12 @@ UInt32	SimpleTextFileDB::Select (char* Statement)
 		if (file.ReadNextLine(tempStr)==false)
 		{
 			notifier->Error("File::Error reading a line from %s",fileName.GetText());
-			return false;
+			return 0;
 		}
 	}
 	cIndex = 0;
 	// totul e ok
-	return true;
+	return nrRecords;
 }
 UInt32	SimpleTextFileDB::SqlSelect (char* What, char* Where, char* From)
 {

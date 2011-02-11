@@ -15,14 +15,14 @@ int _tmain(int argc, _TCHAR* argv[])
 	attr.Create("dbPath=E:\\mcu.db");
 	attr.UpdateString("dbPath",str);
 
-	attr.AddString("DbName","E:\\lucru\\GML\\gml\\bin\\Sqlite.db");
-	attr.AddString("DbConnString","IP=127.0.0.1;Port=80;");
-	attr.AddString("Conector","MCU_conector");
-	attr.AddString("Notifyer","E:\\lucru\\GML\\gml\\bin\\ConsoleNotifyer.ntf");
+	attr.AddString("DbName","SimpleTextFileDB");
+	attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\a.txt");
+	attr.AddString("Conector","FullCacheConnector");
+	attr.AddString("Notifyer","ConsoleNotifyer");
 	attr.AddDouble("LearningRate",0.01);
 	attr.AddUInt32("MaxIteratii",100);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("E:\\lucru\\GML\\gml\\bin\\SimplePerceptronAlgorithm.alg","");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("SimplePerceptronAlgorithm","");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetConfiguration(attr)==false)

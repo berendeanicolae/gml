@@ -1,15 +1,44 @@
 #include "Builder.h"
 #include "GString.h"
 
-bool AdjustNameWithExtensionAndPath(GML::Utils::GString *path,char *extension)
+bool FindGMLLibPath(GML::Utils::GString &gmlLib)
+{
+	HMODULE					hModule;
+	GML::Utils::GString		tmp;
+	char					temp[2048];
+
+	
+	if ((hModule = GetModuleHandleA("gmllib.dll"))==NULL)
+		return false;
+	if (GetModuleFileNameA(hModule,temp,2048)==0)
+		return false;
+	if (tmp.Set(temp)==false)
+		return false;
+	if (tmp.CopyPathName(&gmlLib)==false)
+		return false;
+
+	return true;
+}
+bool AdjustNameWithExtensionAndPath(GML::Utils::GString &path,char *extension)
 {
 	// verific daca are extensia care trebuie
-	if (path->EndsWith(extension,true)==false)
+	if (path.EndsWith(extension,true)==false)
 	{
-		if (path->Add(extension)==false)
+		if (path.Add(extension)==false)
 			return false;
 	}
 	// verific daca are locatia care trebuie
+	if (path.Contains("\\")==false) // e doar numele
+	{
+		GML::Utils::GString		gmlLibPath;
+		if (FindGMLLibPath(gmlLibPath)==false)
+			return false;
+		if (gmlLibPath.PathJoinName(&path)==false)
+			return false;
+		if (path.Set(&gmlLibPath)==false)
+			return false;
+	}
+
 	return true;
 }
 
@@ -22,7 +51,7 @@ GML::Utils::INotify*		GML::Builder::CreateNotifyer(char *pluginName,void *object
 
 	if (path.Set(pluginName)==false)
 		return NULL;
-	if (AdjustNameWithExtensionAndPath(&path,NOTIFYER_EXT)==false)
+	if (AdjustNameWithExtensionAndPath(path,NOTIFYER_EXT)==false)
 		return NULL;
 
 	// incarc libraria
@@ -43,7 +72,7 @@ GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::
 
 	if (path.Set(pluginName)==false)
 		return NULL;
-	if (AdjustNameWithExtensionAndPath(&path,DATABASE_EXT)==false)
+	if (AdjustNameWithExtensionAndPath(path,DATABASE_EXT)==false)
 		return NULL;
 
 	// incarc libraria
@@ -80,7 +109,7 @@ GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Uti
 			poz++;
 		if (path.Set(&list.GetText()[poz])==false)
 			return NULL;
-		if (AdjustNameWithExtensionAndPath(&path,CONNECTOR_EXT)==false)
+		if (AdjustNameWithExtensionAndPath(path,CONNECTOR_EXT)==false)
 			return NULL;
 		// incarc libraria
 		if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
@@ -114,7 +143,7 @@ GML::Algorithm::IAlgorithm*	GML::Builder::CreateAlgorithm(char *algorithmPath,ch
 
 	if (path.Set(algorithmPath)==false)
 		return NULL;
-	if (AdjustNameWithExtensionAndPath(&path,ALGORITHM_EXT)==false)
+	if (AdjustNameWithExtensionAndPath(path,ALGORITHM_EXT)==false)
 		return NULL;
 
 	// incarc libraria
@@ -135,7 +164,7 @@ char*						GML::Builder::GetAlgorithmList(char *algorithmLib)
 
 	if (path.Set(algorithmLib)==false)
 		return NULL;
-	if (AdjustNameWithExtensionAndPath(&path,ALGORITHM_EXT)==false)
+	if (AdjustNameWithExtensionAndPath(path,ALGORITHM_EXT)==false)
 		return NULL;
 
 	// incarc libraria
