@@ -7,6 +7,7 @@ bool	SimpleTextFileDB::OnInit()
 		notifier->Error("Missing 'FileName' attribute");
 		return false;
 	}
+	FeatNames = NULL;
 	return true;
 }
 bool	SimpleTextFileDB::Connect ()
@@ -57,11 +58,21 @@ bool	SimpleTextFileDB::Connect ()
 		return false;
 	}
 	// all ok
+	if ((FeatNames = new GML::Utils::GString[nrFeatures])==NULL)
+		return false;
+	for (UInt32 tr = 0;tr<nrFeatures;tr++)
+	{
+		if (FeatNames[tr].SetFormated("Feat_%d",tr)==false)
+			return false;
+	}
 	return true;
 }
 bool	SimpleTextFileDB::Disconnect ()
 {
 	file.Close();
+	if (FeatNames!=NULL)
+		delete []FeatNames;
+	FeatNames = NULL;
 	return true;
 }
 UInt32	SimpleTextFileDB::Select (char* Statement)
@@ -109,15 +120,7 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &Ve
 	// daca nu mai am linii
 	if (file.ReadNextLine(tempStr)==false)
 		return false;
-	// adaug ID-ul
-	rec.Name = "ID";
-	rec.UInt32Val = cIndex;
-	rec.Type = GML::DB::UINT32VAL;
-	if (VectPtr.PushByRef(rec)==false)
-	{
-		notifier->Error("Unable to add ID to vector !");
-		return false;
-	}
+
 	cIndex++;
 	// adaug si un hash
 	rec.Name = "HASH";
@@ -134,15 +137,15 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &Ve
 	tempStr.Replace(" ","");
 	tempStr.Replace("\t","");
 	rec.Name = "Label";
-	rec.Type = GML::DB::BOOLVAL;
+	rec.Type = GML::DB::DOUBLEVAL;
 	if (tempStr.StartsWith("1:"))
 	{
-		rec.BoolVal = true;
+		rec.DoubleVal = 1.0;
 		tempStr.ReplaceOnPos(0,2,"");
 	} else {
 		if (tempStr.StartsWith("-1:"))
 		{
-			rec.BoolVal = false;
+			rec.DoubleVal = -1.0;
 			tempStr.ReplaceOnPos(0,3,"");
 		} else {
 			notifier->Error("Invalid format : %s",tempStr.GetText());
@@ -155,11 +158,11 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &Ve
 		return false;
 	}
 	// urc toate featurerile
-	rec.Name = "Feature";
 	rec.Type = GML::DB::DOUBLEVAL;
 	rec.DoubleVal = 0;
 	for (int tr=0;tr<nrFeatures;tr++)
 	{
+		rec.Name = FeatNames[tr].GetText();
 		if (VectPtr.PushByRef(rec)==false)
 		{
 			notifier->Error("Unable to add label to vector feature #%d => %s",tr,tempStr.GetText());
@@ -184,7 +187,7 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &Ve
 		// VectPtr[1] = Hash
 		// VectPtr[2] = Label
 		// VectPtr[3] = Feature[0]
-		VectPtr[index+3].DoubleVal = 1;
+		VectPtr[index+3].DoubleVal = 1.0;
 	}
 	return true;
 }
