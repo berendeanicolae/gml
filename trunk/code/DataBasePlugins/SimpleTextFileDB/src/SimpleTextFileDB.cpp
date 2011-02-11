@@ -78,7 +78,7 @@ bool	SimpleTextFileDB::Disconnect ()
 UInt32	SimpleTextFileDB::Select (char* Statement)
 {
 	if ((GML::Utils::GString::Equals(Statement,"*")==false) &&
-		(GML::Utils::GString::Equals(Statement,"select * from RecordTable")==false))
+		(GML::Utils::GString::Equals(Statement,"select * from RecordsTable")==false))
 	{
 		notifier->Error("Only 'Select(*)' is suported !");
 		return 0;
