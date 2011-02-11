@@ -95,15 +95,29 @@ bool SqliteDatabase::Connect()
 	return error != SQLITE_OK ? false : true;
 }
 
-bool SqliteDatabase::Select(char* Statement)
+UInt32 SqliteDatabase::Select(char* Statement)
 {
+	
 	UInt32 error = 0;
+	sqlite3_stmt *new_res;
+	error = sqlite3_prepare_v2(this->database, Statement, 10000000, &new_res, (const char**)&this->tail);
+	if (error != SQLITE_OK)
+	{
+		notifier->Error("Failed to get data from database!");
+		return 0;
+	}
+	UInt32 counter = 0;
+	while((sqlite3_step(this->res) != SQLITE_ROW))
+	{
+		counter++;
+	}
+	sqlite3_finalize(new_res);	
 	error = sqlite3_prepare_v2(this->database, Statement, 10000000, &this->res, (const char**)&this->tail);
 	if (error != SQLITE_OK)
 	{
 		notifier->Error("Failed to get data from database!");
 	}
-	return error == 0 ? true : false;
+	return counter;
 }
 
 UInt32 SqliteDatabase::SqlSelect(char* What, char* Where, char* From)
