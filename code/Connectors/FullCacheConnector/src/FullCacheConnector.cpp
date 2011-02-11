@@ -29,7 +29,7 @@ bool FullCacheConnector::GetRecord( MLRecord &record,UInt32 index )
 	}
 
 	if (RecordsCache.GetCount()<=index) {
-		notifier->Error("an interval error occured: RecordsCache count(%d) is smaller than provided index(%d)", RecordsCache.GetCount(), index);
+		notifier->Error("an interval error occured: RecordsCache count(%d) is smaller than the provided index(%d)", RecordsCache.GetCount(), index);
 		return false;
 	}
 
@@ -91,15 +91,17 @@ bool FullCacheConnector::OnInit()
 	}
 
 	// build the internal cache 
+
+	char SqlString [MAX_SQL_QUERY_SIZE];
+	sprintf_s(SqlString, MAX_SQL_QUERY_SIZE, "select * from %s", RECORDS_TABLE_NAME);
 	
-	RecordsCount = database->Select();
+	RecordsCount = database->Select(SqlString);
 	IntervalStart = 0;
 	IntervalEnd   = RecordsCount;
 	Initialized = TRUE;
 
 	// something bad has happend
-	if (RecordsCount==0) 
-	{
+	if (RecordsCount==0) {
 		notifier->Error("I received 0 records from the database");
 		return false;
 	}
@@ -113,50 +115,93 @@ bool FullCacheConnector::OnInit()
 			return false;
 		}
 
-		//check data count
-		if (VectPtr.GetCount()!=4) {
-			notifier->Error("incorrect table format, the received vector does not have 4 fields");
-			return false;
-		}
-
-		// check data types
-		if (VectPtr[0].Type != UINT32VAL || 
-			VectPtr[1].Type != ASCIISTTVAL ||
-			VectPtr[2].Type != BOOLVAL ||
-			VectPtr[3].Type != BYTESVAL) {
-				notifier->Error("incorrect data types");
-				database->FreeRow(VectPtr);
-				return false;
-		}
-
 		//store data 
 		GML::ML::MLRecord record;
+		MEMSET((void*)&record, 0, sizeof(MLRecord));
 
-		MEMCOPY((UInt8*)&record.Hash, VectPtr[1].BytesVal, 16);
-		record.Label = VectPtr[2].BoolVal;
-		record.FeatCount = VectPtr[3].Size;
+		// count the number of features that we have
+		FeaturesCount = 0;
+		UInt32 vectSize = VectPtr.GetCount();
 
-		// set class data
-		FeaturesCount = record.FeatCount;
-		
+		for (UInt32 tr=0;tr<vectSize;tr++) {
+			DBRecord* dbrec = VectPtr.GetPtrToObject(tr);
+			if (strncmp(dbrec->Name, FEATURES_COL_PREFIX, strlen(FEATURES_COL_PREFIX))==0)
+				FeaturesCount++;
+		}
+													
+		// alloc memory for the features		
 		record.Features = (double*) malloc(sizeof(double)*FeaturesCount);
 		if (!record.Features ) {
 			notifier->Error("could not allocated memory for currect row");
 			database->FreeRow(VectPtr);
 			return false;
 		}
+																						
+		// pass through the vector to store information
+		UInt32 sizeLabelColName = strlen(LABEL_COL_NAME);
+		UInt32 sizeHashColname  = strlen(HASH_COL_NAME);
+		UInt32 sizeFeatPrefColName = strlen(FEATURES_COL_PREFIX);
 
-		// copy the actual features
-		for (UInt32 k=0;k<FeaturesCount;k++) {
-			record.Features[k]  = (double) VectPtr[4].BytesVal[k];
-		}		
+		for (UInt32 tr=0;tr<VectPtr.GetCount();tr++) {
+			DBRecord * dbrec = VectPtr.GetPtrToObject(tr);
 
+			// look for label
+			if (strncmp(dbrec->Name, LABEL_COL_NAME, sizeLabelColName)==0) {
+
+				// check if it's a signed type
+				if (dbrec->Type == BOOLVAL || dbrec->Type == UINT8VAL || dbrec->Type == UINT16VAL || dbrec->Type == UINT32VAL) {
+					notifier->Error("wrong data type for Label column");
+					database->FreeRow(VectPtr);
+					VectPtr.DeleteAll();
+					return false;
+				}
+
+				record.Label = dbrec->DoubleVal;
+				continue;
+			}
+
+			//look for the hash
+			if (strncmp(dbrec->Name, HASH_COL_NAME, sizeHashColname)==0) {
+
+				// check if it's indeed a Hash data type
+				if (dbrec->Type != HASHVAL) {
+					notifier->Error("wrong data type for Hash column");
+					database->FreeRow(VectPtr);
+					VectPtr.DeleteAll();
+					return false;
+				}
+
+				record.Hash = dbrec->Hash;
+				continue;
+			}
+
+			//look for features
+			if (strncmp(dbrec->Name, FEATURES_COL_PREFIX, sizeFeatPrefColName)==0) {
+
+				// check that features are DOUBLEVAL
+				if (dbrec->Type != DOUBLEVAL) {
+					notifier->Error("wrong data type for Feat column");
+					database->FreeRow(VectPtr);
+					VectPtr.DeleteAll();
+					return false;
+				}
+
+				UInt32 nr;
+				char * asciiNr = (char*) &dbrec->Name[sizeFeatPrefColName];
+				nr = atoi (asciiNr);
+				record.Features[nr] = dbrec->DoubleVal;
+			}
+		}				
+
+		// set class data
+		FeaturesCount = record.FeatCount;
+		
 		// put the created record in our cache
 		RecordsCache.PushByRef(record);
 
 		// free the data from database plugin
 		database->FreeRow(VectPtr);
-
+		VectPtr.DeleteAll();
 	}	
 
 	return true;
@@ -191,6 +236,13 @@ FullCacheConnector::FullCacheConnector()
 
 FullCacheConnector::~FullCacheConnector()
 {
+	for (UInt32 i=0;i<RecordsCache.GetCount();i++) {
+		MLRecord * rec = RecordsCache.GetPtrToObject(i);
+		if (rec->Features!=NULL) {
+			free(rec->Features);
+		}
+	}
+
 	if (!RecordsCache.DeleteAll()) {
 		notifier->Error("error deleting all values from cache");
 	}
