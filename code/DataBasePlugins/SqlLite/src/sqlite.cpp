@@ -48,6 +48,10 @@ bool SqliteDatabase::OnInit()
 	GML::Utils::GString str;
 	this->Attr.UpdateString("dbPath", str);	
 	char* _text = str.GetText();
+	if(NULL == _text){
+		notifier->Error("dbPath attribute does not exists!");
+		return false;
+	}
 	this->database_name = (char*)malloc(sizeof(char) * strlen(_text));
 	if(this->database == NULL)
 	{
@@ -94,7 +98,7 @@ bool SqliteDatabase::Connect()
 UInt32 SqliteDatabase::Select(char* Statement)
 {
 	UInt32 error = 0;
-	error = sqlite3_prepare_v2(this->database, Statement, 10000, &this->res, (const char**)&this->tail);
+	error = sqlite3_prepare_v2(this->database, Statement, 10000000, &this->res, (const char**)&this->tail);
 	if (error != SQLITE_OK)
 	{
 		notifier->Error("Failed to get data from database!");
