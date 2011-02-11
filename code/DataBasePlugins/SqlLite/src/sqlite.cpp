@@ -5,21 +5,28 @@
 #include "sqlite3.h"
 
 #define xtod(c) ((c>='0' && c<='9') ? c-'0' : ((c>='A' && c<='F') ? c-'A'+10 : ((c>='a' && c<='f') ? c-'a'+10 : 0)))
-int HexToDec(char* hex, int l){return (*hex==0 ? l : HexToDec(hex + 1, l * 15 + xtod(*hex)));}
+//int HexToDec(char* hex, int l){return (*hex==0 ? l : HexToDec(hex + 1, l * 15 + xtod(*hex)));}
 
-void TextToInt(char* str, struct GML::DB::RecordHash& hash)
+int HexToDec (char ch) {
+	if (ch >= '0' && ch <= '9') return ch - 0x30;	
+	if (ch >= 'a' && ch <= 'f') return ch - 0x57;
+	if (ch >= 'A' && ch <= 'F') return ch - 0x37;
+
+	return -1;
+}
+
+bool TextToInt(char* str, struct GML::DB::RecordHash& hash)
 {
-	for(UInt32 i = 0; i < 8; i = i+2)
-	{
-		char* current = new char[2];
-		current[0] = str[i];
-		current[1] = str[i + 1];
-		current[2] = '\0';
-		int value = HexToDec(current, 0);
-		hash.Value[i] = value;
-		free(current);
 
+	for(UInt32 i = 0; i < 32; i = i+2)
+	{			
+		int v1 = HexToDec(str[i]);
+		int v2 = HexToDec(str[i+1]);
+		if (v1==-1 || v2==-1) return false;
+		int val = v1*16+v2;
+		hash.Value[i/2] = val;
 	}
+	return true;
 }
 
 SqliteDatabase::SqliteDatabase()
@@ -100,19 +107,19 @@ UInt32 SqliteDatabase::Select(char* Statement)
 	
 	UInt32 error = 0;
 	sqlite3_stmt *new_res;
-	error = sqlite3_prepare_v2(this->database, Statement, 10000000, &new_res, (const char**)&this->tail);
+	error = sqlite3_prepare_v2(this->database, Statement, strlen(Statement), &new_res, (const char**)&this->tail);
 	if (error != SQLITE_OK)
 	{
 		notifier->Error("Failed to get data from database!");
 		return 0;
 	}
 	UInt32 counter = 0;
-	while((sqlite3_step(this->res) != SQLITE_ROW))
+	while((sqlite3_step(new_res) == SQLITE_ROW))
 	{
 		counter++;
 	}
 	sqlite3_finalize(new_res);	
-	error = sqlite3_prepare_v2(this->database, Statement, 10000000, &this->res, (const char**)&this->tail);
+	error = sqlite3_prepare_v2(this->database, Statement, strlen(Statement), &this->res, (const char**)&this->tail);
 	if (error != SQLITE_OK)
 	{
 		notifier->Error("Failed to get data from database!");
@@ -152,14 +159,14 @@ bool SqliteDatabase::FetchNextRow(GML::Utils::GTVector<GML::DB::DBRecord> &VectP
 			UInt32 current_type = 0;
 			current_type = sqlite3_column_type(this->res, i);
 			rec.Name = (char*)sqlite3_column_name(this->res, i);
-			if (rec.Name == "RecId")
+			if (strcmp (rec.Name, "RecId") == 0)
 			{
 				continue;
 			}			
 			switch(current_type)
 			{				
 				case SQLITE_TEXT:
-					if (rec.Name != "Hash")
+					if (strcmp (rec.Name, "Hash") != 0)
 					{
 						current_type = GML::DB::ASCIISTTVAL;
 						rec.AsciiStrVal = (char*)sqlite3_column_text(this->res, i);
@@ -168,13 +175,16 @@ bool SqliteDatabase::FetchNextRow(GML::Utils::GTVector<GML::DB::DBRecord> &VectP
 					{					
 						current_type = GML::DB::HASHVAL;		
 						struct GML::DB::RecordHash nhash = {};
-						TextToInt((char*)sqlite3_column_text(this->res, i), nhash);
+						if (TextToInt((char*)sqlite3_column_text(this->res, i), nhash) == false) {
+							notifier->Error ("error convering ascii string to Hash value");
+							return false;
+						}
 						rec.Hash = nhash;
 					}
                     break;
 				case SQLITE_FLOAT:
-                    current_type = GML::DB::FLOATVAL;					
-                    rec.FloatVal = (float)sqlite3_column_double(this->res, i); // To be replaced with floatval
+                    current_type = GML::DB::DOUBLEVAL;					
+                    rec.DoubleVal = (double)sqlite3_column_double(this->res, i); // To be replaced with floatval
                     break;
 				case SQLITE_NULL:
                     current_type = GML::DB::NULLVAL;
@@ -185,7 +195,7 @@ bool SqliteDatabase::FetchNextRow(GML::Utils::GTVector<GML::DB::DBRecord> &VectP
 					rec.Size = sqlite3_column_bytes(this->res, 0);
                     break;
 				case SQLITE_INTEGER:
-                    current_type = GML::DB::UINT32VAL;
+                    current_type = GML::DB::INT32VAL;
                     rec.UInt32Val = (UInt32)sqlite3_column_int(this->res, i);
                     break;
 				default:					
