@@ -2,12 +2,22 @@
 #define _FULL_CACHE_CONNECTOR_H
 
 #include "gmllib.h"
+#include <stdio.h>
+
+#define _CRT_SECURE_NO_DEPRECATE 
+#define _CRT_SECURE_NO_WARNINGS
+
 
 using namespace GML::ML;
 using namespace GML::Utils;
 using namespace GML::DB;
+							
+#define RECORDS_TABLE_NAME			"RecordsTable"
+#define FEATURES_COL_PREFIX			"Feat"
+#define HASH_COL_NAME				"Hash"
+#define LABEL_COL_NAME				"Label"
 
-#define MAIN_TABLE_NAME "RecordsTable"
+#define MAX_SQL_QUERY_SIZE			2048
 
 class FullCacheConnector: public GML::ML::IConector
 {
