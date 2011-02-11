@@ -55,7 +55,7 @@ namespace GML
 			 *	- INPUT char* SqlStatement: the sql select statement
 			 * Return: the number of records fetched during the statement execution
 			 */
-			virtual bool				Select (char* Statement="*")=0;
+			virtual UInt32				Select (char* Statement="*")=0;
 
 			/*
 			 * Usage: emit a sql select statement that is broken in 3 pieces
