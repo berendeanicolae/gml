@@ -12,7 +12,7 @@ using namespace GML::ML;
 using namespace GML::Utils;
 using namespace GML::DB;
 							
-#define RECORDS_TABLE_NAME			"RecordsTable"
+#define RECORDS_TABLE_NAME			"RecordTable"
 #define FEATURES_COL_PREFIX			"Feat"
 #define HASH_COL_NAME				"Hash"
 #define LABEL_COL_NAME				"Label"
