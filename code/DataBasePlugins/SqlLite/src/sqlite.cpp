@@ -4,7 +4,24 @@
 #include "sqlite.h"
 #include "sqlite3.h"
 
-GML::Utils::GString _database_name;
+#define xtod(c) ((c>='0' && c<='9') ? c-'0' : ((c>='A' && c<='F') ? c-'A'+10 : ((c>='a' && c<='f') ? c-'a'+10 : 0)))
+int HexToDec(char* hex, int l){return (*hex==0 ? l : HexToDec(hex + 1, l * 15 + xtod(*hex)));}
+
+void TextToInt(char* str, struct GML::DB::RecordHash& hash)
+{
+	for(UInt32 i = 0; i < 8; i = i+2)
+	{
+		char* current = new char[2];
+		current[0] = str[i];
+		current[1] = str[i + 1];
+		current[2] = '\0';
+		int value = HexToDec(current, 0);
+		hash.Value[i] = value;
+		free(current);
+
+	}
+}
+
 SqliteDatabase::SqliteDatabase()
 {
 }
@@ -107,7 +124,6 @@ bool SqliteDatabase::FetchNextRow(GML::Utils::GTVector<GML::DB::DBRecord> &VectP
 {
 	UInt32 result = 0;
 	UInt32 column_count = 0;
-	this->FreeRow(VectPtr);	
 	result = sqlite3_step(this->res);
 	if (result == SQLITE_ROW)
 	{
@@ -117,12 +133,26 @@ bool SqliteDatabase::FetchNextRow(GML::Utils::GTVector<GML::DB::DBRecord> &VectP
 			GML::DB::DBRecord rec;
 			UInt32 current_type = 0;
 			current_type = sqlite3_column_type(this->res, i);
-			switch(current_type)
+			rec.Name = (char*)sqlite3_column_name(this->res, i);
+			if (rec.Name == "RecId")
 			{
-				
+				continue;
+			}			
+			switch(current_type)
+			{				
 				case SQLITE_TEXT:
-                    current_type = GML::DB::ASCIISTTVAL;
-                    rec.AsciiStrVal = (char*)sqlite3_column_text(this->res, i);
+					if (rec.Name != "Hash")
+					{
+						current_type = GML::DB::ASCIISTTVAL;
+						rec.AsciiStrVal = (char*)sqlite3_column_text(this->res, i);
+					}
+					else
+					{					
+						current_type = GML::DB::HASHVAL;		
+						struct GML::DB::RecordHash nhash = {};
+						TextToInt((char*)sqlite3_column_text(this->res, i), nhash);
+						rec.Hash = nhash;
+					}
                     break;
 				case SQLITE_FLOAT:
                     current_type = GML::DB::UINT32VAL;					
@@ -140,12 +170,9 @@ bool SqliteDatabase::FetchNextRow(GML::Utils::GTVector<GML::DB::DBRecord> &VectP
                     current_type = GML::DB::UINT32VAL;
                     rec.UInt32Val = (UInt32)sqlite3_column_int(this->res, i);
                     break;
-				default:
-					char* err_mes = "Unknown type of column.";
-					UInt32 len = strlen(err_mes);
-                    notifier->Notify(0, err_mes, len);
-			}
-			rec.Name = (char*)sqlite3_column_name(this->res, i);
+				default:					
+					notifier->Error("Unknown type of column.");
+			}			
 			rec.Type = current_type;
 			VectPtr.Push(rec);
 		}
