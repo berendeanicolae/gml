@@ -3,13 +3,14 @@
 #include "sqlite3.h"
 #include "gmllib.h"
 
+
 class SqliteDatabase: public GML::DB::IDataBase
 {
 private:
 	UInt32 currentRow;
 	sqlite3 *database;
-	const char* database_name;
-	const char* tail;
+	char* database_name;
+	char* tail;
 	sqlite3_stmt *res;
 	GML::Utils::INotify* notifier; 
 	bool _InsertRow(char* table, GML::Utils::GTVector<GML::DB::DBRecord> &Vect, char* Fields = "");
@@ -22,7 +23,6 @@ public:
 	bool Update(char* SqlStatement, GML::Utils::GTVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTVector<GML::DB::DBRecord> &UpdateVals );
 	bool FreeRow( GML::Utils::GTVector<GML::DB::DBRecord> &Vect );
 	bool Disconnect();
-	bool Init(GML::Utils::INotify &notifier, char* connectionString);
 	bool Connect();
 	bool FetchNextRow( GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr );
 	bool FetchRowNr( GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr );

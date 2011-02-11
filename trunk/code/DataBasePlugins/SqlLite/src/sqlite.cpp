@@ -3,8 +3,8 @@
 #include "gmllib.h"
 #include "sqlite.h"
 #include "sqlite3.h"
-//using namespace GML::DB;
 
+GML::Utils::GString _database_name;
 SqliteDatabase::SqliteDatabase()
 {
 }
@@ -18,23 +18,26 @@ SqliteDatabase::~SqliteDatabase()
 {
     if(this->database_name != NULL)
     {
-        free(&this->database_name);
+        free(this->database_name);
     }
     if(this->tail != NULL)
     {
-        free(&this->tail);
+        free(this->tail);
     }
     this->Disconnect();
 }
 bool SqliteDatabase::OnInit()
 {
-	// we don't need other infos
-	return true;
-}
-bool SqliteDatabase::Init(GML::Utils::INotify &notifier, char* connectionString)
-{	
-	this->notifier = &notifier;
-	this->database_name = connectionString;
+	GML::Utils::GString str;
+	this->Attr.UpdateString("dbPath", str);	
+	char* _text = str.GetText();
+	this->database_name = (char*)malloc(sizeof(char) * strlen(_text));
+	if(this->database == NULL)
+	{
+		notifier->Error("Error, could not allocate memory for private buffer!");
+		return false;
+	}
+	strcpy((char*)this->database_name, _text);
 	return true;
 }
 bool SqliteDatabase::Finalize()
@@ -65,9 +68,7 @@ bool SqliteDatabase::Connect()
 	error = sqlite3_open(database_name, &database);
 	if (error != SQLITE_OK)
 	{
-		char* err_mes = "Error: could not connect to database.";
-		UInt32 len = strlen(err_mes);
-		notifier->Notify(0, err_mes, 0);
+		notifier->Error("Error: could not connect to database.");
 		return false;
 	}
 	return error != SQLITE_OK ? false : true;
@@ -76,12 +77,10 @@ bool SqliteDatabase::Connect()
 UInt32 SqliteDatabase::Select(char* Statement)
 {
 	UInt32 error = 0;
-	error = sqlite3_prepare_v2(this->database, Statement, 10000, &this->res, &this->tail);
+	error = sqlite3_prepare_v2(this->database, Statement, 10000, &this->res, (const char**)&this->tail);
 	if (error != SQLITE_OK)
 	{
-		char* err_mes = "Failed to get data from database!";
-		UInt32 len = strlen(err_mes);
-		notifier->Notify(0, err_mes, len);
+		notifier->Error("Failed to get data from database!");
 	}
 	return error;
 }
@@ -92,9 +91,7 @@ UInt32 SqliteDatabase::SqlSelect(char* What, char* Where, char* From)
 	char* statement = (char*)malloc((30 + strlen(What) + strlen(Where) + strlen(From)) * sizeof(char));
 	if (statement == NULL)
 	{
-		char* err_mes = "Memory allocaton failed!";
-		UInt32 len = strlen(err_mes);
-		notifier->Notify(0, err_mes, len);
+		notifier->Error("Memory allocaton failed!");
 		return 0;
 	}
 	sprintf(statement, "SELECT %s FROM %s WHERE %s", What, From, Where);
@@ -134,13 +131,14 @@ bool SqliteDatabase::FetchNextRow(GML::Utils::GTVector<GML::DB::DBRecord> &VectP
 				case SQLITE_NULL:
                     current_type = GML::DB::NULLVAL;
                     break;
-				case SQLITE_BLOB:
+				case SQLITE_BLOB:					
                     current_type = GML::DB::BYTESVAL;
-					rec.BytesVal = (unsigned char*)sqlite3_column_blob(this->res, i);                    
+					rec.BytesVal = (UInt8*)sqlite3_column_blob(this->res, i);     
+					rec.Size = sqlite3_column_bytes(this->res, 0);
                     break;
 				case SQLITE_INTEGER:
                     current_type = GML::DB::UINT32VAL;
-                    rec.UInt32Val = (int)sqlite3_column_int(this->res, i);
+                    rec.UInt32Val = (UInt32)sqlite3_column_int(this->res, i);
                     break;
 				default:
 					char* err_mes = "Unknown type of column.";
@@ -163,16 +161,12 @@ bool SqliteDatabase::FetchRowNr(GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr
 	bool result = this->FetchNextRow(VectPtr);
 	if (false == result)
 	{
-		char* err_mes = "No row fetched from previous operation.";
-		UInt32 len = strlen(err_mes);
-		notifier->Notify(0, err_mes, len);
+		notifier->Error("No row fetched from previous operation.");
 		return false;
 	}
 	if (RowNr > VectPtr.GetCount())
 	{
-		char* err_mes = "Index Error: out of range";
-		UInt32 len = strlen(err_mes);
-		notifier->Notify(0, err_mes, len);
+		notifier->Error("Index Error: out of range");
 		return false;
 	}
 	else
@@ -217,18 +211,15 @@ bool SqliteDatabase::_InsertRow(char* Table, GML::Utils::GTVector<GML::DB::DBRec
 {
 	if(!this->database)
 	{
-		char* err_mes = "The database was closed or destroyed.";
-		UInt32 len = strlen(err_mes);
-		notifier->Notify(0, err_mes, len);
+
+		notifier->Error("The database was closed or destroyed.");
 		return false;
     }
 	UInt32 error = 0;
 	UInt32 count = Vect.GetCount();
 	if (0 == count)
 	{
-		char* err_mes = "No values in vector!\n";
-		UInt32 len = strlen(err_mes);
-	    notifier->Notify(0, err_mes, len);
+	    notifier->Error("No values in vector!");
 	    return false;
 	}
 	char statement[1024];
@@ -244,7 +235,28 @@ bool SqliteDatabase::_InsertRow(char* Table, GML::Utils::GTVector<GML::DB::DBRec
 	        case GML::DB::ASCIISTTVAL: sprintf(statement, "%s '%s', ", statement, Vect[i].AsciiStrVal); break;
 	        case GML::DB::UNICSTRVAL: sprintf(statement, "%s '%s', ", statement, Vect[i].UnicStrVal); break;
 	        case GML::DB::NULLVAL: sprintf(statement, "%sNULL, ", statement); break;
-			case GML::DB::BYTESVAL: sprintf(statement, "%s '%s', ", statement, Vect[i].BytesVal); break;
+			case GML::DB::BYTESVAL: 
+				{
+					char* _bytes_val_statement = (char*)malloc(sizeof(char) * (Vect[i].Size * 4) + 1);					
+					if(_bytes_val_statement == NULL)
+					{
+						notifier->Error("Could not allocate memory for blob object!");
+						return false;
+					}
+					// init private buffer;
+					sprintf(_bytes_val_statement, "");
+					for(UInt32 x = 0; x < Vect[i].Size; x++)
+					{
+						sprintf(_bytes_val_statement, "%s0x%02x", _bytes_val_statement, Vect[i].BytesVal[x]);
+					}
+					sprintf(statement, "%s '%s', ", statement, _bytes_val_statement); 
+					if(_bytes_val_statement != NULL)
+					{
+						free(_bytes_val_statement);
+					}
+					break;
+				}
+
 	        default: continue;
 	    }
     }
@@ -271,9 +283,7 @@ bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTVector<GML::DB::DB
 {
 	if(!this->database)
 	{
-		char* err_mes = "The database was closed or destroyed.";
-		UInt32 len = strlen(err_mes);
-		notifier->Notify(0, err_mes, len);
+		notifier->Error("The database was closed or destroyed.");
 		return false;
     }
 
@@ -292,7 +302,25 @@ bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTVector<GML::DB::DB
 	        case GML::DB::ASCIISTTVAL: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].AsciiStrVal); break;
 	        case GML::DB::UNICSTRVAL: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UnicStrVal); break;
 	        case GML::DB::NULLVAL: sprintf(buffer_w, "%s %s %s = NULL ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name); break;
-			case GML::DB::BYTESVAL: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : ",", WhereVals[i].Name, WhereVals[i].BytesVal); break;
+			case GML::DB::BYTESVAL: 
+				{
+					// abc 0xXX0xXX0xXX = > size * 4
+					char* _bytes_val_statement = (char*)malloc(sizeof(char) * (WhereVals[i].Size * 4) + 1);
+					if(_bytes_val_statement == NULL)
+					{
+						notifier->Error("Could not allocate memory for blob object!");
+						return false;
+					}
+					// init private buffer
+					sprintf(_bytes_val_statement, "");
+					for(UInt32 x=0; x < WhereVals[i].Size; x++)
+					{
+						sprintf(_bytes_val_statement, "%s0x%02x", _bytes_val_statement, WhereVals[i].BytesVal[x]);
+					}
+					sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : ",", WhereVals[i].Name, _bytes_val_statement); 
+					free(_bytes_val_statement);
+					break;
+				}
 	        default: continue;
 
         }
@@ -308,18 +336,35 @@ bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTVector<GML::DB::DB
 	        case GML::DB::ASCIISTTVAL: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].AsciiStrVal); break;
 	        case GML::DB::UNICSTRVAL: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UnicStrVal); break;
 	        case GML::DB::NULLVAL: sprintf(buffer_u, "%s %s %s = NULL ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name); break;
-			case GML::DB::BYTESVAL: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].BytesVal); break;
+			case GML::DB::BYTESVAL: 
+				{								
+					char* _bytes_val_statement = (char*)malloc(sizeof(char) * (UpdateVals[i].Size * 4) + 1);
+					if(_bytes_val_statement == NULL)
+					{
+						notifier->Error("Could not allocate memory for blob object!");
+						return false;
+					}
+					// init private buffer
+					sprintf(_bytes_val_statement, "");
+
+					for(UInt32 x=0; x < UpdateVals[i].Size; x++)
+					{
+						sprintf(_bytes_val_statement, "%s0x%02x", _bytes_val_statement, UpdateVals[i].BytesVal[x]);
+					}
+					sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, _bytes_val_statement); 
+					free(_bytes_val_statement);
+					break;
+				}
+
 	        default: continue;
 
         }
 	}
-	int __k = (strlen(SqlStatement) + strlen(buffer_u) + strlen(buffer_w)) * sizeof(char) + 16;
+	UInt32 __k = (strlen(SqlStatement) + strlen(buffer_u) + strlen(buffer_w)) * sizeof(char) + 16;
 	char* update_statement = (char*)malloc(__k);
 	if (NULL == update_statement)
 	{
-		char* err_mes = "Failed to allocate memory for SqlStatement";
-		UInt32 len = strlen(err_mes);
-		notifier->Notify(0, err_mes, len);
+		notifier->Error("Failed to allocate memory for SqlStatement");
 		return false;
 	}	
 	sprintf(update_statement, "%s set %s where %s;", SqlStatement, buffer_u, buffer_w);
