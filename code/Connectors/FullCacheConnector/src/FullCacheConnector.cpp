@@ -96,6 +96,7 @@ bool FullCacheConnector::OnInit()
 	sprintf_s(SqlString, MAX_SQL_QUERY_SIZE, "select * from %s", RECORDS_TABLE_NAME);
 	
 	RecordsCount = database->Select(SqlString);
+	
 	IntervalStart = 0;
 	IntervalEnd   = RecordsCount;
 	Initialized = TRUE;
@@ -179,7 +180,7 @@ bool FullCacheConnector::OnInit()
 			if (strncmp(dbrec->Name, FEATURES_COL_PREFIX, sizeFeatPrefColName)==0) {
 
 				// check that features are DOUBLEVAL
-				if (dbrec->Type != DOUBLEVAL) {
+				if (dbrec->Type != DOUBLEVAL && dbrec->Type != FLOATVAL) {
 					notifier->Error("wrong data type for Feat column");
 					database->FreeRow(VectPtr);
 					VectPtr.DeleteAll();
@@ -187,7 +188,7 @@ bool FullCacheConnector::OnInit()
 				}
 
 				UInt32 nr;
-				char * asciiNr = (char*) &dbrec->Name[sizeFeatPrefColName];
+				char * asciiNr = (char*) &dbrec->Name[sizeFeatPrefColName+1];
 				nr = atoi (asciiNr);
 				record.Features[nr] = dbrec->DoubleVal;
 			}
