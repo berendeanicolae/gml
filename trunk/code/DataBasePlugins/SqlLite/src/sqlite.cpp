@@ -155,7 +155,7 @@ bool SqliteDatabase::FetchNextRow(GML::Utils::GTVector<GML::DB::DBRecord> &VectP
 					}
                     break;
 				case SQLITE_FLOAT:
-                    current_type = GML::DB::UINT32VAL;					
+                    current_type = GML::DB::FLOATVAL;					
                     rec.FloatVal = (float)sqlite3_column_double(this->res, i); // To be replaced with floatval
                     break;
 				case SQLITE_NULL:
