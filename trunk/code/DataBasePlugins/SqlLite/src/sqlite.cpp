@@ -95,7 +95,7 @@ bool SqliteDatabase::Connect()
 	return error != SQLITE_OK ? false : true;
 }
 
-UInt32 SqliteDatabase::Select(char* Statement)
+bool SqliteDatabase::Select(char* Statement)
 {
 	UInt32 error = 0;
 	error = sqlite3_prepare_v2(this->database, Statement, 10000000, &this->res, (const char**)&this->tail);
@@ -103,7 +103,7 @@ UInt32 SqliteDatabase::Select(char* Statement)
 	{
 		notifier->Error("Failed to get data from database!");
 	}
-	return error;
+	return error == 0 ? true : false;
 }
 
 UInt32 SqliteDatabase::SqlSelect(char* What, char* Where, char* From)

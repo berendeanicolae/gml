@@ -19,7 +19,7 @@ public:
 	SqliteDatabase();
 	~SqliteDatabase();
 	UInt32 SqlSelect(char* What="*", char* Where="", char* From="" );
-	UInt32 Select (char* Statement="*");
+	bool Select (char* Statement="*");
 	bool Update(char* SqlStatement, GML::Utils::GTVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTVector<GML::DB::DBRecord> &UpdateVals );
 	bool FreeRow( GML::Utils::GTVector<GML::DB::DBRecord> &Vect );
 	bool Disconnect();
