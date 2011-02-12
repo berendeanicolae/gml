@@ -125,7 +125,7 @@ bool FullCacheConnector::OnInit()
 
 		for (UInt32 tr=0;tr<vectSize;tr++) {
 			DBRecord* dbrec = VectPtr.GetPtrToObject(tr);
-			if (strncmp(dbrec->Name, FEATURES_COL_PREFIX, strlen(FEATURES_COL_PREFIX))==0)
+			if (GML::Utils::GString::StartsWith(dbrec->Name,"Feat_",true))
 				FeaturesCount++;
 		}
 													
@@ -139,16 +139,14 @@ bool FullCacheConnector::OnInit()
 		}
 																						
 		// pass through the vector to store information
-		UInt32 sizeLabelColName = strlen(LABEL_COL_NAME);
-		UInt32 sizeHashColname  = strlen(HASH_COL_NAME);
-		UInt32 sizeFeatPrefColName = strlen(FEATURES_COL_PREFIX);
-		/*
-		for (UInt32 tr=0;tr<VectPtr.GetCount();tr++) {
+		//*
+		for (UInt32 tr=0;tr<VectPtr.GetCount();tr++) 
+		{
 			DBRecord * dbrec = VectPtr.GetPtrToObject(tr);
 
 			// look for label
-			if (strncmp(dbrec->Name, LABEL_COL_NAME, sizeLabelColName)==0) {
-
+			if (GML::Utils::GString::Equals(dbrec->Name, "Label", true)) 
+			{
 				// check if it's a signed type
 				if (dbrec->Type == BOOLVAL || dbrec->Type == UINT8VAL || dbrec->Type == UINT16VAL || dbrec->Type == UINT32VAL) {
 					notifier->Error("wrong data type for Label column");
@@ -162,8 +160,8 @@ bool FullCacheConnector::OnInit()
 			}
 
 			//look for the hash
-			if (strncmp(dbrec->Name, HASH_COL_NAME, sizeHashColname)==0) {
-
+			if (GML::Utils::GString::Equals(dbrec->Name, "Hash", true)) 
+			{
 				// check if it's indeed a Hash data type
 				if (dbrec->Type != HASHVAL) {
 					notifier->Error("wrong data type for Hash column");
@@ -177,8 +175,8 @@ bool FullCacheConnector::OnInit()
 			}
 
 			//look for features
-			if (strncmp(dbrec->Name, FEATURES_COL_PREFIX, sizeFeatPrefColName)==0) {
-
+			if (GML::Utils::GString::StartsWith(dbrec->Name, "Feat_", true)) 
+			{
 				// check that features are DOUBLEVAL
 				if (dbrec->Type != DOUBLEVAL && dbrec->Type != FLOATVAL) {
 					notifier->Error("wrong data type for Feat column");
@@ -188,14 +186,20 @@ bool FullCacheConnector::OnInit()
 				}
 
 				UInt32 nr;
-				char * asciiNr = (char*) &dbrec->Name[sizeFeatPrefColName+1];
-				nr = atoi (asciiNr);
+				if (GML::Utils::GString::ConvertToUInt32(&dbrec->Name[5],&nr)==false)
+				{
+					notifier->Error("Invalid number for Feat_xxx column: %s",dbrec->Name);
+					database->FreeRow(VectPtr);
+					VectPtr.DeleteAll();
+					return false;
+				}
 				record.Features[nr] = dbrec->DoubleVal;
 			}
 		}				
 		//*/
 		// set class data
-		FeaturesCount = record.FeatCount;
+		// VARZA mihai , VARZA :p
+		record.FeatCount = FeaturesCount;
 		
 		// put the created record in our cache
 		RecordsCache.PushByRef(record);

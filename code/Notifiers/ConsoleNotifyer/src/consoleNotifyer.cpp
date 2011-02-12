@@ -18,7 +18,7 @@ bool ConsoleNotifyer::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 	if (messageID==100)
 	{
 		GML::Utils::AlgorithmResult	*res = (GML::Utils::AlgorithmResult *)Data;
-		printf("TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|\n",res->tp,res->tn,res->fn,res->fp,res->se,res->sp,res->acc);
+		printf("TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|\n",(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc);
 		return true;
 	}
 	if ((Data!=NULL) && (DataSize>0))
