@@ -111,6 +111,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClInclude Include="..\..\..\Code\GmlLib\inc\MLRecord.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\ThreadParalelUnit.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\Timer.h" />
+    <ClInclude Include="..\..\..\code\GmlLib\inc\Vector.h" />
     <ClInclude Include="..\..\..\code\GmlLib\inc\VectorOp.h" />
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +128,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClCompile Include="..\..\..\code\GmlLib\src\MLInterface.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\ThreadParalelUnit.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\Timer.cpp" />
+    <ClCompile Include="..\..\..\code\GmlLib\src\vector.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\VectorOp.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
