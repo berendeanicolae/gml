@@ -99,6 +99,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClInclude Include="..\..\..\Code\GmlLib\inc\compat.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\DBRecord.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\File.h" />
+    <ClInclude Include="..\..\..\code\GmlLib\inc\GTFVector.h" />
     <ClInclude Include="..\..\..\code\GmlLib\inc\IAlgorithm.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\IParalelUnit.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\gml.h" />
