@@ -123,15 +123,15 @@ bool FullCacheConnector::OnInit()
 	}
 	
 	// alloc memory for the cache
-	FeatureCacheTemp = new double [FeaturesCount*RecordsCount];
-	FeaturesCache = (double **) FeatureCacheTemp;
+	FeaturesCache = new double [FeaturesCount*RecordsCount];
+	
 	if (!FeaturesCache) 
 	{
 		notifier->Error("error allocating memory for the internal cache");
 		return false;
 	}
 
-	record.Features = (double*)&FeaturesCache[0];
+	record.Features = (double*)&FeaturesCache[0*FeaturesCount];
 
 	for (UInt32 tr=0;tr<VectPtr.GetCount();tr++) 
 	{
@@ -211,7 +211,7 @@ bool FullCacheConnector::OnInit()
 		}	
 													
 		// put pointer from cache		
-		record.Features = (double*)&FeaturesCache[i];	
+		record.Features = (double*)&FeaturesCache[i*FeaturesCount];	
 		record.FeatCount = FeaturesCount;
 		record.Label = VectPtr[LabelPos].DoubleVal;
 		record.Hash =  VectPtr[HashPos].Hash;
