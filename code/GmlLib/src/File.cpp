@@ -114,6 +114,7 @@ bool GML::Utils::File::ReadNextLine(GString &line,bool skipEmpyLines)
 {
 	char	temp[MAX_LINE_BUFFER_SIZE];
 	UInt32	cPos,sizeRead,tr;	
+	bool	foundEOL;
 
 	if (line.Set("")==false)
 		return false;
@@ -121,6 +122,7 @@ bool GML::Utils::File::ReadNextLine(GString &line,bool skipEmpyLines)
 
 	while (true)
 	{
+		foundEOL = false;
 		if (Read(temp,MAX_LINE_BUFFER_SIZE,&sizeRead)==false)
 			return false;
 		if (sizeRead==0)
@@ -136,6 +138,7 @@ bool GML::Utils::File::ReadNextLine(GString &line,bool skipEmpyLines)
 		if ((temp[tr]=='\n') || (temp[tr]=='\r'))
 		{
 			cPos++;
+			foundEOL = true;
 			if ((temp[tr]=='\n') && (tr+1<sizeRead) && (temp[tr+1]=='\r'))
 				cPos++;
 			if ((temp[tr]=='\r') && (tr+1<sizeRead) && (temp[tr+1]=='\n'))
@@ -143,6 +146,8 @@ bool GML::Utils::File::ReadNextLine(GString &line,bool skipEmpyLines)
 		}
 		if (SetFilePos(cPos)==false)
 			return false;
+		if ((tr==MAX_LINE_BUFFER_SIZE) && (foundEOL==false))
+			continue;
 		if ((skipEmpyLines) && (line.Len()==0))
 			continue;
 		break;

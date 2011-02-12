@@ -12,13 +12,26 @@ bool	SimpleTextFileDB::OnInit()
 }
 bool	SimpleTextFileDB::Connect ()
 {
+	int poz = 0;
+	if (allDB.LoadFromFile(fileName.GetText())==false)
+	{
+		notifier->Error("Unable to open (%s) for reading !",fileName.GetText());
+		return false;
+	}
+	/*
 	if (file.OpenRead(fileName.GetText())==false)
 	{
 		notifier->Error("Unable to open (%s) for reading !",fileName.GetText());
 		return false;
 	}
+	
 	// citesc prima linie
 	if (file.ReadNextLine(tempStr)==false)
+	{
+		notifier->Error("Error reading from %s",fileName.GetText());
+		return false;
+	}*/
+	if (allDB.CopyNextLine(&tempStr,&poz)==false)
 	{
 		notifier->Error("Error reading from %s",fileName.GetText());
 		return false;
@@ -38,7 +51,12 @@ bool	SimpleTextFileDB::Connect ()
 		return false;
 	}
 	// citesc a doua linie
-	if (file.ReadNextLine(tempStr)==false)
+	//if (file.ReadNextLine(tempStr)==false)
+	//{
+	//	notifier->Error("Error reading from %s",fileName.GetText());
+	//	return false;
+	//}
+	if (allDB.CopyNextLine(&tempStr,&poz)==false)
 	{
 		notifier->Error("Error reading from %s",fileName.GetText());
 		return false;
@@ -65,11 +83,12 @@ bool	SimpleTextFileDB::Connect ()
 		if (FeatNames[tr].SetFormated("Feat_%d",tr)==false)
 			return false;
 	}
+	notifier->Info("Data Base loaded : %d records , %d features ",nrRecords,nrFeatures);
 	return true;
 }
 bool	SimpleTextFileDB::Disconnect ()
 {
-	file.Close();
+	//file.Close();
 	if (FeatNames!=NULL)
 		delete []FeatNames;
 	FeatNames = NULL;
@@ -83,20 +102,25 @@ UInt32	SimpleTextFileDB::Select (char* Statement)
 		notifier->Error("Only 'Select(*)' is suported !");
 		return 0;
 	}
+	/*
 	if (file.SetFilePos(0)==false)
 	{
 		notifier->Error("File::Seek(0) error !!!");
 		return 0;
 	}
+	*/
+	dbPoz = 0;
 	// skipez primele 2 linii
 	for (int tr=0;tr<2;tr++)
 	{
-		if (file.ReadNextLine(tempStr)==false)
+		//if (file.ReadNextLine(tempStr)==false)
+		if (allDB.CopyNextLine(&tempStr,&dbPoz)==false)
 		{
 			notifier->Error("File::Error reading a line from %s",fileName.GetText());
 			return 0;
 		}
 	}
+	
 	cIndex = 0;
 	// totul e ok
 	return nrRecords;
@@ -120,10 +144,20 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &Ve
 		return false;
 	}
 	// daca nu mai am linii
-	if (file.ReadNextLine(tempStr)==false)
-		return false;
+	//if (file.ReadNextLine(tempStr)==false)
+	//	return false;
+	while (true)
+	{
+		if (allDB.CopyNextLine(&tempStr,&dbPoz)==false)
+			return false;
+		tempStr.Strip();
+		if (tempStr.Len()==0)
+			continue;
+		break;
+	}
 	
 	cIndex++;
+	notifier->Info("Reading records: %d (%d)",cIndex,dbPoz);
 	// adaug si un hash
 	rec.Name = "HASH";
 	rec.Type = GML::DB::HASHVAL;

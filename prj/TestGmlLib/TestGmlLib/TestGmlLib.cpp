@@ -36,11 +36,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	attr.UpdateString("dbPath",str);
 
 	attr.AddString("DbName","SimpleTextFileDB");
-	attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\a.txt");  
+	attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\gdt-db.txt");  
 	attr.AddString("Conector","FullCacheConnector");
 	attr.AddString("Notifyer","ConsoleNotifyer");
 	attr.AddDouble("LearningRate",0.01);
-	attr.AddUInt32("MaxIteratii",100);
+	attr.AddUInt32("MaxIteratii",2);
 
 	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("SimplePerceptronAlgorithm","");
 	if (alg==NULL)
@@ -49,6 +49,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 1;
 	if (alg->Init()==false)
 		return 1;
+	
 	alg->Execute(0);
 
 	return 0;

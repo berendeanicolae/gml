@@ -91,10 +91,14 @@ void	SimplePerceptronAlgorithm::Test()
 }
 void	SimplePerceptronAlgorithm::Execute(UInt32 command)
 {
+	notif->Info("Starting Algorithm (Execute) => Command = %d",command);
+	notif->Info("DB: Records = %d,Features = %d",con->GetRecordCount(),con->GetFeatureCount());
 	memset(weight,0,sizeof(double)*rec.FeatCount);
 	for (UInt32 tr = 0;tr<maxIteratii;tr++)
 	{
+		notif->Info("Train (iteration = %d)",tr);
 		Train();
+		notif->Info("Test  (iteration = %d)",tr);
 		Test();
 	}
 }
