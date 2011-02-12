@@ -28,7 +28,7 @@ namespace GML
 			 * din conectionString 
 			 */
 			virtual bool				OnInit() = 0;
-
+			virtual int*				Alloc()=0;
 			bool						Init (GML::Utils::INotify &notifier, char *connectionString);
 
 			/*

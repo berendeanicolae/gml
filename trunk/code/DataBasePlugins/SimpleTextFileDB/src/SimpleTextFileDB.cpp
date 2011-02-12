@@ -112,6 +112,8 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &Ve
 	int					poz;
 	UInt32				index;
 
+	memset(&rec,0,sizeof(rec));
+
 	if (VectPtr.DeleteAll()==false)
 	{
 		notifier->Error("Unable to delete all indexes from record vector");
@@ -120,7 +122,7 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &Ve
 	// daca nu mai am linii
 	if (file.ReadNextLine(tempStr)==false)
 		return false;
-
+	
 	cIndex++;
 	// adaug si un hash
 	rec.Name = "HASH";
@@ -131,7 +133,7 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &Ve
 		notifier->Error("Unable to add HASH to vector !");
 		return false;
 	}
-
+	//*
 	// formatul este label:lista flaguri
 	tempStr.Strip();
 	tempStr.Replace(" ","");
@@ -183,12 +185,12 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &Ve
 			notifier->Error("Index outside range[0..%d] (%d) => %s",nrFeatures,index,tempStr.GetText());
 			return false;
 		}
-		// VectPtr[0] = ID
-		// VectPtr[1] = Hash
-		// VectPtr[2] = Label
-		// VectPtr[3] = Feature[0]
-		VectPtr[index+3].DoubleVal = 1.0;
-	}
+		// VectPtr[0] = Hash
+		// VectPtr[1] = Label
+		// VectPtr[2] = Feature[0]
+		VectPtr[index+2].DoubleVal = 1.0;
+	}	
+	//*/
 	return true;
 }
 bool	SimpleTextFileDB::FetchRowNr (GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr)

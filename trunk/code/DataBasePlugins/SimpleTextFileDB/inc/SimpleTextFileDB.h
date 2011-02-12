@@ -29,6 +29,7 @@ class SimpleTextFileDB: public GML::DB::IDataBase
 	GML::Utils::GString*	FeatNames;
 
 public:
+    int*				Alloc() { return new int; }
 	bool				OnInit();
 	bool				Connect ();
 	bool				Disconnect ();

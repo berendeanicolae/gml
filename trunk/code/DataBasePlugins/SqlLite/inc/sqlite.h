@@ -16,6 +16,7 @@ private:
 	bool _InsertRow(char* table, GML::Utils::GTVector<GML::DB::DBRecord> &Vect, char* Fields = "");
 	char* _CreateStatement(char*Statement, GML::Utils::GTVector<GML::DB::DBRecord> &vals, GML::Utils::GTVector<GML::DB::DBRecord> &uvals);
 public:
+	int *Alloc() { return NULL; }
 	SqliteDatabase();
 	~SqliteDatabase();
 	UInt32 SqlSelect(char* What="*", char* Where="", char* From="" );
