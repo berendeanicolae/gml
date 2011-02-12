@@ -26,6 +26,8 @@ private:
 	UInt32	RecordsCount, FeaturesCount;
 	
 	GML::Utils::GTVector <MLRecord>	RecordsCache;
+	double ** FeaturesCache;
+	double  * FeatureCacheTemp;
 
 	BOOL	Initialized;
 
