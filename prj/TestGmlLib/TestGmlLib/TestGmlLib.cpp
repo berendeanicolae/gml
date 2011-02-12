@@ -6,8 +6,28 @@
 #include "gmllib.h"
 
 
+void Test(GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr)
+{
+	GML::DB::DBRecord	rec;
+
+	for (int tr=0;tr<6;tr++)
+		VectPtr.PushByRef(rec);
+	for (int tr=0;tr<6;tr++)
+	{
+		VectPtr[tr].DoubleVal = tr;
+		VectPtr[tr].Name = "Hi";
+	}
+
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
+	GML::Utils::GTVector<GML::DB::DBRecord> VectPtr;
+
+	Test(VectPtr);
+	VectPtr.DeleteAll();
+
+
 	GML::Utils::AttributeList	attr;
 	GML::Utils::GString			str;
 

@@ -57,7 +57,7 @@ bool FullCacheConnector::CreateMlRecord( MLRecord &record )
 	}
 
 	record.FeatCount = FeaturesCount;
-	record.Hash = *((RecordHash*)NULL);
+	//record.Hash = *((RecordHash*)NULL);
 	record.Label = 0;
 	record.Weight = 0;
 
@@ -106,7 +106,7 @@ bool FullCacheConnector::OnInit()
 		notifier->Error("I received 0 records from the database");
 		return false;
 	}
-
+	
 	for (UInt32 i=0;i<RecordsCount;i++) {
 		GML::Utils::GTVector<GML::DB::DBRecord> VectPtr;
 		
@@ -115,7 +115,6 @@ bool FullCacheConnector::OnInit()
 			notifier->Error("error fetching record %d from database", i);
 			return false;
 		}
-
 		//store data 
 		GML::ML::MLRecord record;
 		MEMSET((void*)&record, 0, sizeof(MLRecord));
@@ -131,7 +130,8 @@ bool FullCacheConnector::OnInit()
 		}
 													
 		// alloc memory for the features		
-		record.Features = (double*) malloc(sizeof(double)*FeaturesCount);
+		
+		record.Features = new double[FeaturesCount];
 		if (!record.Features ) {
 			notifier->Error("could not allocated memory for currect row");
 			database->FreeRow(VectPtr);
@@ -142,7 +142,7 @@ bool FullCacheConnector::OnInit()
 		UInt32 sizeLabelColName = strlen(LABEL_COL_NAME);
 		UInt32 sizeHashColname  = strlen(HASH_COL_NAME);
 		UInt32 sizeFeatPrefColName = strlen(FEATURES_COL_PREFIX);
-
+		/*
 		for (UInt32 tr=0;tr<VectPtr.GetCount();tr++) {
 			DBRecord * dbrec = VectPtr.GetPtrToObject(tr);
 
@@ -193,7 +193,7 @@ bool FullCacheConnector::OnInit()
 				record.Features[nr] = dbrec->DoubleVal;
 			}
 		}				
-
+		//*/
 		// set class data
 		FeaturesCount = record.FeatCount;
 		
