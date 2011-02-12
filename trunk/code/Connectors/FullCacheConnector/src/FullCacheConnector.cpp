@@ -33,7 +33,9 @@ bool FullCacheConnector::GetRecord( MLRecord &record,UInt32 index )
 		return false;
 	}
 
-	MEMCOPY((void*)&record, (void*) RecordsCache.GetPtrToObject(index), sizeof(MLRecord));
+	record.Features = (double*) &FeaturesCache[index*FeaturesCount]; 
+	record.FeatCount = FeaturesCount;
+	record.Label = LabelStorage[index];
 	
 	return true;
 }
@@ -72,10 +74,11 @@ bool FullCacheConnector::OnInit()
 {
 
 	GTVector<DBRecord> VectPtr;
-	MLRecord record;
+
 	DBRecord* rec;
 
-	UInt32	LabelPos, HashPos, vectSize;
+	UInt32	LabelPos, vectSize;
+	double  * FeaturesPtr;
 	
 	char SqlString [MAX_SQL_QUERY_SIZE];
 
@@ -124,14 +127,15 @@ bool FullCacheConnector::OnInit()
 	
 	// alloc memory for the cache
 	FeaturesCache = new double [FeaturesCount*RecordsCount];
+	LabelStorage  = new double [RecordsCount];
 	
-	if (!FeaturesCache) 
+	if (!FeaturesCache || !LabelStorage) 
 	{
 		notifier->Error("error allocating memory for the internal cache");
 		return false;
 	}
 
-	record.Features = (double*)&FeaturesCache[0*FeaturesCount];
+	FeaturesPtr = (double*)&FeaturesCache[0*FeaturesCount];	
 
 	for (UInt32 tr=0;tr<VectPtr.GetCount();tr++) 
 	{
@@ -148,11 +152,12 @@ bool FullCacheConnector::OnInit()
 				return false;
 			}
 
-			record.Label = dbrec->DoubleVal;
+			LabelStorage[0] = dbrec->DoubleVal;
 			LabelPos = tr;
 			continue;
 		}
 
+		/*
 		//look for the hash
 		if (GML::Utils::GString::Equals(dbrec->Name, "Hash", true)) 
 		{
@@ -168,6 +173,7 @@ bool FullCacheConnector::OnInit()
 			HashPos = tr;
 			continue;
 		}
+		*/
 
 		//look for features
 		if (GML::Utils::GString::StartsWith(dbrec->Name, "Feat_", true)) 
@@ -188,13 +194,10 @@ bool FullCacheConnector::OnInit()
 				VectPtr.DeleteAll();
 				return false;
 			}
-			record.Features[nr] = dbrec->DoubleVal;
+			FeaturesPtr[nr] = dbrec->DoubleVal;
 		}
 	}
-
-	// put the created record in our cache
-	RecordsCache.PushByRef(record);
-
+	
 	// free the data from database plugin
 	database->FreeRow(VectPtr);
 
@@ -202,7 +205,7 @@ bool FullCacheConnector::OnInit()
 	VectPtr.DeleteAll();
 	
 	for (UInt32 i=1;i<RecordsCount;i++) 
-	{
+	{		
 		// fetch data
 		if (!database->FetchNextRow(VectPtr)) 
 		{
@@ -211,13 +214,12 @@ bool FullCacheConnector::OnInit()
 		}	
 													
 		// put pointer from cache		
-		record.Features = (double*)&FeaturesCache[i*FeaturesCount];	
-		record.FeatCount = FeaturesCount;
-		record.Label = VectPtr[LabelPos].DoubleVal;
-		record.Hash =  VectPtr[HashPos].Hash;
+		FeaturesPtr = (double*)&FeaturesCache[i*FeaturesCount];	
+		
+		LabelStorage[i] = VectPtr[LabelPos].DoubleVal;		
 						
 		// check to see if we have fields above the HashPos
-		if (VectPtr.GetCount()<=HashPos) 
+		if (VectPtr.GetCount()<=LabelPos+1) 
 		{
 			notifier->Error("error - the database vector has no features");
 			return false;
@@ -245,12 +247,9 @@ bool FullCacheConnector::OnInit()
 				VectPtr.DeleteAll();
 				return false;
 			}
-			record.Features[nr] = dbrec->DoubleVal;
+			FeaturesPtr[nr] = dbrec->DoubleVal;
 		}				
-		
-		// put the created record in our cache
-		RecordsCache.PushByRef(record);
-
+				
 		// free the data from database plugin
 		database->FreeRow(VectPtr);
 
@@ -287,14 +286,14 @@ FullCacheConnector::FullCacheConnector()
 	 Initialized = FALSE;
 
 	 FeaturesCache = NULL;
-	 RecordsCache.DeleteAll();
+	 LabelStorage  = NULL;
 }
 
 FullCacheConnector::~FullCacheConnector()
 {
 	if (FeaturesCache != NULL) 	
-		free(FeaturesCache);
-	
-	if (!RecordsCache.DeleteAll()) 
-		notifier->Error("error deleting all values from cache");	
+		delete FeaturesCache;
+
+	if (LabelStorage != NULL)
+		delete LabelStorage;
 }

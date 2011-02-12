@@ -24,9 +24,9 @@ class FullCacheConnector: public GML::ML::IConector
 private:
 	UInt32	IntervalStart, IntervalEnd;
 	UInt32	RecordsCount, FeaturesCount;
-	
-	GML::Utils::GTVector <MLRecord>	RecordsCache;
-	double  * FeaturesCache;	
+		
+	double  * FeaturesCache;
+	double  * LabelStorage;
 
 	BOOL	Initialized;
 
