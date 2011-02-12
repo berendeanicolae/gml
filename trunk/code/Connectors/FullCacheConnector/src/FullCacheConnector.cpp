@@ -28,18 +28,13 @@ bool FullCacheConnector::GetRecord( MLRecord &record,UInt32 index )
 		return false;
 	}
 
-	if (RecordsCache.GetCount()<=index) {
-		notifier->Error("an interval error occured: RecordsCache count(%d) is smaller than the provided index(%d)", RecordsCache.GetCount(), index);
+	if (RecordsCount<=index) {
+		notifier->Error("an interval error occured: RecordsCache count(%d) is smaller than the provided index(%d)", RecordsCount, index);
 		return false;
 	}
 
-	MLRecord * rec = RecordsCache.GetPtrToObject(index);
-
-	record.Hash = rec->Hash;
-	record.FeatCount = rec->FeatCount;
-	record.Label = rec->Label;
-	MEMCOPY(record.Features, rec->Features, sizeof(double)*rec->FeatCount);	
-
+	MEMCOPY((void*)&record, (void*) RecordsCache.GetPtrToObject(index), sizeof(MLRecord));
+	
 	return true;
 }
 
@@ -48,18 +43,9 @@ bool FullCacheConnector::CreateMlRecord( MLRecord &record )
 	if (!Initialized) {
 		notifier->Error("connector not initialized");
 		return false;
-	}
+	}	
 
-	record.Features = (double*) malloc(sizeof(double)*FeaturesCount);
-	if (!record.Features ) {											 
-		notifier->Error("could not allocated memory for creating a MLRecord");		
-		return false;
-	}
-
-	record.FeatCount = FeaturesCount;
-	//record.Hash = *((RecordHash*)NULL);
-	record.Label = 0;
-	record.Weight = 0;
+	MEMSET((void*)&record, 0, sizeof(MLRecord));
 
 	return true;
 }
@@ -84,128 +70,191 @@ bool FullCacheConnector::SetRecordInterval( UInt32 start, UInt32 end )
 
 bool FullCacheConnector::OnInit()
 {
+
+	GTVector<DBRecord> VectPtr;
+	MLRecord record;
+	DBRecord* rec;
+
+	UInt32	LabelPos, HashPos, vectSize;
+	
+	char SqlString [MAX_SQL_QUERY_SIZE];
+
+
 	// connect to database
-	if (!database->Connect()) {
+	if (!database->Connect()) 
+	{
 		notifier->Error("could not connect to database");
 		return false;
 	}
 
 	// build the internal cache 
-
-	char SqlString [MAX_SQL_QUERY_SIZE];
+	
 	sprintf_s(SqlString, MAX_SQL_QUERY_SIZE, "select * from %s", RECORDS_TABLE_NAME);
 	
 	RecordsCount = database->Select(SqlString);
-	
-	IntervalStart = 0;
-	IntervalEnd   = RecordsCount;
-	Initialized = TRUE;
 
 	// something bad has happend
-	if (RecordsCount==0) {
+	if (RecordsCount==0) 
+	{
 		notifier->Error("I received 0 records from the database");
 		return false;
 	}
 	
-	for (UInt32 i=0;i<RecordsCount;i++) {
-		GML::Utils::GTVector<GML::DB::DBRecord> VectPtr;
-		
+	IntervalStart = 0;
+	IntervalEnd   = RecordsCount;
+	Initialized = TRUE;	
+
+	// fetch data
+	if (!database->FetchNextRow(VectPtr)) 
+	{		
+		notifier->Error("error fetching record %d from database", 0);
+		return false;
+	}		
+
+	// count the number of features that we have
+	FeaturesCount = 0;
+	vectSize = VectPtr.GetCount();
+
+	for (UInt32 tr=0;tr<vectSize;tr++) 
+	{
+		rec = VectPtr.GetPtrToObject(tr);
+		if (GML::Utils::GString::StartsWith(rec->Name,"Feat_",true))
+			FeaturesCount++;
+	}
+	
+	// alloc memory for the cache
+	FeatureCacheTemp = new double [FeaturesCount*RecordsCount];
+	FeaturesCache = (double **) FeatureCacheTemp;
+	if (!FeaturesCache) 
+	{
+		notifier->Error("error allocating memory for the internal cache");
+		return false;
+	}
+
+	record.Features = (double*)&FeaturesCache[0];
+
+	for (UInt32 tr=0;tr<VectPtr.GetCount();tr++) 
+	{
+		DBRecord * dbrec = VectPtr.GetPtrToObject(tr);
+
+		// look for label
+		if (GML::Utils::GString::Equals(dbrec->Name, "Label", true)) 
+		{
+			// check if it's a signed type
+			if (dbrec->Type == BOOLVAL || dbrec->Type == UINT8VAL || dbrec->Type == UINT16VAL || dbrec->Type == UINT32VAL) {
+				notifier->Error("wrong data type for Label column");
+				database->FreeRow(VectPtr);
+				VectPtr.DeleteAll();
+				return false;
+			}
+
+			record.Label = dbrec->DoubleVal;
+			LabelPos = tr;
+			continue;
+		}
+
+		//look for the hash
+		if (GML::Utils::GString::Equals(dbrec->Name, "Hash", true)) 
+		{
+			// check if it's indeed a Hash data type
+			if (dbrec->Type != HASHVAL) {
+				notifier->Error("wrong data type for Hash column");
+				database->FreeRow(VectPtr);
+				VectPtr.DeleteAll();
+				return false;
+			}
+
+			record.Hash = dbrec->Hash;
+			HashPos = tr;
+			continue;
+		}
+
+		//look for features
+		if (GML::Utils::GString::StartsWith(dbrec->Name, "Feat_", true)) 
+		{
+			// check that features are DOUBLEVAL
+			if (dbrec->Type != DOUBLEVAL && dbrec->Type != FLOATVAL) {
+				notifier->Error("wrong data type for Feat column");
+				database->FreeRow(VectPtr);
+				VectPtr.DeleteAll();
+				return false;
+			}
+
+			UInt32 nr;
+			if (GML::Utils::GString::ConvertToUInt32(&dbrec->Name[5],&nr)==false)
+			{
+				notifier->Error("Invalid number for Feat_xxx column: %s",dbrec->Name);
+				database->FreeRow(VectPtr);
+				VectPtr.DeleteAll();
+				return false;
+			}
+			record.Features[nr] = dbrec->DoubleVal;
+		}
+	}
+
+	// put the created record in our cache
+	RecordsCache.PushByRef(record);
+
+	// free the data from database plugin
+	database->FreeRow(VectPtr);
+
+	// prepare the vector for our next round
+	VectPtr.DeleteAll();
+	
+	for (UInt32 i=1;i<RecordsCount;i++) 
+	{
 		// fetch data
-		if (!database->FetchNextRow(VectPtr)) {
-			notifier->Error("error fetching record %d from database", i);
+		if (!database->FetchNextRow(VectPtr)) 
+		{
+			notifier->Error("error fetching record %d from database", 0);
 			return false;
-		}
-		//store data 
-		GML::ML::MLRecord record;
-		MEMSET((void*)&record, 0, sizeof(MLRecord));
-
-		// count the number of features that we have
-		FeaturesCount = 0;
-		UInt32 vectSize = VectPtr.GetCount();
-
-		for (UInt32 tr=0;tr<vectSize;tr++) {
-			DBRecord* dbrec = VectPtr.GetPtrToObject(tr);
-			if (GML::Utils::GString::StartsWith(dbrec->Name,"Feat_",true))
-				FeaturesCount++;
-		}
+		}	
 													
-		// alloc memory for the features		
-		
-		record.Features = new double[FeaturesCount];
-		if (!record.Features ) {
-			notifier->Error("could not allocated memory for currect row");
-			database->FreeRow(VectPtr);
+		// put pointer from cache		
+		record.Features = (double*)&FeaturesCache[i];	
+		record.FeatCount = FeaturesCount;
+		record.Label = VectPtr[LabelPos].DoubleVal;
+		record.Hash =  VectPtr[HashPos].Hash;
+						
+		// check to see if we have fields above the HashPos
+		if (VectPtr.GetCount()<=HashPos) 
+		{
+			notifier->Error("error - the database vector has no features");
 			return false;
 		}
-																						
-		// pass through the vector to store information
-		//*
-		for (UInt32 tr=0;tr<VectPtr.GetCount();tr++) 
+
+		// pass through the vector to store information		
+		for (UInt32 tr=LabelPos+1;tr<VectPtr.GetCount();tr++) 
 		{
 			DBRecord * dbrec = VectPtr.GetPtrToObject(tr);
 
-			// look for label
-			if (GML::Utils::GString::Equals(dbrec->Name, "Label", true)) 
+			// check that features are DOUBLEVAL
+			if (dbrec->Type != DOUBLEVAL && dbrec->Type != FLOATVAL) 
 			{
-				// check if it's a signed type
-				if (dbrec->Type == BOOLVAL || dbrec->Type == UINT8VAL || dbrec->Type == UINT16VAL || dbrec->Type == UINT32VAL) {
-					notifier->Error("wrong data type for Label column");
-					database->FreeRow(VectPtr);
-					VectPtr.DeleteAll();
-					return false;
-				}
-
-				record.Label = dbrec->DoubleVal;
-				continue;
+				notifier->Error("wrong data type for Feat column");
+				database->FreeRow(VectPtr);
+				VectPtr.DeleteAll();
+				return false;
 			}
 
-			//look for the hash
-			if (GML::Utils::GString::Equals(dbrec->Name, "Hash", true)) 
+			UInt32 nr;
+			if (GML::Utils::GString::ConvertToUInt32(&dbrec->Name[5],&nr)==false)
 			{
-				// check if it's indeed a Hash data type
-				if (dbrec->Type != HASHVAL) {
-					notifier->Error("wrong data type for Hash column");
-					database->FreeRow(VectPtr);
-					VectPtr.DeleteAll();
-					return false;
-				}
-
-				record.Hash = dbrec->Hash;
-				continue;
+				notifier->Error("Invalid number for Feat_xxx column: %s",dbrec->Name);
+				database->FreeRow(VectPtr);
+				VectPtr.DeleteAll();
+				return false;
 			}
-
-			//look for features
-			if (GML::Utils::GString::StartsWith(dbrec->Name, "Feat_", true)) 
-			{
-				// check that features are DOUBLEVAL
-				if (dbrec->Type != DOUBLEVAL && dbrec->Type != FLOATVAL) {
-					notifier->Error("wrong data type for Feat column");
-					database->FreeRow(VectPtr);
-					VectPtr.DeleteAll();
-					return false;
-				}
-
-				UInt32 nr;
-				if (GML::Utils::GString::ConvertToUInt32(&dbrec->Name[5],&nr)==false)
-				{
-					notifier->Error("Invalid number for Feat_xxx column: %s",dbrec->Name);
-					database->FreeRow(VectPtr);
-					VectPtr.DeleteAll();
-					return false;
-				}
-				record.Features[nr] = dbrec->DoubleVal;
-			}
+			record.Features[nr] = dbrec->DoubleVal;
 		}				
-		//*/
-		// set class data
-		// VARZA mihai , VARZA :p
-		record.FeatCount = FeaturesCount;
 		
 		// put the created record in our cache
 		RecordsCache.PushByRef(record);
 
 		// free the data from database plugin
 		database->FreeRow(VectPtr);
+
+		// prepare the vector for our next round
 		VectPtr.DeleteAll();
 	}	
 
@@ -228,7 +277,6 @@ bool FullCacheConnector::Close()
 UInt32 FullCacheConnector::GetTotalRecordCount()
 {
 	if (!Initialized) return 0;
-
 	return RecordsCount;
 }
 
@@ -237,18 +285,16 @@ FullCacheConnector::FullCacheConnector()
 	 RecordsCount = 0;
 	 FeaturesCount = 0;
 	 Initialized = FALSE;
+
+	 FeaturesCache = NULL;
+	 RecordsCache.DeleteAll();
 }
 
 FullCacheConnector::~FullCacheConnector()
 {
-	for (UInt32 i=0;i<RecordsCache.GetCount();i++) {
-		MLRecord * rec = RecordsCache.GetPtrToObject(i);
-		if (rec->Features!=NULL) {
-			free(rec->Features);
-		}
-	}
-
-	if (!RecordsCache.DeleteAll()) {
-		notifier->Error("error deleting all values from cache");
-	}
+	if (FeaturesCache != NULL) 	
+		free(FeaturesCache);
+	
+	if (!RecordsCache.DeleteAll()) 
+		notifier->Error("error deleting all values from cache");	
 }

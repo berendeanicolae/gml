@@ -97,7 +97,7 @@ bool	SimpleTextFileDB::Disconnect ()
 UInt32	SimpleTextFileDB::Select (char* Statement)
 {
 	if ((GML::Utils::GString::Equals(Statement,"*")==false) &&
-		(GML::Utils::GString::Equals(Statement,"select * from RecordsTable")==false))
+		(GML::Utils::GString::Equals(Statement,"select * from RecordTable")==false))
 	{
 		notifier->Error("Only 'Select(*)' is suported !");
 		return 0;
@@ -157,9 +157,9 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &Ve
 	}
 	
 	cIndex++;
-	notifier->Info("Reading records: %d (%d)",cIndex,dbPoz);
+	//notifier->Info("Reading records: %d (%d)",cIndex,dbPoz);
 	// adaug si un hash
-	rec.Name = "HASH";
+	rec.Name = "Hash";
 	rec.Type = GML::DB::HASHVAL;
 	memset(rec.Hash.Value,0,sizeof(rec.Hash));
 	if (VectPtr.PushByRef(rec)==false)
