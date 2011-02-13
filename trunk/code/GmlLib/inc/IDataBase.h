@@ -2,7 +2,7 @@
 
 #include "compat.h"
 #include "INotify.h"
-#include "GTVector.h"
+#include "GTFVector.h"
 #include "DBRecord.h"
 #include "AttributeList.h"
 
@@ -27,8 +27,7 @@ namespace GML
 			 * Cand se apeleaza OnInit() , notifier-ul este deja setat iar in Attr sunt incarcate toate atributele
 			 * din conectionString 
 			 */
-			virtual bool				OnInit() = 0;
-			virtual int*				Alloc()=0;
+			virtual bool				OnInit()=0;
 			bool						Init (GML::Utils::INotify &notifier, char *connectionString);
 
 			/*
@@ -73,7 +72,7 @@ namespace GML
 			 *	- INPUT/OUTPUT DbRecordVect **VectPtr: a double pointer to the calee alocated vector of records			
 			 * Return: true/false if there was a record to fetch or not	 
 			 */
-			virtual bool				FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr)=0;
+			virtual bool				FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)=0;
 
 			/*
 			 * Usage: fetch a new record after a previous SqlSelect call
@@ -82,7 +81,7 @@ namespace GML
 			 *	- INPUT UInt32 RowNr: the row number to be fetched
 			 * Return: true/false if there was a record to fetch or not	 
 			 */
-			virtual bool				FetchRowNr (GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr)=0;
+			virtual bool				FetchRowNr (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr)=0;
 
 			/*
 			 *Usage: free the calee allocated vector of records given in a FetchRow call
@@ -90,7 +89,7 @@ namespace GML
 			 *	- INPUT DbRecordVect* Vect: a pointer to a DbRecordVect to be freed
 			 *Return: true/false if the memory free succeded or not
 			 */
-			virtual bool				FreeRow(GML::Utils::GTVector<GML::DB::DBRecord> &Vect)=0;
+			virtual bool				FreeRow(GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)=0;
 
 			 /*
 			  *Usage: insert a new ENTIRE row into the database
@@ -99,7 +98,7 @@ namespace GML
 			  *	- INPUT DbRecordVect * Vect: a vector of Record objects to be inserted
 			  *	Return: true/false if the action succeded or not
 			  */
-			virtual bool				InsertRow (char* Table, GML::Utils::GTVector<GML::DB::DBRecord> &Vect)=0;
+			virtual bool				InsertRow (char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)=0;
 
 			/*
 			  *Usage: insert a new ENTIRE row into the database
@@ -109,7 +108,7 @@ namespace GML
 			  *	- INPUT DbRecordVect * Vect: a vector of Record objects to be inserted
 			  *	Return: true/false if the action succeded or not
 			  */
-			virtual bool				InsertRow (char* Table, char* Fields, GML::Utils::GTVector<GML::DB::DBRecord> &Vect)=0;
+			virtual bool				InsertRow (char* Table, char* Fields, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)=0;
 
 			/*
 			 * Usage: execute a sql update statement 
@@ -119,7 +118,7 @@ namespace GML
 			 *  - INPUT DbRecordVect* UpdateVals: the values used to replace the old values
 			 * Return: true/false if the operation succeded or not
 			 */
-			virtual bool				Update (char* SqlStatement, GML::Utils::GTVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTVector<GML::DB::DBRecord> &UpdateVals)=0;
+			virtual bool				Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTFVector<GML::DB::DBRecord> &UpdateVals)=0;
 		};
 	}
 }

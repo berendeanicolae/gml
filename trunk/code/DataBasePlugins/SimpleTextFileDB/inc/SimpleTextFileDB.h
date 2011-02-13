@@ -30,18 +30,17 @@ class SimpleTextFileDB: public GML::DB::IDataBase
 	int						dbPoz;
 
 public:
-    int*				Alloc() { return new int; }
 	bool				OnInit();
 	bool				Connect ();
 	bool				Disconnect ();
 	UInt32				Select (char* Statement="*");
 	UInt32				SqlSelect (char* What="*", char* Where="", char* From="");
-	bool				FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr);
-	bool				FetchRowNr (GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr);
-	bool				FreeRow(GML::Utils::GTVector<GML::DB::DBRecord> &Vect);
-	bool				InsertRow (char* Table, GML::Utils::GTVector<GML::DB::DBRecord> &Vect);
-	bool				InsertRow (char* Table, char* Fields, GML::Utils::GTVector<GML::DB::DBRecord> &Vect);
-	bool				Update (char* SqlStatement, GML::Utils::GTVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTVector<GML::DB::DBRecord> &UpdateVals);
+	bool				FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
+	bool				FetchRowNr (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr);
+	bool				FreeRow(GML::Utils::GTFVector<GML::DB::DBRecord> &Vect);
+	bool				InsertRow (char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect);
+	bool				InsertRow (char* Table, char* Fields, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect);
+	bool				Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTFVector<GML::DB::DBRecord> &UpdateVals);
 
 };
  

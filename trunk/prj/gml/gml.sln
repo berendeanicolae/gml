@@ -25,15 +25,23 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Algorithm", "Algorithm", "{EDF5ED9C-8524-443D-9C31-AB2C5DA3341D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimplePerceptronAlgorithm", "SimplePerceptronAlgorithm\SimplePerceptronAlgorithm.vcxproj", "{B22767AC-0081-4DE9-8969-A0E8713CCF37}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Connectors", "Connectors", "{CB091987-2341-425C-835B-C77596F5ABB0}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FullCacheConnector", "FullCacheConnector\FullCacheConnector.vcxproj", "{1ECE0CF3-CB18-43D2-B8C8-F910F224CD97}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcxproj", "{0EFF33E4-4013-4FC7-AA4C-D2E1DAF9A43D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BitConnector", "BitConnector\BitConnector.vcxproj", "{DABE1B18-56F3-460C-9E58-25F89B9C9765}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +77,10 @@ Global
 		{0EFF33E4-4013-4FC7-AA4C-D2E1DAF9A43D}.Debug|Win32.Build.0 = Debug|Win32
 		{0EFF33E4-4013-4FC7-AA4C-D2E1DAF9A43D}.Release|Win32.ActiveCfg = Release|Win32
 		{0EFF33E4-4013-4FC7-AA4C-D2E1DAF9A43D}.Release|Win32.Build.0 = Release|Win32
+		{DABE1B18-56F3-460C-9E58-25F89B9C9765}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DABE1B18-56F3-460C-9E58-25F89B9C9765}.Debug|Win32.Build.0 = Debug|Win32
+		{DABE1B18-56F3-460C-9E58-25F89B9C9765}.Release|Win32.ActiveCfg = Release|Win32
+		{DABE1B18-56F3-460C-9E58-25F89B9C9765}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -79,5 +91,6 @@ Global
 		{089301A7-B086-4B1F-943B-9C110F719835} = {5239E43E-CF89-497B-A9F5-20F4581FB7C3}
 		{B22767AC-0081-4DE9-8969-A0E8713CCF37} = {EDF5ED9C-8524-443D-9C31-AB2C5DA3341D}
 		{1ECE0CF3-CB18-43D2-B8C8-F910F224CD97} = {CB091987-2341-425C-835B-C77596F5ABB0}
+		{DABE1B18-56F3-460C-9E58-25F89B9C9765} = {CB091987-2341-425C-835B-C77596F5ABB0}
 	EndGlobalSection
 EndGlobal

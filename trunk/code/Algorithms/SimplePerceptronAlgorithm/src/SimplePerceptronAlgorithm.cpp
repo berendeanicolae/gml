@@ -105,7 +105,7 @@ void	SimplePerceptronAlgorithm::Execute(UInt32 command)
 {
 	notif->Info("Starting Algorithm (Execute) => Command = %d",command);
 	notif->Info("DB: Records = %d,Features = %d",con->GetRecordCount(),con->GetFeatureCount());
-	memset(weight,0,sizeof(double)*con->GetFeatureCount());
+	memset(&weight[0],0,sizeof(double)*con->GetFeatureCount());
 	b=0;
 	for (UInt32 tr = 0;tr<maxIteratii;tr++)
 	{

@@ -130,7 +130,7 @@ UInt32	SimpleTextFileDB::SqlSelect (char* What, char* Where, char* From)
 	notifier->Error("SqlSelect function not suported !");
 	return 0;
 }
-bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr)
+bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
 	GML::DB::DBRecord	rec;
 	int					poz;
@@ -227,27 +227,27 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &Ve
 	//*/
 	return true;
 }
-bool	SimpleTextFileDB::FetchRowNr (GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr)
+bool	SimpleTextFileDB::FetchRowNr (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr)
 {
 	notifier->Error("FetchRowNr function not suported !");
 	return false;
 }
-bool	SimpleTextFileDB::FreeRow(GML::Utils::GTVector<GML::DB::DBRecord> &Vect)
+bool	SimpleTextFileDB::FreeRow(GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
 {
 	// nu am facut nici o alocare -> deci nu trebuie sa eliberez ceva
 	return true;
 }
-bool	SimpleTextFileDB::InsertRow (char* Table, GML::Utils::GTVector<GML::DB::DBRecord> &Vect)
+bool	SimpleTextFileDB::InsertRow (char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
 {
 	notifier->Error("InsertRow function not suported !");
 	return false;
 }
-bool	SimpleTextFileDB::InsertRow (char* Table, char* Fields, GML::Utils::GTVector<GML::DB::DBRecord> &Vect)
+bool	SimpleTextFileDB::InsertRow (char* Table, char* Fields, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
 {
 	notifier->Error("InsertRow function not suported !");
 	return false;
 }
-bool	SimpleTextFileDB::Update (char* SqlStatement, GML::Utils::GTVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTVector<GML::DB::DBRecord> &UpdateVals)
+bool	SimpleTextFileDB::Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTFVector<GML::DB::DBRecord> &UpdateVals)
 {
 	notifier->Error("Update function not suported !");
 	return false;

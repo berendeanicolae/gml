@@ -609,8 +609,11 @@ namespace GML
 	{
 		template <class TemplateObject> class GTFVector
 		{
-			Vector	data;
+			Vector	elements;
 		public:
+			GTFVector();
+			GTFVector(UInt32 initialSize);
+
 			bool						Create(UInt32 initialSize);
 			void						Free();
 
@@ -637,74 +640,82 @@ namespace GML
 			UInt32						GetCount();
 			UInt32						Len();
 		};		
+		template <class TemplateObject> GTFVector<TemplateObject>::GTFVector()
+		{
+			elements.Create(256,sizeof(TemplateObject));
+		}
+		template <class TemplateObject> GTFVector<TemplateObject>::GTFVector(UInt32 initialSize)
+		{
+			elements.Create(initialSize,sizeof(TemplateObject));
+		}		
 		template <class TemplateObject> bool GTFVector<TemplateObject>::Create(UInt32 initialSize)
 		{
-			return v.Create(sizeof(TemplateObject),initialSize);
+			return elements.Create(initialSize,sizeof(TemplateObject));
 		}
 		template <class TemplateObject> void GTFVector<TemplateObject>::Free()
 		{
-			v.Free();
+			elements.Free();
 		}
 		template <class TemplateObject> bool GTFVector<TemplateObject>::Push(TemplateObject Element)
 		{
-			return v.Push(&Element);
+			return elements.Push(&Element);
 		}
 		template <class TemplateObject> bool GTFVector<TemplateObject>::PushByRef(TemplateObject &Element)
 		{
-			return v.Push(&Element);
+			return elements.Push(&Element);
 		}
 		template <class TemplateObject> bool GTFVector<TemplateObject>::PushFront(TemplateObject Element)
 		{
-			return v.Insert(&Element,0);
+			return elements.Insert(&Element,0);
 		}
 		template <class TemplateObject> bool GTFVector<TemplateObject>::PushFrontByRef(TemplateObject &Element)
 		{
-			return v.Insert(&Element,0);
+			return elements.Insert(&Element,0);
 		}
 		template <class TemplateObject> bool GTFVector<TemplateObject>::Insert(TemplateObject Element,UInt32 pos)
 		{
-			return v.Insert(&Element,pos);
+			return elements.Insert(&Element,pos);
 		}
 		template <class TemplateObject> bool GTFVector<TemplateObject>::InsertByRef(TemplateObject &Element,UInt32 pos)
 		{
-			return v.Insert(&Element,pos);
+			return elements.Insert(&Element,pos);
 		}
 		template <class TemplateObject> TemplateObject& GTFVector<TemplateObject>::operator [] (UInt32 poz)
 		{
-			return *(TemplateObject *)v.Get(poz);
+			return *(TemplateObject *)elements.Get(poz);
 		}
 		template <class TemplateObject> TemplateObject*	GTFVector<TemplateObject>::GetPtrToObject(UInt32 poz)
 		{
-			return (TemplateObject *)v.Get(poz);
+			return (TemplateObject *)elements.Get(poz);
 		}
 		template <class TemplateObject> bool GTFVector<TemplateObject>::Pop(TemplateObject &Element)
 		{
-			if (v.GetSize()==0)
+			if (elements.GetSize()==0)
 				return false;
-			if (v.CopyElement(v.GetSize()-1,&Element)==false)
+			if (elements.CopyElement(elements.GetSize()-1,&Element)==false)
 				return false;
-			return v.Delete(v.GetSize()-1);
+			return elements.Delete(elements.GetSize()-1);
 		}
 
 		template <class TemplateObject> bool GTFVector<TemplateObject>::Delete(UInt32 poz)
 		{
-			return v.Delete(poz);
+			return elements.Delete(poz);
 		}
 		template <class TemplateObject> bool GTFVector<TemplateObject>::DeleteAll()
 		{
-			return v.DeleteAll();
+			return elements.DeleteAll();
 		}
 		template <class TemplateObject> bool GTFVector<TemplateObject>::Exists()
 		{
-			return v.Exists();
+			return elements.Exists();
 		}
 		template <class TemplateObject> UInt32 GTFVector<TemplateObject>::Len()
 		{
-			return v.GetSize();
+			return elements.GetSize();
 		}
 		template <class TemplateObject> UInt32 GTFVector<TemplateObject>::GetCount()
 		{
-			return v.GetSize();
+			return elements.GetSize();
 		}
 
 	}
@@ -1206,8 +1217,7 @@ namespace GML
 			 * Cand se apeleaza OnInit() , notifier-ul este deja setat iar in Attr sunt incarcate toate atributele
 			 * din conectionString 
 			 */
-			virtual bool				OnInit() = 0;
-			virtual int*				Alloc()=0;
+			virtual bool				OnInit()=0;
 			bool						Init (GML::Utils::INotify &notifier, char *connectionString);
 
 			/*
@@ -1252,7 +1262,7 @@ namespace GML
 			 *	- INPUT/OUTPUT DbRecordVect **VectPtr: a double pointer to the calee alocated vector of records			
 			 * Return: true/false if there was a record to fetch or not	 
 			 */
-			virtual bool				FetchNextRow (GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr)=0;
+			virtual bool				FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)=0;
 
 			/*
 			 * Usage: fetch a new record after a previous SqlSelect call
@@ -1261,7 +1271,7 @@ namespace GML
 			 *	- INPUT UInt32 RowNr: the row number to be fetched
 			 * Return: true/false if there was a record to fetch or not	 
 			 */
-			virtual bool				FetchRowNr (GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr)=0;
+			virtual bool				FetchRowNr (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr)=0;
 
 			/*
 			 *Usage: free the calee allocated vector of records given in a FetchRow call
@@ -1269,7 +1279,7 @@ namespace GML
 			 *	- INPUT DbRecordVect* Vect: a pointer to a DbRecordVect to be freed
 			 *Return: true/false if the memory free succeded or not
 			 */
-			virtual bool				FreeRow(GML::Utils::GTVector<GML::DB::DBRecord> &Vect)=0;
+			virtual bool				FreeRow(GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)=0;
 
 			 /*
 			  *Usage: insert a new ENTIRE row into the database
@@ -1278,7 +1288,7 @@ namespace GML
 			  *	- INPUT DbRecordVect * Vect: a vector of Record objects to be inserted
 			  *	Return: true/false if the action succeded or not
 			  */
-			virtual bool				InsertRow (char* Table, GML::Utils::GTVector<GML::DB::DBRecord> &Vect)=0;
+			virtual bool				InsertRow (char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)=0;
 
 			/*
 			  *Usage: insert a new ENTIRE row into the database
@@ -1288,7 +1298,7 @@ namespace GML
 			  *	- INPUT DbRecordVect * Vect: a vector of Record objects to be inserted
 			  *	Return: true/false if the action succeded or not
 			  */
-			virtual bool				InsertRow (char* Table, char* Fields, GML::Utils::GTVector<GML::DB::DBRecord> &Vect)=0;
+			virtual bool				InsertRow (char* Table, char* Fields, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)=0;
 
 			/*
 			 * Usage: execute a sql update statement 
@@ -1298,7 +1308,7 @@ namespace GML
 			 *  - INPUT DbRecordVect* UpdateVals: the values used to replace the old values
 			 * Return: true/false if the operation succeded or not
 			 */
-			virtual bool				Update (char* SqlStatement, GML::Utils::GTVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTVector<GML::DB::DBRecord> &UpdateVals)=0;
+			virtual bool				Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTFVector<GML::DB::DBRecord> &UpdateVals)=0;
 		};
 	}
 }
