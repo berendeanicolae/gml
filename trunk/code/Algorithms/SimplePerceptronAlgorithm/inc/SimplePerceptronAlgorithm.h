@@ -10,7 +10,8 @@ class SimplePerceptronAlgorithm: public GML::Algorithm::IAlgorithm
 	GML::ML::IConector		*con;
 	GML::ML::MLRecord		rec;
 	double					*weight;
-	double					b;
+	double					*delta;
+	double					b,b_delta;
 
 
 	GML::Utils::GString		dbName,conString,conectorString,notifString;
