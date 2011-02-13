@@ -145,7 +145,7 @@ UInt32 SqliteDatabase::SqlSelect(char* What, char* Where, char* From)
 	return 1; // convenience return. I can't find out the nmber of results without iterating through them. That's how sqlite does the work
 }
 
-bool SqliteDatabase::FetchNextRow(GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr)
+bool SqliteDatabase::FetchNextRow(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
 	UInt32 result = 0;
 	UInt32 column_count = 0;
@@ -211,7 +211,7 @@ bool SqliteDatabase::FetchNextRow(GML::Utils::GTVector<GML::DB::DBRecord> &VectP
 		return false;
 	}
 }
-bool SqliteDatabase::FetchRowNr(GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr)
+bool SqliteDatabase::FetchRowNr(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr)
 {
 	bool result = this->FetchNextRow(VectPtr);
 	if (false == result)
@@ -238,7 +238,7 @@ bool SqliteDatabase::FetchRowNr(GML::Utils::GTVector<GML::DB::DBRecord> &VectPtr
 		return true;
     }
 }
-bool SqliteDatabase::FreeRow( GML::Utils::GTVector<GML::DB::DBRecord> &Vect )
+bool SqliteDatabase::FreeRow( GML::Utils::GTFVector<GML::DB::DBRecord> &Vect )
 {
 	UInt32 counter = Vect.GetCount();
 	for(UInt32 i = 0; i < counter; i ++)
@@ -262,7 +262,7 @@ bool SqliteDatabase::FreeRow( GML::Utils::GTVector<GML::DB::DBRecord> &Vect )
 	Vect.DeleteAll();
 	return counter > 0 ? true :false;
 }
-bool SqliteDatabase::_InsertRow(char* Table, GML::Utils::GTVector<GML::DB::DBRecord> &Vect, char* Fields)
+bool SqliteDatabase::_InsertRow(char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect, char* Fields)
 {
 	if(!this->database)
 	{
@@ -323,18 +323,18 @@ bool SqliteDatabase::_InsertRow(char* Table, GML::Utils::GTVector<GML::DB::DBRec
 	return error != SQLITE_OK ? false :true;
 	}
 
-bool SqliteDatabase::InsertRow(char* Table, GML::Utils::GTVector<GML::DB::DBRecord> &Vect)
+bool SqliteDatabase::InsertRow(char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
 {
 	return this->_InsertRow(Table, Vect, "");
 }
 
-bool SqliteDatabase::InsertRow(char* Table, char* Fields, GML::Utils::GTVector<GML::DB::DBRecord> &Vect)
+bool SqliteDatabase::InsertRow(char* Table, char* Fields, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
 {
 	return this->_InsertRow(Table, Vect, Fields);
 }
 
 
-bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTVector<GML::DB::DBRecord> &UpdateVals )
+bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTFVector<GML::DB::DBRecord> &UpdateVals )
 {
 	if(!this->database)
 	{
