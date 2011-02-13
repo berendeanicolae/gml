@@ -16,7 +16,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	attr.UpdateString("dbPath",str);
 
 	attr.AddString("DbName","SimpleTextFileDB");
-	attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\a.txt");  
+	attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin");  
 	attr.AddString("Conector","FullCacheConnector");
 	attr.AddString("Notifyer","ConsoleNotifyer");
 	attr.AddDouble("LearningRate",0.01);

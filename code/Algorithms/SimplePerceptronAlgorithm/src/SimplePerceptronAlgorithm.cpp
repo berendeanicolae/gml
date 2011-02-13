@@ -52,11 +52,20 @@ bool	SimplePerceptronAlgorithm::Init()
 		notif->Error("Unable to allocate %d features !",rec.FeatCount);
 		return false;
 	}
+	if ((delta = new double[rec.FeatCount])==NULL)
+	{
+		notif->Error("Unable to allocate %d features (delta)!",rec.FeatCount);
+		return false;
+	}
 	return true;
 }
 void	SimplePerceptronAlgorithm::Train()
 {
 	UInt32	tr;
+
+
+	memset(delta,0,sizeof(double)*con->GetFeatureCount());
+	b_delta = 0;
 
 	for (tr=0;tr<con->GetRecordCount();tr++)
 	{
@@ -67,10 +76,12 @@ void	SimplePerceptronAlgorithm::Train()
 		}
 		if (GML::ML::VectorOp::IsPerceptronTrained(rec.Features,weight,rec.FeatCount,b,rec.Label)==false)
 		{
-			GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(rec.Features,weight,rec.FeatCount,rec.Label*learningRate);
-			b+=learningRate*rec.Label;
+			GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(rec.Features,delta,rec.FeatCount,rec.Label*learningRate);
+			b_delta+=learningRate*rec.Label;
 		}
 	}
+	GML::ML::VectorOp::AddVectors(weight,delta,con->GetFeatureCount());
+	b+=b_delta;
 }
 void	SimplePerceptronAlgorithm::Test()
 {
