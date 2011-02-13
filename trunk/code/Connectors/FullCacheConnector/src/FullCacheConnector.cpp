@@ -72,8 +72,7 @@ bool FullCacheConnector::SetRecordInterval( UInt32 start, UInt32 end )
 
 bool FullCacheConnector::OnInit()
 {
-
-	GTVector<DBRecord> VectPtr;
+	GTFVector<DBRecord> VectPtr;
 
 	DBRecord* rec;
 
@@ -82,6 +81,11 @@ bool FullCacheConnector::OnInit()
 	
 	char SqlString [MAX_SQL_QUERY_SIZE];
 
+	if (VectPtr.Create(1024)==false)
+	{
+		notifier->Error("Unable to preallocate memory for records !");
+		return false;
+	}
 
 	// connect to database
 	if (!database->Connect()) 
