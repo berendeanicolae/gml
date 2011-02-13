@@ -14,6 +14,7 @@ namespace GML
 			static double	ComputeVectorsSum(double *v1,double *v2,UInt32 elements);
 			// perceptron specific
 			static bool		IsPerceptronTrained(double *features,double *weights,UInt32 elements,double label);
+			static bool		IsPerceptronTrained(double *features,double *weights,UInt32 elements,double b,double label);
 			static void		AdjustTwoStatePerceptronWeights(double *features,double *weights,UInt32 elements,double error);
 			static void		AdjustPerceptronWeights(double *features,double *weights,UInt32 elements,double error);
 

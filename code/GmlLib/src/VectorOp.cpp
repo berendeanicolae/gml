@@ -29,6 +29,10 @@ bool GML::ML::VectorOp::IsPerceptronTrained(double *v1,double *v2,UInt32 element
 {
 	return ((label*ComputeVectorsSum(v1,v2,elements))>0);
 }
+bool GML::ML::VectorOp::IsPerceptronTrained(double *v1,double *v2,UInt32 elements,double b,double label)
+{
+	return ((label*(ComputeVectorsSum(v1,v2,elements)+b))>0);
+}
 void GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(double *features,double *weights,UInt32 elements,double error)
 {
 	Int32	contor = (Int32) elements;
