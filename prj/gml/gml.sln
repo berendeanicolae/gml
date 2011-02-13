@@ -30,6 +30,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Connectors", "Connectors", 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FullCacheConnector", "FullCacheConnector\FullCacheConnector.vcxproj", "{1ECE0CF3-CB18-43D2-B8C8-F910F224CD97}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcxproj", "{0EFF33E4-4013-4FC7-AA4C-D2E1DAF9A43D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -60,6 +65,10 @@ Global
 		{1ECE0CF3-CB18-43D2-B8C8-F910F224CD97}.Debug|Win32.Build.0 = Debug|Win32
 		{1ECE0CF3-CB18-43D2-B8C8-F910F224CD97}.Release|Win32.ActiveCfg = Release|Win32
 		{1ECE0CF3-CB18-43D2-B8C8-F910F224CD97}.Release|Win32.Build.0 = Release|Win32
+		{0EFF33E4-4013-4FC7-AA4C-D2E1DAF9A43D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0EFF33E4-4013-4FC7-AA4C-D2E1DAF9A43D}.Debug|Win32.Build.0 = Debug|Win32
+		{0EFF33E4-4013-4FC7-AA4C-D2E1DAF9A43D}.Release|Win32.ActiveCfg = Release|Win32
+		{0EFF33E4-4013-4FC7-AA4C-D2E1DAF9A43D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
