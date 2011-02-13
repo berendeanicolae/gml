@@ -65,9 +65,10 @@ void	SimplePerceptronAlgorithm::Train()
 			notif->Error("Unable to read record #%d",tr);
 			return;
 		}
-		if (GML::ML::VectorOp::IsPerceptronTrained(rec.Features,weight,rec.FeatCount,rec.Label)==false)
+		if (GML::ML::VectorOp::IsPerceptronTrained(rec.Features,weight,rec.FeatCount,b,rec.Label)==false)
 		{
 			GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(rec.Features,weight,rec.FeatCount,rec.Label*learningRate);
+			b+=learningRate*rec.Label;
 		}
 	}
 }
@@ -84,7 +85,7 @@ void	SimplePerceptronAlgorithm::Test()
 			notif->Error("Unable to read record #%d",tr);
 			return;
 		}
-		res.Update(rec.Label==1,GML::ML::VectorOp::IsPerceptronTrained(rec.Features,weight,rec.FeatCount,rec.Label));
+		res.Update(rec.Label==1,GML::ML::VectorOp::IsPerceptronTrained(rec.Features,weight,rec.FeatCount,b,rec.Label));
 	}
 	res.Compute();
 	notif->Notify(100,&res,sizeof(res));
@@ -93,12 +94,15 @@ void	SimplePerceptronAlgorithm::Execute(UInt32 command)
 {
 	notif->Info("Starting Algorithm (Execute) => Command = %d",command);
 	notif->Info("DB: Records = %d,Features = %d",con->GetRecordCount(),con->GetFeatureCount());
-	memset(weight,0,sizeof(double)*rec.FeatCount);
+	memset(weight,0,sizeof(double)*con->GetFeatureCount());
+	b=0;
 	for (UInt32 tr = 0;tr<maxIteratii;tr++)
 	{
 		//notif->Info("Train (iteration = %d)",tr);
 		Train();
 		//notif->Info("Test  (iteration = %d)",tr);
 		Test();
+		//notif->Info("W=[%.3lf,%.3lf] b=%.3lf",weight[0],weight[1],b);
+		//_asm nop;
 	}
 }
