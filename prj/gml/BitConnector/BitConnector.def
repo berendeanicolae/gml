@@ -1,0 +1,5 @@
+LIBRARY "BitConnector.dbc"
+
+EXPORTS
+Create=CreateNewConnector
+

@@ -74,14 +74,20 @@ void	SimplePerceptronAlgorithm::Train()
 			notif->Error("Unable to read record #%d",tr);
 			return;
 		}
+		//bool is_tr = GML::ML::VectorOp::IsPerceptronTrained(rec.Features,weight,rec.FeatCount,b,rec.Label);
+		//notif->Info("(Coord=%.1lf,%.1lf), W=(%2.3lf,%2.3lf) b=%2.3lf Label=%.1lf => %d",rec.Features[0],rec.Features[1],weight[0],weight[1],b,rec.Label,is_tr);		
 		if (GML::ML::VectorOp::IsPerceptronTrained(rec.Features,weight,rec.FeatCount,b,rec.Label)==false)
 		{
-			GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(rec.Features,delta,rec.FeatCount,rec.Label*learningRate);
-			b_delta+=learningRate*rec.Label;
+			//GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(rec.Features,delta,rec.FeatCount,rec.Label*learningRate);
+			//b_delta+=learningRate*rec.Label;
+			GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(rec.Features,weight,rec.FeatCount,rec.Label*learningRate);
+			b+=learningRate*rec.Label;
 		}
 	}
-	GML::ML::VectorOp::AddVectors(weight,delta,con->GetFeatureCount());
-	b+=b_delta;
+	//notif->Info("W=(%2.3lf,%2.3lf) b=%2.3lf",weight[0],weight[1],b);		
+	//notif->Info("(Coord=%.1lf,%.1lf), W=(%2.3lf,%2.3lf) b=%2.3lf Label=%.1lf",rec.Features[0],rec.Features[1],weight[0],weight[1],b,rec.Label);
+	//GML::ML::VectorOp::AddVectors(weight,delta,con->GetFeatureCount());
+	//b+=b_delta;
 }
 void	SimplePerceptronAlgorithm::Test()
 {
