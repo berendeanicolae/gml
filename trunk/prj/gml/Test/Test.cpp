@@ -17,10 +17,10 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	attr.AddString("DbName","SimpleTextFileDB");
 	attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin");  
-	attr.AddString("Conector","FullCacheConnector");
+	attr.AddString("Conector","BitConnector");
 	attr.AddString("Notifyer","ConsoleNotifyer");
 	attr.AddDouble("LearningRate",0.01);
-	attr.AddUInt32("MaxIteratii",1000);
+	attr.AddUInt32("MaxIteratii",100);
 
 	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("SimplePerceptronAlgorithm","");
 	if (alg==NULL)
