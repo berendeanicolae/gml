@@ -5,20 +5,20 @@ UInt32 FullCacheConnector::GetRecordCount()
 {
 	if (!Initialized) {
 		notifier->Error("connector not initialized");
-		return false;
+		return 0;
 	}
 
-	return RecordsCount;
+	return RecordCount;
 }
 
 UInt32 FullCacheConnector::GetFeatureCount()
 {
 	if (!Initialized) {
 		notifier->Error("connector not initialized");
-		return false;
+		return 0;
 	}
 
-	return FeaturesCount;		
+	return FeatureCount;		
 }
 
 bool FullCacheConnector::GetRecord( MLRecord &record,UInt32 index )
@@ -28,13 +28,13 @@ bool FullCacheConnector::GetRecord( MLRecord &record,UInt32 index )
 		return false;
 	}
 
-	if (RecordsCount<=index) {
-		notifier->Error("an interval error occured: RecordsCache count(%d) is smaller than the provided index(%d)", RecordsCount, index);
+	if (RecordCount<=index) {
+		notifier->Error("an interval error occured: RecordsCache count(%d) is smaller than the provided index(%d)", RecordCount, index);
 		return false;
 	}
 
-	record.Features = (double*) &FeaturesCache[index*FeaturesCount]; 
-	record.FeatCount = FeaturesCount;
+	record.Features = (double*) &FeaturesCache[index*FeatureCount]; 
+	record.FeatCount = FeatureCount;
 	record.Label = LabelStorage[index];
 	
 	return true;
@@ -47,15 +47,15 @@ bool FullCacheConnector::CreateMlRecord( MLRecord &record )
 		return false;
 	}	
 
-	MEMSET((void*)&record, 0, sizeof(MLRecord));
+	//MEMSET((void*)&record, 0, sizeof(MLRecord));
 
 	return true;
 }
 
 bool FullCacheConnector::SetRecordInterval( UInt32 start, UInt32 end )
 {
-	if (start >= RecordsCount || end >= RecordsCount) {
-		notifier->Error("could not set interval margin above value %d", RecordsCount);
+	if (start >= RecordCount || end >= RecordCount) {
+		notifier->Error("could not set interval margin above value %d", RecordCount);
 		return false;
 	}
 
@@ -98,17 +98,17 @@ bool FullCacheConnector::OnInit()
 	
 	sprintf_s(SqlString, MAX_SQL_QUERY_SIZE, "select * from %s", RECORDS_TABLE_NAME);
 	
-	RecordsCount = database->Select(SqlString);
+	RecordCount = database->Select(SqlString);
 
 	// something bad has happend
-	if (RecordsCount==0) 
+	if (RecordCount==0) 
 	{
 		notifier->Error("I received 0 records from the database");
 		return false;
 	}
 	
 	IntervalStart = 0;
-	IntervalEnd   = RecordsCount;
+	IntervalEnd   = RecordCount;
 	Initialized = TRUE;	
 
 	// fetch data
@@ -119,19 +119,19 @@ bool FullCacheConnector::OnInit()
 	}		
 
 	// count the number of features that we have
-	FeaturesCount = 0;
+	FeatureCount = 0;
 	vectSize = VectPtr.GetCount();
 
 	for (UInt32 tr=0;tr<vectSize;tr++) 
 	{
 		rec = VectPtr.GetPtrToObject(tr);
 		if (GML::Utils::GString::StartsWith(rec->Name,"Feat_",true))
-			FeaturesCount++;
+			FeatureCount++;
 	}
 	
 	// alloc memory for the cache
-	FeaturesCache = new double [FeaturesCount*RecordsCount];
-	LabelStorage  = new double [RecordsCount];
+	FeaturesCache = new double [FeatureCount*RecordCount];
+	LabelStorage  = new double [RecordCount];
 	
 	if (!FeaturesCache || !LabelStorage) 
 	{
@@ -139,7 +139,7 @@ bool FullCacheConnector::OnInit()
 		return false;
 	}
 
-	FeaturesPtr = (double*)&FeaturesCache[0*FeaturesCount];	
+	FeaturesPtr = (double*)&FeaturesCache[0*FeatureCount];	
 
 	for (UInt32 tr=0;tr<VectPtr.GetCount();tr++) 
 	{
@@ -208,7 +208,7 @@ bool FullCacheConnector::OnInit()
 	// prepare the vector for our next round
 	VectPtr.DeleteAll();
 	
-	for (UInt32 i=1;i<RecordsCount;i++) 
+	for (UInt32 i=1;i<RecordCount;i++) 
 	{		
 		// fetch data
 		if (!database->FetchNextRow(VectPtr)) 
@@ -218,7 +218,7 @@ bool FullCacheConnector::OnInit()
 		}	
 													
 		// put pointer from cache		
-		FeaturesPtr = (double*)&FeaturesCache[i*FeaturesCount];	
+		FeaturesPtr = (double*)&FeaturesCache[i*FeatureCount];	
 		
 		LabelStorage[i] = VectPtr[LabelPos].DoubleVal;		
 						
@@ -265,28 +265,25 @@ bool FullCacheConnector::OnInit()
 }
 
 bool FullCacheConnector::FreeMLRecord( MLRecord &record )
-{
-	if (record.Features!=NULL) 
-		free(record.Features);
+{	
 	return true;
 }
 
 bool FullCacheConnector::Close()
 {
-	database->Disconnect();
-	return true;
+	return database->Disconnect();	
 }
 
 UInt32 FullCacheConnector::GetTotalRecordCount()
 {
 	if (!Initialized) return 0;
-	return RecordsCount;
+	return RecordCount;
 }
 
 FullCacheConnector::FullCacheConnector()
 {
-	 RecordsCount = 0;
-	 FeaturesCount = 0;
+	 RecordCount = 0;
+	 FeatureCount = 0;
 	 Initialized = FALSE;
 
 	 FeaturesCache = NULL;
