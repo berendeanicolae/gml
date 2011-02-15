@@ -15,9 +15,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	attr.Create("dbPath=E:\\mcu.db");
 	attr.UpdateString("dbPath",str);
 
-	attr.AddString("DbName","SimpleTextFileDB");
-	attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin");  
-	attr.AddString("Conector","BitConnector");
+	attr.AddString("DbName","Sqlite");
+	attr.AddString("DbConnString","FileName=D:\\Research\\gml\\tests\\mcu.db.tiny");  
+	attr.AddString("Conector","FullCacheConnector");
 	attr.AddString("Notifyer","ConsoleNotifyer");
 	attr.AddDouble("LearningRate",0.01);
 	attr.AddUInt32("MaxIteratii",100);
