@@ -7,18 +7,11 @@
 #define _CRT_SECURE_NO_DEPRECATE 
 #define _CRT_SECURE_NO_WARNINGS
 
-
 using namespace GML;
 using namespace GML::DB;
 using namespace GML::ML;
 using namespace GML::Utils;
-							
-#define RECORDS_TABLE_NAME			"RecordTable"
-#define FEATURES_COL_PREFIX			"Feat"
-#define HASH_COL_NAME				"Hash"
-#define LABEL_COL_NAME				"Label"
-
-#define MAX_SQL_QUERY_SIZE			2048
+						
 
 class FullCacheConnector: public IConector
 {
@@ -26,7 +19,7 @@ private:
 	UInt32	IntervalStart, IntervalEnd;
 	UInt32	RecordCount, FeatureCount;
 		
-	double  * FeaturesCache;
+	double  * FeatureCache;
 	double  * LabelStorage;
 
 	BOOL	Initialized;

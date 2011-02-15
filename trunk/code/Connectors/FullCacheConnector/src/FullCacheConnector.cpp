@@ -33,9 +33,9 @@ bool FullCacheConnector::GetRecord( MLRecord &record,UInt32 index )
 		return false;
 	}
 
-	record.Features = (double*) &FeaturesCache[index*FeatureCount]; 
+	record.Features = (double*) &FeatureCache[index*FeatureCount]; 
 	record.FeatCount = FeatureCount;
-	record.Label = LabelStorage[index];
+	record.Label = LabelStorage[index];	
 	
 	return true;
 }
@@ -47,7 +47,7 @@ bool FullCacheConnector::CreateMlRecord( MLRecord &record )
 		return false;
 	}	
 
-	//MEMSET((void*)&record, 0, sizeof(MLRecord));
+	record.FeatCount = FeatureCount;
 
 	return true;
 }
@@ -73,7 +73,6 @@ bool FullCacheConnector::SetRecordInterval( UInt32 start, UInt32 end )
 bool FullCacheConnector::OnInit()
 {
 	GTFVector<DBRecord> VectPtr;
-
 	DBRecord* rec;
 
 	UInt32	LabelPos, vectSize;
@@ -130,16 +129,16 @@ bool FullCacheConnector::OnInit()
 	}
 	
 	// alloc memory for the cache
-	FeaturesCache = new double [FeatureCount*RecordCount];
+	FeatureCache = new double [FeatureCount*RecordCount];
 	LabelStorage  = new double [RecordCount];
 	
-	if (!FeaturesCache || !LabelStorage) 
+	if (!FeatureCache || !LabelStorage) 
 	{
 		notifier->Error("error allocating memory for the internal cache");
 		return false;
 	}
 
-	FeaturesPtr = (double*)&FeaturesCache[0*FeatureCount];	
+	FeaturesPtr = (double*)&FeatureCache[0*FeatureCount];	
 
 	for (UInt32 tr=0;tr<VectPtr.GetCount();tr++) 
 	{
@@ -218,7 +217,7 @@ bool FullCacheConnector::OnInit()
 		}	
 													
 		// put pointer from cache		
-		FeaturesPtr = (double*)&FeaturesCache[i*FeatureCount];	
+		FeaturesPtr = (double*)&FeatureCache[i*FeatureCount];	
 		
 		LabelStorage[i] = VectPtr[LabelPos].DoubleVal;		
 						
@@ -286,14 +285,14 @@ FullCacheConnector::FullCacheConnector()
 	 FeatureCount = 0;
 	 Initialized = FALSE;
 
-	 FeaturesCache = NULL;
+	 FeatureCache = NULL;
 	 LabelStorage  = NULL;
 }
 
 FullCacheConnector::~FullCacheConnector()
 {
-	if (FeaturesCache != NULL) 	
-		delete FeaturesCache;
+	if (FeatureCache != NULL) 	
+		delete FeatureCache;
 
 	if (LabelStorage != NULL)
 		delete LabelStorage;

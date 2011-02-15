@@ -53,10 +53,10 @@ SqliteDatabase::~SqliteDatabase()
 bool SqliteDatabase::OnInit()
 {
 	GML::Utils::GString str;
-	this->Attr.UpdateString("dbPath", str);	
+	this->Attr.UpdateString("FileName", str);	
 	char* _text = str.GetText();
 	if(NULL == _text){
-		notifier->Error("dbPath attribute does not exists!");
+		notifier->Error("FileName attribute does not exists!");
 		return false;
 	}
 	this->database_name = (char*)malloc(sizeof(char) * strlen(_text));

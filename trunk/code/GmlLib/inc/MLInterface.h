@@ -5,6 +5,13 @@
 #include "MLRecord.h"
 #include "IDataBase.h"
 
+#define RECORDS_TABLE_NAME			"RecordTable"
+#define FEATURES_COL_PREFIX			"Feat"
+#define HASH_COL_NAME				"Hash"
+#define LABEL_COL_NAME				"Label"
+
+#define MAX_SQL_QUERY_SIZE			2048
+
 namespace GML
 {
 	namespace ML
