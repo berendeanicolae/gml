@@ -61,7 +61,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>SQLite.def</ModuleDefinitionFile>
-      <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib;$(SolutionDir)..\..\lib\sqlite3.lib</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib;$(SolutionDir)..\..\lib\sqlite3_debug.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)*.db $(SolutionDir)..\..\Bin\*.*</Command>
@@ -83,7 +83,7 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib;$(SolutionDir)..\..\lib\sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib;$(SolutionDir)..\..\lib\sqlite3_release.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>SQLite.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
