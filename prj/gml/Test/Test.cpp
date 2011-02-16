@@ -9,15 +9,10 @@
 int _tmain(int argc, _TCHAR* argv[])
 {
 	GML::Utils::AttributeList	attr;
-	GML::Utils::GString			str;
 
-	attr.Clear();
-	attr.Create("dbPath=E:\\mcu.db");
-	attr.UpdateString("dbPath",str);
-
-	attr.AddString("DbName","Sqlite");
-	attr.AddString("DbConnString","FileName=D:\\Research\\gml\\tests\\mcu.db.tiny");  
-	attr.AddString("Conector","FullCacheConnector");
+	attr.AddString("DbName","SimpleTextFileDB");
+	attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\gdt-db.txt");  
+	attr.AddString("Conector","BitConnector");
 	attr.AddString("Notifyer","ConsoleNotifyer");
 	attr.AddDouble("LearningRate",0.01);
 	attr.AddUInt32("MaxIteratii",100);
