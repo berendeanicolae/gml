@@ -173,7 +173,7 @@ bool GML::ML::IConector::Init(GML::Utils::INotify &_notifier,GML::DB::IDataBase 
 
 	tableName.Set("");
 	Attr.Clear();
-	if (attributeString!=NULL)
+	if ((attributeString!=NULL) && (attributeString[0]!=0))
 	{
 		if (Attr.Create(attributeString)==false)
 		{
@@ -212,7 +212,7 @@ bool GML::ML::IConector::Init(GML::ML::IConector &_conector,char *attributeStrin
 	}
 
 	Attr.Clear();
-	if (attributeString!=NULL)
+	if ((attributeString!=NULL) && (attributeString[0]!=0))
 	{
 		if (Attr.Create(attributeString)==false)
 		{
