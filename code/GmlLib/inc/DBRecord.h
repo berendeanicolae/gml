@@ -37,6 +37,10 @@ namespace GML
 			union
 			{
 				bool		BoolVal;
+				Int8		Int8Val;
+				Int16		Int16Val;
+				Int32		Int32Val;
+				Int64		Int64Val;
 				UInt8		UInt8Val;
 				UInt16		UInt16Val;
 				UInt32		UInt32Val;
