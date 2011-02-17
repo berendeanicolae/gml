@@ -18,19 +18,6 @@ bool	SimpleTextFileDB::Connect ()
 		notifier->Error("Unable to open (%s) for reading !",fileName.GetText());
 		return false;
 	}
-	/*
-	if (file.OpenRead(fileName.GetText())==false)
-	{
-		notifier->Error("Unable to open (%s) for reading !",fileName.GetText());
-		return false;
-	}
-	
-	// citesc prima linie
-	if (file.ReadNextLine(tempStr)==false)
-	{
-		notifier->Error("Error reading from %s",fileName.GetText());
-		return false;
-	}*/
 	if (allDB.CopyNextLine(&tempStr,&poz)==false)
 	{
 		notifier->Error("Error reading from %s",fileName.GetText());
@@ -50,12 +37,6 @@ bool	SimpleTextFileDB::Connect ()
 		notifier->Error("Invalid numeric value for records number: %s",tempStr.GetText());
 		return false;
 	}
-	// citesc a doua linie
-	//if (file.ReadNextLine(tempStr)==false)
-	//{
-	//	notifier->Error("Error reading from %s",fileName.GetText());
-	//	return false;
-	//}
 	if (allDB.CopyNextLine(&tempStr,&poz)==false)
 	{
 		notifier->Error("Error reading from %s",fileName.GetText());
@@ -124,6 +105,39 @@ UInt32	SimpleTextFileDB::Select (char* Statement)
 	cIndex = 0;
 	// totul e ok
 	return nrRecords;
+}
+bool    SimpleTextFileDB::GetColumnInformations(char *columnName,GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
+{
+	GML::DB::DBRecord	rec;
+
+	VectPtr.DeleteAll();
+
+	rec.Name = "Hash";
+	rec.Type = GML::DB::HASHVAL;
+	
+	if (VectPtr.PushByRef(rec)==false)
+	{
+		notifier->Error("Unable to add HASH to vector !");
+		return false;
+	}
+	rec.Name = "Label";
+	rec.Type = GML::DB::DOUBLEVAL;
+	if (VectPtr.PushByRef(rec)==false)
+	{
+		notifier->Error("Unable to add label to vector !");
+		return false;
+	}
+	rec.Type = GML::DB::DOUBLEVAL;	
+	for (int tr=0;tr<nrFeatures;tr++)
+	{
+		rec.Name = FeatNames[tr].GetText();
+		if (VectPtr.PushByRef(rec)==false)
+		{
+			notifier->Error("Unable to add label to vector feature #%d => %s",tr,tempStr.GetText());
+			return false;
+		}
+	}	
+	return true;
 }
 UInt32	SimpleTextFileDB::SqlSelect (char* What, char* Where, char* From)
 {
