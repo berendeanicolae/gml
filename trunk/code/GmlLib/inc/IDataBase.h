@@ -74,6 +74,9 @@ namespace GML
 			 */
 			virtual bool				FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)=0;
 
+
+			virtual bool				GetColumnInformations (char* TableName,GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)=0;
+
 			/*
 			 * Usage: fetch a new record after a previous SqlSelect call
 			 * Param:

@@ -170,8 +170,6 @@ bool GML::ML::IConector::Init(GML::Utils::INotify &_notifier,GML::DB::IDataBase 
 	notifier = &_notifier;
 	database = &_database;
 	conector = NULL;
-	
-
 
 	return OnInit();
 }
