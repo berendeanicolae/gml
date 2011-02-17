@@ -16,13 +16,25 @@ namespace GML
 {
 	namespace ML
 	{
+		struct TableColumnIndexes
+		{
+			UInt32		nrFeatures;
+			Int32		indexLabel;
+			Int32		indexHash;
+			Int32		*indexFeature;
+		};
 		class EXPORT IConector
 		{
 		protected:
 			GML::Utils::INotify			*notifier;
 			GML::DB::IDataBase			*database;
 			GML::ML::IConector			*conector;
-
+			TableColumnIndexes			columns;
+			
+			void						ClearColumnIndexes();
+			bool						UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double *value);
+			bool						UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
+			
 		public:	
 			IConector();
 

@@ -1096,6 +1096,10 @@ namespace GML
 			union
 			{
 				bool		BoolVal;
+				Int8		Int8Val;
+				Int16		Int16Val;
+				Int32		Int32Val;
+				Int64		Int64Val;
 				UInt8		UInt8Val;
 				UInt16		UInt16Val;
 				UInt32		UInt32Val;
@@ -1318,17 +1322,36 @@ namespace GML
 //===================== MLInterface.h =================================================================================
 
 
+#define RECORDS_TABLE_NAME			"RecordTable"
+#define FEATURES_COL_PREFIX			"Feat"
+#define HASH_COL_NAME				"Hash"
+#define LABEL_COL_NAME				"Label"
+
+#define MAX_SQL_QUERY_SIZE			2048
+
 namespace GML
 {
 	namespace ML
 	{
+		struct TableColumnIndexes
+		{
+			UInt32		nrFeatures;
+			Int32		indexLabel;
+			Int32		indexHash;
+			Int32		*indexFeature;
+		};
 		class  IConector
 		{
 		protected:
 			GML::Utils::INotify			*notifier;
 			GML::DB::IDataBase			*database;
 			GML::ML::IConector			*conector;
-
+			TableColumnIndexes			columns;
+			
+			void						ClearColumnIndexes();
+			bool						UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double *value);
+			bool						UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
+			
 		public:	
 			IConector();
 
