@@ -158,8 +158,11 @@ bool GML::ML::IConector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBReco
 	}
 	return true;
 }
-bool GML::ML::IConector::Init(GML::Utils::INotify &_notifier,GML::DB::IDataBase &_database)
+bool GML::ML::IConector::Init(GML::Utils::INotify &_notifier,GML::DB::IDataBase &_database,char *attributeString)
 {
+	GML::Utils::GString							tableName;
+	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
+
 	// daca a fost deja initializat
 	if ((database!=NULL) || (conector!=NULL))
 	{
@@ -167,13 +170,38 @@ bool GML::ML::IConector::Init(GML::Utils::INotify &_notifier,GML::DB::IDataBase 
 			notifier->Error("Conector already initilized !");
 		return false;
 	}
+
+	tableName.Set("");
+	Attr.Clear();
+	if (attributeString!=NULL)
+	{
+		if (Attr.Create(attributeString)==false)
+		{
+			notifier->Error("Invalid format for Conector initializations: %s",attributeString);
+			return false;
+		}
+		if (Attr.UpdateString("Table",tableName)==false)
+		{
+			notifier->Error("Missing Table attribute => requaired for DataBase Conection");
+			return false;
+		}
+	}
+
 	notifier = &_notifier;
 	database = &_database;
 	conector = NULL;
 
+	if (database->GetColumnInformations(tableName.GetText(),VectPtr)==false)
+	{
+		notifier->Error("Error reading column informations from DBTable: [%s]",tableName.GetText());
+		return false;
+	}
+	if (UpdateColumnInformations(VectPtr)==false)
+		return false;
+
 	return OnInit();
 }
-bool GML::ML::IConector::Init(GML::ML::IConector &_conector)
+bool GML::ML::IConector::Init(GML::ML::IConector &_conector,char *attributeString)
 {
 	// daca a fost deja initializat
 	if ((database!=NULL) || (conector!=NULL))
@@ -182,6 +210,17 @@ bool GML::ML::IConector::Init(GML::ML::IConector &_conector)
 			notifier->Error("Conector already initilized !");
 		return false;
 	}
+
+	Attr.Clear();
+	if (attributeString!=NULL)
+	{
+		if (Attr.Create(attributeString)==false)
+		{
+			notifier->Error("Invalid format for Conector initializations: %s",attributeString);
+			return false;
+		}
+	}
+
 	conector = &_conector;
 	notifier = conector->notifier;
 	database = NULL;
