@@ -26,7 +26,8 @@ namespace GML
 		class EXPORT IConector
 		{
 		protected:
-			GML::Utils::INotify			*notifier;
+			GML::Utils::AttributeList	Attr;
+			GML::Utils::INotify			*notifier;			
 			GML::DB::IDataBase			*database;
 			GML::ML::IConector			*conector;
 			TableColumnIndexes			columns;
@@ -39,8 +40,8 @@ namespace GML
 			IConector();
 
 			virtual bool				OnInit() = 0;
-			virtual bool				Init(GML::Utils::INotify &Notifier,GML::DB::IDataBase &Database);
-			virtual bool				Init(GML::ML::IConector &conector);
+			virtual bool				Init(GML::Utils::INotify &Notifier,GML::DB::IDataBase &Database,char *attributeString=NULL);
+			virtual bool				Init(GML::ML::IConector &conector,char *attributeString=NULL);
 
 			/*	 
 			 * Usage: uninit stuff
