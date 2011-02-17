@@ -87,8 +87,8 @@ GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::
 }
 GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Utils::INotify &notify,GML::DB::IDataBase &database)
 {
-	GML::Utils::GString		list,path;
-	int						poz;
+	GML::Utils::GString		list,path,attributeList;
+	int						poz,a_poz;
 	HMODULE					hModule;
 	GML::ML::IConector*		(*fnCreate)();
 	GML::ML::IConector		*con,*last;
@@ -107,8 +107,26 @@ GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Uti
 			poz = 0;
 		else
 			poz++;
+		if (path.Strip()==false)
+			return NULL;
 		if (path.Set(&list.GetText()[poz])==false)
 			return NULL;
+		a_poz = path.Find("{");
+		if (a_poz>=0)
+		{
+			if (attributeList.Set(&path.GetText()[a_poz+1])==false)
+				return NULL;
+			if (attributeList.EndsWith("}"))
+				attributeList.Truncate(attributeList.Len()-1);
+			if (attributeList.Strip()==false)
+				return NULL;
+			path.Truncate(a_poz);
+			if (path.Strip()==false)
+				return NULL;
+		} else {
+			if (attributeList.Set("")==false)
+				return NULL;
+		}
 		if (AdjustNameWithExtensionAndPath(path,CONNECTOR_EXT)==false)
 			return NULL;
 		// incarc libraria
@@ -123,10 +141,10 @@ GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Uti
 		if (first)
 		{
 			last = con;
-			if (last->Init(notify,database)==false)
+			if (last->Init(notify,database,attributeList.GetText())==false)
 				return NULL;
 		} else {
-			if (con->Init(*last)==false)
+			if (con->Init(*last,attributeList.GetText())==false)
 				return NULL;
 			last = con;
 		}
