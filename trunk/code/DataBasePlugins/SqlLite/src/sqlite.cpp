@@ -431,4 +431,9 @@ bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTFVector<GML::DB::D
 	return error != SQLITE_OK ? false : true;
 }
 
+bool SqliteDatabase::GetColumnInformations( char* TableName, GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr )
+{
+	return false;
+}
+
 

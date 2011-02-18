@@ -18,6 +18,7 @@
 
 #ifdef OS_WINDOWS
 	#include "windows.h"
+	#include <string>
 
 	#define UInt8				unsigned char
 	#define UInt16				unsigned short

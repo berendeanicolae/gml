@@ -1,5 +1,10 @@
 #include "SimplePerceptronAlgorithm.h"
 
+void SimplePerceptronAlgorithm::OnExecute(char* command)
+{
+
+}
+
 SimplePerceptronAlgorithm::SimplePerceptronAlgorithm()
 {
 	db = NULL;

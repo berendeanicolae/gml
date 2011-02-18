@@ -32,6 +32,7 @@ public:
 	// used to free the prepared statement to prevent leakage
 	bool Finalize();
 	bool OnInit();
+	bool GetColumnInformations (char* TableName, GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
 };
 
 

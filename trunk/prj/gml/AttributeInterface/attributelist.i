@@ -58,7 +58,7 @@ namespace GML
 			bool			Update(char *Name,void *Data,UInt32 DataSize);
 			%feature("autodoc", "1");
 			//bool			UpdateString(char *Name,GML::Utils::GString &text);
-			string			UpdateString(char *Name);
+			std::string			UpdateString(char *Name);
 			%feature("autodoc", "1");
 			void			Clear();
 			%feature("autodoc", "1");

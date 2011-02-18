@@ -93,7 +93,7 @@
       <Command>copy _$(TargetName).pyd $(SolutionDir)..\..\bin\*.*|copy $(TargetName).py $(SolutionDir)..\..\bin\*.*</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>set PYTHON_LIB="E:\Program Files\Python31\libs\python31.lib";set PYTHON_INCLUDE="E:\Program Files\Python3.1\include"</Command>
+      <Command>set PYTHON_LIB="$(SolutionDir)..\..\lib\python31.lib";set PYTHON_INCLUDE=%PYTHON_PATH%\include"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -141,6 +141,9 @@
     <PostBuildEvent>
       <Command>copy _$(TargetName).pyd $(SolutionDir)..\..\bin\*.*|copy $(TargetName).py $(SolutionDir)..\..\bin\*.*</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>set PYTHON_LIB="$(SolutionDir)..\..\lib\python31_d.lib";set PYTHON_INCLUDE=%PYTHON_PATH%\include"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\code\GmlLib\src\attributelist.cpp" />
