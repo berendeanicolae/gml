@@ -13,12 +13,11 @@ namespace GML
 	{
 		class EXPORT IAlgorithm
 		{
+		protected:
 			GML::Utils::INotify									*notif;
 			GML::Utils::GTFVector<GML::Utils::AttributeLink>	AttrLinks;
 			HANDLE												hMainThread;
 
-
-		protected:
 			bool			AddString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *Description=NULL);
 			bool			AddBool(char *Name,bool &LocalAddr,bool defaultValue,char *Description=NULL);
 			bool			AddDouble(char *Name,double &LocalAddr,double defaultValue,char *Description=NULL);
@@ -33,7 +32,9 @@ namespace GML
 			virtual bool	Init() = 0;
 			virtual void	OnExecute(char* command)=0;
 
-			void			Execute(char *command);
+			// void			Execute(char *command);
+			virtual void			Execute(UInt32 command)=0;
+
 		};
 	}
 }

@@ -28,6 +28,7 @@ public:
 	bool	GetConfiguration(GML::Utils::AttributeList &config);
 	bool	Init();
 	void	Execute(UInt32 command);
+	void	OnExecute(char* command);
 };
 
 

@@ -5,9 +5,6 @@
 #include "GTVector.h"
 #include "File.h"
 
-// Wrappers
-#include <string>
-using namespace std;
 
 
 namespace GML
@@ -76,7 +73,8 @@ namespace GML
 
 
 			// WRAPPERS for PYTHON
-			string UpdateString(char *Name);
+			
+			std::string UpdateString(char *Name);
 		};
 	}
 }
