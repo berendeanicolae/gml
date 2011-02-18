@@ -47,6 +47,7 @@
     <OutDir>.\Debug\</OutDir>
     <IntDir>.\Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
+    <TargetExt>.pyd</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -90,6 +91,9 @@
     <PostBuildEvent>
       <Command>copy _$(TargetName).pyd $(SolutionDir)..\..\bin\*.*|copy $(TargetName).py $(SolutionDir)..\..\bin\*.*</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>set PYTHON_LIB="E:\Program Files\Python31\libs\python31.lib";set PYTHON_INCLUDE="E:\Program Files\Python3.1\include"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -129,7 +133,7 @@
       <LinkDLL>true</LinkDLL>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <OutputFile>_ialgorithm.pyd</OutputFile>
+      <OutputFile>_$(TargetName).pyd</OutputFile>
       <ImportLibrary>.\Debug\_ialgorithm.lib</ImportLibrary>
       <AdditionalDependencies>$(PYTHON_LIB_D);$(SolutionDir)..\..\lib\gmllib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
