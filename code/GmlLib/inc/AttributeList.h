@@ -5,6 +5,11 @@
 #include "GTVector.h"
 #include "File.h"
 
+// Wrappers
+#include <string>
+using namespace std;
+
+
 namespace GML
 {
 	namespace Utils
@@ -59,7 +64,7 @@ namespace GML
 
 			bool			Update(char *Name,void *Data,UInt32 DataSize);
 			bool			UpdateString(char *Name,GML::Utils::GString &text);
-
+			
 			void			Clear();
 			Attribute*		Get(unsigned int index);
 			Attribute*		Get(char* Name);
@@ -68,6 +73,10 @@ namespace GML
 			bool			Save(char *fileName);
 			bool			Load(char *fileName);
 			bool			Create(char *text,char separator=';');
+
+
+			// WRAPPERS for PYTHON
+			string UpdateString(char *Name);
 		};
 	}
 }
