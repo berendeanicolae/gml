@@ -38,8 +38,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\Release\</OutDir>
-    <IntDir>.\Release\</IntDir>
+    <OutDir>..\Release\</OutDir>
+    <IntDir>..\Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetExt>.pyd</TargetExt>
   </PropertyGroup>
@@ -92,6 +92,9 @@
     <PostBuildEvent>
       <Command>copy _$(TargetName).pyd $(SolutionDir)..\..\bin\*.*|copy $(TargetName).py $(SolutionDir)..\..\bin\*.*</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>set PYTHON_LIB="E:\Program Files\Python31\libs\python31.lib";set PYTHON_INCLUDE="E:\Program Files\Python3.1\include"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
