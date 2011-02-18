@@ -13,10 +13,10 @@ namespace GML
 	{
 		class EXPORT IAlgorithm
 		{
-		protected:
-			GML::Utils::INotify									*notif;
 			GML::Utils::GTFVector<GML::Utils::AttributeLink>	AttrLinks;
 			HANDLE												hMainThread;
+		protected:
+			GML::Utils::INotify									*notif;
 
 			bool			AddString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *Description=NULL);
 			bool			AddBool(char *Name,bool &LocalAddr,bool defaultValue,char *Description=NULL);
