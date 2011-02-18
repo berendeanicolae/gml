@@ -602,6 +602,9 @@ namespace GML
 	}
 }
 //===================== GTFVector.h =================================================================================
+#ifndef __GTF_VECTOR__
+#define __GTF_VECTOR__
+
 
 namespace GML
 {
@@ -720,6 +723,8 @@ namespace GML
 
 	}
 }
+
+#endif
 
 //===================== md5.h =================================================================================
 
@@ -1156,6 +1161,14 @@ namespace GML
 			bool operator > (Attribute &a1);
 		};
 
+		struct  AttributeLink
+		{
+			char*			Name;
+			void*			LocalAddress;
+			unsigned int	AttributeType;
+			char*			Description;
+		};
+
 		class  AttributeList
 		{
 			GML::Utils::GTVector<GML::Utils::Attribute>	list;
@@ -1426,15 +1439,28 @@ namespace GML
 #define __I_ALGORITHM__
 
 
+
 namespace GML
 {
 	namespace Algorithm
 	{
 		class  IAlgorithm
 		{
-		public:
-			virtual bool	SetConfiguration(GML::Utils::AttributeList &config) = 0;
-			virtual bool	GetConfiguration(GML::Utils::AttributeList &config) = 0;
+			GML::Utils::INotify									*notif;
+			GML::Utils::GTFVector<GML::Utils::AttributeLink>	AttrLinks;
+		
+		protected:
+			bool			AddString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *Description=NULL);
+			bool			AddBool(char *Name,bool &LocalAddr,bool defaultValue,char *Description=NULL);
+			bool			AddDouble(char *Name,double &LocalAddr,double defaultValue,char *Description=NULL);
+			bool			AddUInt32(char *Name,UInt32 &LocalAddr,UInt32 defaultValue,char *Description=NULL);
+			bool			AddInt32(char *Name,Int32 &LocalAddr,Int32 defaultValue,char *Description=NULL);
+		public:			
+			IAlgorithm();
+
+			bool			SetConfiguration(GML::Utils::AttributeList &config);
+			bool			GetConfiguration(GML::Utils::AttributeList &config);
+
 			virtual bool	Init() = 0;
 			virtual void	Execute(UInt32 command)=0;
 		};

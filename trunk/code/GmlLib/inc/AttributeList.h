@@ -22,6 +22,14 @@ namespace GML
 			bool operator > (Attribute &a1);
 		};
 
+		struct EXPORT AttributeLink
+		{
+			char*			Name;
+			void*			LocalAddress;
+			unsigned int	AttributeType;
+			char*			Description;
+		};
+
 		class EXPORT AttributeList
 		{
 			GML::Utils::GTVector<GML::Utils::Attribute>	list;

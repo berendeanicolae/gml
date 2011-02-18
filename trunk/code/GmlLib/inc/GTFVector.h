@@ -1,3 +1,6 @@
+#ifndef __GTF_VECTOR__
+#define __GTF_VECTOR__
+
 #include "Compat.h"
 #include "Vector.h"
 
@@ -118,3 +121,5 @@ namespace GML
 
 	}
 }
+
+#endif
