@@ -1,7 +1,24 @@
 #include "AttributeList.h"
+#include <string>
 
 static unsigned int AttributeSizes[]={1,1,2,4,8,1,2,4,8,4,8,0};
 static char *AttributeTypeName[]={"BOOL","INT8","INT16","INT32","INT64","UINT8","UINT16","UINT32","UINT64","FLOAT","DOUBLE","STRING"};
+
+// WRAPPERS for Python
+
+string GML::Utils::AttributeList::UpdateString(char *Name)
+{
+	GML::Utils::GString str;
+	string text;
+	bool error = this->UpdateString(Name, str);
+	if(!error) return "";
+	text = str.GetText();
+	return text;
+}
+
+
+
+
 
 int  AttributeCompare(GML::Utils::Attribute &a1,GML::Utils::Attribute &a2)
 {
@@ -325,6 +342,8 @@ bool GML::Utils::AttributeList::UpdateString(char *Name,GML::Utils::GString &tex
 		return false;
 	return text.Set((char*)a->Data,a->DataSize);
 }
+
+
 bool GML::Utils::AttributeList::AddAttribute(char* Name,void *Data,unsigned int AttributeType,unsigned int ElementsCount,char *Description)
 {
 	GML::Utils::Attribute		a;
