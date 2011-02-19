@@ -20,7 +20,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("SimplePerceptronAlgorithm","");
 	if (alg==NULL)
 		return 1;
-	if (alg->SetConfiguration(
+	if (alg->SetProperty(
 		"DbName=SimpleTextFileDB;"
 		"DbConnString='FileName=E:\\lucru\\GML\\gml\\bin\\a.txt';"
 		"Conector=BitConnector{Table=RecordTable};"
