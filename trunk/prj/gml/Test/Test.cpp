@@ -14,7 +14,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\gdt-db.txt");  
 	attr.AddString("Conector","BitConnector");
 	attr.AddString("Notifyer","ConsoleNotifyer");
-	attr.AddDouble("LearningRate",0.01);
+	attr.AddDouble("LearningRate",0.02);
 	attr.AddUInt32("MaxIteratii",100);
 
 	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("SimplePerceptronAlgorithm","");
