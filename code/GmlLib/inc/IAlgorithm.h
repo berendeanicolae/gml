@@ -18,11 +18,11 @@ namespace GML
 		protected:
 			GML::Utils::INotify									*notif;
 
-			bool			AddString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *Description=NULL);
-			bool			AddBool(char *Name,bool &LocalAddr,bool defaultValue,char *Description=NULL);
-			bool			AddDouble(char *Name,double &LocalAddr,double defaultValue,char *Description=NULL);
-			bool			AddUInt32(char *Name,UInt32 &LocalAddr,UInt32 defaultValue,char *Description=NULL);
-			bool			AddInt32(char *Name,Int32 &LocalAddr,Int32 defaultValue,char *Description=NULL);
+			bool			LinkString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *Description=NULL);
+			bool			LinkBool(char *Name,bool &LocalAddr,bool defaultValue,char *Description=NULL);
+			bool			LinkDouble(char *Name,double &LocalAddr,double defaultValue,char *Description=NULL);
+			bool			LinkUInt32(char *Name,UInt32 &LocalAddr,UInt32 defaultValue,char *Description=NULL);
+			bool			LinkInt32(char *Name,Int32 &LocalAddr,Int32 defaultValue,char *Description=NULL);
 		public:			
 			IAlgorithm();
 
@@ -33,7 +33,7 @@ namespace GML
 			virtual void	OnExecute(char* command)=0;
 
 			// void			Execute(char *command);
-			virtual void			Execute(UInt32 command)=0;
+			virtual void	Execute(UInt32 command)=0;
 
 		};
 	}

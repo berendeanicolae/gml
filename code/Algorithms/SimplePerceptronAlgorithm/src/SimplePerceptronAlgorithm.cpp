@@ -9,28 +9,13 @@ SimplePerceptronAlgorithm::SimplePerceptronAlgorithm()
 {
 	db = NULL;
 	con = NULL;
-	notif = NULL;
-}
-bool	SimplePerceptronAlgorithm::SetConfiguration(GML::Utils::AttributeList &config)
-{
-	if (config.UpdateString("DbName",dbName)==false)
-		return false;
-	if (config.UpdateString("DbConnString",conString)==false)
-		return false;
-	if (config.UpdateString("Conector",conectorString)==false)
-		return false;
-	if (config.UpdateString("Notifyer",notifString)==false)
-		return false;
-	if (config.Update("LearningRate",&learningRate,sizeof(double))==false)
-		return false;
-	if (config.Update("MaxIteratii",&maxIteratii,sizeof(UInt32))==false)
-		return false;
 
-	return true;
-}
-bool	SimplePerceptronAlgorithm::GetConfiguration(GML::Utils::AttributeList &config)
-{
-	return false;
+	LinkString("DbName"				,dbName			,"");
+	LinkString("DbConnString"		,conString		,"");
+	LinkString("Conector"			,conectorString	,"");
+	LinkString("Notifyer"			,notifString	,"");
+	LinkDouble("LearningRate"		,learningRate	,0.01);
+	LinkUInt32("MaxIteratii"		,maxIteratii	,100);
 }
 bool	SimplePerceptronAlgorithm::Init()
 {

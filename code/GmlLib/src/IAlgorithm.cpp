@@ -4,7 +4,7 @@ GML::Algorithm::IAlgorithm::IAlgorithm()
 {
 	notif = NULL;
 }
-bool GML::Algorithm::IAlgorithm::AddString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *Description)
+bool GML::Algorithm::IAlgorithm::LinkString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *Description)
 {
 	GML::Utils::AttributeLink	link;
 
@@ -17,7 +17,7 @@ bool GML::Algorithm::IAlgorithm::AddString(char *Name,GML::Utils::GString &Local
 
 	return AttrLinks.PushByRef(link);
 }
-bool GML::Algorithm::IAlgorithm::AddBool(char *Name,bool &LocalAddr,bool defaultValue,char *Description)
+bool GML::Algorithm::IAlgorithm::LinkBool(char *Name,bool &LocalAddr,bool defaultValue,char *Description)
 {
 	GML::Utils::AttributeLink	link;
 
@@ -29,7 +29,7 @@ bool GML::Algorithm::IAlgorithm::AddBool(char *Name,bool &LocalAddr,bool default
 
 	return AttrLinks.PushByRef(link);
 }
-bool GML::Algorithm::IAlgorithm::AddDouble(char *Name,double &LocalAddr,double defaultValue,char *Description)
+bool GML::Algorithm::IAlgorithm::LinkDouble(char *Name,double &LocalAddr,double defaultValue,char *Description)
 {
 	GML::Utils::AttributeLink	link;
 
@@ -41,7 +41,7 @@ bool GML::Algorithm::IAlgorithm::AddDouble(char *Name,double &LocalAddr,double d
 
 	return AttrLinks.PushByRef(link);
 }
-bool GML::Algorithm::IAlgorithm::AddUInt32(char *Name,UInt32 &LocalAddr,UInt32 defaultValue,char *Description)
+bool GML::Algorithm::IAlgorithm::LinkUInt32(char *Name,UInt32 &LocalAddr,UInt32 defaultValue,char *Description)
 {
 	GML::Utils::AttributeLink	link;
 
@@ -53,7 +53,7 @@ bool GML::Algorithm::IAlgorithm::AddUInt32(char *Name,UInt32 &LocalAddr,UInt32 d
 
 	return AttrLinks.PushByRef(link);
 }
-bool GML::Algorithm::IAlgorithm::AddInt32(char *Name,Int32 &LocalAddr,Int32 defaultValue,char *Description)
+bool GML::Algorithm::IAlgorithm::LinkInt32(char *Name,Int32 &LocalAddr,Int32 defaultValue,char *Description)
 {
 	GML::Utils::AttributeLink	link;
 
@@ -117,7 +117,7 @@ bool GML::Algorithm::IAlgorithm::SetConfiguration(GML::Utils::AttributeList &con
 			case GML::Utils::AttributeList::DOUBLE:
 				if (attr->AttributeType==GML::Utils::AttributeList::DOUBLE) 
 				{
-					(*((double *)link->LocalAddress)) = *((bool *)attr->Data);
+					(*((double *)link->LocalAddress)) = *((double *)attr->Data);
 					break;
 				}
 				if (attr->AttributeType==GML::Utils::AttributeList::UINT32) 
