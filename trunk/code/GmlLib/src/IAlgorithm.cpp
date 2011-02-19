@@ -283,3 +283,7 @@ bool GML::Algorithm::IAlgorithm::Wait(UInt32 nrMiliseconds)
 		return true;
 	return (WaitForSingleObject(hMainThread,nrMiliseconds)==WAIT_OBJECT_0);
 }
+bool GML::Algorithm::IAlgorithm::Wait()
+{
+	return Wait(INFINITE);
+}
