@@ -331,17 +331,101 @@ bool GML::Utils::AttributeList::Update(char *Name,void *Data,UInt32 DataSize)
 	MEMCOPY(Data,a->Data,a->DataSize);
 	return true;
 }
-bool GML::Utils::AttributeList::UpdateString(char *Name,GML::Utils::GString &text)
+bool GML::Utils::AttributeList::UpdateString(char *Name,GML::Utils::GString &text, bool useDefault,char* defaultValue)
 {
 	GML::Utils::Attribute		*a;
 
 	if ((a=Get(Name))==NULL)
-		return false;
+	{
+		if (useDefault)
+			return text.Set(defaultValue);
+		else
+			return false;
+	}
 	if (a->Data==NULL)
 		return false;
 	return text.Set((char*)a->Data,a->DataSize);
 }
+bool GML::Utils::AttributeList::UpdateBool(char *Name,bool &boolValue,bool useDefault,bool defaultValue)
+{
+	GML::Utils::Attribute		*a;
 
+	if ((a=Get(Name))==NULL)
+	{
+		if (useDefault)
+		{
+			boolValue = defaultValue;
+			return true;
+		}
+		return false;
+	}
+	if (a->DataSize!=sizeof(bool))
+		return false;
+	if (a->Data==NULL)
+		return false;
+	boolValue = *(bool *)a->Data;
+	return true;
+}
+bool GML::Utils::AttributeList::UpdateUInt32(char *Name,UInt32 &uint32Value,bool useDefault,UInt32 defaultValue)
+{
+	GML::Utils::Attribute		*a;
+
+	if ((a=Get(Name))==NULL)
+	{
+		if (useDefault)
+		{
+			uint32Value = defaultValue;
+			return true;
+		}
+		return false;
+	}
+	if (a->DataSize!=sizeof(UInt32))
+		return false;
+	if (a->Data==NULL)
+		return false;
+	uint32Value = *(UInt32 *)a->Data;
+	return true;
+}
+bool GML::Utils::AttributeList::UpdateInt32(char *Name,Int32 &int32Value,bool useDefault,Int32 defaultValue)
+{
+	GML::Utils::Attribute		*a;
+
+	if ((a=Get(Name))==NULL)
+	{
+		if (useDefault)
+		{
+			int32Value = defaultValue;
+			return true;
+		}
+		return false;
+	}
+	if (a->DataSize!=sizeof(Int32))
+		return false;
+	if (a->Data==NULL)
+		return false;
+	int32Value = *(Int32 *)a->Data;
+	return true;
+}
+bool GML::Utils::AttributeList::UpdateDouble(char *Name,double &doubleValue,bool useDefault,double defaultValue)
+{
+	GML::Utils::Attribute		*a;
+
+	if ((a=Get(Name))==NULL)
+	{
+		if (useDefault)
+		{
+			doubleValue = defaultValue;
+			return true;
+		}
+		return false;
+	}
+	if (a->DataSize!=sizeof(double))
+		return false;
+	if (a->Data==NULL)
+		return false;
+	doubleValue = *(double *)a->Data;
+	return true;
+}
 
 bool GML::Utils::AttributeList::AddAttribute(char* Name,void *Data,unsigned int AttributeType,unsigned int ElementsCount,char *Description)
 {
