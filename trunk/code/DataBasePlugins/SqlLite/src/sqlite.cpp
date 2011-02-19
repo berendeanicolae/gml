@@ -36,7 +36,7 @@ SqliteDatabase::SqliteDatabase()
 	database = NULL;
 	res = NULL;
 
-	LinkString("FileName",FileName,"","File that contains the sqllite database");
+	LinkPropertyToString("FileName",FileName,"","File that contains the sqllite database");
 }
 SqliteDatabase::~SqliteDatabase()
 {

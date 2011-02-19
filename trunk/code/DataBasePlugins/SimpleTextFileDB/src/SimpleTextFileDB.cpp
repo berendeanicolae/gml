@@ -3,7 +3,7 @@
 SimpleTextFileDB::SimpleTextFileDB()
 {
 	FeatNames = NULL;
-	LinkString("FileName",fileName,"","File that contains the database !");
+	LinkPropertyToString("FileName",fileName,"","File that contains the database !");
 }
 bool	SimpleTextFileDB::OnInit()
 {

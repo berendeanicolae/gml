@@ -23,7 +23,7 @@ protected:
 
 public:
 	SimplePerceptronAlgorithm();
-	bool	SetConfiguration(GML::Utils::AttributeList &config);
+	bool	SetProperty(GML::Utils::AttributeList &config);
 	bool	GetConfiguration(GML::Utils::AttributeList &config);
 	bool	Init();
 	void	Execute(UInt32 command);

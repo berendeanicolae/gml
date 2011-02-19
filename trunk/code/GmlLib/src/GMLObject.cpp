@@ -8,7 +8,7 @@ GML::Utils::GMLObject::GMLObject()
 	Author = "";
 	AttrLinks.DeleteAll();
 }
-bool GML::Utils::GMLObject::LinkString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *Description)
+bool GML::Utils::GMLObject::LinkPropertyToString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *Description)
 {
 	GML::Utils::AttributeLink	link;
 
@@ -21,7 +21,7 @@ bool GML::Utils::GMLObject::LinkString(char *Name,GML::Utils::GString &LocalAddr
 
 	return AttrLinks.PushByRef(link);
 }
-bool GML::Utils::GMLObject::LinkBool(char *Name,bool &LocalAddr,bool defaultValue,char *Description)
+bool GML::Utils::GMLObject::LinkPropertyToBool(char *Name,bool &LocalAddr,bool defaultValue,char *Description)
 {
 	GML::Utils::AttributeLink	link;
 
@@ -33,7 +33,7 @@ bool GML::Utils::GMLObject::LinkBool(char *Name,bool &LocalAddr,bool defaultValu
 
 	return AttrLinks.PushByRef(link);
 }
-bool GML::Utils::GMLObject::LinkDouble(char *Name,double &LocalAddr,double defaultValue,char *Description)
+bool GML::Utils::GMLObject::LinkPropertyToDouble(char *Name,double &LocalAddr,double defaultValue,char *Description)
 {
 	GML::Utils::AttributeLink	link;
 
@@ -45,7 +45,7 @@ bool GML::Utils::GMLObject::LinkDouble(char *Name,double &LocalAddr,double defau
 
 	return AttrLinks.PushByRef(link);
 }
-bool GML::Utils::GMLObject::LinkUInt32(char *Name,UInt32 &LocalAddr,UInt32 defaultValue,char *Description)
+bool GML::Utils::GMLObject::LinkPropertyToUInt32(char *Name,UInt32 &LocalAddr,UInt32 defaultValue,char *Description)
 {
 	GML::Utils::AttributeLink	link;
 
@@ -57,7 +57,7 @@ bool GML::Utils::GMLObject::LinkUInt32(char *Name,UInt32 &LocalAddr,UInt32 defau
 
 	return AttrLinks.PushByRef(link);
 }
-bool GML::Utils::GMLObject::LinkInt32(char *Name,Int32 &LocalAddr,Int32 defaultValue,char *Description)
+bool GML::Utils::GMLObject::LinkPropertyToInt32(char *Name,Int32 &LocalAddr,Int32 defaultValue,char *Description)
 {
 	GML::Utils::AttributeLink	link;
 
@@ -69,7 +69,7 @@ bool GML::Utils::GMLObject::LinkInt32(char *Name,Int32 &LocalAddr,Int32 defaultV
 
 	return AttrLinks.PushByRef(link);
 }
-bool GML::Utils::GMLObject::SetConfiguration(GML::Utils::AttributeList &config)
+bool GML::Utils::GMLObject::SetProperty(GML::Utils::AttributeList &config)
 {
 	UInt32						tr;
 	GML::Utils::AttributeLink	*link;
@@ -80,7 +80,7 @@ bool GML::Utils::GMLObject::SetConfiguration(GML::Utils::AttributeList &config)
 	{
 		if ((link=AttrLinks.GetPtrToObject(tr))==NULL)
 		{
-			DEBUGMSG("IAlgorithm: Internal Error reading AttrLink %d ",tr);
+			DEBUGMSG("IAlgorithm: Internal Error reading AttrLinkPropertyTo %d ",tr);
 			return false;
 		}
 		// daca nu am acel atribut , continu
@@ -166,7 +166,7 @@ bool GML::Utils::GMLObject::SetConfiguration(GML::Utils::AttributeList &config)
 	// all ok :-> am setat datele
 	return true;
 }
-bool GML::Utils::GMLObject::SetConfiguration(char *str_config)
+bool GML::Utils::GMLObject::SetProperty(char *str_config)
 {
 	GML::Utils::AttributeList	config;
 
@@ -175,9 +175,9 @@ bool GML::Utils::GMLObject::SetConfiguration(char *str_config)
 		DEBUGMSG("Unable to create AttributeList from: %s",str_config);
 		return false;
 	}
-	return SetConfiguration(config);
+	return SetProperty(config);
 }
-bool GML::Utils::GMLObject::GetConfiguration(GML::Utils::AttributeList &config)
+bool GML::Utils::GMLObject::GetProperty(GML::Utils::AttributeList &config)
 {
 	UInt32						tr;
 	GML::Utils::AttributeLink	*link;
@@ -187,7 +187,7 @@ bool GML::Utils::GMLObject::GetConfiguration(GML::Utils::AttributeList &config)
 	{
 		if ((link=AttrLinks.GetPtrToObject(tr))==NULL)
 		{			
-			DEBUGMSG("IAlgorithm: Internal Error reading AttrLink %d ",tr);
+			DEBUGMSG("IAlgorithm: Internal Error reading AttrLinkPropertyTo %d ",tr);
 			return false;
 		}
 		switch (link->AttributeType)

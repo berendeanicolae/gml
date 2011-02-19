@@ -8,7 +8,7 @@ GML::ML::IConector::IConector()
 	conector = NULL;	
 	columns.indexFeature = NULL;
 	ClearColumnIndexes();
-	LinkString("Table",tableName,"","Name of the table from the database that will be used");
+	LinkPropertyToString("Table",tableName,"","Name of the table from the database that will be used");
 }
 void GML::ML::IConector::ClearColumnIndexes()
 {
@@ -173,7 +173,7 @@ bool GML::ML::IConector::Init(GML::Utils::INotify &_notifier,GML::DB::IDataBase 
 
 	if ((attributeString!=NULL) && (attributeString[0]!=0))
 	{
-		if (SetConfiguration(attributeString)==false)
+		if (SetProperty(attributeString)==false)
 		{
 			notifier->Error("Invalid format for Conector initializations: %s",attributeString);
 			return false;
@@ -206,7 +206,7 @@ bool GML::ML::IConector::Init(GML::ML::IConector &_conector,char *attributeStrin
 
 	if ((attributeString!=NULL) && (attributeString[0]!=0))
 	{
-		if (SetConfiguration(attributeString)==false)
+		if (SetProperty(attributeString)==false)
 		{
 			notifier->Error("Invalid format for Conector initializations: %s",attributeString);
 			return false;
