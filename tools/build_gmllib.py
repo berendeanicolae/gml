@@ -12,6 +12,7 @@ list_headers = [
 	"IParalelUnit.h",
 	"ThreadParalelUnit.h",
 	"AttributeList.h",
+	"GMLObject.h",
 	"INotify.h",
 	"VectorOp.h",
 	"DBRecord.h",
@@ -19,8 +20,7 @@ list_headers = [
 	"IDataBase.h",
 	"MLInterface.h",
 	"IAlgorithm.h",	
-	"Builder.h",
-		
+	"Builder.h",		
 ]
 
 c_path = sys.argv[1]
