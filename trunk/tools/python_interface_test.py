@@ -8,11 +8,11 @@ if not len(sys.argv) > 1:
 path = sys.argv[1]
 
 attr = attributelist.AttributeList()
-attr.AddString("DbName","Sqlite")
+attr.AddString("DbName","SimpleTextFileDB")
 attr.AddString("DbConnString","FileName={}".format(path))
-attr.AddString("Conector","FullCacheConnector")
+attr.AddString("Conector","BitConnector{Table=RecordTable}")
 attr.AddString("Notifyer","ConsoleNotifyer")
-attr.AddDouble("LearningRate",0.01)
+attr.AddDouble("LearningRate",0.02)
 attr.AddInt32("MaxIteratii",100, "")
 b = builder.Builder()
 
@@ -24,12 +24,12 @@ else:
 	config = ialg.SetConfiguration(attr)
 	if config:
 		_in = ialg.Init()
-		print("Result of algorithm initialization: {}".format(_in))
+		print("Result of algorithm initialization: %d"%_in)
 		if _in:
 			print("alg result: ", _in)
-			a = 0.0
-			#ialgorithm.IAlgorithm_Execute(a)
-			ialg.Execute(a)   
+			ialg.Execute("train");
+			ialg.Wait();
+
 
 
 
