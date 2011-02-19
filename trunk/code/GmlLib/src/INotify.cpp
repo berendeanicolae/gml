@@ -110,4 +110,17 @@ bool GML::Utils::INotify::Info(char *format,...)
 		return false;
 	}
 }
+bool GML::Utils::INotify::Init(char *attributeString)
+{
+	Attr.Clear();
+
+	if ((attributeString!=NULL) && (attributeString[0]!=0))
+	{
+		if (Attr.Create(attributeString)==false)			
+			return false;
+	}
+	return OnInit();
+}
+
+
 

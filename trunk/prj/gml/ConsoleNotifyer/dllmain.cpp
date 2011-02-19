@@ -2,13 +2,13 @@
 #include "gmllib.h"
 #include "ConsoleNotifyer.h"
 
-GML::Utils::INotify*	CreateNewNotifyer(void *objData)
+GML::Utils::INotify*	CreateNewNotifyer(char *attributeList)
 {
 	ConsoleNotifyer		*notif = new ConsoleNotifyer();
 
 	if (notif==NULL)
 		return NULL;
-	if (notif->Init(objData)==false)
+	if (notif->Init(attributeList)==false)
 	{
 		delete notif;
 		return NULL;
