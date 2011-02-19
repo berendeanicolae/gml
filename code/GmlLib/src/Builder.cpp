@@ -43,14 +43,32 @@ bool AdjustNameWithExtensionAndPath(GML::Utils::GString &path,char *extension)
 }
 
 //==========================================================================================
-GML::Utils::INotify*		GML::Builder::CreateNotifyer(char *pluginName,void *objectData)
+GML::Utils::INotify*		GML::Builder::CreateNotifyer(char *pluginName)
 {
-	GML::Utils::GString		path;
+	GML::Utils::GString		path,attributeList;
 	HMODULE					hModule;
+	int						a_poz;
 	GML::Utils::INotify*	(*fnCreate)(void *objData);
+
 
 	if (path.Set(pluginName)==false)
 		return NULL;
+	a_poz = path.Find("{");
+	if (a_poz>=0)
+	{
+		if (attributeList.Set(&path.GetText()[a_poz+1])==false)
+			return NULL;
+		if (attributeList.EndsWith("}"))
+			attributeList.Truncate(attributeList.Len()-1);
+		if (attributeList.Strip()==false)
+			return NULL;
+		path.Truncate(a_poz);
+		if (path.Strip()==false)
+			return NULL;
+	} else {
+		if (attributeList.Set("")==false)
+			return NULL;
+	}
 	if (AdjustNameWithExtensionAndPath(path,NOTIFYER_EXT)==false)
 		return NULL;
 
@@ -62,7 +80,7 @@ GML::Utils::INotify*		GML::Builder::CreateNotifyer(char *pluginName,void *object
 	if (fnCreate==NULL)
 		return NULL;
 	// am incarcat si totul e ok -> cer o interfata
-	return fnCreate(objectData);
+	return fnCreate(attributeList.GetText());
 }
 GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::INotify &notify,char *connectionString)
 {

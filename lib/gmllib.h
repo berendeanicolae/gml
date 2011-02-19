@@ -1013,6 +1013,82 @@ namespace GML
 	}
 };
 
+//===================== AttributeList.h =================================================================================
+
+
+
+
+namespace GML
+{
+	namespace Utils
+	{
+		struct  Attribute
+		{
+			char*			Name;
+			char*			Description;
+			unsigned char*	Data;
+			unsigned int	DataSize;
+			unsigned int	AttributeType;
+			unsigned int	ElementsCount;
+
+			bool operator < (Attribute &a1);
+			bool operator > (Attribute &a1);
+		};
+
+		struct  AttributeLink
+		{
+			char*			Name;
+			void*			LocalAddress;
+			unsigned int	AttributeType;
+			char*			Description;
+		};
+
+		class  AttributeList
+		{
+			GML::Utils::GTVector<GML::Utils::Attribute>	list;
+			
+			bool			FromString(GML::Utils::GString &text);
+		public:
+			enum 
+			{
+				BOOLEAN = 0,
+				INT8,INT16,INT32,INT64,
+				UINT8,UINT16,UINT32,UINT64,
+				FLOAT,DOUBLE,
+				STRING,
+				ATTRIBUTES_COUNT		
+			};		
+		public:
+			AttributeList(void);
+			~AttributeList(void);
+		
+			bool			AddAttribute(char* Name,void *Data,unsigned int AttributeType,unsigned int ElementsCount=1,char *Description=NULL);
+
+			bool			AddString(char *Name, char *Text, char *Description = NULL);
+			bool			AddBool(char *Name, bool value,char *Description = NULL);
+			bool			AddDouble(char *Name, double value, char *Description = NULL);
+			bool			AddUInt32(char *Name, UInt32 value, char *Description = NULL);
+			bool			AddInt32(char *Name, Int32 value, char *Description = NULL);
+
+			bool			Update(char *Name,void *Data,UInt32 DataSize);
+			bool			UpdateString(char *Name,GML::Utils::GString &text);
+			
+			void			Clear();
+			Attribute*		Get(unsigned int index);
+			Attribute*		Get(char* Name);
+			unsigned int	GetCount();
+
+			bool			Save(char *fileName);
+			bool			Load(char *fileName);
+			bool			Create(char *text,char separator=';');
+
+
+			// WRAPPERS for PYTHON
+			
+			std::string UpdateString(char *Name);
+		};
+	}
+}
 //===================== INotify.h =================================================================================
 
 
@@ -1022,12 +1098,15 @@ namespace GML
 	{
 		class  INotify
 		{
+			GML::Utils::AttributeList	Attr;
 		public:
 			enum {
 				NOTIFY_ERROR = 0,
 				NOTIFY_INFO,
 			};
-			virtual bool	Init(void *initData) = 0;
+			bool			Init(char *attributeString);
+
+			virtual bool	OnInit() = 0;
 			virtual bool	Uninit() = 0;
 			virtual bool	Notify(UInt32 messageID,void *Data,UInt32 DataSize) = 0;
 
@@ -1142,82 +1221,6 @@ namespace GML
 }
 
 
-//===================== AttributeList.h =================================================================================
-
-
-
-
-namespace GML
-{
-	namespace Utils
-	{
-		struct  Attribute
-		{
-			char*			Name;
-			char*			Description;
-			unsigned char*	Data;
-			unsigned int	DataSize;
-			unsigned int	AttributeType;
-			unsigned int	ElementsCount;
-
-			bool operator < (Attribute &a1);
-			bool operator > (Attribute &a1);
-		};
-
-		struct  AttributeLink
-		{
-			char*			Name;
-			void*			LocalAddress;
-			unsigned int	AttributeType;
-			char*			Description;
-		};
-
-		class  AttributeList
-		{
-			GML::Utils::GTVector<GML::Utils::Attribute>	list;
-			
-			bool			FromString(GML::Utils::GString &text);
-		public:
-			enum 
-			{
-				BOOLEAN = 0,
-				INT8,INT16,INT32,INT64,
-				UINT8,UINT16,UINT32,UINT64,
-				FLOAT,DOUBLE,
-				STRING,
-				ATTRIBUTES_COUNT		
-			};		
-		public:
-			AttributeList(void);
-			~AttributeList(void);
-		
-			bool			AddAttribute(char* Name,void *Data,unsigned int AttributeType,unsigned int ElementsCount=1,char *Description=NULL);
-
-			bool			AddString(char *Name, char *Text, char *Description = NULL);
-			bool			AddBool(char *Name, bool value,char *Description = NULL);
-			bool			AddDouble(char *Name, double value, char *Description = NULL);
-			bool			AddUInt32(char *Name, UInt32 value, char *Description = NULL);
-			bool			AddInt32(char *Name, Int32 value, char *Description = NULL);
-
-			bool			Update(char *Name,void *Data,UInt32 DataSize);
-			bool			UpdateString(char *Name,GML::Utils::GString &text);
-			
-			void			Clear();
-			Attribute*		Get(unsigned int index);
-			Attribute*		Get(char* Name);
-			unsigned int	GetCount();
-
-			bool			Save(char *fileName);
-			bool			Load(char *fileName);
-			bool			Create(char *text,char separator=';');
-
-
-			// WRAPPERS for PYTHON
-			
-			std::string UpdateString(char *Name);
-		};
-	}
-}
 //===================== IDataBase.h =================================================================================
 
 
@@ -1493,7 +1496,7 @@ namespace GML
 	class  Builder
 	{
 	public:
-		static GML::Utils::INotify*			CreateNotifyer(char *pluginName,void *objectData = NULL);	
+		static GML::Utils::INotify*			CreateNotifyer(char *pluginName);	
 		static GML::DB::IDataBase*			CreateDataBase(char *pluginName,GML::Utils::INotify &notify,char *connectionString);
 		static GML::ML::IConector*			CreateConectors(char *conectorsList,GML::Utils::INotify &notify,GML::DB::IDataBase &database);
 		static GML::Algorithm::IAlgorithm*	CreateAlgorithm(char *algorithmLib,char *algorithmName=NULL);

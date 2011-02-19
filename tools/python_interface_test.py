@@ -7,6 +7,7 @@ if not len(sys.argv) > 1:
 	sys.exit()
 path = sys.argv[1]
 
+"""
 attr = attributelist.AttributeList()
 attr.AddString("DbName","SimpleTextFileDB")
 attr.AddString("DbConnString","FileName={}".format(path))
@@ -15,13 +16,19 @@ attr.AddString("Notifyer","ConsoleNotifyer")
 attr.AddDouble("LearningRate",0.02)
 attr.AddInt32("MaxIteratii",100, "")
 b = builder.Builder()
-
+"""
 ialg = b.CreateAlgorithm("SimplePerceptronAlgorithm","")
 print("Inited algorithm: {}".format(ialg)) 
 if not ialg:
 	pass
 else:
-	config = ialg.SetConfiguration(attr)
+	config = ialg.SetConfiguration(
+	{
+		"DbName":"SimpleTextFileDB",
+		"DbConnString":"FileName={}",
+		
+	}
+	)
 	if config:
 		_in = ialg.Init()
 		print("Result of algorithm initialization: %d"%_in)

@@ -2,7 +2,7 @@
 #include "ConsoleNotifyer.h"
 
 
-bool ConsoleNotifyer::Init(void *initData)
+bool ConsoleNotifyer::OnInit()
 {
 	return true;
 }
