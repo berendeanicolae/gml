@@ -3,14 +3,15 @@
 struct ThreadLocalData
 {
 	GML::Algorithm::IAlgorithm	*me;
-	char						*command;
+	GML::Utils::GString			command;
 	HANDLE						*ptrhMainThread;
 };
 DWORD WINAPI IAlgorithm_ThreadProc(LPVOID lpParameter)
 {
 	ThreadLocalData *tld = (ThreadLocalData *)lpParameter;
-	tld->me->OnExecute(tld->command);
+	tld->me->OnExecute(tld->command.GetText());
 	CloseHandle(*(tld->ptrhMainThread));
+	tld->command.Distroy();
 	(*(tld->ptrhMainThread)) = NULL;
 	// sterg obiectul
 	delete tld;
@@ -264,7 +265,12 @@ bool GML::Algorithm::IAlgorithm::Execute(char *command)
 		notif->Error("Internal error => Unable to create ThreadLocalData object");
 		return false;
 	}
-	tld->command = command;
+	if (tld->command.Set(command)==false)
+	{
+		delete tld;
+		notif->Error("Internal error => Unable to set string ... ");
+		return false;
+	}
 	tld->me = this;
 	tld->ptrhMainThread = &hMainThread;
 	// creez firul
