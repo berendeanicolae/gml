@@ -189,6 +189,18 @@ bool GML::Algorithm::IAlgorithm::SetConfiguration(GML::Utils::AttributeList &con
 	// all ok :-> am setat datele
 	return true;
 }
+bool GML::Algorithm::IAlgorithm::SetConfiguration(char *str_config)
+{
+	GML::Utils::AttributeList	config;
+
+	if (config.Create(str_config)==false)
+	{
+		if (notif)
+			notif->Error("Unable to create AttributeList from: %s",str_config);
+		return false;
+	}
+	return SetConfiguration(config);
+}
 bool GML::Algorithm::IAlgorithm::GetConfiguration(GML::Utils::AttributeList &config)
 {
 	UInt32						tr;

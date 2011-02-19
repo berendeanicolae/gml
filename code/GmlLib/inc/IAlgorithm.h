@@ -27,6 +27,7 @@ namespace GML
 			IAlgorithm();
 
 			bool			SetConfiguration(GML::Utils::AttributeList &config);
+			bool			SetConfiguration(char *config);
 			bool			GetConfiguration(GML::Utils::AttributeList &config);
 
 			virtual bool	Init() = 0;
