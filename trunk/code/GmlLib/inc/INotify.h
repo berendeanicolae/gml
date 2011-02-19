@@ -9,6 +9,7 @@ namespace GML
 	{
 		class EXPORT INotify
 		{
+		protected:
 			GML::Utils::AttributeList	Attr;
 		public:
 			enum {

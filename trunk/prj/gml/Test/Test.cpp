@@ -13,7 +13,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	attr.AddString("DbName","SimpleTextFileDB");
 	attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\a.txt");  
 	attr.AddString("Conector","BitConnector{Table=RecordTable}");
-	attr.AddString("Notifyer","ConsoleNotifyer{test=sal;color=red;size=100;}");
+	attr.AddString("Notifyer","ConsoleNotifyer{useColors=True}");
 	attr.AddDouble("LearningRate",0.02);
 	attr.AddUInt32("MaxIteratii",30);
 
