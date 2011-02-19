@@ -23,13 +23,13 @@ namespace GML
 			Int32		indexHash;
 			Int32		*indexFeature;
 		};
-		class EXPORT IConector
+		class EXPORT IConector : public GML::Utils::GMLObject
 		{
 		protected:
-			GML::Utils::AttributeList	Attr;
 			GML::Utils::INotify			*notifier;			
 			GML::DB::IDataBase			*database;
 			GML::ML::IConector			*conector;
+			GML::Utils::GString			tableName;
 			TableColumnIndexes			columns;
 			
 			void						ClearColumnIndexes();

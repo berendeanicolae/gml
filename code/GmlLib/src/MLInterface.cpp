@@ -8,6 +8,7 @@ GML::ML::IConector::IConector()
 	conector = NULL;	
 	columns.indexFeature = NULL;
 	ClearColumnIndexes();
+	LinkString("Table",tableName,"","Name of the table from the database that will be used");
 }
 void GML::ML::IConector::ClearColumnIndexes()
 {
@@ -159,8 +160,7 @@ bool GML::ML::IConector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBReco
 	return true;
 }
 bool GML::ML::IConector::Init(GML::Utils::INotify &_notifier,GML::DB::IDataBase &_database,char *attributeString)
-{
-	GML::Utils::GString							tableName;
+{	
 	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
 
 	// daca a fost deja initializat
@@ -171,18 +171,11 @@ bool GML::ML::IConector::Init(GML::Utils::INotify &_notifier,GML::DB::IDataBase 
 		return false;
 	}
 
-	tableName.Set("");
-	Attr.Clear();
 	if ((attributeString!=NULL) && (attributeString[0]!=0))
 	{
-		if (Attr.Create(attributeString)==false)
+		if (SetConfiguration(attributeString)==false)
 		{
 			notifier->Error("Invalid format for Conector initializations: %s",attributeString);
-			return false;
-		}
-		if (Attr.UpdateString("Table",tableName)==false)
-		{
-			notifier->Error("Missing Table attribute => requaired for DataBase Conection");
 			return false;
 		}
 	}
@@ -211,10 +204,9 @@ bool GML::ML::IConector::Init(GML::ML::IConector &_conector,char *attributeStrin
 		return false;
 	}
 
-	Attr.Clear();
 	if ((attributeString!=NULL) && (attributeString[0]!=0))
 	{
-		if (Attr.Create(attributeString)==false)
+		if (SetConfiguration(attributeString)==false)
 		{
 			notifier->Error("Invalid format for Conector initializations: %s",attributeString);
 			return false;

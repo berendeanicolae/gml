@@ -30,6 +30,7 @@ class SimpleTextFileDB: public GML::DB::IDataBase
 	int						dbPoz;
 
 public:
+	SimpleTextFileDB();
 	bool				OnInit();
 	bool				Connect ();
 	bool				Disconnect ();

@@ -5,13 +5,14 @@
 #include "GTFVector.h"
 #include "DBRecord.h"
 #include "AttributeList.h"
+#include "GMLObject.h"
 
 
 namespace GML
 {
 	namespace DB
 	{
-		class EXPORT IDataBase 
+		class EXPORT IDataBase: public GML::Utils::GMLObject
 		{
 		protected:
 			/*
@@ -19,7 +20,6 @@ namespace GML
 			 *  - in the case of this class mostly errors 
 			 */
 			GML::Utils::INotify			*notifier;
-			GML::Utils::AttributeList	Attr;
 
 		public:
 			virtual ~IDataBase();

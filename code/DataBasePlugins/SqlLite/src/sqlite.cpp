@@ -31,12 +31,12 @@ bool TextToInt(char* str, struct GML::DB::RecordHash& hash)
 
 SqliteDatabase::SqliteDatabase()
 {
-}
-GML::Utils::AttributeList::AttributeList()
-{
-}
-GML::Utils::AttributeList::~AttributeList()
-{
+	database_name = NULL;
+	tail = NULL;
+	database = NULL;
+	res = NULL;
+
+	LinkString("FileName",FileName,"","File that contains the sqllite database");
 }
 SqliteDatabase::~SqliteDatabase()
 {
@@ -52,9 +52,7 @@ SqliteDatabase::~SqliteDatabase()
 }
 bool SqliteDatabase::OnInit()
 {
-	GML::Utils::GString str;
-	this->Attr.UpdateString("FileName", str);	
-	char* _text = str.GetText();
+	char* _text = FileName.GetText();
 	if(NULL == _text){
 		notifier->Error("FileName attribute does not exists!");
 		return false;
