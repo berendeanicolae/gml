@@ -36,7 +36,7 @@ f.write("\n\n//-----------------------------------------------------------------
 for name in list_headers:
 	print("Adding ... "+name)
 	f.write("//===================== "+name+" =================================================================================\n");
-	for line in open(os.path.join(c_path,name),"rb"):
+	for line in open(os.path.join(c_path,name),"rt"):
 		if "#include" in line:
 			continue
 		if "#pragma once" in line:

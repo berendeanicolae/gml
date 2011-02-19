@@ -33,7 +33,8 @@ namespace GML
 			virtual void	OnExecute(char* command)=0;
 
 			bool			Execute(char *command);
-			bool			Wait(UInt32 nrMiliseconds=0xFFFFFFFF);
+			bool			Wait();
+			bool			Wait(UInt32 nrMiliseconds);
 
 		};
 	}
