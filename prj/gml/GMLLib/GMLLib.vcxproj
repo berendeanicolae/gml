@@ -99,6 +99,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClInclude Include="..\..\..\Code\GmlLib\inc\compat.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\DBRecord.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\File.h" />
+    <ClInclude Include="..\..\..\code\GmlLib\inc\GMLObject.h" />
     <ClInclude Include="..\..\..\code\GmlLib\inc\GTFVector.h" />
     <ClInclude Include="..\..\..\code\GmlLib\inc\IAlgorithm.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\IParalelUnit.h" />
@@ -121,6 +122,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClCompile Include="..\..\..\code\GmlLib\src\Builder.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\dllmain.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\File.cpp" />
+    <ClCompile Include="..\..\..\code\GmlLib\src\GMLObject.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\IAlgorithm.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\IDataBase.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\INotify.cpp" />
