@@ -2,7 +2,7 @@
 
 bool	SimpleTextFileDB::OnInit()
 {
-	if (Attr.UpdateString("DbPath",fileName)==false)
+	if (Attr.UpdateString("FileName",fileName)==false)
 	{
 		notifier->Error("Missing 'FileName' attribute");
 		return false;
