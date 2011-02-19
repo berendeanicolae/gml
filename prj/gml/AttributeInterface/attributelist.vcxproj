@@ -136,17 +136,16 @@
       <SubSystem>Console</SubSystem>
       <OutputFile>_$(TargetName).pyd</OutputFile>
       <ImportLibrary>.\Debug\_attributelist.lib</ImportLibrary>
-      <AdditionalDependencies>$(PYTHON_LIB_D);$(SolutionDir)..\..\lib\gmllib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(PYTHON_LIB);$(SolutionDir)..\..\lib\gmllib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy _$(TargetName).pyd $(SolutionDir)..\..\bin\*.*|copy $(TargetName).py $(SolutionDir)..\..\bin\*.*</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>set PYTHON_LIB="$(SolutionDir)..\..\lib\python31_d.lib";set PYTHON_INCLUDE=%PYTHON_PATH%\include"</Command>
+      <Command>set PYTHON_LIB="$(SolutionDir)..\..\lib\python31.lib";set PYTHON_INCLUDE=%PYTHON_PATH%\include"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\code\GmlLib\src\attributelist.cpp" />
     <ClCompile Include="attributelist_wrap.cxx" />
   </ItemGroup>
   <ItemGroup>
@@ -160,7 +159,7 @@ echo on
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(InputName)_wrap.cxx;%(Outputs)</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo In order to function correctly, please ensure the following environment variables are correctly set: 
 echo PYTHON_INCLUDE: %PYTHON_INCLUDE% 
-echo PYTHON_LIB_D: %PYTHON_LIB_D% 
+echo PYTHON_LIB: %PYTHON_LIB% 
 echo on 
 	..\..\..\tools\swig\swig.exe -c++ -python %(FullPath) </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(InputName)_wrap.cxx;%(Outputs)</Outputs>

@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\code\GmlLib\src\AttributeList.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="attributelist_wrap.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
