@@ -107,9 +107,9 @@ GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Uti
 			poz = 0;
 		else
 			poz++;
-		if (path.Strip()==false)
-			return NULL;
 		if (path.Set(&list.GetText()[poz])==false)
+			return NULL;
+		if (path.Strip()==false)
 			return NULL;
 		a_poz = path.Find("{");
 		if (a_poz>=0)
