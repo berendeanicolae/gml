@@ -67,7 +67,7 @@ bool GML::ML::IConector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB:
 				notifier->Error("Invalid type for Feature at column #%d. Allowed types: BOOL,INT16,INT32,DOUBLE !",tr);
 				return false;
 			}
-			columns.indexFeature++;
+			columns.nrFeatures++;
 		}
 	}
 	if (columns.nrFeatures==0)

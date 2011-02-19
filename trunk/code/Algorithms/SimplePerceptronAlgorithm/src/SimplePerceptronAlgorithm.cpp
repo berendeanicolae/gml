@@ -27,6 +27,11 @@ bool	SimplePerceptronAlgorithm::Init()
 		notif->Error("Unable to create Database (%s,%s)",dbName.GetText(),conString.GetText());
 		return false;
 	}
+	if (db->Connect()==false)
+	{
+		notif->Error("Unable to connect to Database (%s,%s)",dbName.GetText(),conString.GetText());
+		return false;
+	}
 	if ((con = GML::Builder::CreateConectors(conectorString.GetText(),*notif,*db))==NULL)
 	{
 		notif->Error("Unable to create Conector (%s)",conectorString.GetText());
