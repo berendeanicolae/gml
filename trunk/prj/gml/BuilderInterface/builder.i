@@ -2,6 +2,7 @@
 %module builder
 %{
 #define SWIG_FILE_WITH_INIT
+#include "..\..\..\code\GmlLib\inc\Compat.h";
 #include "..\..\..\code\GmlLib\inc\builder.h";
 %}
 
