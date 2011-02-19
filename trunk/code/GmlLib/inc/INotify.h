@@ -1,16 +1,16 @@
 #pragma once
 
 #include "compat.h"
+#include "GMLObject.h"
 #include "AttributeList.h"
 
 namespace GML
 {
 	namespace Utils
 	{
-		class EXPORT INotify
+		class EXPORT INotify: public GMLObject
 		{
-		protected:
-			GML::Utils::AttributeList	Attr;
+
 		public:
 			enum {
 				NOTIFY_ERROR = 0,

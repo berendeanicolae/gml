@@ -1,13 +1,12 @@
 #include "SimpleTextFileDB.h"
 
+SimpleTextFileDB::SimpleTextFileDB()
+{
+	FeatNames = NULL;
+	LinkString("FileName",fileName,"","File that contains the database !");
+}
 bool	SimpleTextFileDB::OnInit()
 {
-	if (Attr.UpdateString("FileName",fileName)==false)
-	{
-		notifier->Error("Missing 'FileName' attribute");
-		return false;
-	}
-	FeatNames = NULL;
 	return true;
 }
 bool	SimpleTextFileDB::Connect ()

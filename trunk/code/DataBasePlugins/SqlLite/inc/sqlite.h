@@ -7,12 +7,14 @@
 class SqliteDatabase: public GML::DB::IDataBase
 {
 private:
-	UInt32 currentRow;
-	sqlite3 *database;
-	char* database_name;
-	char* tail;
-	sqlite3_stmt *res;
-	GML::Utils::INotify* notifier; 
+	UInt32					currentRow;
+	sqlite3					*database;
+	char*					database_name;
+	char*					tail;
+	sqlite3_stmt			*res;
+	
+	GML::Utils::GString		FileName;
+
 	bool _InsertRow(char* table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect, char* Fields = "");
 	char* _CreateStatement(char*Statement, GML::Utils::GTFVector<GML::DB::DBRecord> &vals, GML::Utils::GTFVector<GML::DB::DBRecord> &uvals);
 public:

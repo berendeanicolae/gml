@@ -112,11 +112,9 @@ bool GML::Utils::INotify::Info(char *format,...)
 }
 bool GML::Utils::INotify::Init(char *attributeString)
 {
-	Attr.Clear();
-
 	if ((attributeString!=NULL) && (attributeString[0]!=0))
 	{
-		if (Attr.Create(attributeString)==false)			
+		if (SetConfiguration(attributeString)==false)
 			return false;
 	}
 	return OnInit();

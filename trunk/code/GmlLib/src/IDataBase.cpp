@@ -7,10 +7,9 @@ bool GML::DB::IDataBase::Init(GML::Utils::INotify &_notifier, char *connectionSt
 {
 	notifier = &_notifier;
 
-	Attr.Clear();
-	if (connectionString!=NULL)
+	if ((connectionString!=NULL) && (connectionString[0]!=0))
 	{
-		if (Attr.Create(connectionString)==false)
+		if (SetConfiguration(connectionString)==false)
 		{
 			notifier->Error("Invalid format for DataBase initializations: %s",connectionString);
 			return false;
