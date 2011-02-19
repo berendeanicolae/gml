@@ -145,7 +145,6 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\code\GmlLib\src\builder.cpp" />
     <ClCompile Include="builder_wrap.cxx" />
   </ItemGroup>
   <ItemGroup>
