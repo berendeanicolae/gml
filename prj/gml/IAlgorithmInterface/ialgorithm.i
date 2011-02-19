@@ -16,7 +16,7 @@ namespace GML
 		public:
 			IAlgorithm();
 			%feature("autodoc", "1");
-			virtual bool	SetConfiguration(GML::Utils::AttributeList &config) = 0;
+			virtual bool	SetProperty(GML::Utils::AttributeList &config) = 0;
 			%feature("autodoc", "1");
 			virtual bool	GetConfiguration(GML::Utils::AttributeList &config) = 0;
 			%feature("autodoc", "1");

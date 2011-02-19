@@ -9,7 +9,7 @@ bool GML::DB::IDataBase::Init(GML::Utils::INotify &_notifier, char *connectionSt
 
 	if ((connectionString!=NULL) && (connectionString[0]!=0))
 	{
-		if (SetConfiguration(connectionString)==false)
+		if (SetProperty(connectionString)==false)
 		{
 			notifier->Error("Invalid format for DataBase initializations: %s",connectionString);
 			return false;

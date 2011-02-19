@@ -114,7 +114,7 @@ bool GML::Utils::INotify::Init(char *attributeString)
 {
 	if ((attributeString!=NULL) && (attributeString[0]!=0))
 	{
-		if (SetConfiguration(attributeString)==false)
+		if (SetProperty(attributeString)==false)
 			return false;
 	}
 	return OnInit();

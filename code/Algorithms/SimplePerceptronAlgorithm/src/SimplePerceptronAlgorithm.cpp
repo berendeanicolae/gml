@@ -5,12 +5,12 @@ SimplePerceptronAlgorithm::SimplePerceptronAlgorithm()
 	db = NULL;
 	con = NULL;
 
-	LinkString("DbName"				,dbName			,"");
-	LinkString("DbConnString"		,conString		,"");
-	LinkString("Conector"			,conectorString	,"");
-	LinkString("Notifyer"			,notifString	,"");
-	LinkDouble("LearningRate"		,learningRate	,0.01);
-	LinkUInt32("MaxIteratii"		,maxIteratii	,100);
+	LinkPropertyToString("DbName"				,dbName			,"");
+	LinkPropertyToString("DbConnString"		,conString		,"");
+	LinkPropertyToString("Conector"			,conectorString	,"");
+	LinkPropertyToString("Notifyer"			,notifString	,"");
+	LinkPropertyToDouble("LearningRate"		,learningRate	,0.01);
+	LinkPropertyToUInt32("MaxIteratii"			,maxIteratii	,100);
 }
 bool	SimplePerceptronAlgorithm::Init()
 {
