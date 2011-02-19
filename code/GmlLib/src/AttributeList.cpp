@@ -21,7 +21,7 @@ std::string GML::Utils::AttributeList::UpdateString(char *Name)
 
 int  AttributeCompare(GML::Utils::Attribute &a1,GML::Utils::Attribute &a2)
 {
-	return GML::Utils::GString::Compare(a1.Name,a2.Name);
+	return GML::Utils::GString::Compare(a1.Name,a2.Name,true);
 }
 void ClearAttribute(GML::Utils::Attribute *a)
 {

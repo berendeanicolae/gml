@@ -1103,6 +1103,7 @@ namespace GML
 	{
 		class  INotify
 		{
+		protected:
 			GML::Utils::AttributeList	Attr;
 		public:
 			enum {

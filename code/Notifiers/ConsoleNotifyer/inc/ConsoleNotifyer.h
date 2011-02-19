@@ -5,6 +5,8 @@
 
 class ConsoleNotifyer: public GML::Utils::INotify
 {
+	bool	useColors;
+	void	SetColor(unsigned char fore,unsigned char back);
 public:
 	bool	OnInit();
 	bool	Uninit();
