@@ -1071,7 +1071,12 @@ namespace GML
 			bool			AddInt32(char *Name, Int32 value, char *Description = NULL);
 
 			bool			Update(char *Name,void *Data,UInt32 DataSize);
-			bool			UpdateString(char *Name,GML::Utils::GString &text);
+
+			bool			UpdateBool(char *Name,bool &boolValue,bool useDefault=false,bool defaultValue=false);
+			bool			UpdateUInt32(char *Name,UInt32 &uint32Value,bool useDefault=false,UInt32 defaultValue=0);
+			bool			UpdateInt32(char *Name,Int32 &int32Value,bool useDefault=false,Int32 defaultValue=0);
+			bool			UpdateDouble(char *Name,double &doubleValue,bool useDefault=false,double defaultValue=0);
+			bool			UpdateString(char *Name,GML::Utils::GString &text,bool useDefault=false,char* defaultValue="");
 			
 			void			Clear();
 			Attribute*		Get(unsigned int index);
