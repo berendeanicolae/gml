@@ -2685,10 +2685,9 @@ SWIG_Python_MustGetPtr(PyObject *obj, swig_type_info *ty, int argnum, int flags)
 
 #define SWIGTYPE_p_GML__Algorithm__IAlgorithm swig_types[0]
 #define SWIGTYPE_p_GML__Utils__AttributeList swig_types[1]
-#define SWIGTYPE_p_UInt32 swig_types[2]
-#define SWIGTYPE_p_char swig_types[3]
-static swig_type_info *swig_types[5];
-static swig_module_info swig_module = {swig_types, 4, 0, 0, 0, 0};
+#define SWIGTYPE_p_char swig_types[2]
+static swig_type_info *swig_types[4];
+static swig_module_info swig_module = {swig_types, 3, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -2786,6 +2785,7 @@ namespace swig {
 
 
 #define SWIG_FILE_WITH_INIT
+#include "..\..\..\code\GmlLib\inc\Compat.h";
 #include "..\..\..\code\GmlLib\inc\IAlgorithm.h";
 
 
@@ -2793,6 +2793,156 @@ SWIGINTERNINLINE PyObject*
   SWIG_From_bool  (bool value)
 {
   return PyBool_FromLong(value ? 1 : 0);
+}
+
+
+#include <limits.h>
+#if !defined(SWIG_NO_LLONG_MAX)
+# if !defined(LLONG_MAX) && defined(__GNUC__) && defined (__LONG_LONG_MAX__)
+#   define LLONG_MAX __LONG_LONG_MAX__
+#   define LLONG_MIN (-LLONG_MAX - 1LL)
+#   define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
+# endif
+#endif
+
+
+SWIGINTERN int
+SWIG_AsVal_double (PyObject *obj, double *val)
+{
+  int res = SWIG_TypeError;
+  if (PyFloat_Check(obj)) {
+    if (val) *val = PyFloat_AsDouble(obj);
+    return SWIG_OK;
+  } else if (PyInt_Check(obj)) {
+    if (val) *val = PyInt_AsLong(obj);
+    return SWIG_OK;
+  } else if (PyLong_Check(obj)) {
+    double v = PyLong_AsDouble(obj);
+    if (!PyErr_Occurred()) {
+      if (val) *val = v;
+      return SWIG_OK;
+    } else {
+      PyErr_Clear();
+    }
+  }
+#ifdef SWIG_PYTHON_CAST_MODE
+  {
+    int dispatch = 0;
+    double d = PyFloat_AsDouble(obj);
+    if (!PyErr_Occurred()) {
+      if (val) *val = d;
+      return SWIG_AddCast(SWIG_OK);
+    } else {
+      PyErr_Clear();
+    }
+    if (!dispatch) {
+      long v = PyLong_AsLong(obj);
+      if (!PyErr_Occurred()) {
+	if (val) *val = v;
+	return SWIG_AddCast(SWIG_AddCast(SWIG_OK));
+      } else {
+	PyErr_Clear();
+      }
+    }
+  }
+#endif
+  return res;
+}
+
+
+#include <float.h>
+
+
+#include <math.h>
+
+
+SWIGINTERNINLINE int
+SWIG_CanCastAsInteger(double *d, double min, double max) {
+  double x = *d;
+  if ((min <= x && x <= max)) {
+   double fx = floor(x);
+   double cx = ceil(x);
+   double rd =  ((x - fx) < 0.5) ? fx : cx; /* simple rint */
+   if ((errno == EDOM) || (errno == ERANGE)) {
+     errno = 0;
+   } else {
+     double summ, reps, diff;
+     if (rd < x) {
+       diff = x - rd;
+     } else if (rd > x) {
+       diff = rd - x;
+     } else {
+       return 1;
+     }
+     summ = rd + x;
+     reps = diff/summ;
+     if (reps < 8*DBL_EPSILON) {
+       *d = rd;
+       return 1;
+     }
+   }
+  }
+  return 0;
+}
+
+
+SWIGINTERN int
+SWIG_AsVal_unsigned_SS_long (PyObject *obj, unsigned long *val) 
+{
+  if (PyInt_Check(obj)) {
+    long v = PyInt_AsLong(obj);
+    if (v >= 0) {
+      if (val) *val = v;
+      return SWIG_OK;
+    } else {
+      return SWIG_OverflowError;
+    }
+  } else if (PyLong_Check(obj)) {
+    unsigned long v = PyLong_AsUnsignedLong(obj);
+    if (!PyErr_Occurred()) {
+      if (val) *val = v;
+      return SWIG_OK;
+    } else {
+      PyErr_Clear();
+    }
+  }
+#ifdef SWIG_PYTHON_CAST_MODE
+  {
+    int dispatch = 0;
+    unsigned long v = PyLong_AsUnsignedLong(obj);
+    if (!PyErr_Occurred()) {
+      if (val) *val = v;
+      return SWIG_AddCast(SWIG_OK);
+    } else {
+      PyErr_Clear();
+    }
+    if (!dispatch) {
+      double d;
+      int res = SWIG_AddCast(SWIG_AsVal_double (obj,&d));
+      if (SWIG_IsOK(res) && SWIG_CanCastAsInteger(&d, 0, ULONG_MAX)) {
+	if (val) *val = (unsigned long)(d);
+	return res;
+      }
+    }
+  }
+#endif
+  return SWIG_TypeError;
+}
+
+
+SWIGINTERN int
+SWIG_AsVal_unsigned_SS_int (PyObject * obj, unsigned int *val)
+{
+  unsigned long v;
+  int res = SWIG_AsVal_unsigned_SS_long (obj, &v);
+  if (SWIG_IsOK(res)) {
+    if ((v > UINT_MAX)) {
+      return SWIG_OverflowError;
+    } else {
+      if (val) *val = static_cast< unsigned int >(v);
+    }
+  }  
+  return res;
 }
 
 
@@ -2983,11 +3133,11 @@ fail:
 SWIGINTERN PyObject *_wrap_IAlgorithm_Execute(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   GML::Algorithm::IAlgorithm *arg1 = (GML::Algorithm::IAlgorithm *) 0 ;
-  UInt32 arg2 ;
+  unsigned int arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
+  unsigned int val2 ;
+  int ecode2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
@@ -2997,19 +3147,11 @@ SWIGINTERN PyObject *_wrap_IAlgorithm_Execute(PyObject *SWIGUNUSEDPARM(self), Py
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IAlgorithm_Execute" "', argument " "1"" of type '" "GML::Algorithm::IAlgorithm *""'"); 
   }
   arg1 = reinterpret_cast< GML::Algorithm::IAlgorithm * >(argp1);
-  {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_UInt32,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IAlgorithm_Execute" "', argument " "2"" of type '" "UInt32""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IAlgorithm_Execute" "', argument " "2"" of type '" "UInt32""'");
-    } else {
-      UInt32 * temp = reinterpret_cast< UInt32 * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
-    }
-  }
+  ecode2 = SWIG_AsVal_unsigned_SS_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "IAlgorithm_Execute" "', argument " "2"" of type '" "unsigned int""'");
+  } 
+  arg2 = static_cast< unsigned int >(val2);
   (arg1)->Execute(arg2);
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -3084,7 +3226,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"IAlgorithm_SetConfiguration", _wrap_IAlgorithm_SetConfiguration, METH_VARARGS, (char *)"IAlgorithm_SetConfiguration(IAlgorithm self, GML::Utils::AttributeList config) -> bool"},
 	 { (char *)"IAlgorithm_GetConfiguration", _wrap_IAlgorithm_GetConfiguration, METH_VARARGS, (char *)"IAlgorithm_GetConfiguration(IAlgorithm self, GML::Utils::AttributeList config) -> bool"},
 	 { (char *)"IAlgorithm_Init", _wrap_IAlgorithm_Init, METH_VARARGS, (char *)"IAlgorithm_Init(IAlgorithm self) -> bool"},
-	 { (char *)"IAlgorithm_Execute", _wrap_IAlgorithm_Execute, METH_VARARGS, (char *)"IAlgorithm_Execute(IAlgorithm self, UInt32 command)"},
+	 { (char *)"IAlgorithm_Execute", _wrap_IAlgorithm_Execute, METH_VARARGS, (char *)"IAlgorithm_Execute(IAlgorithm self, unsigned int command)"},
 	 { (char *)"IAlgorithm_OnExecute", _wrap_IAlgorithm_OnExecute, METH_VARARGS, (char *)"IAlgorithm_OnExecute(IAlgorithm self, char command)"},
 	 { (char *)"delete_IAlgorithm", _wrap_delete_IAlgorithm, METH_VARARGS, NULL},
 	 { (char *)"IAlgorithm_swigregister", IAlgorithm_swigregister, METH_VARARGS, NULL},
@@ -3096,25 +3238,21 @@ static PyMethodDef SwigMethods[] = {
 
 static swig_type_info _swigt__p_GML__Algorithm__IAlgorithm = {"_p_GML__Algorithm__IAlgorithm", "GML::Algorithm::IAlgorithm *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_GML__Utils__AttributeList = {"_p_GML__Utils__AttributeList", "GML::Utils::AttributeList *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_UInt32 = {"_p_UInt32", "UInt32 *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_GML__Algorithm__IAlgorithm,
   &_swigt__p_GML__Utils__AttributeList,
-  &_swigt__p_UInt32,
   &_swigt__p_char,
 };
 
 static swig_cast_info _swigc__p_GML__Algorithm__IAlgorithm[] = {  {&_swigt__p_GML__Algorithm__IAlgorithm, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_GML__Utils__AttributeList[] = {  {&_swigt__p_GML__Utils__AttributeList, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_UInt32[] = {  {&_swigt__p_UInt32, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_GML__Algorithm__IAlgorithm,
   _swigc__p_GML__Utils__AttributeList,
-  _swigc__p_UInt32,
   _swigc__p_char,
 };
 
