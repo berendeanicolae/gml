@@ -1,10 +1,5 @@
 #include "SimplePerceptronAlgorithm.h"
 
-void SimplePerceptronAlgorithm::OnExecute(char* command)
-{
-
-}
-
 SimplePerceptronAlgorithm::SimplePerceptronAlgorithm()
 {
 	db = NULL;
@@ -102,19 +97,25 @@ void	SimplePerceptronAlgorithm::Test()
 	res.Compute();
 	notif->Notify(100,&res,sizeof(res));
 }
-void	SimplePerceptronAlgorithm::Execute(UInt32 command)
+void	SimplePerceptronAlgorithm::OnExecute(char* command)
 {
-	notif->Info("Starting Algorithm (Execute) => Command = %d",command);
-	notif->Info("DB: Records = %d,Features = %d",con->GetRecordCount(),con->GetFeatureCount());
-	memset(&weight[0],0,sizeof(double)*con->GetFeatureCount());
-	b=0;
-	for (UInt32 tr = 0;tr<maxIteratii;tr++)
+	notif->Info("Executing command : %s",command);
+	if (GML::Utils::GString::Equals(command,"train",true))
 	{
-		//notif->Info("Train (iteration = %d)",tr);
-		Train();
-		//notif->Info("Test  (iteration = %d)",tr);
-		Test();
-		//notif->Info("W=[%.3lf,%.3lf] b=%.3lf",weight[0],weight[1],b);
-		//_asm nop;
+		notif->Info("DB: Records = %d,Features = %d",con->GetRecordCount(),con->GetFeatureCount());
+		memset(&weight[0],0,sizeof(double)*con->GetFeatureCount());
+		b=0;
+		for (UInt32 tr = 0;tr<maxIteratii;tr++)
+		{
+			Train();
+			Test();
+		}
+		return;
 	}
+	if (GML::Utils::GString::Equals(command,"test",true))
+	{
+		Test();
+		return;
+	}
+	notif->Info("Unknown command : %s",command);
 }
