@@ -15,7 +15,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	attr.AddString("Conector","BitConnector{Table=RecordTable}");
 	attr.AddString("Notifyer","ConsoleNotifyer");
 	attr.AddDouble("LearningRate",0.02);
-	attr.AddUInt32("MaxIteratii",100);
+	attr.AddUInt32("MaxIteratii",30);
 
 	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("SimplePerceptronAlgorithm","");
 	if (alg==NULL)
@@ -25,8 +25,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (alg->Init()==false)
 		return 1;
 	
-	alg->Execute(0);
+	alg->Execute("train");
+	alg->Wait();
 
+	printf("Algorithm done !\n");
 	return 0;
 }
 

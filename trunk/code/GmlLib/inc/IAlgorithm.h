@@ -32,8 +32,8 @@ namespace GML
 			virtual bool	Init() = 0;
 			virtual void	OnExecute(char* command)=0;
 
-			// void			Execute(char *command);
-			virtual void	Execute(UInt32 command)=0;
+			bool			Execute(char *command);
+			bool			Wait(UInt32 nrMiliseconds=0xFFFFFFFF);
 
 		};
 	}
