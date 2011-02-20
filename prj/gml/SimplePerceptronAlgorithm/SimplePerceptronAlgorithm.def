@@ -1,4 +1,4 @@
-LIBRARY "SimplePerceptronAlgorithm.db"
+LIBRARY "SimplePerceptronAlgorithm.alg"
 
 EXPORTS
 Create=CreateNewAlgorithm
