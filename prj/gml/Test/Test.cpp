@@ -21,8 +21,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
-		"DbName=SimpleTextFileDB;"
-		"DbConnString='FileName=E:\\lucru\\GML\\gml\\bin\\a.txt';"
+		"DbName=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\a.txt};"
 		"Conector=BitConnector{Table=RecordTable};"
 		"Notifyer=ConsoleNotifyer{useColors=True};"
 		"LearningRate=0.02;"

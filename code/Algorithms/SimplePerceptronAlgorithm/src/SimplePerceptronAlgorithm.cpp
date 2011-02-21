@@ -17,7 +17,7 @@ bool	SimplePerceptronAlgorithm::Init()
 	// creez obiectele:
 	if ((notif = GML::Builder::CreateNotifyer(notifString.GetText()))==NULL)
 		return false;
-	if ((db = GML::Builder::CreateDataBase(dbName.GetText(),*notif,conString.GetText()))==NULL)
+	if ((db = GML::Builder::CreateDataBase(dbName.GetText(),*notif))==NULL)
 	{
 		notif->Error("Unable to create Database (%s,%s)",dbName.GetText(),conString.GetText());
 		return false;
