@@ -82,14 +82,31 @@ GML::Utils::INotify*		GML::Builder::CreateNotifyer(char *pluginName)
 	// am incarcat si totul e ok -> cer o interfata
 	return fnCreate(attributeList.GetText());
 }
-GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::INotify &notify,char *connectionString)
+GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::INotify &notify)
 {
-	GML::Utils::GString		path;
+	GML::Utils::GString		path,attributeList;
 	HMODULE					hModule;
+	int						a_poz;
 	GML::DB::IDataBase*		(*fnCreate)(GML::Utils::INotify &notify,char *connectionString);
 
 	if (path.Set(pluginName)==false)
 		return NULL;
+	a_poz = path.Find("{");
+	if (a_poz>=0)
+	{
+		if (attributeList.Set(&path.GetText()[a_poz+1])==false)
+			return NULL;
+		if (attributeList.EndsWith("}"))
+			attributeList.Truncate(attributeList.Len()-1);
+		if (attributeList.Strip()==false)
+			return NULL;
+		path.Truncate(a_poz);
+		if (path.Strip()==false)
+			return NULL;
+	} else {
+		if (attributeList.Set("")==false)
+			return NULL;
+	}
 	if (AdjustNameWithExtensionAndPath(path,DATABASE_EXT)==false)
 		return NULL;
 
@@ -101,7 +118,7 @@ GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::
 	if (fnCreate==NULL)
 		return NULL;
 	// am incarcat si totul e ok -> cer o interfata
-	return fnCreate(notify,connectionString);	
+	return fnCreate(notify,attributeList.GetText());	
 }
 GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Utils::INotify &notify,GML::DB::IDataBase &database)
 {
