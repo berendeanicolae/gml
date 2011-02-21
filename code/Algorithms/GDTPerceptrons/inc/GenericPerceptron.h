@@ -5,8 +5,11 @@
 
 class GenericPerceptron : public GML::Algorithm::IAlgorithm
 {
+	GML::DB::IDataBase		*db;
+	GML::ML::IConector		*con;
+
 	// proprietati
-	GML::Utils::GString		name;
+	GML::Utils::GString		Name;
 	GML::Utils::GString		Conector;
 	GML::Utils::GString		DataBase;
 	GML::Utils::GString		Notifier;
@@ -25,6 +28,8 @@ class GenericPerceptron : public GML::Algorithm::IAlgorithm
 
 public:
 	GenericPerceptron();
+
+	bool					Init();
 };
 
 
