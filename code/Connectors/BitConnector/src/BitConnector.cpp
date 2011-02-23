@@ -92,6 +92,9 @@ bool	BitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index)
 	UInt8	*cPoz = &Data[index*Align8Size];
 	UInt32	tr;
 
+	if (index>=nrRecords)
+		return false;
+
 	for (tr=0;tr<columns.nrFeatures;tr++)
 	{
 		if ((cPoz[tr/8] & (1<<(tr%8)))!=0)
@@ -104,6 +107,21 @@ bool	BitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index)
 		record.Label = 1.0;
 	else
 		record.Label = -1.0;
+
+	return true;
+}
+bool	BitConnector::GetRecordLabel(double &Label,UInt32 index)
+{
+	UInt8	*cPoz = &Data[index*Align8Size];
+
+	if (index>=nrRecords)
+		return false;
+
+	// pun si label-ul
+	if ((cPoz[columns.nrFeatures/8] & (1<<(columns.nrFeatures%8)))!=0)
+		Label = 1.0;
+	else
+		Label = -1.0;
 
 	return true;
 }
