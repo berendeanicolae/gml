@@ -9353,40 +9353,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_AttributeList_UpdateString(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  GML::Utils::AttributeList *arg1 = (GML::Utils::AttributeList *) 0 ;
-  char *arg2 = (char *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  std::string result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:AttributeList_UpdateString",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_GML__Utils__AttributeList, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "AttributeList_UpdateString" "', argument " "1"" of type '" "GML::Utils::AttributeList *""'"); 
-  }
-  arg1 = reinterpret_cast< GML::Utils::AttributeList * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "AttributeList_UpdateString" "', argument " "2"" of type '" "char *""'");
-  }
-  arg2 = reinterpret_cast< char * >(buf2);
-  result = (arg1)->UpdateString(arg2);
-  resultobj = SWIG_From_std_string(static_cast< std::string >(result));
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
-  return resultobj;
-fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_AttributeList_Clear(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   GML::Utils::AttributeList *arg1 = (GML::Utils::AttributeList *) 0 ;
@@ -9906,7 +9872,6 @@ static PyMethodDef SwigMethods[] = {
 		""},
 	 { (char *)"AttributeList_AddInt32", _wrap_AttributeList_AddInt32, METH_VARARGS, (char *)"AttributeList_AddInt32(AttributeList self, char Name, int value, char Description) -> bool"},
 	 { (char *)"AttributeList_Update", _wrap_AttributeList_Update, METH_VARARGS, (char *)"AttributeList_Update(AttributeList self, char Name, void Data, UInt32 DataSize) -> bool"},
-	 { (char *)"AttributeList_UpdateString", _wrap_AttributeList_UpdateString, METH_VARARGS, (char *)"AttributeList_UpdateString(AttributeList self, char Name) -> string"},
 	 { (char *)"AttributeList_Clear", _wrap_AttributeList_Clear, METH_VARARGS, (char *)"AttributeList_Clear(AttributeList self)"},
 	 { (char *)"AttributeList_Get", _wrap_AttributeList_Get, METH_VARARGS, (char *)"\n"
 		"Get(unsigned int index) -> Attribute\n"

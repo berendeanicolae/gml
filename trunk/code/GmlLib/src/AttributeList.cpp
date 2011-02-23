@@ -3,21 +3,6 @@
 static unsigned int AttributeSizes[]={1,1,2,4,8,1,2,4,8,4,8,0};
 static char *AttributeTypeName[]={"BOOL","INT8","INT16","INT32","INT64","UINT8","UINT16","UINT32","UINT64","FLOAT","DOUBLE","STRING"};
 
-// WRAPPERS for Python
-
-std::string GML::Utils::AttributeList::UpdateString(char *Name)
-{
-	GML::Utils::GString str;
-	std::string text;
-	bool error = this->UpdateString(Name, str);
-	if(!error) return "";
-	text = str.GetText();
-	return text;
-}
-
-
-
-
 
 int  AttributeCompare(GML::Utils::Attribute &a1,GML::Utils::Attribute &a2)
 {
