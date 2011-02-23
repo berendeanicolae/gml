@@ -18,15 +18,16 @@ b = gml.Builder()
 ialg = b.CreateAlgorithm("SimplePerceptronAlgorithm")
 print("Inited algorithm: {}".format(ialg)) 
 if not ialg:
-	pass
-else:
-	config = ialg.SetProperty(attr)
-	if config:
-		_in = ialg.Init()
-		print("Result of algorithm initialization: %d"%_in)
-		if _in:
-			ialg.Execute("train");
-			ialg.Wait();
+	print ("could not init the algorithm")
+	sys.exit()
+
+config = ialg.SetProperty(attr)
+if config:
+	_in = ialg.Init()
+	print("Result of algorithm initialization: %d"%_in)
+	if _in:
+		ialg.Execute("train");
+		ialg.Wait();
 
 
 
