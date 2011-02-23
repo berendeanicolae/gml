@@ -6,12 +6,15 @@ GenericPerceptron::GenericPerceptron()
 	db = NULL;
 	con = NULL;
 
+	batchPerceptron = false;
+
 	LinkPropertyToString("Name"					,Name					,"");
 	LinkPropertyToString("DataBase"				,DataBase				,"");
 	LinkPropertyToString("Conector"				,Conector				,"");
 	LinkPropertyToString("Notifier"				,Notifier				,"");
 	LinkPropertyToDouble("LearningRate"			,learningRate			,0.01);
 	LinkPropertyToBool  ("UseWeight"			,useWeight				,false);
+	LinkPropertyToBool  ("UseB"					,useB					,true);
 	LinkPropertyToUInt32("TestAfterIterations"	,testAfterIterations	,1);
 	LinkPropertyToDouble("MinimAcc"				,minimAcc				,100.0);
 	LinkPropertyToDouble("MinimSe"				,minimAcc				,100.1);
@@ -19,9 +22,12 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToUInt32("MaxIterations"		,maxIterations			,10);
 	LinkPropertyToString("WeightFileName"		,WeightFileName			,"");
 	LinkPropertyToString("InitialWeight"		,InitialWeight			,"Zeros","!!LIST:Zeros,Random,FromFile!!");
+	LinkPropertyToUInt32("ThreadsCount"			,threadsCount			,1);
 }
 bool	GenericPerceptron::Init()
 {
+	UInt32		tr;
+
 	// creez obiectele:
 	if ((notif = GML::Builder::CreateNotifyer(Notifier.GetText()))==NULL)
 		return false;
@@ -40,7 +46,40 @@ bool	GenericPerceptron::Init()
 		notif->Error("Unable to create Conector (%s)",Conector.GetText());
 		return false;
 	}
+	if (batchPerceptron==false)
+		threadsCount = 1;
+	if (threadsCount<1)
+		threadsCount = 1;
 
+	if ((ptData = new PerceptronThreadData[threadsCount])==NULL)
+	{
+		notif->Error("Unable to allocate PerceptronThreadData[%d]",threadsCount);
+		return false;
+	}
+	for (tr=0;tr<threadsCount;tr++)
+	{
+		if (con->CreateMlRecord(ptData[tr].Record)==false)
+		{
+			notif->Error("Unable to create MLRecord !");
+			return false;
+		}
+		if ((ptData[tr].Weight = new double[con->GetFeatureCount()])==NULL)
+		{
+			notif->Error("Unable to allocate weight vector !");
+			return false;
+		}
+		if (batchPerceptron)
+		{
+			if ((ptData[tr].Delta = new double[con->GetFeatureCount()])==NULL)
+			{
+				notif->Error("Unable to allocate delta vector !");
+				return false;
+			}		
+		} else {
+			ptData[tr].Delta = NULL;
+		}
+		ptData[tr].ID = tr;		
+	}
 	return true;
 }
 bool    GenericPerceptron::Train(PerceptronThreadData *ptd)

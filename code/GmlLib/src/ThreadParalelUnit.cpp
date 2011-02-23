@@ -54,7 +54,6 @@ bool GML::Utils::ThreadParalelUnit::Execute(unsigned int _codeID)
 		return false;
 	codeID = _codeID;
 	ResetEvent(eventWorking);
-
 	SetEvent(eventWaiting);
 	return true;
 }
