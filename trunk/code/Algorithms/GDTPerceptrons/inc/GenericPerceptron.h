@@ -3,6 +3,19 @@
 
 #include "gmllib.h"
 
+struct PerceptronThreadData
+{
+	GML::ML::MLRecord				Record;
+	double							*Weight;
+	double							*Delta;
+	double							b_Weight;
+	double							b_Delta;
+	UInt32							ID;
+	GML::Utils::AlgorithmResult		Res;
+	UInt32							*RecordIndexes;
+	UInt32							RecordIndexesCount;
+};
+
 class GenericPerceptron : public GML::Algorithm::IAlgorithm
 {
 	GML::DB::IDataBase		*db;
@@ -13,6 +26,9 @@ class GenericPerceptron : public GML::Algorithm::IAlgorithm
 	GML::Utils::GString		Conector;
 	GML::Utils::GString		DataBase;
 	GML::Utils::GString		Notifier;
+	GML::Utils::GString		WeightFileName;
+	GML::Utils::GString		InitialWeight;
+
 
 	// proprietati de training
 	double					learningRate;
@@ -26,6 +42,9 @@ class GenericPerceptron : public GML::Algorithm::IAlgorithm
 	double					minimSp;
 	UInt32					maxIterations;
 
+protected:
+	bool					Train(PerceptronThreadData *ptd);
+	bool					Test(PerceptronThreadData *ptd);
 public:
 	GenericPerceptron();
 
