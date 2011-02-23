@@ -1045,7 +1045,7 @@ namespace GML
 
 		class  AttributeList
 		{
-			GML::Utils::GTVector<GML::Utils::Attribute>	list;
+			GTVector<GML::Utils::Attribute>	list;
 			
 			bool			FromString(GML::Utils::GString &text);
 		public:
@@ -1085,12 +1085,7 @@ namespace GML
 
 			bool			Save(char *fileName);
 			bool			Load(char *fileName);
-			bool			Create(char *text,char separator=';');
-
-
-			// WRAPPERS for PYTHON
-			
-			std::string UpdateString(char *Name);
+			bool			Create(char *text,char separator=';');			
 		};
 	}
 }
