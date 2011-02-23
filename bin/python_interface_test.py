@@ -1,13 +1,11 @@
-import attributelist
-import ialgorithm
-import builder
+import gml
 import sys
 if not len(sys.argv) > 1:
 	print("You must pass the path of database!")
 	sys.exit()
 path = sys.argv[1]
 
-attr = attributelist.AttributeList()
+attr = gml.AttributeList()
 
 attr.Set({ "DbName":"SimpleTextFileDB{FileName=%s}"%path,
 	   "Conector":"BitConnector{Table=RecordTable}",
@@ -15,7 +13,7 @@ attr.Set({ "DbName":"SimpleTextFileDB{FileName=%s}"%path,
 	   "LearningRate":0.02,
 	   "MaxIteratii":100})
 
-b = builder.Builder()
+b = gml.Builder()
 
 ialg = b.CreateAlgorithm("SimplePerceptronAlgorithm")
 print("Inited algorithm: {}".format(ialg)) 
