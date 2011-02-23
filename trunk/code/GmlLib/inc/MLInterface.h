@@ -71,6 +71,8 @@ namespace GML
 			 */
 			virtual bool GetRecord(MLRecord &record,UInt32 index)=0;
 
+			virtual bool GetRecordLabel(double &label,UInt32 index)=0;
+
 			/*
 			 * Usage: Free a MLRecord structure
 			 * Params:
