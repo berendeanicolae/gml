@@ -9,21 +9,20 @@ path = sys.argv[1]
 
 attr = attributelist.AttributeList()
 
-attr.Set({ "DbName":"SimpleTextFileDB",
-	   "DbConnString":"FileName={}".format(path),	
+attr.Set({ "DbName":"SimpleTextFileDB{FileName=%s}"%path,
 	   "Conector":"BitConnector{Table=RecordTable}",
-	   "Notifyer":"ConsoleNotifyer",
+	   "Notifyer":"ConsoleNotifyer{useColors=True}",
 	   "LearningRate":0.02,
 	   "MaxIteratii":100})
 
 b = builder.Builder()
 
-ialg = b.CreateAlgorithm("SimplePerceptronAlgorithm","")
+ialg = b.CreateAlgorithm("SimplePerceptronAlgorithm")
 print("Inited algorithm: {}".format(ialg)) 
 if not ialg:
 	pass
 else:
-	config = ialg.SetConfiguration(attr)
+	config = ialg.SetProperty(attr)
 	if config:
 		_in = ialg.Init()
 		print("Result of algorithm initialization: %d"%_in)
