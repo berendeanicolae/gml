@@ -1,11 +1,25 @@
 %module attributelist
-%include "std_string.i"
+
+%include std_string.i
+%include std_pair.i
+%include std_map.i
 
 %{
 #define SWIG_FILE_WITH_INIT
-#include "..\..\..\code\GmlLib\inc\AttributeList.h";
-#include "..\..\..\code\GmlLib\inc\Compat.h";
+#include "..\..\..\code\GmlLib\inc\AttributeList.h"
+#include "..\..\..\code\GmlLib\inc\Compat.h"
 %}
+
+/* instantiate the required template specializations */
+namespace std {
+  /* remember to instantiate the key,value pair! */
+  %template(DoubleMap) map<std::string,double>;
+  %template() map<std::string,int>;
+}
+
+%template() std::pair<swig::SwigPtr_PyObject, swig::SwigPtr_PyObject>;
+%template(pymap) std::map<swig::SwigPtr_PyObject, swig::SwigPtr_PyObject>;
+
 
 namespace GML
 {
@@ -73,6 +87,55 @@ namespace GML
 			bool			Load(char *fileName);
 			%feature("autodoc", "1");
 			bool			Create(char *text,char separator=';');
+						
+			%extend 
+			{								
+				bool Set(const std::map<swig::SwigPtr_PyObject,swig::SwigPtr_PyObject>& v) 
+				{
+					std::string key;
+					std::map<swig::SwigPtr_PyObject,swig::SwigPtr_PyObject>::const_iterator it, end;
+					end = v.end();
+					char *str;
+					char str1[1024], str2[1024];
+					size_t psize;
+					int alloc;
+					int nr = 0;
+					end = v.end();
+					
+					for (it = v.begin(); it != end; ++it)
+					{						
+						// check first parameter
+						if (SWIG_AsCharPtrAndSize(it->first, &str, &psize, &alloc)==SWIG_OK)
+						{					
+							strncpy(str1, str, 1024);
+						} else return false;
+						
+						// check second parameter
+						if (PyFloat_Check(it->second)) 
+						{
+							//printf ("second is a float: %.03f\n", PyFloat_AsDouble(it->second));
+							if (!self->AddDouble(str1, PyFloat_AsDouble(it->second))) return false;
+						} else
+						if (PyInt_Check(it->second))
+						{
+							//printf("second is a int: %d\n", PyInt_AsLong(it->second));
+							if (!self->AddInt32(str1, PyInt_AsLong(it->second))) return false;
+						} else
+						if (PyBool_Check(it->second))
+						{
+							//printf("second is a bool: %d\n", PyObject_IsTrue(it->second));	
+							if (!self->AddBool(str1, (bool)PyObject_IsTrue(it->second))) return false;
+						} else
+						if (SWIG_AsCharPtrAndSize(it->second, &str, &psize, &alloc)==SWIG_OK)
+						{
+							//printf ("second is a string: \"%s\"\n", str);
+							strncpy(str2, str, 1024);
+							if (!self->AddString(str1, str2)) return false;
+						} 
+					}
+					return true;
+				}				
+			}											
 		};
 	}
 }
