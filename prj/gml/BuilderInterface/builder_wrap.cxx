@@ -2788,6 +2788,7 @@ namespace swig {
 
 
 #define SWIG_FILE_WITH_INIT
+#include "..\..\..\code\GmlLib\inc\Compat.h";
 #include "..\..\..\code\GmlLib\inc\builder.h";
 
 
@@ -2913,39 +2914,7 @@ SWIG_FromCharPtr(const char *cptr)
 #ifdef __cplusplus
 extern "C" {
 #endif
-SWIGINTERN PyObject *_wrap_Builder_CreateNotifyer__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  char *arg1 = (char *) 0 ;
-  void *arg2 = (void *) 0 ;
-  int res1 ;
-  char *buf1 = 0 ;
-  int alloc1 = 0 ;
-  int res2 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  GML::Utils::INotify *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:Builder_CreateNotifyer",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Builder_CreateNotifyer" "', argument " "1"" of type '" "char *""'");
-  }
-  arg1 = reinterpret_cast< char * >(buf1);
-  res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2), 0, 0);
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Builder_CreateNotifyer" "', argument " "2"" of type '" "void *""'"); 
-  }
-  result = (GML::Utils::INotify *)GML::Builder::CreateNotifyer(arg1,arg2);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GML__Utils__INotify, 0 |  0 );
-  if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
-  return resultobj;
-fail:
-  if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_Builder_CreateNotifyer__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_Builder_CreateNotifyer(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   char *arg1 = (char *) 0 ;
   int res1 ;
@@ -2970,66 +2939,20 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_Builder_CreateNotifyer(PyObject *self, PyObject *args) {
-  int argc;
-  PyObject *argv[3];
-  int ii;
-  
-  if (!PyTuple_Check(args)) SWIG_fail;
-  argc = (int)PyObject_Length(args);
-  for (ii = 0; (ii < argc) && (ii < 2); ii++) {
-    argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 1) {
-    int _v;
-    int res = SWIG_AsCharPtrAndSize(argv[0], 0, NULL, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      return _wrap_Builder_CreateNotifyer__SWIG_1(self, args);
-    }
-  }
-  if (argc == 2) {
-    int _v;
-    int res = SWIG_AsCharPtrAndSize(argv[0], 0, NULL, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      void *ptr = 0;
-      int res = SWIG_ConvertPtr(argv[1], &ptr, 0, 0);
-      _v = SWIG_CheckState(res);
-      if (_v) {
-        return _wrap_Builder_CreateNotifyer__SWIG_0(self, args);
-      }
-    }
-  }
-  
-fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'Builder_CreateNotifyer'.\n"
-    "  Possible C/C++ prototypes are:\n"
-    "    CreateNotifyer(char *,void *)\n"
-    "    GML::Builder::CreateNotifyer(char *)\n");
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_Builder_CreateDataBase(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   char *arg1 = (char *) 0 ;
   GML::Utils::INotify *arg2 = 0 ;
-  char *arg3 = (char *) 0 ;
   int res1 ;
   char *buf1 = 0 ;
   int alloc1 = 0 ;
   void *argp2 = 0 ;
   int res2 = 0 ;
-  int res3 ;
-  char *buf3 = 0 ;
-  int alloc3 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
   GML::DB::IDataBase *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOO:Builder_CreateDataBase",&obj0,&obj1,&obj2)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OO:Builder_CreateDataBase",&obj0,&obj1)) SWIG_fail;
   res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Builder_CreateDataBase" "', argument " "1"" of type '" "char *""'");
@@ -3043,19 +2966,12 @@ SWIGINTERN PyObject *_wrap_Builder_CreateDataBase(PyObject *SWIGUNUSEDPARM(self)
     SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Builder_CreateDataBase" "', argument " "2"" of type '" "GML::Utils::INotify &""'"); 
   }
   arg2 = reinterpret_cast< GML::Utils::INotify * >(argp2);
-  res3 = SWIG_AsCharPtrAndSize(obj2, &buf3, NULL, &alloc3);
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "Builder_CreateDataBase" "', argument " "3"" of type '" "char *""'");
-  }
-  arg3 = reinterpret_cast< char * >(buf3);
-  result = (GML::DB::IDataBase *)GML::Builder::CreateDataBase(arg1,*arg2,arg3);
+  result = (GML::DB::IDataBase *)GML::Builder::CreateDataBase(arg1,*arg2);
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GML__DB__IDataBase, 0 |  0 );
   if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
-  if (alloc3 == SWIG_NEWOBJ) delete[] buf3;
   return resultobj;
 fail:
   if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
-  if (alloc3 == SWIG_NEWOBJ) delete[] buf3;
   return NULL;
 }
 
@@ -3109,44 +3025,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_Builder_CreateAlgorithm__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  char *arg1 = (char *) 0 ;
-  char *arg2 = (char *) 0 ;
-  int res1 ;
-  char *buf1 = 0 ;
-  int alloc1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  int alloc2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  GML::Algorithm::IAlgorithm *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:Builder_CreateAlgorithm",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Builder_CreateAlgorithm" "', argument " "1"" of type '" "char *""'");
-  }
-  arg1 = reinterpret_cast< char * >(buf1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Builder_CreateAlgorithm" "', argument " "2"" of type '" "char *""'");
-  }
-  arg2 = reinterpret_cast< char * >(buf2);
-  result = (GML::Algorithm::IAlgorithm *)GML::Builder::CreateAlgorithm(arg1,arg2);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GML__Algorithm__IAlgorithm, 0 |  0 );
-  if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
-  return resultobj;
-fail:
-  if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_Builder_CreateAlgorithm__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_Builder_CreateAlgorithm(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   char *arg1 = (char *) 0 ;
   int res1 ;
@@ -3167,46 +3046,6 @@ SWIGINTERN PyObject *_wrap_Builder_CreateAlgorithm__SWIG_1(PyObject *SWIGUNUSEDP
   return resultobj;
 fail:
   if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_Builder_CreateAlgorithm(PyObject *self, PyObject *args) {
-  int argc;
-  PyObject *argv[3];
-  int ii;
-  
-  if (!PyTuple_Check(args)) SWIG_fail;
-  argc = (int)PyObject_Length(args);
-  for (ii = 0; (ii < argc) && (ii < 2); ii++) {
-    argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 1) {
-    int _v;
-    int res = SWIG_AsCharPtrAndSize(argv[0], 0, NULL, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      return _wrap_Builder_CreateAlgorithm__SWIG_1(self, args);
-    }
-  }
-  if (argc == 2) {
-    int _v;
-    int res = SWIG_AsCharPtrAndSize(argv[0], 0, NULL, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      int res = SWIG_AsCharPtrAndSize(argv[1], 0, NULL, 0);
-      _v = SWIG_CheckState(res);
-      if (_v) {
-        return _wrap_Builder_CreateAlgorithm__SWIG_0(self, args);
-      }
-    }
-  }
-  
-fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'Builder_CreateAlgorithm'.\n"
-    "  Possible C/C++ prototypes are:\n"
-    "    CreateAlgorithm(char *,char *)\n"
-    "    GML::Builder::CreateAlgorithm(char *)\n");
   return NULL;
 }
 
@@ -3279,16 +3118,10 @@ SWIGINTERN PyObject *Builder_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObje
 
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
-	 { (char *)"Builder_CreateNotifyer", _wrap_Builder_CreateNotifyer, METH_VARARGS, (char *)"\n"
-		"CreateNotifyer(char pluginName, void objectData = None) -> GML::Utils::INotify\n"
-		"Builder_CreateNotifyer(char pluginName) -> GML::Utils::INotify\n"
-		""},
-	 { (char *)"Builder_CreateDataBase", _wrap_Builder_CreateDataBase, METH_VARARGS, (char *)"Builder_CreateDataBase(char pluginName, GML::Utils::INotify notify, char connectionString) -> GML::DB::IDataBase"},
+	 { (char *)"Builder_CreateNotifyer", _wrap_Builder_CreateNotifyer, METH_VARARGS, (char *)"Builder_CreateNotifyer(char pluginName) -> GML::Utils::INotify"},
+	 { (char *)"Builder_CreateDataBase", _wrap_Builder_CreateDataBase, METH_VARARGS, (char *)"Builder_CreateDataBase(char pluginName, GML::Utils::INotify notify) -> GML::DB::IDataBase"},
 	 { (char *)"Builder_CreateConectors", _wrap_Builder_CreateConectors, METH_VARARGS, (char *)"Builder_CreateConectors(char conectorsList, GML::Utils::INotify notify, GML::DB::IDataBase database) -> GML::ML::IConector"},
-	 { (char *)"Builder_CreateAlgorithm", _wrap_Builder_CreateAlgorithm, METH_VARARGS, (char *)"\n"
-		"CreateAlgorithm(char algorithmLib, char algorithmName = None) -> GML::Algorithm::IAlgorithm\n"
-		"Builder_CreateAlgorithm(char algorithmLib) -> GML::Algorithm::IAlgorithm\n"
-		""},
+	 { (char *)"Builder_CreateAlgorithm", _wrap_Builder_CreateAlgorithm, METH_VARARGS, (char *)"Builder_CreateAlgorithm(char algorithmLib) -> GML::Algorithm::IAlgorithm"},
 	 { (char *)"Builder_GetAlgorithmList", _wrap_Builder_GetAlgorithmList, METH_VARARGS, (char *)"Builder_GetAlgorithmList(char algorithmLib) -> char"},
 	 { (char *)"new_Builder", _wrap_new_Builder, METH_VARARGS, NULL},
 	 { (char *)"delete_Builder", _wrap_delete_Builder, METH_VARARGS, NULL},

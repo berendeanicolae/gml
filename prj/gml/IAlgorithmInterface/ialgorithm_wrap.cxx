@@ -2685,10 +2685,9 @@ SWIG_Python_MustGetPtr(PyObject *obj, swig_type_info *ty, int argnum, int flags)
 
 #define SWIGTYPE_p_GML__Algorithm__IAlgorithm swig_types[0]
 #define SWIGTYPE_p_GML__Utils__AttributeList swig_types[1]
-#define SWIGTYPE_p_UInt32 swig_types[2]
-#define SWIGTYPE_p_char swig_types[3]
-static swig_type_info *swig_types[5];
-static swig_module_info swig_module = {swig_types, 4, 0, 0, 0, 0};
+#define SWIGTYPE_p_char swig_types[2]
+static swig_type_info *swig_types[4];
+static swig_module_info swig_module = {swig_types, 3, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -2785,7 +2784,11 @@ namespace swig {
 }
 
 
+#include <string>
+
+
 #define SWIG_FILE_WITH_INIT
+#include "..\..\..\code\GmlLib\inc\Compat.h";
 #include "..\..\..\code\GmlLib\inc\IAlgorithm.h";
 
 
@@ -2887,10 +2890,160 @@ SWIG_AsCharPtrAndSize(PyObject *obj, char** cptr, size_t* psize, int *alloc)
 
 
 
+
+#include <limits.h>
+#if !defined(SWIG_NO_LLONG_MAX)
+# if !defined(LLONG_MAX) && defined(__GNUC__) && defined (__LONG_LONG_MAX__)
+#   define LLONG_MAX __LONG_LONG_MAX__
+#   define LLONG_MIN (-LLONG_MAX - 1LL)
+#   define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
+# endif
+#endif
+
+
+SWIGINTERN int
+SWIG_AsVal_double (PyObject *obj, double *val)
+{
+  int res = SWIG_TypeError;
+  if (PyFloat_Check(obj)) {
+    if (val) *val = PyFloat_AsDouble(obj);
+    return SWIG_OK;
+  } else if (PyInt_Check(obj)) {
+    if (val) *val = PyInt_AsLong(obj);
+    return SWIG_OK;
+  } else if (PyLong_Check(obj)) {
+    double v = PyLong_AsDouble(obj);
+    if (!PyErr_Occurred()) {
+      if (val) *val = v;
+      return SWIG_OK;
+    } else {
+      PyErr_Clear();
+    }
+  }
+#ifdef SWIG_PYTHON_CAST_MODE
+  {
+    int dispatch = 0;
+    double d = PyFloat_AsDouble(obj);
+    if (!PyErr_Occurred()) {
+      if (val) *val = d;
+      return SWIG_AddCast(SWIG_OK);
+    } else {
+      PyErr_Clear();
+    }
+    if (!dispatch) {
+      long v = PyLong_AsLong(obj);
+      if (!PyErr_Occurred()) {
+	if (val) *val = v;
+	return SWIG_AddCast(SWIG_AddCast(SWIG_OK));
+      } else {
+	PyErr_Clear();
+      }
+    }
+  }
+#endif
+  return res;
+}
+
+
+#include <float.h>
+
+
+#include <math.h>
+
+
+SWIGINTERNINLINE int
+SWIG_CanCastAsInteger(double *d, double min, double max) {
+  double x = *d;
+  if ((min <= x && x <= max)) {
+   double fx = floor(x);
+   double cx = ceil(x);
+   double rd =  ((x - fx) < 0.5) ? fx : cx; /* simple rint */
+   if ((errno == EDOM) || (errno == ERANGE)) {
+     errno = 0;
+   } else {
+     double summ, reps, diff;
+     if (rd < x) {
+       diff = x - rd;
+     } else if (rd > x) {
+       diff = rd - x;
+     } else {
+       return 1;
+     }
+     summ = rd + x;
+     reps = diff/summ;
+     if (reps < 8*DBL_EPSILON) {
+       *d = rd;
+       return 1;
+     }
+   }
+  }
+  return 0;
+}
+
+
+SWIGINTERN int
+SWIG_AsVal_unsigned_SS_long (PyObject *obj, unsigned long *val) 
+{
+  if (PyInt_Check(obj)) {
+    long v = PyInt_AsLong(obj);
+    if (v >= 0) {
+      if (val) *val = v;
+      return SWIG_OK;
+    } else {
+      return SWIG_OverflowError;
+    }
+  } else if (PyLong_Check(obj)) {
+    unsigned long v = PyLong_AsUnsignedLong(obj);
+    if (!PyErr_Occurred()) {
+      if (val) *val = v;
+      return SWIG_OK;
+    } else {
+      PyErr_Clear();
+    }
+  }
+#ifdef SWIG_PYTHON_CAST_MODE
+  {
+    int dispatch = 0;
+    unsigned long v = PyLong_AsUnsignedLong(obj);
+    if (!PyErr_Occurred()) {
+      if (val) *val = v;
+      return SWIG_AddCast(SWIG_OK);
+    } else {
+      PyErr_Clear();
+    }
+    if (!dispatch) {
+      double d;
+      int res = SWIG_AddCast(SWIG_AsVal_double (obj,&d));
+      if (SWIG_IsOK(res) && SWIG_CanCastAsInteger(&d, 0, ULONG_MAX)) {
+	if (val) *val = (unsigned long)(d);
+	return res;
+      }
+    }
+  }
+#endif
+  return SWIG_TypeError;
+}
+
+
+SWIGINTERN int
+SWIG_AsVal_unsigned_SS_int (PyObject * obj, unsigned int *val)
+{
+  unsigned long v;
+  int res = SWIG_AsVal_unsigned_SS_long (obj, &v);
+  if (SWIG_IsOK(res)) {
+    if ((v > UINT_MAX)) {
+      return SWIG_OverflowError;
+    } else {
+      if (val) *val = static_cast< unsigned int >(v);
+    }
+  }  
+  return res;
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-SWIGINTERN PyObject *_wrap_IAlgorithm_SetProperty(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_IAlgorithm_SetProperty__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   GML::Algorithm::IAlgorithm *arg1 = (GML::Algorithm::IAlgorithm *) 0 ;
   GML::Utils::AttributeList *arg2 = 0 ;
@@ -2924,7 +3077,88 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_IAlgorithm_GetConfiguration(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_IAlgorithm_SetProperty__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  GML::Algorithm::IAlgorithm *arg1 = (GML::Algorithm::IAlgorithm *) 0 ;
+  char *arg2 = (char *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  bool result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:IAlgorithm_SetProperty",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_GML__Algorithm__IAlgorithm, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IAlgorithm_SetProperty" "', argument " "1"" of type '" "GML::Algorithm::IAlgorithm *""'"); 
+  }
+  arg1 = reinterpret_cast< GML::Algorithm::IAlgorithm * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IAlgorithm_SetProperty" "', argument " "2"" of type '" "char *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  result = (bool)(arg1)->SetProperty(arg2);
+  resultobj = SWIG_From_bool(static_cast< bool >(result));
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  return resultobj;
+fail:
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IAlgorithm_SetProperty(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[3];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 2); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 2) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_GML__Algorithm__IAlgorithm, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_GML__Utils__AttributeList, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        return _wrap_IAlgorithm_SetProperty__SWIG_0(self, args);
+      }
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_GML__Algorithm__IAlgorithm, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      int res = SWIG_AsCharPtrAndSize(argv[1], 0, NULL, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        return _wrap_IAlgorithm_SetProperty__SWIG_1(self, args);
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'IAlgorithm_SetProperty'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    SetProperty(GML::Algorithm::IAlgorithm *,GML::Utils::AttributeList &)\n"
+    "    SetProperty(GML::Algorithm::IAlgorithm *,char *)\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IAlgorithm_GetProperty(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   GML::Algorithm::IAlgorithm *arg1 = (GML::Algorithm::IAlgorithm *) 0 ;
   GML::Utils::AttributeList *arg2 = 0 ;
@@ -2936,21 +3170,21 @@ SWIGINTERN PyObject *_wrap_IAlgorithm_GetConfiguration(PyObject *SWIGUNUSEDPARM(
   PyObject * obj1 = 0 ;
   bool result;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:IAlgorithm_GetConfiguration",&obj0,&obj1)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OO:IAlgorithm_GetProperty",&obj0,&obj1)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_GML__Algorithm__IAlgorithm, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IAlgorithm_GetConfiguration" "', argument " "1"" of type '" "GML::Algorithm::IAlgorithm *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IAlgorithm_GetProperty" "', argument " "1"" of type '" "GML::Algorithm::IAlgorithm *""'"); 
   }
   arg1 = reinterpret_cast< GML::Algorithm::IAlgorithm * >(argp1);
   res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_GML__Utils__AttributeList,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IAlgorithm_GetConfiguration" "', argument " "2"" of type '" "GML::Utils::AttributeList &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IAlgorithm_GetProperty" "', argument " "2"" of type '" "GML::Utils::AttributeList &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IAlgorithm_GetConfiguration" "', argument " "2"" of type '" "GML::Utils::AttributeList &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IAlgorithm_GetProperty" "', argument " "2"" of type '" "GML::Utils::AttributeList &""'"); 
   }
   arg2 = reinterpret_cast< GML::Utils::AttributeList * >(argp2);
-  result = (bool)(arg1)->GetConfiguration(*arg2);
+  result = (bool)(arg1)->GetProperty(*arg2);
   resultobj = SWIG_From_bool(static_cast< bool >(result));
   return resultobj;
 fail:
@@ -2974,44 +3208,6 @@ SWIGINTERN PyObject *_wrap_IAlgorithm_Init(PyObject *SWIGUNUSEDPARM(self), PyObj
   arg1 = reinterpret_cast< GML::Algorithm::IAlgorithm * >(argp1);
   result = (bool)(arg1)->Init();
   resultobj = SWIG_From_bool(static_cast< bool >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_IAlgorithm_Execute(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  GML::Algorithm::IAlgorithm *arg1 = (GML::Algorithm::IAlgorithm *) 0 ;
-  UInt32 arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:IAlgorithm_Execute",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_GML__Algorithm__IAlgorithm, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IAlgorithm_Execute" "', argument " "1"" of type '" "GML::Algorithm::IAlgorithm *""'"); 
-  }
-  arg1 = reinterpret_cast< GML::Algorithm::IAlgorithm * >(argp1);
-  {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_UInt32,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IAlgorithm_Execute" "', argument " "2"" of type '" "UInt32""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IAlgorithm_Execute" "', argument " "2"" of type '" "UInt32""'");
-    } else {
-      UInt32 * temp = reinterpret_cast< UInt32 * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
-    }
-  }
-  (arg1)->Execute(arg2);
-  resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
   return NULL;
@@ -3051,6 +3247,137 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_IAlgorithm_Execute(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  GML::Algorithm::IAlgorithm *arg1 = (GML::Algorithm::IAlgorithm *) 0 ;
+  char *arg2 = (char *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  bool result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:IAlgorithm_Execute",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_GML__Algorithm__IAlgorithm, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IAlgorithm_Execute" "', argument " "1"" of type '" "GML::Algorithm::IAlgorithm *""'"); 
+  }
+  arg1 = reinterpret_cast< GML::Algorithm::IAlgorithm * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IAlgorithm_Execute" "', argument " "2"" of type '" "char *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  result = (bool)(arg1)->Execute(arg2);
+  resultobj = SWIG_From_bool(static_cast< bool >(result));
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  return resultobj;
+fail:
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IAlgorithm_Wait__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  GML::Algorithm::IAlgorithm *arg1 = (GML::Algorithm::IAlgorithm *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  bool result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IAlgorithm_Wait",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_GML__Algorithm__IAlgorithm, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IAlgorithm_Wait" "', argument " "1"" of type '" "GML::Algorithm::IAlgorithm *""'"); 
+  }
+  arg1 = reinterpret_cast< GML::Algorithm::IAlgorithm * >(argp1);
+  result = (bool)(arg1)->Wait();
+  resultobj = SWIG_From_bool(static_cast< bool >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IAlgorithm_Wait__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  GML::Algorithm::IAlgorithm *arg1 = (GML::Algorithm::IAlgorithm *) 0 ;
+  unsigned int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  unsigned int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  bool result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:IAlgorithm_Wait",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_GML__Algorithm__IAlgorithm, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IAlgorithm_Wait" "', argument " "1"" of type '" "GML::Algorithm::IAlgorithm *""'"); 
+  }
+  arg1 = reinterpret_cast< GML::Algorithm::IAlgorithm * >(argp1);
+  ecode2 = SWIG_AsVal_unsigned_SS_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "IAlgorithm_Wait" "', argument " "2"" of type '" "unsigned int""'");
+  } 
+  arg2 = static_cast< unsigned int >(val2);
+  result = (bool)(arg1)->Wait(arg2);
+  resultobj = SWIG_From_bool(static_cast< bool >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IAlgorithm_Wait(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[3];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 2); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 1) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_GML__Algorithm__IAlgorithm, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_IAlgorithm_Wait__SWIG_0(self, args);
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_GML__Algorithm__IAlgorithm, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_unsigned_SS_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        return _wrap_IAlgorithm_Wait__SWIG_1(self, args);
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'IAlgorithm_Wait'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    Wait(GML::Algorithm::IAlgorithm *)\n"
+    "    Wait(GML::Algorithm::IAlgorithm *,unsigned int)\n");
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_delete_IAlgorithm(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   GML::Algorithm::IAlgorithm *arg1 = (GML::Algorithm::IAlgorithm *) 0 ;
@@ -3081,11 +3408,18 @@ SWIGINTERN PyObject *IAlgorithm_swigregister(PyObject *SWIGUNUSEDPARM(self), PyO
 
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
-	 { (char *)"IAlgorithm_SetProperty", _wrap_IAlgorithm_SetProperty, METH_VARARGS, (char *)"IAlgorithm_SetProperty(IAlgorithm self, GML::Utils::AttributeList config) -> bool"},
-	 { (char *)"IAlgorithm_GetConfiguration", _wrap_IAlgorithm_GetConfiguration, METH_VARARGS, (char *)"IAlgorithm_GetConfiguration(IAlgorithm self, GML::Utils::AttributeList config) -> bool"},
+	 { (char *)"IAlgorithm_SetProperty", _wrap_IAlgorithm_SetProperty, METH_VARARGS, (char *)"\n"
+		"SetProperty(GML::Utils::AttributeList config) -> bool\n"
+		"IAlgorithm_SetProperty(IAlgorithm self, char config) -> bool\n"
+		""},
+	 { (char *)"IAlgorithm_GetProperty", _wrap_IAlgorithm_GetProperty, METH_VARARGS, (char *)"IAlgorithm_GetProperty(IAlgorithm self, GML::Utils::AttributeList config) -> bool"},
 	 { (char *)"IAlgorithm_Init", _wrap_IAlgorithm_Init, METH_VARARGS, (char *)"IAlgorithm_Init(IAlgorithm self) -> bool"},
-	 { (char *)"IAlgorithm_Execute", _wrap_IAlgorithm_Execute, METH_VARARGS, (char *)"IAlgorithm_Execute(IAlgorithm self, UInt32 command)"},
 	 { (char *)"IAlgorithm_OnExecute", _wrap_IAlgorithm_OnExecute, METH_VARARGS, (char *)"IAlgorithm_OnExecute(IAlgorithm self, char command)"},
+	 { (char *)"IAlgorithm_Execute", _wrap_IAlgorithm_Execute, METH_VARARGS, (char *)"IAlgorithm_Execute(IAlgorithm self, char command) -> bool"},
+	 { (char *)"IAlgorithm_Wait", _wrap_IAlgorithm_Wait, METH_VARARGS, (char *)"\n"
+		"Wait() -> bool\n"
+		"IAlgorithm_Wait(IAlgorithm self, unsigned int nrMiliseconds) -> bool\n"
+		""},
 	 { (char *)"delete_IAlgorithm", _wrap_delete_IAlgorithm, METH_VARARGS, NULL},
 	 { (char *)"IAlgorithm_swigregister", IAlgorithm_swigregister, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
@@ -3096,25 +3430,21 @@ static PyMethodDef SwigMethods[] = {
 
 static swig_type_info _swigt__p_GML__Algorithm__IAlgorithm = {"_p_GML__Algorithm__IAlgorithm", "GML::Algorithm::IAlgorithm *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_GML__Utils__AttributeList = {"_p_GML__Utils__AttributeList", "GML::Utils::AttributeList *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_UInt32 = {"_p_UInt32", "UInt32 *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_GML__Algorithm__IAlgorithm,
   &_swigt__p_GML__Utils__AttributeList,
-  &_swigt__p_UInt32,
   &_swigt__p_char,
 };
 
 static swig_cast_info _swigc__p_GML__Algorithm__IAlgorithm[] = {  {&_swigt__p_GML__Algorithm__IAlgorithm, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_GML__Utils__AttributeList[] = {  {&_swigt__p_GML__Utils__AttributeList, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_UInt32[] = {  {&_swigt__p_UInt32, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_GML__Algorithm__IAlgorithm,
   _swigc__p_GML__Utils__AttributeList,
-  _swigc__p_UInt32,
   _swigc__p_char,
 };
 

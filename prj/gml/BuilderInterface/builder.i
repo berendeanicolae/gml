@@ -11,15 +11,19 @@ class Builder
 	{
 	public:
 		%feature("autodoc", "1");
-		static GML::Utils::INotify*			CreateNotifyer(char *pluginName,void *objectData = NULL);	
+		static GML::Utils::INotify*			CreateNotifyer(char *pluginName);
+
 		%feature("autodoc", "1");
-		static GML::DB::IDataBase*			CreateDataBase(char *pluginName,GML::Utils::INotify &notify,char *connectionString);
+		static GML::DB::IDataBase*			CreateDataBase(char *pluginName,GML::Utils::INotify &notify);
+
 		%feature("autodoc", "1");
 		static GML::ML::IConector*			CreateConectors(char *conectorsList,GML::Utils::INotify &notify,GML::DB::IDataBase &database);
+
 		%feature("autodoc", "1");
-		static GML::Algorithm::IAlgorithm*	CreateAlgorithm(char *algorithmLib,char *algorithmName=NULL);
+		static GML::Algorithm::IAlgorithm*	CreateAlgorithm(char *algorithmLib);
+
 		%feature("autodoc", "1");
-		static char*						GetAlgorithmList(char *algorithmLib);
+		static char*						GetAlgorithmList(char *algorithmLib);											
 	};
 }
 
