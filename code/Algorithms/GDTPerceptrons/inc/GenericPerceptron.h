@@ -49,11 +49,13 @@ class GenericPerceptron : public GML::Algorithm::IAlgorithm
 
 	// Thread data
 	PerceptronThreadData			*ptData;
+	PerceptronThreadData			FullData;
 	GML::Utils::ThreadParalelUnit	*tpu;
 
 protected:
 	bool					Train(PerceptronThreadData *ptd);
 	bool					Test(PerceptronThreadData *ptd);
+	bool					SplitIndexes(PerceptronThreadData *ptd,UInt32 ptdElements,PerceptronThreadData *original);
 public:
 	GenericPerceptron();
 

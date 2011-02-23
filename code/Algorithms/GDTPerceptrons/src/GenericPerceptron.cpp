@@ -24,6 +24,43 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToString("InitialWeight"		,InitialWeight			,"Zeros","!!LIST:Zeros,Random,FromFile!!");
 	LinkPropertyToUInt32("ThreadsCount"			,threadsCount			,1);
 }
+bool	GenericPerceptron::SplitIndexes(PerceptronThreadData *ptd,UInt32 ptdElements,PerceptronThreadData *original)
+{
+	UInt32	tr,idx;
+	UInt32	rap = (original->RecordIndexesCount/threadsCount)+1;
+	UInt32	index[2] = {0,0};
+	double	label;
+
+	// aloc memorie pentru indexi
+	for (tr=0;tr<threadsCount;tr++)
+	{
+		if ((ptd[tr].RecordIndexes = new UInt32[rap])==NULL)
+		{
+			notif->Error("Unable to allocate RecordIndexes[%d] vector !",rap);
+			return false;
+		}
+		ptd[tr].RecordIndexesCount = 0;
+	}
+	// completez lista
+	for (tr=0;tr<original->RecordIndexesCount;tr++)
+	{
+		if (con->GetRecordLabel(label,original->RecordIndexes[tr])==false)
+		{
+			notif->Error("Unable to read record with index #%d",original->RecordIndexes[tr]);
+			return false;
+		}
+		if (label==1)
+			idx= 1;
+		else
+			idx = 0;
+		ptd[index[idx]].RecordIndexes[ptd[index[idx]].RecordIndexesCount++]=original->RecordIndexes[tr];
+		index[idx]++;
+		if (index[idx]>=ptdElements)
+			index[idx]=0;
+	}
+
+	return true;
+}
 bool	GenericPerceptron::Init()
 {
 	UInt32		tr;
@@ -51,35 +88,71 @@ bool	GenericPerceptron::Init()
 	if (threadsCount<1)
 		threadsCount = 1;
 
-	if ((ptData = new PerceptronThreadData[threadsCount])==NULL)
+	// creez indexii pentru toate
+	if (con->CreateMlRecord(FullData.Record)==false)
 	{
-		notif->Error("Unable to allocate PerceptronThreadData[%d]",threadsCount);
+		notif->Error("Unable to create MLRecord !");
 		return false;
 	}
-	for (tr=0;tr<threadsCount;tr++)
+	if ((FullData.Weight = new double[con->GetFeatureCount()])==NULL)
 	{
-		if (con->CreateMlRecord(ptData[tr].Record)==false)
-		{
-			notif->Error("Unable to create MLRecord !");
-			return false;
-		}
-		if ((ptData[tr].Weight = new double[con->GetFeatureCount()])==NULL)
-		{
-			notif->Error("Unable to allocate weight vector !");
-			return false;
-		}
-		if (batchPerceptron)
-		{
-			if ((ptData[tr].Delta = new double[con->GetFeatureCount()])==NULL)
-			{
-				notif->Error("Unable to allocate delta vector !");
-				return false;
-			}		
-		} else {
-			ptData[tr].Delta = NULL;
-		}
-		ptData[tr].ID = tr;		
+		notif->Error("Unable to allocate weight vector !");
+		return false;
 	}
+	if (batchPerceptron)
+	{
+		if ((FullData.Delta = new double[con->GetFeatureCount()])==NULL)
+		{
+			notif->Error("Unable to allocate delta vector !");
+			return false;
+		}		
+	} else {
+		FullData.Delta = NULL;
+	}
+	FullData.ID = 0xFFFFFFFF;
+	if ((FullData.RecordIndexes=new UInt32[con->GetRecordCount()])==NULL)
+	{
+		notif->Error("Unable to create RecordIndexes[%d] !",con->GetRecordCount());
+		return false;
+	}
+	FullData.RecordIndexesCount = con->GetRecordCount();
+	for (tr=0;tr<FullData.RecordIndexesCount;tr++)
+		FullData.RecordIndexes[tr]=tr;
+
+
+	if (threadsCount>1)
+	{
+		if ((ptData = new PerceptronThreadData[threadsCount])==NULL)
+		{
+			notif->Error("Unable to allocate PerceptronThreadData[%d]",threadsCount);
+			return false;
+		}
+		for (tr=0;tr<threadsCount;tr++)
+		{
+			if (con->CreateMlRecord(ptData[tr].Record)==false)
+			{
+				notif->Error("Unable to create MLRecord !");
+				return false;
+			}
+			if ((ptData[tr].Weight = new double[con->GetFeatureCount()])==NULL)
+			{
+				notif->Error("Unable to allocate weight vector !");
+				return false;
+			}
+			if (batchPerceptron)
+			{
+				if ((ptData[tr].Delta = new double[con->GetFeatureCount()])==NULL)
+				{
+					notif->Error("Unable to allocate delta vector !");
+					return false;
+				}		
+			} else {
+				ptData[tr].Delta = NULL;
+			}
+			ptData[tr].ID = tr;		
+		}
+	}
+
 	return true;
 }
 bool    GenericPerceptron::Train(PerceptronThreadData *ptd)
