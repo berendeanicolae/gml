@@ -7,6 +7,8 @@ class RosenblattPerceptron: public GenericPerceptron
 {
 	bool	PerformTrainIteration();
 	bool	PerformTestIteration();
+	bool	OnUpdateBestData();
+	bool	OnSaveData(char *fileName);	
 public:
 
 };

@@ -8,21 +8,23 @@ GenericPerceptron::GenericPerceptron()
 
 	batchPerceptron = false;
 
-	LinkPropertyToString("Name"					,Name					,"");
-	LinkPropertyToString("DataBase"				,DataBase				,"");
-	LinkPropertyToString("Conector"				,Conector				,"");
-	LinkPropertyToString("Notifier"				,Notifier				,"");
-	LinkPropertyToDouble("LearningRate"			,learningRate			,0.01);
-	LinkPropertyToBool  ("UseWeight"			,useWeight				,false);
-	LinkPropertyToBool  ("UseB"					,useB					,true);
-	LinkPropertyToUInt32("TestAfterIterations"	,testAfterIterations	,1);
-	LinkPropertyToDouble("MinimAcc"				,minimAcc				,100.0);
-	LinkPropertyToDouble("MinimSe"				,minimAcc				,100.1);
-	LinkPropertyToDouble("MinimSp"				,minimAcc				,100.1);
-	LinkPropertyToUInt32("MaxIterations"		,maxIterations			,10);
-	LinkPropertyToString("WeightFileName"		,WeightFileName			,"");
-	LinkPropertyToUInt32("InitialWeight"		,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,FromFile!!");
-	LinkPropertyToUInt32("ThreadsCount"			,threadsCount			,1);
+	LinkPropertyToString("Name"						,Name					,"Perceptron");
+	LinkPropertyToString("DataBase"					,DataBase				,"");
+	LinkPropertyToString("Conector"					,Conector				,"");
+	LinkPropertyToString("Notifier"					,Notifier				,"");
+	LinkPropertyToDouble("LearningRate"				,learningRate			,0.01);
+	LinkPropertyToBool  ("UseWeight"				,useWeight				,false);
+	LinkPropertyToBool  ("UseB"						,useB					,true);
+	LinkPropertyToUInt32("SaveData"					,saveData				,SAVE_DATA_AT_FINISH,"!!LIST:None=0,AfterEachIteration,WhenAlgorithmEnds!!");
+	LinkPropertyToUInt32("SaveBest"					,saveBest				,SAVE_BEST_NONE,"!!LIST:None=0,BestACC,BestSE,BestSP!!");
+	LinkPropertyToUInt32("TestAfterIterations"		,testAfterIterations	,1);
+	LinkPropertyToDouble("MinimAcc"					,minimAcc				,100.0);
+	LinkPropertyToDouble("MinimSe"					,minimAcc				,100.1);
+	LinkPropertyToDouble("MinimSp"					,minimAcc				,100.1);
+	LinkPropertyToUInt32("MaxIterations"			,maxIterations			,10);
+	LinkPropertyToString("WeightFileName"			,WeightFileName			,"");
+	LinkPropertyToUInt32("InitialWeight"			,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,FromFile!!");
+	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1);
 }
 bool	GenericPerceptron::SplitIndexes(PerceptronThreadData *ptd,UInt32 ptdElements,PerceptronThreadData *original)
 {
@@ -61,6 +63,103 @@ bool	GenericPerceptron::SplitIndexes(PerceptronThreadData *ptd,UInt32 ptdElement
 
 	return true;
 }
+bool	GenericPerceptron::Create(PerceptronThreadData &ptd,UInt32 id)
+{
+	if (con->CreateMlRecord(ptd.Record)==false)
+	{
+		notif->Error("Unable to create MLRecord !");
+		return false;
+	}
+	if ((ptd.Weight = new double[con->GetFeatureCount()])==NULL)
+	{
+		notif->Error("Unable to allocate weight vector !");
+		return false;
+	}
+	memset(ptd.Weight,0,sizeof(double)*con->GetFeatureCount());
+	ptd.b_Weight = 0;
+	if (batchPerceptron)
+	{
+		if ((ptd.Delta = new double[con->GetFeatureCount()])==NULL)
+		{
+			notif->Error("Unable to allocate delta vector !");
+			return false;
+		}		
+	} else {
+		ptd.Delta = NULL;
+	}
+	ptd.RecordIndexes = NULL;
+	ptd.RecordIndexesCount = 0;
+	ptd.Res.Clear();
+	ptd.ID = id;
+	return true;
+}
+bool	GenericPerceptron::UpdateBest(PerceptronThreadData &ptd)
+{
+	switch (saveBest)
+	{
+		case SAVE_BEST_NONE:
+			return false;
+		case SAVE_BEST_ACC:
+			if (ptd.Res.acc<BestData.Res.acc)
+				return false;
+			break;
+		case SAVE_BEST_SE:
+			if (ptd.Res.se<BestData.Res.se)
+				return false;
+			break;
+		case SAVE_BEST_SP:
+			if (ptd.Res.sp<BestData.Res.sp)
+				return false;
+			break;
+		default:
+			notif->Error("UpdateBest => false (code = %d) ",saveBest);
+			return false;
+	}
+	// copii datele
+	memcpy(BestData.Weight,ptd.Weight,con->GetFeatureCount()*sizeof(double));
+	BestData.b_Weight = ptd.b_Weight;
+	BestData.Res.Copy(&ptd.Res);
+
+	return true;
+}
+bool	GenericPerceptron::Save(PerceptronThreadData &ptd,char *fileName)
+{
+	GML::Utils::AttributeList	tempAttr;
+
+	tempAttr.Clear();
+	if (tempAttr.AddDouble("b",ptd.b_Weight,"b value form line equation Sum(xi*wi)+b")==false)
+	{
+		notif->Error("Unable to populate AttributeList for saving ...");
+		return false;
+	}
+	if (tempAttr.AddAttribute("Weight",ptd.Weight,GML::Utils::AttributeList::DOUBLE,con->GetFeatureCount(),"w value form line equation Sum(xi*wi)+b")==false)
+	{
+		notif->Error("Unable to populate AttributeList for saving ...");
+		return false;
+	}
+	if (tempAttr.AddDouble("acc",ptd.Res.acc)==false)
+	{
+		notif->Error("Unable to populate AttributeList for saving ...");
+		return false;
+	}
+	if (tempAttr.AddDouble("se",ptd.Res.se)==false)
+	{
+		notif->Error("Unable to populate AttributeList for saving ...");
+		return false;
+	}
+	if (tempAttr.AddDouble("sp",ptd.Res.sp)==false)
+	{
+		notif->Error("Unable to populate AttributeList for saving ...");
+		return false;
+	}
+
+	if (tempAttr.Save(fileName)==false)
+	{
+		notif->Error("Unable to save data to %s",fileName);
+		return false;
+	}
+	return true;
+}
 bool	GenericPerceptron::Init()
 {
 	UInt32		tr;
@@ -89,29 +188,11 @@ bool	GenericPerceptron::Init()
 		threadsCount = 1;
 
 	// creez indexii pentru toate
-	if (con->CreateMlRecord(FullData.Record)==false)
-	{
-		notif->Error("Unable to create MLRecord !");
+	if (Create(FullData,0xFFFFFFFF)==false)
 		return false;
-	}
-	if ((FullData.Weight = new double[con->GetFeatureCount()])==NULL)
-	{
-		notif->Error("Unable to allocate weight vector !");
+	if (Create(BestData,0xFFFFFFFF)==false)
 		return false;
-	}
-	memset(FullData.Weight,0,sizeof(double)*con->GetFeatureCount());
-	FullData.b_Weight = 0;
-	if (batchPerceptron)
-	{
-		if ((FullData.Delta = new double[con->GetFeatureCount()])==NULL)
-		{
-			notif->Error("Unable to allocate delta vector !");
-			return false;
-		}		
-	} else {
-		FullData.Delta = NULL;
-	}
-	FullData.ID = 0xFFFFFFFF;
+	
 	if ((FullData.RecordIndexes=new UInt32[con->GetRecordCount()])==NULL)
 	{
 		notif->Error("Unable to create RecordIndexes[%d] !",con->GetRecordCount());
@@ -131,27 +212,8 @@ bool	GenericPerceptron::Init()
 		}
 		for (tr=0;tr<threadsCount;tr++)
 		{
-			if (con->CreateMlRecord(ptData[tr].Record)==false)
-			{
-				notif->Error("Unable to create MLRecord !");
+			if (Create(ptData[tr],tr)==false)
 				return false;
-			}
-			if ((ptData[tr].Weight = new double[con->GetFeatureCount()])==NULL)
-			{
-				notif->Error("Unable to allocate weight vector !");
-				return false;
-			}
-			if (batchPerceptron)
-			{
-				if ((ptData[tr].Delta = new double[con->GetFeatureCount()])==NULL)
-				{
-					notif->Error("Unable to allocate delta vector !");
-					return false;
-				}		
-			} else {
-				ptData[tr].Delta = NULL;
-			}
-			ptData[tr].ID = tr;		
 		}
 	}
 
@@ -231,7 +293,8 @@ bool	GenericPerceptron::Test(PerceptronThreadData *ptd)
 }
 bool	GenericPerceptron::PerformTrain()
 {
-	UInt32	it;
+	UInt32					it;
+	GML::Utils::GString		saveNM;
 
 	for (it=0;it<maxIterations;it++)
 	{
@@ -246,18 +309,49 @@ bool	GenericPerceptron::PerformTrain()
 			{
 				notif->Error("Error on test iteration ...");
 				return false;
-			}			
+			}
+			if (OnUpdateBestData())
+			{
+				switch (saveBest)
+				{
+					case SAVE_BEST_ACC: 
+						saveNM.SetFormated("%s_best_acc.txt",Name.GetText()); 
+						break;
+					case SAVE_BEST_SE: 
+						saveNM.SetFormated("%s_best_se.txt",Name.GetText()); 
+						break;
+					case SAVE_BEST_SP: 
+						saveNM.SetFormated("%s_best_sp.txt",Name.GetText()); 
+						break;
+					default:
+						saveNM.SetFormated("%s_best.txt",Name.GetText());
+						break;
+				}				
+				OnSaveData(saveNM.GetText());
+			}
+			if (saveData==SAVE_DATA_AFTER_EACH_ITERATION)
+			{
+				saveNM.SetFormated("%s_it_%d.txt",Name.GetText(),it+1);
+				OnSaveData(saveNM.GetText());
+			}
 		}
+	}
+	if (saveData==SAVE_DATA_AT_FINISH)
+	{
+		saveNM.SetFormated("%s_final.txt",Name.GetText());
+		OnSaveData(saveNM.GetText());
 	}
 	return true;
 }
 bool	GenericPerceptron::PerformTest()
 {
+	GML::Utils::GString		saveNM;
 	if (PerformTestIteration()==false)
 	{
 		notif->Error("Error on test iteration ...");
 		return false;
-	}			
+	}
+
 	return true;
 }
 void	GenericPerceptron::OnExecute(char *command)
