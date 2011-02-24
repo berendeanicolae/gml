@@ -19,6 +19,12 @@ struct PerceptronThreadData
 class GenericPerceptron : public GML::Algorithm::IAlgorithm
 {
 protected:
+	enum {
+		INITIAL_WEIGHT_ZERO  = 0,
+		INITIAL_WEIGHT_RANDOM,
+		INITIAL_WEIGHT_FROMFILE
+	};
+protected:
 	GML::DB::IDataBase				*db;
 	GML::ML::IConector				*con;
 
@@ -28,7 +34,7 @@ protected:
 	GML::Utils::GString				DataBase;
 	GML::Utils::GString				Notifier;
 	GML::Utils::GString				WeightFileName;
-	GML::Utils::GString				InitialWeight;
+	UInt32							InitialWeight;
 
 	// proprietati de training
 	double							learningRate;
