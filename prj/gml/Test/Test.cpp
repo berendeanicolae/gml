@@ -17,13 +17,13 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("SimplePerceptronAlgorithm","");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("GDTPerceptrons","RosenblattPerceptron");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
-		"DbName=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\a.txt};"
+		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\a.txt};"
 		"Conector=BitConnector{Table=RecordTable};"
-		"Notifyer=ConsoleNotifyer{useColors=True};"
+		"Notifier=ConsoleNotifyer{useColors=True};"
 		"LearningRate=0.02;"
 		"MaxIteratii=30;")==false)
 		return 1;

@@ -99,6 +99,8 @@ bool	GenericPerceptron::Init()
 		notif->Error("Unable to allocate weight vector !");
 		return false;
 	}
+	memset(FullData.Weight,0,sizeof(double)*con->GetFeatureCount());
+	FullData.b_Weight = 0;
 	if (batchPerceptron)
 	{
 		if ((FullData.Delta = new double[con->GetFeatureCount()])==NULL)
