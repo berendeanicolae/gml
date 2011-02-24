@@ -171,6 +171,8 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd)
 		w = ptd->Delta;
 		b = &ptd->b_Delta;
 	}
+	if (!useB)
+		(*b)=0;
 
 	while (count>0)
 	{
@@ -186,7 +188,8 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd)
 			else
 				error = ptd->Record.Label * learningRate;
 			GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(ptd->Record.Features,w,nrFeatures,error);
-			(*b) += error;
+			if (useB)
+				(*b) += error;
 		}
 		count--;
 		ptrIndex++;
@@ -205,6 +208,9 @@ bool	GenericPerceptron::Test(PerceptronThreadData *ptd)
 	UInt32	nrFeatures = con->GetFeatureCount();
 	double	*w = ptd->Weight;
 	double	*b = &ptd->b_Weight;
+	
+	if (!useB)
+		(*b)=0;
 
 	ptd->Res.Clear();
 
