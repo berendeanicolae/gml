@@ -223,3 +223,48 @@ bool	GenericPerceptron::Test(PerceptronThreadData *ptd)
 
 	return true;
 }
+bool	GenericPerceptron::PerformTrain()
+{
+	UInt32	it;
+
+	for (it=0;it<maxIterations;it++)
+	{
+		if (PerformTrainIteration()==false)
+		{
+			notif->Error("Error on training iteration ...");
+			return false;
+		}
+		if ((it % testAfterIterations)==0)
+		{
+			if (PerformTestIteration()==false)
+			{
+				notif->Error("Error on test iteration ...");
+				return false;
+			}			
+		}
+	}
+	return true;
+}
+bool	GenericPerceptron::PerformTest()
+{
+	if (PerformTestIteration()==false)
+	{
+		notif->Error("Error on test iteration ...");
+		return false;
+	}			
+	return true;
+}
+void	GenericPerceptron::OnExecute(char *command)
+{
+	if (GML::Utils::GString::Equals(command,"train",true))
+	{
+		PerformTrain();
+		return;
+	}
+	if (GML::Utils::GString::Equals(command,"test",true))
+	{
+		PerformTest();
+		return;
+	}
+	notif->Error("Unkwnown command: %s",command);
+}
