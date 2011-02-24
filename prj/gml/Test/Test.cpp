@@ -8,7 +8,7 @@
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	//GML::Utils::AttributeList	attr;
+	GML::Utils::AttributeList	attr;
 
 	//attr.AddString("DbName","SimpleTextFileDB");
 	//attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\a.txt");  
@@ -25,11 +25,14 @@ int _tmain(int argc, _TCHAR* argv[])
 		"Conector=BitConnector{Table=RecordTable};"
 		"Notifier=ConsoleNotifyer{useColors=True};"
 		"LearningRate=0.02;"
+		"InitialWeight=random;"
 		"useB=true;"
 		"MaxIterations=30;")==false)
 		return 1;
+	alg->GetProperty(attr);
 	if (alg->Init()==false)
 		return 1;
+	alg->GetProperty(attr);
 	
 	alg->Execute("train");
 	alg->Wait();
