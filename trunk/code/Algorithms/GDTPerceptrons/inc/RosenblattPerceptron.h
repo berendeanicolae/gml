@@ -5,9 +5,10 @@
 
 class RosenblattPerceptron: public GenericPerceptron
 {
-	bool	DoTrain();
+	bool	PerformTrainIteration();
+	bool	PerformTestIteration();
 public:
-	void	OnExecute(char* command);
+
 };
 
 

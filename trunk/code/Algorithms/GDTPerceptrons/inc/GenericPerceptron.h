@@ -57,10 +57,17 @@ protected:
 	bool					Train(PerceptronThreadData *ptd);
 	bool					Test(PerceptronThreadData *ptd);
 	bool					SplitIndexes(PerceptronThreadData *ptd,UInt32 ptdElements,PerceptronThreadData *original);
+
+
+	virtual bool			PerformTrainIteration()=0;
+	virtual bool			PerformTestIteration()=0;
 public:
 	GenericPerceptron();
 
 	bool					Init();
+	bool					PerformTrain();
+	bool					PerformTest();
+	void					OnExecute(char *command);
 };
 
 
