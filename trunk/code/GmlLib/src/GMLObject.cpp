@@ -14,6 +14,7 @@
 					(*((tip *)link->LocalAddress)) = (tip)int64Value; \
 					break; \
 				}
+
 bool AttributeToListIndex(GML::Utils::Attribute *attr,GML::Utils::AttributeLink	*link,Int64 *intValue)
 {
 	GML::Utils::GString		list,item,value;
@@ -38,10 +39,42 @@ bool AttributeToListIndex(GML::Utils::Attribute *attr,GML::Utils::AttributeLink	
 			if (value.ConvertToInt64(&cValue)==false)
 				continue;
 		} 
-		if (item.Equals(attr->Name,true))
+		if (item.Equals((char *)attr->Data,true))
 		{
 			(*intValue) = cValue;
 			return true;
+		}
+		cValue++;
+	}
+	return false;
+}
+bool ListIndexToAttribute(GML::Utils::AttributeLink	*link,Int64 intValue,GML::Utils::GString *name)
+{
+	GML::Utils::GString		list,item,value;
+	int						poz,p_eq;
+	TYPE_INT64				cValue;
+
+	if (GML::Utils::GString::StartsWith(link->Description,"!!LIST:",true)==false)
+		return false;
+	if ((poz=GML::Utils::GString::Find(&link->Description[7],"!!"))==-1)
+		return false;
+	if (list.Set(&link->Description[7],poz)==false)
+		return false;
+	poz = 0;
+	cValue = 0;
+	while (list.CopyNext(&item,",",&poz))
+	{
+		if ((p_eq=item.FindLast("="))!=-1)
+		{
+			if (value.Set(&item.GetText()[p_eq+1])==false)
+				return false;
+			item.Truncate(p_eq);
+			if (value.ConvertToInt64(&cValue)==false)
+				continue;
+		} 
+		if (cValue==intValue)
+		{
+			return name->Set(&item);
 		}
 		cValue++;
 	}
@@ -199,6 +232,7 @@ bool GML::Utils::GMLObject::GetProperty(GML::Utils::AttributeList &config)
 {
 	UInt32						tr;
 	GML::Utils::AttributeLink	*link;
+	GML::Utils::GString			listValue;
 	
 	config.Clear();
 	for (tr=0;tr<AttrLinks.Len();tr++)
@@ -212,23 +246,65 @@ bool GML::Utils::GMLObject::GetProperty(GML::Utils::AttributeList &config)
 		{
 			case GML::Utils::AttributeList::STRING:
 				if (config.AddString(link->Name,(*(GML::Utils::GString *)link->LocalAddress).GetText(),link->Description)==false)
+				{
 					DEBUGMSG("Error adding : %s ",link->Name);
+					return false;
+				}
 				break;
 			case GML::Utils::AttributeList::DOUBLE:
+				if (ListIndexToAttribute(link,(Int64)(*(double *)link->LocalAddress),&listValue))
+				{
+					if (config.AddString(link->Name,listValue.GetText(),link->Description)==false)
+					{
+						DEBUGMSG("Error adding : %s ",link->Name);
+						return false;
+					}
+					break;
+				}
 				if (config.AddDouble(link->Name,(*(double *)link->LocalAddress),link->Description)==false)
+				{
 					DEBUGMSG("Error adding : %s ",link->Name);
+					return false;
+				}
 				break;
 			case GML::Utils::AttributeList::BOOLEAN:
 				if (config.AddBool(link->Name,(*(bool *)link->LocalAddress),link->Description)==false)
+				{
 					DEBUGMSG("Error adding : %s ",link->Name);
+					return false;
+				}
 				break;
 			case GML::Utils::AttributeList::UINT32:
+				if (ListIndexToAttribute(link,(Int64)(*(UInt32 *)link->LocalAddress),&listValue))
+				{
+					if (config.AddString(link->Name,listValue.GetText(),link->Description)==false)
+					{
+						DEBUGMSG("Error adding : %s ",link->Name);
+						return false;
+					}
+					break;
+				}
 				if (config.AddUInt32(link->Name,(*(UInt32 *)link->LocalAddress),link->Description)==false)
+				{
 					DEBUGMSG("Error adding : %s ",link->Name);
+					return false;
+				}
 				break;
 			case GML::Utils::AttributeList::INT32:
+				if (ListIndexToAttribute(link,(Int64)(*(Int32 *)link->LocalAddress),&listValue))
+				{
+					if (config.AddString(link->Name,listValue.GetText(),link->Description)==false)
+					{
+						DEBUGMSG("Error adding : %s ",link->Name);
+						return false;
+					}
+					break;
+				}
 				if (config.AddInt32(link->Name,(*(Int32 *)link->LocalAddress),link->Description)==false)
+				{
 					DEBUGMSG("Error adding : %s ",link->Name);
+					return false;
+				}
 				break;
 			default:				
 				DEBUGMSG("Don`t know how to add : %s ",link->Name);
