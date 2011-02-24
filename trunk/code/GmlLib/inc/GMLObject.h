@@ -20,6 +20,7 @@ namespace GML
 			bool			LinkPropertyToDouble(char *Name,double &LocalAddr,double defaultValue,char *Description=NULL);
 			bool			LinkPropertyToUInt32(char *Name,UInt32 &LocalAddr,UInt32 defaultValue,char *Description=NULL);
 			bool			LinkPropertyToInt32(char *Name,Int32 &LocalAddr,Int32 defaultValue,char *Description=NULL);
+			
 		
 		public:
 			bool			SetProperty(GML::Utils::AttributeList &config);

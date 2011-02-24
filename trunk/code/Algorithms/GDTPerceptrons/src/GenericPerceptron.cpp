@@ -21,7 +21,7 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToDouble("MinimSp"				,minimAcc				,100.1);
 	LinkPropertyToUInt32("MaxIterations"		,maxIterations			,10);
 	LinkPropertyToString("WeightFileName"		,WeightFileName			,"");
-	LinkPropertyToString("InitialWeight"		,InitialWeight			,"Zeros","!!LIST:Zeros,Random,FromFile!!");
+	LinkPropertyToUInt32("InitialWeight"		,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,FromFile!!");
 	LinkPropertyToUInt32("ThreadsCount"			,threadsCount			,1);
 }
 bool	GenericPerceptron::SplitIndexes(PerceptronThreadData *ptd,UInt32 ptdElements,PerceptronThreadData *original)
