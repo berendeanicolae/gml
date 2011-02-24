@@ -21,11 +21,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
-		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\a.txt};"
+		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"
 		"Conector=BitConnector{Table=RecordTable};"
 		"Notifier=ConsoleNotifyer{useColors=True};"
 		"LearningRate=0.02;"
-		"MaxIteratii=30;")==false)
+		"useB=true;"
+		"MaxIterations=30;")==false)
 		return 1;
 	if (alg->Init()==false)
 		return 1;
