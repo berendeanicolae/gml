@@ -2,6 +2,13 @@
 
 #define DEBUGMSG	printf
 
+#define TEST_SET_PROP(attr_sursa_name,tip,tip_sursa) \
+				if (attr->AttributeType==attr_sursa_name) \
+				{ \
+					(*((tip *)link->LocalAddress)) = (tip)(*((tip_sursa *)attr->Data)); \
+					break; \
+				} 
+
 GML::Utils::GMLObject::GMLObject()
 {
 	Description = "";
@@ -107,55 +114,23 @@ bool GML::Utils::GMLObject::SetProperty(GML::Utils::AttributeList &config)
 				}
 				break;
 			case GML::Utils::AttributeList::BOOLEAN:
-				if (attr->AttributeType!=GML::Utils::AttributeList::BOOLEAN)
-				{					
-					DEBUGMSG("Invalid Attribute type (expecting boolean) for %s ",link->Name);
-					return false;
-				}
-				(*((bool *)link->LocalAddress)) = *((bool *)attr->Data);
+				TEST_SET_PROP(GML::Utils::AttributeList::BOOLEAN,bool,bool);
+				DEBUGMSG("Expecting a boolean value for %s ",link->Name);
 				break;
 			case GML::Utils::AttributeList::DOUBLE:
-				if (attr->AttributeType==GML::Utils::AttributeList::DOUBLE) 
-				{
-					(*((double *)link->LocalAddress)) = *((double *)attr->Data);
-					break;
-				}
-				if (attr->AttributeType==GML::Utils::AttributeList::UINT32) 
-				{
-					(*((double *)link->LocalAddress)) = (double)(*((UInt32 *)attr->Data));
-					break;
-				}
-				if (attr->AttributeType==GML::Utils::AttributeList::INT32) 
-				{
-					(*((double *)link->LocalAddress)) = (double)(*((Int32 *)attr->Data));
-					break;
-				}				
+				TEST_SET_PROP(GML::Utils::AttributeList::DOUBLE,double,double);
+				TEST_SET_PROP(GML::Utils::AttributeList::UINT32,double,UInt32);
+				TEST_SET_PROP(GML::Utils::AttributeList::INT32,double,Int32);
 				DEBUGMSG("Expecting a numerical value (double,uint32,int32) for %s ",link->Name);
 				return false;
 			case GML::Utils::AttributeList::UINT32:
-				if (attr->AttributeType==GML::Utils::AttributeList::UINT32) 
-				{
-					(*((UInt32 *)link->LocalAddress)) = *((UInt32 *)attr->Data);
-					break;
-				}
-				if (attr->AttributeType==GML::Utils::AttributeList::INT32) 
-				{
-					(*((UInt32 *)link->LocalAddress)) = (UInt32)(*((Int32 *)attr->Data));
-					break;
-				}				
+				TEST_SET_PROP(GML::Utils::AttributeList::UINT32,UInt32,UInt32);
+				TEST_SET_PROP(GML::Utils::AttributeList::UINT32,Int32,UInt32);
 				DEBUGMSG("Expecting a numerical value (uint32,int32) for %s ",link->Name);
 				return false;
 			case GML::Utils::AttributeList::INT32:
-				if (attr->AttributeType==GML::Utils::AttributeList::INT32) 
-				{
-					(*((Int32 *)link->LocalAddress)) = *((Int32 *)attr->Data);
-					break;
-				}
-				if (attr->AttributeType==GML::Utils::AttributeList::UINT32) 
-				{
-					(*((Int32 *)link->LocalAddress)) = (Int32)(*((UInt32 *)attr->Data));
-					break;
-				}				
+				TEST_SET_PROP(GML::Utils::AttributeList::INT32,Int32,Int32);
+				TEST_SET_PROP(GML::Utils::AttributeList::INT32,UInt32,Int32);
 				DEBUGMSG("Expecting a numerical value (uint32,int32) for %s ",link->Name);
 				return false;
 			default:				
