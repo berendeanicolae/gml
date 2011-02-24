@@ -8,7 +8,46 @@
 					(*((tip *)link->LocalAddress)) = (tip)(*((tip_sursa *)attr->Data)); \
 					break; \
 				} 
+#define TEST_SETLIST_PROP(tip) \
+				if (AttributeToListIndex(attr,link,&int64Value)) \
+				{ \
+					(*((tip *)link->LocalAddress)) = (tip)int64Value; \
+					break; \
+				}
+bool AttributeToListIndex(GML::Utils::Attribute *attr,GML::Utils::AttributeLink	*link,Int64 *intValue)
+{
+	GML::Utils::GString		list,item,value;
+	int						poz,p_eq;
+	TYPE_INT64				cValue;
 
+	if (GML::Utils::GString::StartsWith(link->Description,"!!LIST:",true)==false)
+		return false;
+	if ((poz=GML::Utils::GString::Find(&link->Description[7],"!!"))==-1)
+		return false;
+	if (list.Set(&link->Description[7],poz)==false)
+		return false;
+	poz = 0;
+	cValue = 0;
+	while (list.CopyNext(&item,",",&poz))
+	{
+		if ((p_eq=item.FindLast("="))!=-1)
+		{
+			if (value.Set(&item.GetText()[p_eq+1])==false)
+				return false;
+			item.Truncate(p_eq);
+			if (value.ConvertToInt64(&cValue)==false)
+				continue;
+		} 
+		if (item.Equals(attr->Name,true))
+		{
+			(*intValue) = cValue;
+			return true;
+		}
+		cValue++;
+	}
+	return false;
+}
+//=========================================================================================================================================================
 GML::Utils::GMLObject::GMLObject()
 {
 	Description = "";
@@ -81,6 +120,7 @@ bool GML::Utils::GMLObject::SetProperty(GML::Utils::AttributeList &config)
 	UInt32						tr;
 	GML::Utils::AttributeLink	*link;
 	GML::Utils::Attribute		*attr;
+	Int64						int64Value;
 
 	// caut in linkuri daca am ceva similar
 	for (tr=0;tr<AttrLinks.Len();tr++)
@@ -116,22 +156,25 @@ bool GML::Utils::GMLObject::SetProperty(GML::Utils::AttributeList &config)
 			case GML::Utils::AttributeList::BOOLEAN:
 				TEST_SET_PROP(GML::Utils::AttributeList::BOOLEAN,bool,bool);
 				DEBUGMSG("Expecting a boolean value for %s ",link->Name);
-				break;
+				return false;
 			case GML::Utils::AttributeList::DOUBLE:
 				TEST_SET_PROP(GML::Utils::AttributeList::DOUBLE,double,double);
 				TEST_SET_PROP(GML::Utils::AttributeList::UINT32,double,UInt32);
 				TEST_SET_PROP(GML::Utils::AttributeList::INT32,double,Int32);
-				DEBUGMSG("Expecting a numerical value (double,uint32,int32) for %s ",link->Name);
+				TEST_SETLIST_PROP(double);
+				DEBUGMSG("Expecting a numerical value (double,uint32,int32 or list) for %s ",link->Name);
 				return false;
 			case GML::Utils::AttributeList::UINT32:
 				TEST_SET_PROP(GML::Utils::AttributeList::UINT32,UInt32,UInt32);
 				TEST_SET_PROP(GML::Utils::AttributeList::UINT32,Int32,UInt32);
-				DEBUGMSG("Expecting a numerical value (uint32,int32) for %s ",link->Name);
+				TEST_SETLIST_PROP(UInt32);
+				DEBUGMSG("Expecting a numerical value (uint32,int32 or list) for %s ",link->Name);
 				return false;
 			case GML::Utils::AttributeList::INT32:
 				TEST_SET_PROP(GML::Utils::AttributeList::INT32,Int32,Int32);
 				TEST_SET_PROP(GML::Utils::AttributeList::INT32,UInt32,Int32);
-				DEBUGMSG("Expecting a numerical value (uint32,int32) for %s ",link->Name);
+				TEST_SETLIST_PROP(Int32);
+				DEBUGMSG("Expecting a numerical value (uint32,int32 or list) for %s ",link->Name);
 				return false;
 			default:				
 				DEBUGMSG("Don`t know to convert %s (unknown type) ",link->Name);
