@@ -18,6 +18,7 @@ struct PerceptronThreadData
 
 class GenericPerceptron : public GML::Algorithm::IAlgorithm
 {
+protected:
 	GML::DB::IDataBase				*db;
 	GML::ML::IConector				*con;
 
