@@ -27,13 +27,13 @@ int _tmain(int argc, _TCHAR* argv[])
 		"LearningRate=0.02;"
 		"InitialWeight=random;"
 		"useB=true;"
+		"SaveData=AfterEachIteration;"
+		"SaveBest=BestACC;"
 		"MaxIterations=30;")==false)
 		return 1;
-	alg->GetProperty(attr);
 	if (alg->Init()==false)
 		return 1;
-	alg->GetProperty(attr);
-	
+		
 	alg->Execute("train");
 	alg->Wait();
 

@@ -24,6 +24,17 @@ protected:
 		INITIAL_WEIGHT_RANDOM,
 		INITIAL_WEIGHT_FROMFILE
 	};
+	enum {
+		SAVE_BEST_NONE = 0,
+		SAVE_BEST_ACC,
+		SAVE_BEST_SE,
+		SAVE_BEST_SP,
+	};
+	enum {
+		SAVE_DATA_NONE = 0,
+		SAVE_DATA_AFTER_EACH_ITERATION,
+		SAVE_DATA_AT_FINISH,
+	};
 protected:
 	GML::DB::IDataBase				*db;
 	GML::ML::IConector				*con;
@@ -41,6 +52,8 @@ protected:
 	bool							useWeight;
 	bool							useB;
 	bool							batchPerceptron;
+	UInt32							saveData;
+	UInt32							saveBest;
 	UInt32							testAfterIterations;
 
 
@@ -56,17 +69,22 @@ protected:
 
 	// Thread data
 	PerceptronThreadData			*ptData;
-	PerceptronThreadData			FullData;
+	PerceptronThreadData			FullData,BestData;
 	GML::Utils::ThreadParalelUnit	*tpu;
 
 protected:
 	bool					Train(PerceptronThreadData *ptd);
 	bool					Test(PerceptronThreadData *ptd);
 	bool					SplitIndexes(PerceptronThreadData *ptd,UInt32 ptdElements,PerceptronThreadData *original);
+	bool					Create(PerceptronThreadData &ptd,UInt32 id);
+	bool					UpdateBest(PerceptronThreadData &ptd);
+	bool					Save(PerceptronThreadData &ptd,char *fileName);
 
 
 	virtual bool			PerformTrainIteration()=0;
 	virtual bool			PerformTestIteration()=0;
+	virtual bool			OnUpdateBestData()=0;
+	virtual bool			OnSaveData(char *fileName)=0;	
 public:
 	GenericPerceptron();
 
