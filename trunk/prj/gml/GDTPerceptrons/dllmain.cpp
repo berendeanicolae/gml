@@ -1,6 +1,7 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "gmllib.h"
 #include "RosenblattPerceptron.h"
+#include "BatchPerceptron.h"
 
 GML::Algorithm::IAlgorithm*	CreateNewAlgorithm(char *algName)
 {
@@ -9,6 +10,9 @@ GML::Algorithm::IAlgorithm*	CreateNewAlgorithm(char *algName)
 	{
 		return new RosenblattPerceptron();
 	}
+	if (GML::Utils::GString::Equals(algName,"BatchPerceptron",true))
+		return new BatchPerceptron();
+
 
 	return NULL;
 }
