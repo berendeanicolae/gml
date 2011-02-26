@@ -64,7 +64,7 @@
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib;$(SolutionDir)..\..\lib\sqlite3_debug.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)*.db $(SolutionDir)..\..\Bin\*.*</Command>
+      <Command>copy $(OutDir)*.db $(SolutionDir)..\..\Bin\DataBases\*.*</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -87,7 +87,7 @@
       <ModuleDefinitionFile>SQLite.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)*.db $(SolutionDir)..\..\Bin\*.*</Command>
+      <Command>copy $(OutDir)*.db $(SolutionDir)..\..\Bin\DataBases\*.*</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
