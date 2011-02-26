@@ -62,7 +62,7 @@
       <ModuleDefinitionFile>BitConnector.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)*.dbc $(SolutionDir)..\..\Bin\*.*</Command>
+      <Command>copy $(OutDir)*.dbc $(SolutionDir)..\..\Bin\Conectors\*.*</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -85,7 +85,7 @@
       <ModuleDefinitionFile>BitConnector.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)*.dbc $(SolutionDir)..\..\Bin\*.*</Command>
+      <Command>copy $(OutDir)*.dbc $(SolutionDir)..\..\Bin\Conectors\*.*</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
