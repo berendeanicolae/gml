@@ -33,10 +33,11 @@ bool AdjustNameWithExtensionAndPath(GML::Utils::GString &path,char *extension,ch
 		GML::Utils::GString		gmlLibPath;
 		if (FindGMLLibPath(gmlLibPath)==false)
 			return false;
-		if (gmlLibPath.PathJoinName(&path)==false)
-			return false;
 		if (gmlLibPath.PathJoinName(folderName)==false)
 			return false;
+		if (gmlLibPath.PathJoinName(&path)==false)
+			return false;
+
 		if (path.Set(&gmlLibPath)==false)
 			return false;
 	}
