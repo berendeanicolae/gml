@@ -19,7 +19,7 @@ bool FindGMLLibPath(GML::Utils::GString &gmlLib)
 
 	return true;
 }
-bool AdjustNameWithExtensionAndPath(GML::Utils::GString &path,char *extension)
+bool AdjustNameWithExtensionAndPath(GML::Utils::GString &path,char *extension,char *folderName)
 {
 	// verific daca are extensia care trebuie
 	if (path.EndsWith(extension,true)==false)
@@ -34,6 +34,8 @@ bool AdjustNameWithExtensionAndPath(GML::Utils::GString &path,char *extension)
 		if (FindGMLLibPath(gmlLibPath)==false)
 			return false;
 		if (gmlLibPath.PathJoinName(&path)==false)
+			return false;
+		if (gmlLibPath.PathJoinName(folderName)==false)
 			return false;
 		if (path.Set(&gmlLibPath)==false)
 			return false;
@@ -69,7 +71,7 @@ GML::Utils::INotify*		GML::Builder::CreateNotifyer(char *pluginName)
 		if (attributeList.Set("")==false)
 			return NULL;
 	}
-	if (AdjustNameWithExtensionAndPath(path,NOTIFYER_EXT)==false)
+	if (AdjustNameWithExtensionAndPath(path,NOTIFYER_EXT,NOTIFYER_FOLDER)==false)
 		return NULL;
 
 	// incarc libraria
@@ -107,7 +109,7 @@ GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::
 		if (attributeList.Set("")==false)
 			return NULL;
 	}
-	if (AdjustNameWithExtensionAndPath(path,DATABASE_EXT)==false)
+	if (AdjustNameWithExtensionAndPath(path,DATABASE_EXT,DATABASE_FOLDER)==false)
 		return NULL;
 
 	// incarc libraria
@@ -162,7 +164,7 @@ GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Uti
 			if (attributeList.Set("")==false)
 				return NULL;
 		}
-		if (AdjustNameWithExtensionAndPath(path,CONNECTOR_EXT)==false)
+		if (AdjustNameWithExtensionAndPath(path,CONNECTOR_EXT,CONNECTOR_FOLDER)==false)
 			return NULL;
 		// incarc libraria
 		if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
@@ -196,7 +198,7 @@ GML::Algorithm::IAlgorithm*	GML::Builder::CreateAlgorithm(char *algorithmPath,ch
 
 	if (path.Set(algorithmPath)==false)
 		return NULL;
-	if (AdjustNameWithExtensionAndPath(path,ALGORITHM_EXT)==false)
+	if (AdjustNameWithExtensionAndPath(path,ALGORITHM_EXT,ALGORITHM_FOLDER)==false)
 		return NULL;
 
 	// incarc libraria
@@ -217,7 +219,7 @@ char*						GML::Builder::GetAlgorithmList(char *algorithmLib)
 
 	if (path.Set(algorithmLib)==false)
 		return NULL;
-	if (AdjustNameWithExtensionAndPath(path,ALGORITHM_EXT)==false)
+	if (AdjustNameWithExtensionAndPath(path,ALGORITHM_EXT,ALGORITHM_FOLDER)==false)
 		return NULL;
 
 	// incarc libraria
