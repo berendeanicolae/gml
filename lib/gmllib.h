@@ -1114,6 +1114,8 @@ namespace GML
 		public:
 			bool			SetProperty(GML::Utils::AttributeList &config);
 			bool			SetProperty(char *config);
+			bool			SetPropertyFromFile(char *fileName);
+			
 			bool			GetProperty(GML::Utils::AttributeList &config);
 		public:
 			GMLObject();

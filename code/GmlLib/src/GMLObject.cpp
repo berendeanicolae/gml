@@ -228,6 +228,17 @@ bool GML::Utils::GMLObject::SetProperty(char *str_config)
 	}
 	return SetProperty(config);
 }
+bool GML::Utils::GMLObject::SetPropertyFromFile(char *fileName)
+{
+	GML::Utils::AttributeList	config;
+
+	if (config.Load(fileName)==false)
+	{		
+		DEBUGMSG("Unable to load AttributeList from: %s",fileName);
+		return false;
+	}
+	return SetProperty(config);
+}
 bool GML::Utils::GMLObject::GetProperty(GML::Utils::AttributeList &config)
 {
 	UInt32						tr;

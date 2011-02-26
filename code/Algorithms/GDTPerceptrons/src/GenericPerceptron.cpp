@@ -1,6 +1,11 @@
 #include "GenericPerceptron.h"
 
-
+void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
+{
+	GenericPerceptron *gp = (GenericPerceptron *)context;
+	gp->OnRunThreadCommand(gp->ptData[paralel->GetID()],paralel->GetCodeID());
+}
+//====================================================================================================
 GenericPerceptron::GenericPerceptron()
 {
 	db = NULL;
@@ -91,7 +96,7 @@ bool	GenericPerceptron::Create(PerceptronThreadData &ptd,UInt32 id)
 	ptd.RecordIndexesCount = 0;
 	ptd.Res.Clear();
 	ptd.ID = id;
-	return true;
+	return true;	
 }
 bool	GenericPerceptron::UpdateBest(PerceptronThreadData &ptd)
 {
@@ -160,6 +165,54 @@ bool	GenericPerceptron::Save(PerceptronThreadData &ptd,char *fileName)
 	}
 	return true;
 }
+bool	GenericPerceptron::Load(PerceptronThreadData &ptd,char *fileName)
+{
+	GML::Utils::AttributeList	tempAttr;
+
+	if (tempAttr.Load(fileName)==false)
+	{
+		notif->Error("Unable to load : %s",fileName);
+		return false;
+	}
+	if (tempAttr.UpdateDouble("b",ptd.b_Weight,true)==false)
+	{
+		notif->Error("Unable to update 'b' value from %s",fileName);
+		return false;
+	}
+	if (tempAttr.Update("Weight",ptd.Weight,sizeof(double)*con->GetFeatureCount())==false)
+	{
+		notif->Error("Unable to update 'Weight' value from %s",fileName);
+		return false;
+	}
+	return true;
+}
+bool	GenericPerceptron::InitWeight(PerceptronThreadData &ptd)
+{
+	UInt32	tr;
+
+	if (ptd.b_Weight==NULL)
+		return true;
+	switch (InitialWeight)
+	{
+		case INITIAL_WEIGHT_ZERO:
+			memset(ptd.Weight,0,sizeof(double)*con->GetFeatureCount());
+			ptd.b_Weight = 0.0;
+			break;
+		case INITIAL_WEIGHT_RANDOM:
+			for (tr=0;tr<con->GetFeatureCount();tr++)
+				ptd.Weight[tr]=((double)((rand()%201)-100))/100.0;
+			ptd.b_Weight = ((double)((rand()%201)-100))/100.0;
+			break;
+		case INITIAL_WEIGHT_FROMFILE:
+			if (Load(ptd,WeightFileName.GetText())==false)
+				return false;
+			break;
+		default:
+			notif->Error("Unknwo initial seright method : %d ",InitialWeight);
+			return false;
+	}
+	return true;
+}
 bool	GenericPerceptron::Init()
 {
 	UInt32		tr;
@@ -190,6 +243,8 @@ bool	GenericPerceptron::Init()
 	// creez indexii pentru toate
 	if (Create(FullData,0xFFFFFFFF)==false)
 		return false;
+	if (InitWeight(FullData)==false)
+		return false;
 	if (Create(BestData,0xFFFFFFFF)==false)
 		return false;
 	
@@ -214,6 +269,22 @@ bool	GenericPerceptron::Init()
 		{
 			if (Create(ptData[tr],tr)==false)
 				return false;
+		}
+		if (SplitIndexes(ptData,threadsCount,&FullData)==false)
+			return false;
+		
+		if ((tpu = new GML::Utils::ThreadParalelUnit[threadsCount])==NULL)
+		{
+			notif->Error("Unable to create %d threads ",threadsCount);
+			return false;
+		}
+		for (tr=0;tr<threadsCount;tr++)
+		{
+			if (tpu[tr].Init(tr,this,ThreadRedirectFunction)==false)
+			{
+				notif->Error("Unable to start thread #%d",tr);
+				return false;
+			}
 		}
 	}
 
@@ -350,8 +421,7 @@ bool	GenericPerceptron::PerformTest()
 	{
 		notif->Error("Error on test iteration ...");
 		return false;
-	}
-
+	}		
 	return true;
 }
 void	GenericPerceptron::OnExecute(char *command)
@@ -367,4 +437,25 @@ void	GenericPerceptron::OnExecute(char *command)
 		return;
 	}
 	notif->Error("Unkwnown command: %s",command);
+}
+bool    GenericPerceptron::ExecuteParalelCommand(UInt32 command)
+{
+	UInt32	tr;
+
+	// executie
+	for (tr=0;tr<threadsCount;tr++)
+		if (tpu[tr].Execute(command)==false)
+		{
+			notif->Error("Error on runnig thread #%d",tr);
+			return false;
+		}
+	// asteptare
+	for (tr=0;tr<threadsCount;tr++)
+		if (tpu[tr].WaitToFinish()==false)
+		{
+			notif->Error("WaitToFinish failed on thread #%d",tr);
+			return false;
+		}
+	// all ok
+	return true;
 }
