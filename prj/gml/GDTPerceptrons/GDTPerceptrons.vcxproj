@@ -59,7 +59,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib</AdditionalDependencies>
-      <ModuleDefinitionFile>GDTPerceptrons.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)*.alg $(SolutionDir)..\..\Bin\Algorithms\*.*</Command>
@@ -81,14 +82,14 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib</AdditionalDependencies>
-      <ModuleDefinitionFile>GDTPerceptrons.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)*.alg $(SolutionDir)..\..\Bin\Algorithms\*.*</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="GDTPerceptrons.def" />
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>

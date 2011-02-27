@@ -61,7 +61,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>ConsoleNotifyer.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)*.ntf $(SolutionDir)..\..\Bin\Notifiers\*.*</Command>
@@ -84,14 +85,14 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib</AdditionalDependencies>
-      <ModuleDefinitionFile>ConsoleNotifyer.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)*.ntf $(SolutionDir)..\..\Bin\Notifiers\*.*</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="ConsoleNotifyer.def" />
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>

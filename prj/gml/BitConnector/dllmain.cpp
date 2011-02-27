@@ -1,13 +1,5 @@
-#include "gmllib.h"
 #include "BitConnector.h"
 
-BOOL APIENTRY DllMain( HMODULE hModule,DWORD  ul_reason_for_call,LPVOID lpReserved)
-{	
-	return TRUE;
-}
+LIB_INTERFACE(BitConnector,"GDT",1,"A simple BitConector");
 
-GML::ML::IConector*	CreateNewConnector()
-{
-	BitConnector* connector = new BitConnector();	
-	return connector;
-}
+
