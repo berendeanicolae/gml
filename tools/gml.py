@@ -20,6 +20,7 @@ from optparse import OptionParser, OptionGroup
 from time import strftime, localtime
 from os.path import basename, dirname, isfile, exists, join
 from os import makedirs
+from os import name as OS_TYPE
 
 LOCAL_REPOSITORY = "repo.lst"
 
@@ -35,6 +36,40 @@ class Utils:
 
 		file.close()   
 		return md5.hexdigest()
+		
+	def __add_to_path(path):
+		if OS_TYPE == 'nt':
+			from winreg import CreateKey, SetValueEx, QueryValueEx, HKEY_CURRENT_USER, REG_EXPAND_SZ
+			import os
+			from os.path import isdir
+			envpath = None
+			HKCU = HKEY_CURRENT_USER
+			ENV = "Environment"
+			PATH = "PATH"
+			DEFAULT = "%PATH%"
+			with CreateKey(HKCU, ENV) as key:
+				try:
+					envpath = QueryValueEx(key, PATH)[0]
+				except WindowsError:
+					envpath = DEFAULT
+
+				paths = [envpath]
+				if path and path not in envpath and isdir(path):
+						paths.append(path)
+
+				envpath = os.pathsep.join(paths)
+				SetValueEx(key, PATH, 0, REG_EXPAND_SZ, envpath)
+				return True
+		else:
+			return False
+			
+	def add_to_path(path):
+		cm.print_msg("\n[Registry operations]")
+		if not Utils.__add_to_path(path):
+			cm.print_error("Could not add GML root dir to PATH")
+			exit(1)
+		else:
+			cm.print_msg("Done adding GML root dir to PATH. Changes will be\nvisible the next time you login using this user")
 
 class ConsoleMessages:
 	def __source_info(self):
@@ -117,7 +152,7 @@ class Downloader:
 			sys.stdout.write("[%3d%%] %-63s" % (percent, dest))
 	
 	def update(self):
-		self.cm.print_msg("Update started...")
+		self.cm.print_msg("[Update process]")
 		ret = True
 		if self.repository == None:
 			return False
@@ -149,13 +184,16 @@ class Downloader:
 							if sline[3] != Utils.md5sum(fname):
 								ret &= self.download(sline[1], fname)
 							else:
-								self.cm.print_msg("[100%%] Already latest version: %s"  %fname)
+								sys.stdout.write("[ -- ] %-63s [OK]\n" %fname)
 						else:
 							ret &= self.download(sline[1], fname)
 					elif action == "deflate":
 						unz = unzip()
+						sys.stdout.write("Deflating %s ..." %sline[1])
 						if not unz.extract(join(self.root, sline[1]), join(self.root, sline[2])):
 							return False
+						sys.stdout.write("\b"*70)
+						sys.stdout.write("[ -- ] Deflating %-53s [OK]\n" %fname)
 					else:
 						return self.cm.print_error("Unknown action from repository file: \"%s\". Will not continue" %action)
 				else:
@@ -197,7 +235,15 @@ def get_cmd_options():
 			action = "store",
 			dest   = "install_path",
 			default= None,
-			help   = "Download and install GML to given path. An example would be: \"gml.py -i C:\\GML\""
+			help   = "Download and install GML to given path. An example would be: \"gml.py -i C:\\GML\". This option implies --environ"
+			)
+			
+	pkg_group.add_option(
+			"-e", "--environ",
+			action = "store_true",
+			dest   = "set_env",
+			default= False,
+			help   = "Tries to add GML root path to current user's PATH variable. Changes will be visible on next login"
 			)
 
 	parser.add_option_group(pkg_group)
@@ -227,5 +273,9 @@ if __name__ == '__main__':
 		if not d.update():
 			cm.print_error("Could not update GML")
 			exit(1)
-		else:
-			cm.print_msg("== Done ==")
+		Utils.add_to_path(options.install_path)
+		cm.print_msg("== Done ==")
+	if options.set_env:
+		print("Currently not available without -i option")
+		#Utils.add_to_path(options.install_path)
+		cm.print_msg("== Done ==")
