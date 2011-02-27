@@ -15,7 +15,7 @@ SimplePerceptronAlgorithm::SimplePerceptronAlgorithm()
 bool	SimplePerceptronAlgorithm::Init()
 {
 	// creez obiectele:
-	if ((notif = GML::Builder::CreateNotifyer(notifString.GetText()))==NULL)
+	if ((notif = GML::Builder::CreateNotifier(notifString.GetText()))==NULL)
 		return false;
 	if ((db = GML::Builder::CreateDataBase(dbName.GetText(),*notif))==NULL)
 	{

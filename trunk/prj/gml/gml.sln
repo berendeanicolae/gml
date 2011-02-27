@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GMLLib", "GMLLib\GMLLib.vcxproj", "{D218E74E-F7BB-40F8-9791-D2DEC548EE2A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Notifyers", "Notifyers", "{54E1725C-7B50-4C30-A28A-0262D7EBFC15}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Notifiers", "Notifiers", "{54E1725C-7B50-4C30-A28A-0262D7EBFC15}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConsoleNotifyer", "ConsoleNotifyer\ConsoleNotifyer.vcxproj", "{EB787576-09FE-4AD3-9953-6FA1AA64D612}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConsoleNotifier", "ConsoleNotifyer\ConsoleNotifyer.vcxproj", "{EB787576-09FE-4AD3-9953-6FA1AA64D612}"
 	ProjectSection(ProjectDependencies) = postProject
 		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
 	EndProjectSection

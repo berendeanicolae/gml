@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Compat.h"
-#include "INotify.h"
+#include "INotifier.h"
 #include "MLRecord.h"
 #include "IDataBase.h"
 
@@ -26,7 +26,7 @@ namespace GML
 		class EXPORT IConector : public GML::Utils::GMLObject
 		{
 		protected:
-			GML::Utils::INotify			*notifier;			
+			GML::Utils::INotifier			*notifier;			
 			GML::DB::IDataBase			*database;
 			GML::ML::IConector			*conector;
 			GML::Utils::GString			tableName;
@@ -40,7 +40,7 @@ namespace GML
 			IConector();
 
 			virtual bool				OnInit() = 0;
-			virtual bool				Init(GML::Utils::INotify &Notifier,GML::DB::IDataBase &Database,char *attributeString=NULL);
+			virtual bool				Init(GML::Utils::INotifier &Notifier,GML::DB::IDataBase &Database,char *attributeString=NULL);
 			virtual bool				Init(GML::ML::IConector &conector,char *attributeString=NULL);
 
 			/*	 

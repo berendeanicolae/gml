@@ -297,3 +297,12 @@ FullCacheConnector::~FullCacheConnector()
 	if (LabelStorage != NULL)
 		delete LabelStorage;
 }
+
+bool FullCacheConnector::GetRecordLabel( double &label,UInt32 index )
+{
+	if (index < IntervalStart || index >= IntervalEnd)
+		return false;
+
+	label = LabelStorage[index];
+	return true;
+}

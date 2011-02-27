@@ -3,12 +3,12 @@
 
 #include "gmllib.h"
 
-class ConsoleNotifyer: public GML::Utils::INotify
+class ConsoleNotifier: public GML::Utils::INotifier
 {
 	bool	useColors;
 	void	SetColor(unsigned char fore,unsigned char back);
 public:
-	ConsoleNotifyer();
+	ConsoleNotifier();
 	bool	OnInit();
 	bool	Uninit();
 	bool	Notify(UInt32 messageID,void *Data,UInt32 DataSize);

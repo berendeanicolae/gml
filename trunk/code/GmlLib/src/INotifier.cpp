@@ -1,11 +1,11 @@
-#include "INotify.h"
+#include "INotifier.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 
 #define TEMP_STACK_BUFFER_SIZE		2048
 
-bool GML::Utils::INotify::NotifyString(UInt32 messageID,char *format,...)
+bool GML::Utils::INotifier::NotifyString(UInt32 messageID,char *format,...)
 {
     va_list		args;
     int			len;
@@ -40,7 +40,7 @@ bool GML::Utils::INotify::NotifyString(UInt32 messageID,char *format,...)
 		return false;
 	}
 }
-bool GML::Utils::INotify::Error(char *format,...)
+bool GML::Utils::INotifier::Error(char *format,...)
 {
     va_list		args;
     int			len;
@@ -57,7 +57,7 @@ bool GML::Utils::INotify::Error(char *format,...)
 		if ((len = vsprintf_s( stack, len+1, format, args ))<0)
 			return false;
 		stack[len]=0;
-		return Notify(GML::Utils::INotify::NOTIFY_ERROR,stack,(unsigned int)len);
+		return Notify(GML::Utils::INotifier::NOTIFY_ERROR,stack,(unsigned int)len);
 	} else {
 		if ((temp = new char[len+1])==NULL)
 			return false;
@@ -67,7 +67,7 @@ bool GML::Utils::INotify::Error(char *format,...)
 			if ((len = vsprintf_s( temp, len+1, format, args ))<0)
 				break;
 			temp[len]=0;
-			result = Notify(GML::Utils::INotify::NOTIFY_ERROR,stack,(unsigned int)len);
+			result = Notify(GML::Utils::INotifier::NOTIFY_ERROR,stack,(unsigned int)len);
 			delete temp;
 			return result;
 		}
@@ -75,7 +75,7 @@ bool GML::Utils::INotify::Error(char *format,...)
 		return false;
 	}
 }
-bool GML::Utils::INotify::Info(char *format,...)
+bool GML::Utils::INotifier::Info(char *format,...)
 {
     va_list		args;
     int			len;
@@ -92,7 +92,7 @@ bool GML::Utils::INotify::Info(char *format,...)
 		if ((len = vsprintf_s( stack, len+1, format, args ))<0)
 			return false;
 		stack[len]=0;
-		return Notify(GML::Utils::INotify::NOTIFY_INFO,stack,(unsigned int)len);
+		return Notify(GML::Utils::INotifier::NOTIFY_INFO,stack,(unsigned int)len);
 	} else {
 		if ((temp = new char[len+1])==NULL)
 			return false;
@@ -102,7 +102,7 @@ bool GML::Utils::INotify::Info(char *format,...)
 			if ((len = vsprintf_s( temp, len+1, format, args ))<0)
 				break;
 			temp[len]=0;
-			result = Notify(GML::Utils::INotify::NOTIFY_INFO,stack,(unsigned int)len);
+			result = Notify(GML::Utils::INotifier::NOTIFY_INFO,stack,(unsigned int)len);
 			delete temp;
 			return result;
 		}
@@ -110,7 +110,7 @@ bool GML::Utils::INotify::Info(char *format,...)
 		return false;
 	}
 }
-bool GML::Utils::INotify::Init(char *attributeString)
+bool GML::Utils::INotifier::Init(char *attributeString)
 {
 	if ((attributeString!=NULL) && (attributeString[0]!=0))
 	{

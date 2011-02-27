@@ -13,7 +13,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddString("DbName","SimpleTextFileDB");
 	//attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\a.txt");  
 	//attr.AddString("Conector","BitConnector{Table=RecordTable}");
-	//attr.AddString("Notifyer","ConsoleNotifyer{useColors=True}");
+	//attr.AddString("Notifyer","ConsoleNotifier{useColors=True}");
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
@@ -21,12 +21,13 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
-		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"
-		"Conector=BitConnector{Table=RecordTable};"
-		"Notifier=ConsoleNotifyer{useColors=True};"
+		"Name=Test;"
+		"DataBase=SimpleTextFileDB{FileName=\"D:\\Research\\gml\\tests\\small_mcu.txt.text-plugin\"};"
+		"Conector=BitConnector{Table=RecordTable;alta_prop=100};"
+		"Notifier=ConsoleNotifier{useColors=True};"
 		"LearningRate=0.02;"
 		"InitialWeight=random;"
-		"useB=true;"
+		"useBias=false;"
 		"SaveData=AfterEachIteration;"
 		"SaveBest=BestACC;"
 		"MaxIterations=30;")==false)

@@ -61,7 +61,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>SQLite.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib;$(SolutionDir)..\..\lib\sqlite3_debug.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -93,7 +94,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
-    <None Include="SQLite.def" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\code\DataBasePlugins\SqlLite\src\sqlite.cpp" />

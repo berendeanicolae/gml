@@ -1146,14 +1146,14 @@ namespace GML
 #endif
 
 
-//===================== INotify.h =================================================================================
+//===================== INotifier.h =================================================================================
 
 
 namespace GML
 {
 	namespace Utils
 	{
-		class  INotify: public GMLObject
+		class  INotifier: public GMLObject
 		{
 
 		public:
@@ -1293,7 +1293,7 @@ namespace GML
 			 * Generic Notifier object for passing messages
 			 *  - in the case of this class mostly errors 
 			 */
-			GML::Utils::INotify			*notifier;
+			GML::Utils::INotifier			*notifier;
 
 		public:
 			virtual ~IDataBase();
@@ -1302,7 +1302,7 @@ namespace GML
 			 * din conectionString 
 			 */
 			virtual bool				OnInit()=0;
-			bool						Init (GML::Utils::INotify &notifier, char *connectionString);
+			bool						Init (GML::Utils::INotifier &notifier, char *connectionString);
 
 			/*
 			 * Usage: 
@@ -1426,7 +1426,7 @@ namespace GML
 		class  IConector : public GML::Utils::GMLObject
 		{
 		protected:
-			GML::Utils::INotify			*notifier;			
+			GML::Utils::INotifier			*notifier;			
 			GML::DB::IDataBase			*database;
 			GML::ML::IConector			*conector;
 			GML::Utils::GString			tableName;
@@ -1440,7 +1440,7 @@ namespace GML
 			IConector();
 
 			virtual bool				OnInit() = 0;
-			virtual bool				Init(GML::Utils::INotify &Notifier,GML::DB::IDataBase &Database,char *attributeString=NULL);
+			virtual bool				Init(GML::Utils::INotifier &Notifier,GML::DB::IDataBase &Database,char *attributeString=NULL);
 			virtual bool				Init(GML::ML::IConector &conector,char *attributeString=NULL);
 
 			/*	 
@@ -1518,7 +1518,7 @@ namespace GML
 		{
 		protected:
 			HANDLE												hMainThread;
-			GML::Utils::INotify									*notif;
+			GML::Utils::INotifier								*notif;
 		public:			
 			IAlgorithm();
 
@@ -1546,9 +1546,9 @@ namespace GML
 	class  Builder
 	{
 	public:
-		static GML::Utils::INotify*			CreateNotifyer(char *pluginName);	
-		static GML::DB::IDataBase*			CreateDataBase(char *pluginName,GML::Utils::INotify &notify);
-		static GML::ML::IConector*			CreateConectors(char *conectorsList,GML::Utils::INotify &notify,GML::DB::IDataBase &database);
+		static GML::Utils::INotifier*		CreateNotifier(char *pluginName);	
+		static GML::DB::IDataBase*			CreateDataBase(char *pluginName,GML::Utils::INotifier &notify);
+		static GML::ML::IConector*			CreateConectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database);
 		static GML::Algorithm::IAlgorithm*	CreateAlgorithm(char *algorithmLib);		
 	};
 }

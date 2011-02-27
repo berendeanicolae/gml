@@ -8,7 +8,7 @@ namespace GML
 {
 	namespace Utils
 	{
-		class EXPORT INotify: public GMLObject
+		class EXPORT INotifier: public GMLObject
 		{
 
 		public:

@@ -4688,24 +4688,6 @@ SWIGINTERN bool GML_Algorithm_IAlgorithm_Set(GML::Algorithm::IAlgorithm *self,st
 						}
 						
 						// check second parameter
-						if (PyFloat_Check(it->second)) 
-						{
-							//printf ("second is a float: %.03f\n", PyFloat_AsDouble(it->second));
-							if (!al->AddDouble(str1, PyFloat_AsDouble(it->second))) 
-							{
-								delete al;
-								return false;
-							}
-						} else
-						if (PyInt_Check(it->second))
-						{
-							//printf("second is a int: %d\n", PyInt_AsLong(it->second));
-							if (!al->AddInt32(str1, PyInt_AsLong(it->second))) 
-							{
-								delete al;
-								return false;
-							}
-						} else
 						if (PyBool_Check(it->second))
 						{
 							//printf("second is a bool: %d\n", PyObject_IsTrue(it->second));	
@@ -4715,6 +4697,27 @@ SWIGINTERN bool GML_Algorithm_IAlgorithm_Set(GML::Algorithm::IAlgorithm *self,st
 								return false;
 							}
 						} else
+
+						if (PyFloat_Check(it->second)) 
+						{
+							//printf ("second is a float: %.03f\n", PyFloat_AsDouble(it->second));
+							if (!al->AddDouble(str1, PyFloat_AsDouble(it->second))) 
+							{
+								delete al;
+								return false;
+							}
+						} else
+
+						if (PyInt_Check(it->second))
+						{
+							//printf("second is a int: %d\n", PyInt_AsLong(it->second));
+							if (!al->AddUInt32(str1, PyInt_AsLong(it->second))) 
+							{
+								delete al;
+								return false;
+							}
+						} else
+						
 						if (SWIG_AsCharPtrAndSize(it->second, &str, &psize, &alloc)==SWIG_OK)
 						{
 							//printf ("second is a string: \"%s\"\n", str);

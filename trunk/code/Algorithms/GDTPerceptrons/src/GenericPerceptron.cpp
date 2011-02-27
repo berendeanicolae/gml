@@ -19,7 +19,7 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToString("Notifier"					,Notifier				,"");
 	LinkPropertyToDouble("LearningRate"				,learningRate			,0.01);
 	LinkPropertyToBool  ("UseWeight"				,useWeight				,false);
-	LinkPropertyToBool  ("UseB"						,useB					,true);
+	LinkPropertyToBool  ("UseBias"					,useB					,true);
 	LinkPropertyToUInt32("SaveData"					,saveData				,SAVE_DATA_AT_FINISH,"!!LIST:None=0,AfterEachIteration,WhenAlgorithmEnds!!");
 	LinkPropertyToUInt32("SaveBest"					,saveBest				,SAVE_BEST_NONE,"!!LIST:None=0,BestACC,BestSE,BestSP!!");
 	LinkPropertyToUInt32("TestAfterIterations"		,testAfterIterations	,1);
@@ -218,7 +218,7 @@ bool	GenericPerceptron::Init()
 	UInt32		tr;
 
 	// creez obiectele:
-	if ((notif = GML::Builder::CreateNotifyer(Notifier.GetText()))==NULL)
+	if ((notif = GML::Builder::CreateNotifier(Notifier.GetText()))==NULL)
 		return false;
 	if ((db = GML::Builder::CreateDataBase(DataBase.GetText(),*notif))==NULL)
 	{

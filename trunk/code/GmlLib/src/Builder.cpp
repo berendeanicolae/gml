@@ -46,13 +46,13 @@ bool AdjustNameWithExtensionAndPath(GML::Utils::GString &path,char *extension,ch
 }
 
 //==========================================================================================
-GML::Utils::INotify*		GML::Builder::CreateNotifyer(char *pluginName)
+GML::Utils::INotifier*		GML::Builder::CreateNotifier(char *pluginName)
 {
 	GML::Utils::GString		path,attributeList;
 	HMODULE					hModule;
 	int						a_poz;
-	GML::Utils::INotify*	(*fnCreate)();
-	GML::Utils::INotify*	newObject;
+	GML::Utils::INotifier*	(*fnCreate)();
+	GML::Utils::INotifier*	newObject;
 
 
 	if (path.Set(pluginName)==false)
@@ -90,7 +90,7 @@ GML::Utils::INotify*		GML::Builder::CreateNotifyer(char *pluginName)
 		return NULL;
 	return newObject;
 }
-GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::INotify &notify)
+GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::INotifier &notify)
 {
 	GML::Utils::GString		path,attributeList;
 	HMODULE					hModule;
@@ -133,7 +133,7 @@ GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::
 		return NULL;
 	return newObject;
 }
-GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Utils::INotify &notify,GML::DB::IDataBase &database)
+GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database)
 {
 	GML::Utils::GString		list,path,attributeList;
 	int						poz,a_poz;

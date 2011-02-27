@@ -1,7 +1,7 @@
 #pragma once
 
 #include "compat.h"
-#include "INotify.h"
+#include "INotifier.h"
 #include "GTFVector.h"
 #include "DBRecord.h"
 #include "AttributeList.h"
@@ -19,7 +19,7 @@ namespace GML
 			 * Generic Notifier object for passing messages
 			 *  - in the case of this class mostly errors 
 			 */
-			GML::Utils::INotify			*notifier;
+			GML::Utils::INotifier			*notifier;
 
 		public:
 			virtual ~IDataBase();
@@ -28,7 +28,7 @@ namespace GML
 			 * din conectionString 
 			 */
 			virtual bool				OnInit()=0;
-			bool						Init (GML::Utils::INotify &notifier, char *connectionString);
+			bool						Init (GML::Utils::INotifier &notifier, char *connectionString);
 
 			/*
 			 * Usage: 

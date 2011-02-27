@@ -2684,13 +2684,12 @@ SWIG_Python_MustGetPtr(PyObject *obj, swig_type_info *ty, int argnum, int flags)
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define SWIGTYPE_p_GML__Algorithm__IAlgorithm swig_types[0]
-#define SWIGTYPE_p_GML__Builder swig_types[1]
-#define SWIGTYPE_p_GML__DB__IDataBase swig_types[2]
-#define SWIGTYPE_p_GML__ML__IConector swig_types[3]
-#define SWIGTYPE_p_GML__Utils__INotify swig_types[4]
-#define SWIGTYPE_p_char swig_types[5]
-static swig_type_info *swig_types[7];
-static swig_module_info swig_module = {swig_types, 6, 0, 0, 0, 0};
+#define SWIGTYPE_p_GML__DB__IDataBase swig_types[1]
+#define SWIGTYPE_p_GML__ML__IConector swig_types[2]
+#define SWIGTYPE_p_GML__Utils__INotifier swig_types[3]
+#define SWIGTYPE_p_char swig_types[4]
+static swig_type_info *swig_types[6];
+static swig_module_info swig_module = {swig_types, 5, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -2883,54 +2882,26 @@ SWIG_AsCharPtrAndSize(PyObject *obj, char** cptr, size_t* psize, int *alloc)
 
 
 
-
-SWIGINTERNINLINE PyObject *
-SWIG_FromCharPtrAndSize(const char* carray, size_t size)
-{
-  if (carray) {
-    if (size > INT_MAX) {
-      swig_type_info* pchar_descriptor = SWIG_pchar_descriptor();
-      return pchar_descriptor ? 
-	SWIG_NewPointerObj(const_cast< char * >(carray), pchar_descriptor, 0) : SWIG_Py_Void();
-    } else {
-#if PY_VERSION_HEX >= 0x03000000
-      return PyUnicode_FromStringAndSize(carray, static_cast< int >(size));
-#else
-      return PyString_FromStringAndSize(carray, static_cast< int >(size));
-#endif
-    }
-  } else {
-    return SWIG_Py_Void();
-  }
-}
-
-
-SWIGINTERNINLINE PyObject * 
-SWIG_FromCharPtr(const char *cptr)
-{ 
-  return SWIG_FromCharPtrAndSize(cptr, (cptr ? strlen(cptr) : 0));
-}
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-SWIGINTERN PyObject *_wrap_Builder_CreateNotifyer(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_CreateNotifier(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   char *arg1 = (char *) 0 ;
   int res1 ;
   char *buf1 = 0 ;
   int alloc1 = 0 ;
   PyObject * obj0 = 0 ;
-  GML::Utils::INotify *result = 0 ;
+  GML::Utils::INotifier *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:Builder_CreateNotifyer",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:CreateNotifier",&obj0)) SWIG_fail;
   res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Builder_CreateNotifyer" "', argument " "1"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CreateNotifier" "', argument " "1"" of type '" "char *""'");
   }
   arg1 = reinterpret_cast< char * >(buf1);
-  result = (GML::Utils::INotify *)GML::Builder::CreateNotifyer(arg1);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GML__Utils__INotify, 0 |  0 );
+  result = (GML::Utils::INotifier *)GML::Builder::CreateNotifier(arg1);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GML__Utils__INotifier, 0 |  0 );
   if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
   return resultobj;
 fail:
@@ -2939,10 +2910,10 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_Builder_CreateDataBase(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_CreateDataBase(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   char *arg1 = (char *) 0 ;
-  GML::Utils::INotify *arg2 = 0 ;
+  GML::Utils::INotifier *arg2 = 0 ;
   int res1 ;
   char *buf1 = 0 ;
   int alloc1 = 0 ;
@@ -2952,20 +2923,20 @@ SWIGINTERN PyObject *_wrap_Builder_CreateDataBase(PyObject *SWIGUNUSEDPARM(self)
   PyObject * obj1 = 0 ;
   GML::DB::IDataBase *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:Builder_CreateDataBase",&obj0,&obj1)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OO:CreateDataBase",&obj0,&obj1)) SWIG_fail;
   res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Builder_CreateDataBase" "', argument " "1"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CreateDataBase" "', argument " "1"" of type '" "char *""'");
   }
   arg1 = reinterpret_cast< char * >(buf1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_GML__Utils__INotify,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_GML__Utils__INotifier,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Builder_CreateDataBase" "', argument " "2"" of type '" "GML::Utils::INotify &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CreateDataBase" "', argument " "2"" of type '" "GML::Utils::INotifier &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Builder_CreateDataBase" "', argument " "2"" of type '" "GML::Utils::INotify &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "CreateDataBase" "', argument " "2"" of type '" "GML::Utils::INotifier &""'"); 
   }
-  arg2 = reinterpret_cast< GML::Utils::INotify * >(argp2);
+  arg2 = reinterpret_cast< GML::Utils::INotifier * >(argp2);
   result = (GML::DB::IDataBase *)GML::Builder::CreateDataBase(arg1,*arg2);
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GML__DB__IDataBase, 0 |  0 );
   if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
@@ -2976,10 +2947,10 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_Builder_CreateConectors(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_CreateConectors(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   char *arg1 = (char *) 0 ;
-  GML::Utils::INotify *arg2 = 0 ;
+  GML::Utils::INotifier *arg2 = 0 ;
   GML::DB::IDataBase *arg3 = 0 ;
   int res1 ;
   char *buf1 = 0 ;
@@ -2993,26 +2964,26 @@ SWIGINTERN PyObject *_wrap_Builder_CreateConectors(PyObject *SWIGUNUSEDPARM(self
   PyObject * obj2 = 0 ;
   GML::ML::IConector *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOO:Builder_CreateConectors",&obj0,&obj1,&obj2)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOO:CreateConectors",&obj0,&obj1,&obj2)) SWIG_fail;
   res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Builder_CreateConectors" "', argument " "1"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CreateConectors" "', argument " "1"" of type '" "char *""'");
   }
   arg1 = reinterpret_cast< char * >(buf1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_GML__Utils__INotify,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_GML__Utils__INotifier,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Builder_CreateConectors" "', argument " "2"" of type '" "GML::Utils::INotify &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CreateConectors" "', argument " "2"" of type '" "GML::Utils::INotifier &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Builder_CreateConectors" "', argument " "2"" of type '" "GML::Utils::INotify &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "CreateConectors" "', argument " "2"" of type '" "GML::Utils::INotifier &""'"); 
   }
-  arg2 = reinterpret_cast< GML::Utils::INotify * >(argp2);
+  arg2 = reinterpret_cast< GML::Utils::INotifier * >(argp2);
   res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_GML__DB__IDataBase,  0 );
   if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "Builder_CreateConectors" "', argument " "3"" of type '" "GML::DB::IDataBase &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CreateConectors" "', argument " "3"" of type '" "GML::DB::IDataBase &""'"); 
   }
   if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Builder_CreateConectors" "', argument " "3"" of type '" "GML::DB::IDataBase &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "CreateConectors" "', argument " "3"" of type '" "GML::DB::IDataBase &""'"); 
   }
   arg3 = reinterpret_cast< GML::DB::IDataBase * >(argp3);
   result = (GML::ML::IConector *)GML::Builder::CreateConectors(arg1,*arg2,*arg3);
@@ -3025,7 +2996,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_Builder_CreateAlgorithm(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_CreateAlgorithm(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   char *arg1 = (char *) 0 ;
   int res1 ;
@@ -3034,10 +3005,10 @@ SWIGINTERN PyObject *_wrap_Builder_CreateAlgorithm(PyObject *SWIGUNUSEDPARM(self
   PyObject * obj0 = 0 ;
   GML::Algorithm::IAlgorithm *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:Builder_CreateAlgorithm",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:CreateAlgorithm",&obj0)) SWIG_fail;
   res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Builder_CreateAlgorithm" "', argument " "1"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CreateAlgorithm" "', argument " "1"" of type '" "char *""'");
   }
   arg1 = reinterpret_cast< char * >(buf1);
   result = (GML::Algorithm::IAlgorithm *)GML::Builder::CreateAlgorithm(arg1);
@@ -3050,82 +3021,15 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_Builder_GetAlgorithmList(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  char *arg1 = (char *) 0 ;
-  int res1 ;
-  char *buf1 = 0 ;
-  int alloc1 = 0 ;
-  PyObject * obj0 = 0 ;
-  char *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:Builder_GetAlgorithmList",&obj0)) SWIG_fail;
-  res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Builder_GetAlgorithmList" "', argument " "1"" of type '" "char *""'");
-  }
-  arg1 = reinterpret_cast< char * >(buf1);
-  result = (char *)GML::Builder::GetAlgorithmList(arg1);
-  resultobj = SWIG_FromCharPtr((const char *)result);
-  if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
-  return resultobj;
-fail:
-  if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_Builder(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  GML::Builder *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)":new_Builder")) SWIG_fail;
-  result = (GML::Builder *)new GML::Builder();
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GML__Builder, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_delete_Builder(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  GML::Builder *arg1 = (GML::Builder *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_Builder",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_GML__Builder, SWIG_POINTER_DISOWN |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_Builder" "', argument " "1"" of type '" "GML::Builder *""'"); 
-  }
-  arg1 = reinterpret_cast< GML::Builder * >(argp1);
-  delete arg1;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *Builder_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *obj;
-  if (!PyArg_ParseTuple(args,(char*)"O:swigregister", &obj)) return NULL;
-  SWIG_TypeNewClientData(SWIGTYPE_p_GML__Builder, SWIG_NewClientData(obj));
-  return SWIG_Py_Void();
-}
-
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
-	 { (char *)"Builder_CreateNotifyer", _wrap_Builder_CreateNotifyer, METH_VARARGS, (char *)"Builder_CreateNotifyer(char pluginName) -> GML::Utils::INotify"},
-	 { (char *)"Builder_CreateDataBase", _wrap_Builder_CreateDataBase, METH_VARARGS, (char *)"Builder_CreateDataBase(char pluginName, GML::Utils::INotify notify) -> GML::DB::IDataBase"},
-	 { (char *)"Builder_CreateConectors", _wrap_Builder_CreateConectors, METH_VARARGS, (char *)"Builder_CreateConectors(char conectorsList, GML::Utils::INotify notify, GML::DB::IDataBase database) -> GML::ML::IConector"},
-	 { (char *)"Builder_CreateAlgorithm", _wrap_Builder_CreateAlgorithm, METH_VARARGS, (char *)"Builder_CreateAlgorithm(char algorithmLib) -> GML::Algorithm::IAlgorithm"},
-	 { (char *)"Builder_GetAlgorithmList", _wrap_Builder_GetAlgorithmList, METH_VARARGS, (char *)"Builder_GetAlgorithmList(char algorithmLib) -> char"},
-	 { (char *)"new_Builder", _wrap_new_Builder, METH_VARARGS, NULL},
-	 { (char *)"delete_Builder", _wrap_delete_Builder, METH_VARARGS, NULL},
-	 { (char *)"Builder_swigregister", Builder_swigregister, METH_VARARGS, NULL},
+	 { (char *)"CreateNotifier", _wrap_CreateNotifier, METH_VARARGS, (char *)"CreateNotifier(char pluginName) -> GML::Utils::INotifier"},
+	 { (char *)"CreateDataBase", _wrap_CreateDataBase, METH_VARARGS, (char *)"CreateDataBase(char pluginName, GML::Utils::INotifier notifier) -> GML::DB::IDataBase"},
+	 { (char *)"CreateConectors", _wrap_CreateConectors, METH_VARARGS, (char *)"\n"
+		"CreateConectors(char conectorsList, GML::Utils::INotifier notifier, \n"
+		"    GML::DB::IDataBase database) -> GML::ML::IConector\n"
+		""},
+	 { (char *)"CreateAlgorithm", _wrap_CreateAlgorithm, METH_VARARGS, (char *)"CreateAlgorithm(char algorithmLib) -> GML::Algorithm::IAlgorithm"},
 	 { NULL, NULL, 0, NULL }
 };
 
@@ -3133,34 +3037,30 @@ static PyMethodDef SwigMethods[] = {
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
 static swig_type_info _swigt__p_GML__Algorithm__IAlgorithm = {"_p_GML__Algorithm__IAlgorithm", "GML::Algorithm::IAlgorithm *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_GML__Builder = {"_p_GML__Builder", "GML::Builder *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_GML__DB__IDataBase = {"_p_GML__DB__IDataBase", "GML::DB::IDataBase *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_GML__ML__IConector = {"_p_GML__ML__IConector", "GML::ML::IConector *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_GML__Utils__INotify = {"_p_GML__Utils__INotify", "GML::Utils::INotify *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_GML__Utils__INotifier = {"_p_GML__Utils__INotifier", "GML::Utils::INotifier *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_GML__Algorithm__IAlgorithm,
-  &_swigt__p_GML__Builder,
   &_swigt__p_GML__DB__IDataBase,
   &_swigt__p_GML__ML__IConector,
-  &_swigt__p_GML__Utils__INotify,
+  &_swigt__p_GML__Utils__INotifier,
   &_swigt__p_char,
 };
 
 static swig_cast_info _swigc__p_GML__Algorithm__IAlgorithm[] = {  {&_swigt__p_GML__Algorithm__IAlgorithm, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_GML__Builder[] = {  {&_swigt__p_GML__Builder, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_GML__DB__IDataBase[] = {  {&_swigt__p_GML__DB__IDataBase, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_GML__ML__IConector[] = {  {&_swigt__p_GML__ML__IConector, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_GML__Utils__INotify[] = {  {&_swigt__p_GML__Utils__INotify, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_GML__Utils__INotifier[] = {  {&_swigt__p_GML__Utils__INotifier, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_GML__Algorithm__IAlgorithm,
-  _swigc__p_GML__Builder,
   _swigc__p_GML__DB__IDataBase,
   _swigc__p_GML__ML__IConector,
-  _swigc__p_GML__Utils__INotify,
+  _swigc__p_GML__Utils__INotifier,
   _swigc__p_char,
 };
 

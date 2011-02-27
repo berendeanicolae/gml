@@ -159,7 +159,7 @@ bool GML::ML::IConector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBReco
 	}
 	return true;
 }
-bool GML::ML::IConector::Init(GML::Utils::INotify &_notifier,GML::DB::IDataBase &_database,char *attributeString)
+bool GML::ML::IConector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBase &_database,char *attributeString)
 {	
 	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
 
