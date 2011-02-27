@@ -61,7 +61,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib</AdditionalDependencies>
-      <ModuleDefinitionFile>SimpleTextFileDB.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)*.db $(SolutionDir)..\..\Bin\DataBases\*.*</Command>
@@ -84,7 +85,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib</AdditionalDependencies>
-      <ModuleDefinitionFile>SimpleTextFileDB.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>copy $(OutDir)*.db $(SolutionDir)..\..\Bin\DataBases\*.*</Command>
@@ -92,7 +94,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
-    <None Include="SimpleTextFileDB.def" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\code\DataBasePlugins\SimpleTextFileDB\src\SimpleTextFileDB.cpp" />

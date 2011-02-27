@@ -51,7 +51,8 @@ GML::Utils::INotify*		GML::Builder::CreateNotifyer(char *pluginName)
 	GML::Utils::GString		path,attributeList;
 	HMODULE					hModule;
 	int						a_poz;
-	GML::Utils::INotify*	(*fnCreate)(void *objData);
+	GML::Utils::INotify*	(*fnCreate)();
+	GML::Utils::INotify*	newObject;
 
 
 	if (path.Set(pluginName)==false)
@@ -79,18 +80,23 @@ GML::Utils::INotify*		GML::Builder::CreateNotifyer(char *pluginName)
 	if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
 		return NULL;
 	// incarc functia Create
-	*(FARPROC *)&fnCreate = GetProcAddress(hModule,"Create");
+	*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
 	if (fnCreate==NULL)
 		return NULL;
 	// am incarcat si totul e ok -> cer o interfata
-	return fnCreate(attributeList.GetText());
+	if ((newObject=fnCreate())==NULL)
+		return NULL;
+	if (newObject->Init(attributeList.GetText())==false)
+		return NULL;
+	return newObject;
 }
 GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::INotify &notify)
 {
 	GML::Utils::GString		path,attributeList;
 	HMODULE					hModule;
 	int						a_poz;
-	GML::DB::IDataBase*		(*fnCreate)(GML::Utils::INotify &notify,char *connectionString);
+	GML::DB::IDataBase*		(*fnCreate)();
+	GML::DB::IDataBase*		newObject;
 
 	if (path.Set(pluginName)==false)
 		return NULL;
@@ -117,11 +123,15 @@ GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::
 	if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
 		return NULL;
 	// incarc functia Create
-	*(FARPROC *)&fnCreate = GetProcAddress(hModule,"Create");
+	*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
 	if (fnCreate==NULL)
 		return NULL;
 	// am incarcat si totul e ok -> cer o interfata
-	return fnCreate(notify,attributeList.GetText());	
+	if ((newObject=fnCreate())==NULL)
+		return NULL;
+	if (newObject->Init(notify,attributeList.GetText())==false)
+		return NULL;
+	return newObject;
 }
 GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Utils::INotify &notify,GML::DB::IDataBase &database)
 {
@@ -171,7 +181,7 @@ GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Uti
 		if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
 			return NULL;
 		// incarc functia Create
-		*(FARPROC *)&fnCreate = GetProcAddress(hModule,"Create");
+		*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
 		if (fnCreate==NULL)
 			return NULL;
 		if ((con = fnCreate())==NULL)
@@ -191,11 +201,11 @@ GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Uti
 	}
 	return last;
 }
-GML::Algorithm::IAlgorithm*	GML::Builder::CreateAlgorithm(char *algorithmPath,char *algorithmName)
+GML::Algorithm::IAlgorithm*	GML::Builder::CreateAlgorithm(char *algorithmPath)
 {
 	GML::Utils::GString			path;
 	HMODULE						hModule;
-	GML::Algorithm::IAlgorithm*	(*fnCreate)(char *algorithmName);
+	GML::Algorithm::IAlgorithm*	(*fnCreate)();
 
 	if (path.Set(algorithmPath)==false)
 		return NULL;
@@ -206,30 +216,10 @@ GML::Algorithm::IAlgorithm*	GML::Builder::CreateAlgorithm(char *algorithmPath,ch
 	if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
 		return NULL;
 	// incarc functia Create
-	*(FARPROC *)&fnCreate = GetProcAddress(hModule,"Create");
+	*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
 	if (fnCreate==NULL)
 		return NULL;
 	// am incarcat si totul e ok -> cer o interfata
-	return fnCreate(algorithmName);
+	return fnCreate();
 }
-char*						GML::Builder::GetAlgorithmList(char *algorithmLib)
-{
-	GML::Utils::GString			path;
-	HMODULE						hModule;
-	char*						(*fnGetAlgorithmList)();
 
-	if (path.Set(algorithmLib)==false)
-		return NULL;
-	if (AdjustNameWithExtensionAndPath(path,ALGORITHM_EXT,ALGORITHM_FOLDER)==false)
-		return NULL;
-
-	// incarc libraria
-	if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
-		return NULL;
-	// incarc functia Create
-	*(FARPROC *)&fnGetAlgorithmList = GetProcAddress(hModule,"GetAlgorithmList");
-	if (fnGetAlgorithmList==NULL)
-		return NULL;
-	// am incarcat si totul e ok -> cer o interfata
-	return fnGetAlgorithmList();
-}

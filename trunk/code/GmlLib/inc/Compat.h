@@ -71,4 +71,19 @@
 	#define free				free
 #endif
 
+#define LIB_INTERFACE(tip,author,version,description)\
+	BOOL APIENTRY DllMain( HMODULE hModule,DWORD  ul_reason_for_call,LPVOID lpReserved) { return TRUE; }; \
+	extern "C" EXPORT void* CreateInterface() { return new tip (); };\
+	extern "C" EXPORT char*	GetInterfaceAuthor() { return (char*)author; };\
+	extern "C" EXPORT char*	GetInterfaceDescription() { return (char*)description; };\
+	extern "C" EXPORT int	GetInterfaceVersion() { return (int)version; };\
+	extern "C" EXPORT bool	GetInterfaceProperty(GML::Utils::AttributeList &attr)\
+	{														\
+		tip* t = new tip();									\
+		if (t!=NULL)										\
+			return t->GetProperty(attr);					\
+		return false;										\
+	};		
+
+
 #endif

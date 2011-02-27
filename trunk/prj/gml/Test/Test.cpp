@@ -17,7 +17,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("GDTPerceptrons","RosenblattPerceptron");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("GDTPerceptrons");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
