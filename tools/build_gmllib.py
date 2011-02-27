@@ -13,7 +13,7 @@ list_headers = [
 	"ThreadParalelUnit.h",
 	"AttributeList.h",
 	"GMLObject.h",
-	"INotify.h",
+	"INotifier.h",
 	"VectorOp.h",
 	"DBRecord.h",
 	"MLRecord.h",

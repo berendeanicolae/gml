@@ -9,7 +9,7 @@
 #include "GString.h"
 #include "GTVector.h"
 #include "IDataBase.h"
-#include "INotify.h"
+#include "INotifier.h"
 #include "md5.h"
 #include "MLInterface.h"
 #include "MLRecord.h"

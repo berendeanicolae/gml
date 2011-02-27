@@ -1,24 +1,27 @@
-import gml
+import gmllib
 import sys
 if not len(sys.argv) > 1:
 	print("You must pass the path of database!")
 	sys.exit()
 path = sys.argv[1]
 
-b = gml.Builder()
-
-ialg = b.CreateAlgorithm("SimplePerceptronAlgorithm")
+ialg = gmllib.CreateAlgorithm("GDTPerceptrons")
 print("Inited algorithm: {}".format(ialg)) 
 
 if not ialg:
 	print ("could not init the algorithm")
 	sys.exit()
 
-config = ialg.Set({"DbName":"SimpleTextFileDB{FileName=%s}"%path,
-		   "Conector":"BitConnector{Table=RecordTable}",
-		   "Notifyer":"ConsoleNotifyer{useColors=True}",
+config = ialg.Set({"Name":"MCU-Testing", 
+                   "DataBase":"SimpleTextFileDB{FileName=%s}"%path,
+		   "Conector":"BitConnector{Table=RecordTable",
+		   "Notifier":"ConsoleNotifier{useColors=True}",
 		   "LearningRate":0.02,
-		   "MaxIteratii":100})
+		   "MaxIterations":100,
+                   "InitialWeight":"random",
+                   "useBias":False,
+                   "SaveData":"AfterEachIteration",
+                   "SaveBest":"BestACC"})
 
 if config:
 	_in = ialg.Init()

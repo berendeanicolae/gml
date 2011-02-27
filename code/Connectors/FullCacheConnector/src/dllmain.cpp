@@ -4,22 +4,6 @@
 #include "gmllib.h"
 #include "FullCacheConnector.h"
 
-BOOL APIENTRY DllMain( HMODULE hModule,DWORD  ul_reason_for_call,LPVOID lpReserved)
-{	
-	return TRUE;
-}
-
-GML::ML::IConector*	CreateNewConnector()
-{
-	FullCacheConnector* connector = new FullCacheConnector();	
-	return connector;
-}
-
-bool DestroyConnector (GML::ML::IConector* connector) 
-{
-	if (connector!=NULL)
-		delete connector;
-	return true;
-}
+LIB_INTERFACE(FullCacheConnector,"MCU",1,"A connector that loads the entire database into memory as double for every record");
 
 

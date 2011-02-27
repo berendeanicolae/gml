@@ -171,9 +171,10 @@ bool GML::Utils::GMLObject::SetProperty(GML::Utils::AttributeList &config)
 			DEBUGMSG("No vectors allowes at this point (on %s)",link->Name);
 			return false;
 		}
+
 		// verific daca tipul e ok
 		switch (link->AttributeType)
-		{
+		{			
 			case GML::Utils::AttributeList::STRING:
 				if (attr->AttributeType!=GML::Utils::AttributeList::STRING)
 				{

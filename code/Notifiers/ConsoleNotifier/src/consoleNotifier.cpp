@@ -1,23 +1,23 @@
 #include "stdio.h"
-#include "ConsoleNotifyer.h"
+#include "ConsoleNotifier.h"
 
-ConsoleNotifyer::ConsoleNotifyer()
+ConsoleNotifier::ConsoleNotifier()
 {
 	LinkPropertyToBool("UseColors",useColors,false,"Specifies if colors should be used when showing mesages");
 }
-void ConsoleNotifyer::SetColor(unsigned char Fore, unsigned char Back)
+void ConsoleNotifier::SetColor(unsigned char Fore, unsigned char Back)
 {
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),(Fore & 15)+(Back & 15)*16);
 }
-bool ConsoleNotifyer::OnInit()
+bool ConsoleNotifier::OnInit()
 {	
 	return true;
 }
-bool ConsoleNotifyer::Uninit()
+bool ConsoleNotifier::Uninit()
 {
 	return true;
 }
-bool ConsoleNotifyer::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
+bool ConsoleNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 {
 	char *text = (char *)Data;
 	SetColor(7,0);
@@ -36,10 +36,10 @@ bool ConsoleNotifyer::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 	{
 		switch (messageID)
 		{
-			case GML::Utils::INotify::NOTIFY_ERROR:
+			case GML::Utils::INotifier::NOTIFY_ERROR:
 				SetColor(10,0);
 				break;
-			case GML::Utils::INotify::NOTIFY_INFO:
+			case GML::Utils::INotifier::NOTIFY_INFO:
 				SetColor(11,0);
 				break;
 		};

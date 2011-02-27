@@ -1,5 +1,0 @@
-LIBRARY "FullCacheConnector.dbc"
-
-EXPORTS
-Create=CreateNewConnector
-Destroy=DestroyConnector

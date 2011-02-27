@@ -3,7 +3,7 @@
 
 #include "Compat.h"
 #include "GMLObject.h"
-#include "INotify.h"
+#include "INotifier.h"
 
 
 
@@ -15,7 +15,7 @@ namespace GML
 		{
 		protected:
 			HANDLE												hMainThread;
-			GML::Utils::INotify									*notif;
+			GML::Utils::INotifier								*notif;
 		public:			
 			IAlgorithm();
 

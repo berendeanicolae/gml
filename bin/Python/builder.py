@@ -66,70 +66,24 @@ except AttributeError:
     _newclass = 0
 
 
-class Builder(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, Builder, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, Builder, name)
-    __repr__ = _swig_repr
-    def CreateNotifyer(*args):
-        """CreateNotifyer(char pluginName) -> GML::Utils::INotify"""
-        return _builder.Builder_CreateNotifyer(*args)
 
-    if _newclass:CreateNotifyer = staticmethod(CreateNotifyer)
-    __swig_getmethods__["CreateNotifyer"] = lambda x: CreateNotifyer
-    def CreateDataBase(*args):
-        """CreateDataBase(char pluginName, GML::Utils::INotify notify) -> GML::DB::IDataBase"""
-        return _builder.Builder_CreateDataBase(*args)
+def CreateNotifier(*args):
+  """CreateNotifier(char pluginName) -> GML::Utils::INotifier"""
+  return _builder.CreateNotifier(*args)
 
-    if _newclass:CreateDataBase = staticmethod(CreateDataBase)
-    __swig_getmethods__["CreateDataBase"] = lambda x: CreateDataBase
-    def CreateConectors(*args):
-        """CreateConectors(char conectorsList, GML::Utils::INotify notify, GML::DB::IDataBase database) -> GML::ML::IConector"""
-        return _builder.Builder_CreateConectors(*args)
+def CreateDataBase(*args):
+  """CreateDataBase(char pluginName, GML::Utils::INotifier notifier) -> GML::DB::IDataBase"""
+  return _builder.CreateDataBase(*args)
 
-    if _newclass:CreateConectors = staticmethod(CreateConectors)
-    __swig_getmethods__["CreateConectors"] = lambda x: CreateConectors
-    def CreateAlgorithm(*args):
-        """CreateAlgorithm(char algorithmLib) -> GML::Algorithm::IAlgorithm"""
-        return _builder.Builder_CreateAlgorithm(*args)
+def CreateConectors(*args):
+  """
+    CreateConectors(char conectorsList, GML::Utils::INotifier notifier, 
+        GML::DB::IDataBase database) -> GML::ML::IConector
+    """
+  return _builder.CreateConectors(*args)
 
-    if _newclass:CreateAlgorithm = staticmethod(CreateAlgorithm)
-    __swig_getmethods__["CreateAlgorithm"] = lambda x: CreateAlgorithm
-    def GetAlgorithmList(*args):
-        """GetAlgorithmList(char algorithmLib) -> char"""
-        return _builder.Builder_GetAlgorithmList(*args)
-
-    if _newclass:GetAlgorithmList = staticmethod(GetAlgorithmList)
-    __swig_getmethods__["GetAlgorithmList"] = lambda x: GetAlgorithmList
-    def __init__(self): 
-        this = _builder.new_Builder()
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _builder.delete_Builder
-    __del__ = lambda self : None;
-Builder_swigregister = _builder.Builder_swigregister
-Builder_swigregister(Builder)
-
-def Builder_CreateNotifyer(*args):
-  """Builder_CreateNotifyer(char pluginName) -> GML::Utils::INotify"""
-  return _builder.Builder_CreateNotifyer(*args)
-
-def Builder_CreateDataBase(*args):
-  """Builder_CreateDataBase(char pluginName, GML::Utils::INotify notify) -> GML::DB::IDataBase"""
-  return _builder.Builder_CreateDataBase(*args)
-
-def Builder_CreateConectors(*args):
-  """Builder_CreateConectors(char conectorsList, GML::Utils::INotify notify, GML::DB::IDataBase database) -> GML::ML::IConector"""
-  return _builder.Builder_CreateConectors(*args)
-
-def Builder_CreateAlgorithm(*args):
-  """Builder_CreateAlgorithm(char algorithmLib) -> GML::Algorithm::IAlgorithm"""
-  return _builder.Builder_CreateAlgorithm(*args)
-
-def Builder_GetAlgorithmList(*args):
-  """Builder_GetAlgorithmList(char algorithmLib) -> char"""
-  return _builder.Builder_GetAlgorithmList(*args)
-
+def CreateAlgorithm(*args):
+  """CreateAlgorithm(char algorithmLib) -> GML::Algorithm::IAlgorithm"""
+  return _builder.CreateAlgorithm(*args)
 
 

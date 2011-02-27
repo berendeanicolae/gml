@@ -61,7 +61,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>FullCacheConnector.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -92,7 +93,6 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="FullCacheConnector.def" />
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>

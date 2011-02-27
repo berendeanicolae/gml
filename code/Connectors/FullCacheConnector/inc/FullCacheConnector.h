@@ -47,6 +47,8 @@ public:
 
 	virtual UInt32 GetTotalRecordCount();
 
+	virtual bool GetRecordLabel(double &label,UInt32 index);
+
 };
 
 #endif
