@@ -22,8 +22,8 @@ private:
 	double  * FeatureCache;
 	double  * LabelStorage;
 
-	BOOL	Initialized;
-
+	BOOL	Initialized;							 
+	
 
 public:
 	FullCacheConnector();

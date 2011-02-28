@@ -95,7 +95,10 @@ bool FullCacheConnector::OnInit()
 
 	// build the internal cache 
 	
-	sprintf_s(SqlString, MAX_SQL_QUERY_SIZE, "select * from %s", RECORDS_TABLE_NAME);
+	if (SelectQuery.Equals("*"))
+		sprintf_s(SqlString, MAX_SQL_QUERY_SIZE, "select * from %s", TableName);
+	else
+		sprintf_s(SqlString, MAX_SQL_QUERY_SIZE, "%s", SelectQuery.GetText());
 	
 	RecordCount = database->Select(SqlString);
 
@@ -286,7 +289,7 @@ FullCacheConnector::FullCacheConnector()
 	 Initialized = FALSE;
 
 	 FeatureCache = NULL;
-	 LabelStorage  = NULL;
+	 LabelStorage  = NULL;	 	 	 
 }
 
 FullCacheConnector::~FullCacheConnector()

@@ -8,7 +8,7 @@ GML::ML::IConector::IConector()
 	conector = NULL;	
 	columns.indexFeature = NULL;
 	ClearColumnIndexes();
-	LinkPropertyToString("Table",tableName,"","Name of the table from the database that will be used");
+	LinkPropertyToString("Table",TableName,"","Name of the table from the database that will be used");
 }
 void GML::ML::IConector::ClearColumnIndexes()
 {
@@ -184,9 +184,9 @@ bool GML::ML::IConector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBas
 	database = &_database;
 	conector = NULL;
 
-	if (database->GetColumnInformations(tableName.GetText(),VectPtr)==false)
+	if (database->GetColumnInformations(TableName.GetText(),VectPtr)==false)
 	{
-		notifier->Error("Error reading column informations from DBTable: [%s]",tableName.GetText());
+		notifier->Error("Error reading column informations from DBTable: [%s]",TableName.GetText());
 		return false;
 	}
 	if (UpdateColumnInformations(VectPtr)==false)

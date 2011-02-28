@@ -93,9 +93,6 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\..\..\code\Connectors\FullCacheConnector\inc\FullCacheConnector.h" />
   </ItemGroup>
   <ItemGroup>
