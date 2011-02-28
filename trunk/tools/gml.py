@@ -4,7 +4,7 @@ __version__		="0.1.0.1"
 __copyright__	= "Copytight 2011 %s" %__author__
 __webpage__		= "http://code.google.com/p/gml/"
 
-REPO = "http://students.info.uaic.ro/~stefan.hanu/gml/repo.lst"
+REPO = "http://www.infoiasi.ro/gml/repo.lst"
 
 import sys, hashlib, zipfile
 
@@ -24,52 +24,48 @@ from os import name as OS_TYPE
 
 LOCAL_REPOSITORY = "repo.lst"
 
-class Utils:
-	def md5sum(filePath):
-		md5 = hashlib.md5()
-		file = open(filePath, "rb")
-		while True:
-			data = file.read(8192)
-			if not data:
-				break
-			md5.update(data)
-
-		file.close()   
-		return md5.hexdigest()
+def md5sum(filePath):
+	md5 = hashlib.md5()
+	file = open(filePath, "rb")
+	while True:
+		data = file.read(8192)
+		if not data:
+			break
+		md5.update(data)
+	file.close()   
+	return md5.hexdigest()
 		
-	def __add_to_path(path):
-		if OS_TYPE == 'nt':
-			from winreg import CreateKey, SetValueEx, QueryValueEx, HKEY_CURRENT_USER, REG_EXPAND_SZ
-			import os
-			from os.path import isdir
-			envpath = None
-			HKCU = HKEY_CURRENT_USER
-			ENV = "Environment"
-			PATH = "PATH"
-			DEFAULT = "%PATH%"
-			with CreateKey(HKCU, ENV) as key:
-				try:
-					envpath = QueryValueEx(key, PATH)[0]
-				except WindowsError:
-					envpath = DEFAULT
-
-				paths = [envpath]
-				if path and path not in envpath and isdir(path):
-						paths.append(path)
-
-				envpath = os.pathsep.join(paths)
-				SetValueEx(key, PATH, 0, REG_EXPAND_SZ, envpath)
-				return True
-		else:
-			return False
-			
-	def add_to_path(path):
-		cm.print_msg("\n[Registry operations]")
-		if not Utils.__add_to_path(path):
-			cm.print_error("Could not add GML root dir to PATH")
-			exit(1)
-		else:
-			cm.print_msg("Done adding GML root dir to PATH. Changes will be\nvisible the next time you login using this user")
+def __add_to_path(path):
+	if OS_TYPE == 'nt':
+		from winreg import CreateKey, SetValueEx, QueryValueEx, HKEY_CURRENT_USER, REG_EXPAND_SZ
+		import os
+		from os.path import isdir
+		envpath = None
+		HKCU = HKEY_CURRENT_USER
+		ENV = "Environment"
+		PATH = "PATH"
+		DEFAULT = "%PATH%"
+		with CreateKey(HKCU, ENV) as key:
+			try:
+				envpath = QueryValueEx(key, PATH)[0]
+			except WindowsError:
+				envpath = DEFAULT
+			paths = [envpath]
+			if path and path not in envpath and isdir(path):
+					paths.append(path)
+			envpath = os.pathsep.join(paths)
+			SetValueEx(key, PATH, 0, REG_EXPAND_SZ, envpath)
+			return True
+	else:
+		return False
+		
+def add_to_path(path):
+	cm.print_msg("\n[Registry operations]")
+	if not __add_to_path(path):
+		cm.print_error("Could not add GML root dir to PATH")
+		exit(1)
+	else:
+		cm.print_msg("Done adding GML root dir to PATH. Changes will be\nvisible the next time you login using this user")
 
 class ConsoleMessages:
 	def __source_info(self):
@@ -181,7 +177,7 @@ class Downloader:
 					if action == "get":
 						fname = join(self.root, sline[2])
 						if isfile(fname):
-							if sline[3] != Utils.md5sum(fname):
+							if sline[3] != md5sum(fname):
 								ret &= self.download(sline[1], fname)
 							else:
 								sys.stdout.write("[ -- ] %-63s [OK]\n" %fname)
@@ -273,9 +269,9 @@ if __name__ == '__main__':
 		if not d.update():
 			cm.print_error("Could not update GML")
 			exit(1)
-		Utils.add_to_path(options.install_path)
+		add_to_path(options.install_path)
 		cm.print_msg("== Done ==")
 	if options.set_env:
 		print("Currently not available without -i option")
-		#Utils.add_to_path(options.install_path)
+		#add_to_path(options.install_path)
 		cm.print_msg("== Done ==")
