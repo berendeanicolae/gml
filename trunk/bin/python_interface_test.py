@@ -15,7 +15,7 @@ if not ialg:
 config = ialg.Set({"Name":"MCU-Testing", 
                    "DataBase":"SimpleTextFileDB{FileName=%s}"%path,
 		   "Conector":"BitConnector{Table=RecordTable",
-		   "Notifier":"ConsoleNotifier{useColors=True}",
+		   "Notifier":"ConsoleNotifier{useColors=False}",
 		   "LearningRate":0.02,
 		   "MaxIterations":100,
                    "InitialWeight":"random",

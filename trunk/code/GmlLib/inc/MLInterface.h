@@ -26,10 +26,11 @@ namespace GML
 		class EXPORT IConector : public GML::Utils::GMLObject
 		{
 		protected:
-			GML::Utils::INotifier			*notifier;			
+			GML::Utils::INotifier		*notifier;			
 			GML::DB::IDataBase			*database;
 			GML::ML::IConector			*conector;
-			GML::Utils::GString			tableName;
+			GML::Utils::GString			TableName;
+			GML::Utils::GString			SelectQuery;
 			TableColumnIndexes			columns;
 			
 			void						ClearColumnIndexes();
