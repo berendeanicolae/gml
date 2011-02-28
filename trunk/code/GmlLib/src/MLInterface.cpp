@@ -8,7 +8,8 @@ GML::ML::IConector::IConector()
 	conector = NULL;	
 	columns.indexFeature = NULL;
 	ClearColumnIndexes();
-	LinkPropertyToString("Table",TableName,"","Name of the table from the database that will be used");
+	LinkPropertyToString("Table",TableName,"RecordTable","Name of the table from the database that will be used");
+	LinkPropertyToString("SelectQuery",SelectQuery,"*","The query for the select statement");
 }
 void GML::ML::IConector::ClearColumnIndexes()
 {
