@@ -1,4 +1,0 @@
-LIBRARY "SimplePerceptronAlgorithm.alg"
-
-EXPORTS
-Create=CreateNewAlgorithm
