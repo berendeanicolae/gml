@@ -200,13 +200,13 @@ bool GML::Utils::GMLObject::SetProperty(GML::Utils::AttributeList &config)
 				return false;
 			case GML::Utils::AttributeList::UINT32:
 				TEST_SET_PROP(GML::Utils::AttributeList::UINT32,UInt32,UInt32);
-				TEST_SET_PROP(GML::Utils::AttributeList::UINT32,Int32,UInt32);
+				TEST_SET_PROP(GML::Utils::AttributeList::INT32,UInt32,Int32);
 				TEST_SETLIST_PROP(UInt32);
 				DEBUGMSG("Expecting a numerical value (uint32,int32 or list) for %s ",link->Name);
 				return false;
 			case GML::Utils::AttributeList::INT32:
 				TEST_SET_PROP(GML::Utils::AttributeList::INT32,Int32,Int32);
-				TEST_SET_PROP(GML::Utils::AttributeList::INT32,UInt32,Int32);
+				TEST_SET_PROP(GML::Utils::AttributeList::UINT32,Int32,UInt32);
 				TEST_SETLIST_PROP(Int32);
 				DEBUGMSG("Expecting a numerical value (uint32,int32 or list) for %s ",link->Name);
 				return false;
