@@ -47,7 +47,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetExt>.dbc</TargetExt>
-    <OutDir>$(SolutionDir)$(Configuration)\Conectors\</OutDir>
+    <OutDir>$(SolutionDir)$(Configuration)\Connectors\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -67,7 +67,7 @@
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)*.dbc $(SolutionDir)..\..\Bin\Conectors\*.*</Command>
+      <Command>copy $(OutDir)*.dbc $(SolutionDir)..\..\Bin\Connectors\*.*</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -87,10 +87,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib</AdditionalDependencies>
-      <ModuleDefinitionFile>FullCacheConnector.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)*.dbc $(SolutionDir)..\..\Bin\Conectors\*.*</Command>
+      <Command>copy $(OutDir)*.dbc $(SolutionDir)..\..\Bin\Connectors\*.*</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

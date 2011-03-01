@@ -46,8 +46,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)$(Configuration)\Conectors\</OutDir>
-    <TargetExt>.ddb</TargetExt>
+    <OutDir>$(SolutionDir)$(Configuration)\Connectors\</OutDir>
+    <TargetExt>.dbc</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -63,7 +63,7 @@
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)*.dbc $(SolutionDir)..\..\Bin\Conectors\*.*</Command>
+      <Command>copy $(OutDir)*.dbc $(SolutionDir)..\..\Bin\Connectors\*.*</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -84,7 +84,7 @@
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)*.dbc $(SolutionDir)..\..\Bin\Conectors\*.*</Command>
+      <Command>copy $(OutDir)*.dbc $(SolutionDir)..\..\Bin\Connectors\*.*</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
