@@ -22,7 +22,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 1;
 	if (alg->SetProperty(
 		"Name=Test;"
-		"DataBase=SimpleTextFileDB{FileName=D:\\Research\\gml\\tests\\small_mcu.txt.text-plugin};"
+		"DataBase=Sqlite{FileName=D:\\Research\\gml\\tests\\small_mcu.txt.text-plugin};"
 		"Conector=SplitConnector{SplitMode=Range}=>FullCacheConnector{Table=RecordTable};"
 		"Notifier=ConsoleNotifier{useColors=True};"
 		"LearningRate=0.02;"
