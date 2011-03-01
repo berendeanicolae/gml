@@ -463,7 +463,7 @@ bool GML::Utils::AttributeList::AddString(char *Name, char *Text, char *Descript
 	return AddAttribute(Name,Text,STRING,1,Description);
 }
 bool GML::Utils::AttributeList::AddBool(char *Name, bool value,char *Description)
-{	
+{
 	return AddAttribute(Name,&value,BOOLEAN,1,Description);
 }
 bool GML::Utils::AttributeList::AddDouble(char *Name, double value, char *Description)

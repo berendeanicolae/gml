@@ -5,7 +5,7 @@ if not len(sys.argv) > 1:
 	sys.exit()
 path = sys.argv[1]
 
-ialg = gmllib.CreateAlgorithm("GDTPerceptrons")
+ialg = gmllib.CreateAlgorithm("BatchPerceptron")
 print("Inited algorithm: {}".format(ialg)) 
 
 if not ialg:
@@ -14,7 +14,7 @@ if not ialg:
 
 config = ialg.Set({"Name":"MCU-Testing", 
                    "DataBase":"SimpleTextFileDB{FileName=%s}"%path,
-		   "Conector":"BitConnector{Table=RecordTable",
+		   "Connector":"BitConnector{Table=RecordTable",
 		   "Notifier":"ConsoleNotifier{useColors=False}",
 		   "LearningRate":0.02,
 		   "MaxIterations":100,
