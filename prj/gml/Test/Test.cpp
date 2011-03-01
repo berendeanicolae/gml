@@ -23,7 +23,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (alg->SetProperty(
 		"Name=Test;"
 		"DataBase=SimpleTextFileDB{FileName=D:\\Research\\gml\\tests\\small_mcu.txt.text-plugin};"
-		"Conector=FullCacheConnector{Table=RecordTable};"
+		"Conector=SplitConnector{SplitMode=Range;Start=0;Stop=10}=>FullCacheConnector{Table=RecordTable};"
 		"Notifier=ConsoleNotifier{useColors=True};"
 		"LearningRate=0.02;"
 		"InitialWeight=random;"
