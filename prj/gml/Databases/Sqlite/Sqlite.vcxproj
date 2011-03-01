@@ -94,7 +94,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\code\DataBasePlugins\SqlLite\src\sqlite.cpp" />
+    <ClCompile Include="..\..\..\..\code\DataBasePlugins\SqlLite\src\sqlite.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -105,7 +105,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\code\DataBasePlugins\SqlLite\inc\sqlite.h" />
+    <ClInclude Include="..\..\..\..\code\DataBasePlugins\SqlLite\inc\sqlite.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -89,13 +89,13 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\code\Algorithms\GDTPerceptrons\src\BatchPerceptron.cpp" />
-    <ClCompile Include="..\..\..\code\Algorithms\GDTPerceptrons\src\GenericPerceptron.cpp" />
+    <ClCompile Include="..\..\..\..\code\Algorithms\GDTPerceptrons\src\BatchPerceptron.cpp" />
+    <ClCompile Include="..\..\..\..\code\Algorithms\GDTPerceptrons\src\GenericPerceptron.cpp" />
     <ClCompile Include="dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\code\Algorithms\GDTPerceptrons\inc\BatchPerceptron.h" />
-    <ClInclude Include="..\..\..\code\Algorithms\GDTPerceptrons\inc\GenericPerceptron.h" />
+    <ClInclude Include="..\..\..\..\code\Algorithms\GDTPerceptrons\inc\BatchPerceptron.h" />
+    <ClInclude Include="..\..\..\..\code\Algorithms\GDTPerceptrons\inc\GenericPerceptron.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

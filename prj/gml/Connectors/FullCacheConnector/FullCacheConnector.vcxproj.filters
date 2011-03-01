@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\..\..\code\Connectors\FullCacheConnector\src\FullCacheConnector.cpp" />
-    <ClCompile Include="..\..\..\code\Connectors\FullCacheConnector\src\dllmain.cpp" />
+    <ClCompile Include="..\..\..\..\code\Connectors\FullCacheConnector\src\FullCacheConnector.cpp" />
+    <ClCompile Include="..\..\..\..\code\Connectors\FullCacheConnector\src\dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\code\Connectors\FullCacheConnector\inc\FullCacheConnector.h" />
+    <ClInclude Include="..\..\..\..\code\Connectors\FullCacheConnector\inc\FullCacheConnector.h" />
   </ItemGroup>
 </Project>
