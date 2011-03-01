@@ -48,6 +48,7 @@
     <LinkIncremental>false</LinkIncremental>
     <TargetExt>.dbc</TargetExt>
     <GenerateManifest>false</GenerateManifest>
+    <OutDir>$(SolutionDir)$(Configuration)\Conectors\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

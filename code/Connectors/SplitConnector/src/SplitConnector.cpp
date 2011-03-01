@@ -8,7 +8,7 @@ SplitConnector::SplitConnector()
 
 	LinkPropertyToUInt32("SplitMode", SplitMode, Percentage, "!!LIST:Percentage=0,Range!!");
 	LinkPropertyToUInt32("Start", Start, 0, "The start percentage/item to split from\n this can mean Percentage Start or Numeric Start\n zero indexed");
-	LinkPropertyToUInt32("Stop", Stop, 0, "The stop percentage/item to split from\n this can mean Percentage Stop or Numeric Stop\nzero indexed, the actual index Stop is not included");
+	LinkPropertyToUInt32("Stop", Stop, 1, "The stop percentage/item to split from\n this can mean Percentage Stop or Numeric Stop\nzero indexed, the actual index Stop is not included");
 }
 
 SplitConnector::~SplitConnector()
