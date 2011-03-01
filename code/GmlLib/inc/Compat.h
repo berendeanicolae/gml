@@ -8,7 +8,7 @@
 
 #define NOTIFYER_FOLDER		"Notifiers"
 #define DATABASE_FOLDER		"DataBases"
-#define CONNECTOR_FOLDER	"Conectors"
+#define CONNECTOR_FOLDER	"Connectors"
 #define ALGORITHM_FOLDER	"Algorithms"
 
 #ifdef WIN32

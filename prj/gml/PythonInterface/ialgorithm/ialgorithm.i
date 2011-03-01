@@ -84,7 +84,8 @@ namespace GML
 						if (PyBool_Check(it->second))
 						{
 							//printf("second is a bool: %d\n", PyObject_IsTrue(it->second));	
-							if (!al->AddBool(str1, (bool)PyObject_IsTrue(it->second))) 
+							bool x = PyObject_IsTrue(it->second)==1? true: false; 	
+							if (!al->AddBool(str1, x)) 
 							{
 								delete al;
 								return false;

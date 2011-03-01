@@ -1,7 +1,7 @@
 #include "MLInterface.h"
 
 
-GML::ML::IConector::IConector()
+GML::ML::IConnector::IConnector()
 {
 	notifier = NULL;
 	database = NULL;
@@ -11,7 +11,7 @@ GML::ML::IConector::IConector()
 	LinkPropertyToString("Table",TableName,"RecordTable","Name of the table from the database that will be used");
 	LinkPropertyToString("SelectQuery",SelectQuery,"*","The query for the select statement");
 }
-void GML::ML::IConector::ClearColumnIndexes()
+void GML::ML::IConnector::ClearColumnIndexes()
 {
 	if (columns.indexFeature!=NULL)
 		delete columns.indexFeature;
@@ -20,7 +20,7 @@ void GML::ML::IConector::ClearColumnIndexes()
 	columns.indexLabel = -1;
 	columns.indexHash = -1;
 }
-bool GML::ML::IConector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
+bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
 	UInt32				tr,value;
 	GML::DB::DBRecord	*rec;
@@ -128,7 +128,7 @@ bool GML::ML::IConector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB:
 
 	return true;
 }
-bool GML::ML::IConector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double *value)
+bool GML::ML::IConnector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double *value)
 {
 	GML::DB::DBRecord	*rec;
 
@@ -160,7 +160,7 @@ bool GML::ML::IConector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBReco
 	}
 	return true;
 }
-bool GML::ML::IConector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBase &_database,char *attributeString)
+bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBase &_database,char *attributeString)
 {	
 	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
 
@@ -195,7 +195,7 @@ bool GML::ML::IConector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBas
 
 	return OnInit();
 }
-bool GML::ML::IConector::Init(GML::ML::IConector &_conector,char *attributeString)
+bool GML::ML::IConnector::Init(GML::ML::IConnector &_conector,char *attributeString)
 {
 	// daca a fost deja initializat
 	if ((database!=NULL) || (conector!=NULL))

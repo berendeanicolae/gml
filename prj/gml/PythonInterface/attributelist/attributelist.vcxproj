@@ -38,8 +38,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(ProjectName)</OutDir>
-    <IntDir>$(SolutionDir)$(ProjectName)</IntDir>
+    <OutDir>$(SolutionDir)$(Configuration)\Python\</OutDir>
+    <IntDir>$(SolutionDir)$(Configuration)\Python\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetExt>.pyd</TargetExt>
   </PropertyGroup>

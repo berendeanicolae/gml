@@ -14,7 +14,7 @@ namespace GML
 	public:
 		static GML::Utils::INotifier*		CreateNotifier(char *pluginName);	
 		static GML::DB::IDataBase*			CreateDataBase(char *pluginName,GML::Utils::INotifier &notify);
-		static GML::ML::IConector*			CreateConectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database);
+		static GML::ML::IConnector*			CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database);
 		static GML::Algorithm::IAlgorithm*	CreateAlgorithm(char *algorithmLib);		
 	};
 }

@@ -13,7 +13,7 @@ using namespace GML::ML;
 using namespace GML::Utils;
 						
 
-class FullCacheConnector: public IConector
+class FullCacheConnector: public IConnector
 {
 private:
 	UInt32	IntervalStart, IntervalEnd;

@@ -23,12 +23,12 @@ namespace GML
 			Int32		indexHash;
 			Int32		*indexFeature;
 		};
-		class EXPORT IConector : public GML::Utils::GMLObject
+		class EXPORT IConnector : public GML::Utils::GMLObject
 		{
 		protected:
 			GML::Utils::INotifier		*notifier;			
 			GML::DB::IDataBase			*database;
-			GML::ML::IConector			*conector;
+			GML::ML::IConnector			*conector;
 			GML::Utils::GString			TableName;
 			GML::Utils::GString			SelectQuery;
 			TableColumnIndexes			columns;
@@ -38,11 +38,11 @@ namespace GML
 			bool						UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
 			
 		public:	
-			IConector();
+			IConnector();
 
 			virtual bool				OnInit() = 0;
 			virtual bool				Init(GML::Utils::INotifier &Notifier,GML::DB::IDataBase &Database,char *attributeString=NULL);
-			virtual bool				Init(GML::ML::IConector &conector,char *attributeString=NULL);
+			virtual bool				Init(GML::ML::IConnector &conector,char *attributeString=NULL);
 
 			/*	 
 			 * Usage: uninit stuff
