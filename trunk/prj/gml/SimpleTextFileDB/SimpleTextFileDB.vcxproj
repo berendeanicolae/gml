@@ -48,6 +48,7 @@
     <LinkIncremental>false</LinkIncremental>
     <TargetExt>.db</TargetExt>
     <GenerateManifest>false</GenerateManifest>
+    <OutDir>$(SolutionDir)$(Configuration)\DataBases\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
