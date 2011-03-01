@@ -8,7 +8,7 @@ SplitConnector::SplitConnector()
 
 	LinkPropertyToUInt32("SplitMode", SplitMode, Percentage, "!!LIST:Percentage=0,Range!!");
 	LinkPropertyToUInt32("Start", Start, 0, "The start percentage/item to split from\n this can mean Percentage Start or Numeric Start\n zero indexed");
-	LinkPropertyToUInt32("Stop", Stop, 1, "The stop percentage/item to split from\n this can mean Percentage Stop or Numeric Stop\nzero indexed, the actual index Stop is not included");
+	LinkPropertyToUInt32("Stop", Stop, 1000, "The stop percentage/item to split from\n this can mean Percentage Stop or Numeric Stop\nzero indexed, the actual index Stop is not included");
 }
 
 SplitConnector::~SplitConnector()
@@ -74,7 +74,7 @@ bool SplitConnector::OnInitPercentage()
 	FeatureCount = this->conector->GetFeatureCount();
 	RecordCount = (Stop-Start)/100 * TotalRecordCount;
 
-	RecordIndexCache = new double[RecordCount];
+	RecordIndexCache = new UInt32[RecordCount];
 	if (RecordIndexCache == NULL)
 	{
 		notifier->Error("could not allocate memory");
@@ -87,6 +87,8 @@ bool SplitConnector::OnInitPercentage()
 
 	for (UInt32 tr=startIndex;tr<stopIndex;tr++)
 		RecordIndexCache[tr-startIndex] = tr;
+
+	notifier->Info("SplitConnector(split by percentage) data (Records=%d,Features=%d)",RecordCount,FeatureCount);
 
 	return true;
 }
@@ -103,7 +105,7 @@ bool SplitConnector::OnInitRange()
 		return false;
 	}
 
-	RecordIndexCache = new double[RecordCount];
+	RecordIndexCache = new UInt32[RecordCount];
 	if (RecordIndexCache == NULL)
 	{
 		notifier->Error("could not allocate memory");
@@ -112,6 +114,8 @@ bool SplitConnector::OnInitRange()
 
 	for (UInt32 tr=Start;tr<Stop;tr++)
 		RecordIndexCache[tr-Start] = tr;
+
+	notifier->Info("SplitConnector(split by range) data (Records=%d,Features=%d)",RecordCount,FeatureCount);
 
 	return true;
 }
@@ -123,6 +127,8 @@ bool SplitConnector::OnInit()
 		notifier->Error("SplitConnector is an intermediate connector, please provide a lower level connector");
 		return false;
 	}
+
+	notifier->Info("SplitConnector loading data");
 
 	switch (SplitMode)
 	{

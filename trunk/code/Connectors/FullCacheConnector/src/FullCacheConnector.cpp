@@ -77,6 +77,8 @@ bool FullCacheConnector::OnInit()
 
 	UInt32	LabelPos, vectSize;
 	double  * FeaturesPtr;
+
+	notifier->Info("FullCacheConnector loading data");	
 	
 	char SqlString [MAX_SQL_QUERY_SIZE];
 
@@ -262,6 +264,8 @@ bool FullCacheConnector::OnInit()
 		// prepare the vector for our next round
 		VectPtr.DeleteAll();
 	}	
+
+	notifier->Info("FullCacheConnector data (Records=%d,Features=%d)",RecordCount,FeatureCount);
 
 	return true;
 }
