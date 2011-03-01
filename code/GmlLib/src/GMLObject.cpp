@@ -153,7 +153,7 @@ bool GML::Utils::GMLObject::SetProperty(GML::Utils::AttributeList &config)
 	UInt32						tr;
 	GML::Utils::AttributeLink	*link;
 	GML::Utils::Attribute		*attr;
-	Int64						int64Value;
+	Int64						int64Value;	
 
 	// caut in linkuri daca am ceva similar
 	for (tr=0;tr<AttrLinks.Len();tr++)
