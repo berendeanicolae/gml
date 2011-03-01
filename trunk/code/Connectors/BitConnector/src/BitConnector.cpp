@@ -87,6 +87,10 @@ bool	BitConnector::SetRecordInterval(UInt32 start, UInt32 end)
 bool	BitConnector::CreateMlRecord (GML::ML::MLRecord &record)
 {
 	record.FeatCount = columns.nrFeatures;
+	record.Parent = NULL;
+	record.Parent = new GML::ML::MLRecord();
+	this->conector->CreateMlRecord((*record.Parent));
+
 	return ((record.Features = new double[columns.nrFeatures])!=NULL);
 }
 bool	BitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index)

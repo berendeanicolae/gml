@@ -96,10 +96,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\code\Notifiers\ConsoleNotifier\src\consoleNotifier.cpp" />
+    <ClCompile Include="..\..\..\..\code\Notifiers\ConsoleNotifier\src\ConsoleNotifier.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -110,7 +107,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\code\Notifiers\ConsoleNotifier\inc\ConsoleNotifier.h" />
+    <ClInclude Include="..\..\..\..\code\Notifiers\ConsoleNotifier\inc\ConsoleNotifier.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -155,13 +155,13 @@
 echo PYTHON_INCLUDE: %PYTHON_INCLUDE% 
 echo PYTHON_LIB: %PYTHON_LIB% 
 echo on 
-	..\..\..\tools\swig\swig.exe -c++ -python %(FullPath) </Command>
+	..\..\..\..\tools\swig\swig.exe -c++ -python %(FullPath) </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(InputName)_wrap.cxx;%(Outputs)</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo In order to function correctly, please ensure the following environment variables are correctly set: 
 echo PYTHON_INCLUDE: %PYTHON_INCLUDE% 
 echo PYTHON_LIB: %PYTHON_LIB% 
 echo on 
-	..\..\..\tools\swig\swig.exe -c++ -python %(FullPath) </Command>
+	..\..\..\..\tools\swig\swig.exe -c++ -python %(FullPath) </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(InputName)_wrap.cxx;%(Outputs)</Outputs>
     </CustomBuild>
   </ItemGroup>

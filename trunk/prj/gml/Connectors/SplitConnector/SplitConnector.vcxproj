@@ -88,7 +88,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\code\Connectors\SplitConnector\src\SplitConnector.cpp" />
+    <ClCompile Include="..\..\..\..\code\Connectors\SplitConnector\src\SplitConnector.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -99,7 +99,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\code\Connectors\SplitConnector\inc\SplitConnector.h" />
+    <ClInclude Include="..\..\..\..\code\Connectors\SplitConnector\inc\SplitConnector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

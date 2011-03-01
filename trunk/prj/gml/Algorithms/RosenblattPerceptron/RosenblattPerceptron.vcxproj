@@ -89,11 +89,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\code\Algorithms\GDTPerceptrons\src\GenericPerceptron.cpp" />
-    <ClCompile Include="..\..\..\code\Algorithms\GDTPerceptrons\src\RosenblattPerceptron.cpp" />
+    <ClCompile Include="..\..\..\..\code\Algorithms\GDTPerceptrons\src\GenericPerceptron.cpp" />
+    <ClCompile Include="..\..\..\..\code\Algorithms\GDTPerceptrons\src\RosenblattPerceptron.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -104,8 +101,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\code\Algorithms\GDTPerceptrons\inc\GenericPerceptron.h" />
-    <ClInclude Include="..\..\..\code\Algorithms\GDTPerceptrons\inc\RosenblattPerceptron.h" />
+    <ClInclude Include="..\..\..\..\code\Algorithms\GDTPerceptrons\inc\GenericPerceptron.h" />
+    <ClInclude Include="..\..\..\..\code\Algorithms\GDTPerceptrons\inc\RosenblattPerceptron.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

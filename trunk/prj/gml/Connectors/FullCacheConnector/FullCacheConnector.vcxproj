@@ -94,11 +94,11 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\code\Connectors\FullCacheConnector\inc\FullCacheConnector.h" />
+    <ClCompile Include="..\..\..\..\code\Connectors\FullCacheConnector\src\dllmain.cpp" />
+    <ClCompile Include="..\..\..\..\code\Connectors\FullCacheConnector\src\FullCacheConnector.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\code\Connectors\FullCacheConnector\src\dllmain.cpp" />
-    <ClCompile Include="..\..\..\code\Connectors\FullCacheConnector\src\FullCacheConnector.cpp" />
+    <ClInclude Include="..\..\..\..\code\Connectors\FullCacheConnector\inc\FullCacheConnector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

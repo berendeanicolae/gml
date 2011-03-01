@@ -95,7 +95,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\code\DataBasePlugins\SimpleTextFileDB\src\SimpleTextFileDB.cpp" />
+    <ClCompile Include="..\..\..\..\code\DataBasePlugins\SimpleTextFileDB\src\SimpleTextFileDB.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -106,7 +106,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\code\DataBasePlugins\SimpleTextFileDB\inc\SimpleTextFileDB.h" />
+    <ClInclude Include="..\..\..\..\code\DataBasePlugins\SimpleTextFileDB\inc\SimpleTextFileDB.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
