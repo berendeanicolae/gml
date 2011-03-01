@@ -152,9 +152,14 @@ GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Uti
 	{
 		poz = list.FindLast("=>");
 		if (poz<0)
-			poz = -2;
-		if (path.Set(&list.GetText()[poz+2])==false)
-			return NULL;
+		{
+			poz = 0;
+			if (path.Set(list.GetText())==false)
+				return NULL;		
+		} else 	{
+			if (path.Set(&list.GetText()[poz+2])==false)
+				return NULL;
+		}
 		if (path.Strip()==false)
 			return NULL;
 		a_poz = path.Find("{");
