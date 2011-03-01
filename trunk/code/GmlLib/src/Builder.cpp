@@ -133,13 +133,13 @@ GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::
 		return NULL;
 	return newObject;
 }
-GML::ML::IConector*			GML::Builder::CreateConectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database)
+GML::ML::IConnector*			GML::Builder::CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database)
 {
 	GML::Utils::GString		list,path,attributeList;
 	int						poz,a_poz;
 	HMODULE					hModule;
-	GML::ML::IConector*		(*fnCreate)();
-	GML::ML::IConector		*con,*last;
+	GML::ML::IConnector*		(*fnCreate)();
+	GML::ML::IConnector		*con,*last;
 	bool					first;
 
 	if (list.Set(conectorsList)==false)

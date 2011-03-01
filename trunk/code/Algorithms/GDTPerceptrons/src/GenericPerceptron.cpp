@@ -15,7 +15,7 @@ GenericPerceptron::GenericPerceptron()
 
 	LinkPropertyToString("Name"						,Name					,"Perceptron");
 	LinkPropertyToString("DataBase"					,DataBase				,"");
-	LinkPropertyToString("Conector"					,Conector				,"");
+	LinkPropertyToString("Connector"				,Conector				,"");
 	LinkPropertyToString("Notifier"					,Notifier				,"");
 	LinkPropertyToDouble("LearningRate"				,learningRate			,0.01);
 	LinkPropertyToBool  ("UseWeight"				,useWeight				,false);
@@ -230,7 +230,7 @@ bool	GenericPerceptron::Init()
 		notif->Error("Unable to connect to Database (%s)",DataBase.GetText());
 		return false;
 	}
-	if ((con = GML::Builder::CreateConectors(Conector.GetText(),*notif,*db))==NULL)
+	if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif,*db))==NULL)
 	{
 		notif->Error("Unable to create Conector (%s)",Conector.GetText());
 		return false;

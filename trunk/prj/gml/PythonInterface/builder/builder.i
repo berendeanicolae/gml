@@ -23,9 +23,9 @@ namespace GML::Builder
 	}
 
 	%feature("autodoc", "1");
-	static GML::ML::IConector*			CreateConectors(char *conectorsList,GML::Utils::INotifier &notifier,GML::DB::IDataBase &database)
+	static GML::ML::IConnector*			CreateConnectors(char *conectorsList,GML::Utils::INotifier &notifier,GML::DB::IDataBase &database)
 	{
-		return CreateConectors(conectorsList,notifier,database);
+		return CreateConnectors(conectorsList,notifier,database);
 	}
 
 	%feature("autodoc", "1");

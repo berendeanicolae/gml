@@ -11,7 +11,7 @@
 
 #define NOTIFYER_FOLDER		"Notifiers"
 #define DATABASE_FOLDER		"DataBases"
-#define CONNECTOR_FOLDER	"Conectors"
+#define CONNECTOR_FOLDER	"Connectors"
 #define ALGORITHM_FOLDER	"Algorithms"
 
 #ifdef WIN32
@@ -1424,12 +1424,12 @@ namespace GML
 			Int32		indexHash;
 			Int32		*indexFeature;
 		};
-		class  IConector : public GML::Utils::GMLObject
+		class  IConnector : public GML::Utils::GMLObject
 		{
 		protected:
 			GML::Utils::INotifier		*notifier;			
 			GML::DB::IDataBase			*database;
-			GML::ML::IConector			*conector;
+			GML::ML::IConnector			*conector;
 			GML::Utils::GString			TableName;
 			GML::Utils::GString			SelectQuery;
 			TableColumnIndexes			columns;
@@ -1439,11 +1439,11 @@ namespace GML
 			bool						UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
 			
 		public:	
-			IConector();
+			IConnector();
 
 			virtual bool				OnInit() = 0;
 			virtual bool				Init(GML::Utils::INotifier &Notifier,GML::DB::IDataBase &Database,char *attributeString=NULL);
-			virtual bool				Init(GML::ML::IConector &conector,char *attributeString=NULL);
+			virtual bool				Init(GML::ML::IConnector &conector,char *attributeString=NULL);
 
 			/*	 
 			 * Usage: uninit stuff
@@ -1550,7 +1550,7 @@ namespace GML
 	public:
 		static GML::Utils::INotifier*		CreateNotifier(char *pluginName);	
 		static GML::DB::IDataBase*			CreateDataBase(char *pluginName,GML::Utils::INotifier &notify);
-		static GML::ML::IConector*			CreateConectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database);
+		static GML::ML::IConnector*			CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database);
 		static GML::Algorithm::IAlgorithm*	CreateAlgorithm(char *algorithmLib);		
 	};
 }

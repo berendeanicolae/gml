@@ -37,7 +37,7 @@ protected:
 	};
 protected:
 	GML::DB::IDataBase				*db;
-	GML::ML::IConector				*con;
+	GML::ML::IConnector				*con;
 
 	// proprietati
 	GML::Utils::GString				Name;

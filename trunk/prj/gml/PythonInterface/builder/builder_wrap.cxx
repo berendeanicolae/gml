@@ -2685,7 +2685,7 @@ SWIG_Python_MustGetPtr(PyObject *obj, swig_type_info *ty, int argnum, int flags)
 
 #define SWIGTYPE_p_GML__Algorithm__IAlgorithm swig_types[0]
 #define SWIGTYPE_p_GML__DB__IDataBase swig_types[1]
-#define SWIGTYPE_p_GML__ML__IConector swig_types[2]
+#define SWIGTYPE_p_GML__ML__IConnector swig_types[2]
 #define SWIGTYPE_p_GML__Utils__INotifier swig_types[3]
 #define SWIGTYPE_p_char swig_types[4]
 static swig_type_info *swig_types[6];
@@ -2947,7 +2947,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_CreateConectors(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_CreateConnectors(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   char *arg1 = (char *) 0 ;
   GML::Utils::INotifier *arg2 = 0 ;
@@ -2962,32 +2962,32 @@ SWIGINTERN PyObject *_wrap_CreateConectors(PyObject *SWIGUNUSEDPARM(self), PyObj
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
-  GML::ML::IConector *result = 0 ;
+  GML::ML::IConnector *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOO:CreateConectors",&obj0,&obj1,&obj2)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOO:CreateConnectors",&obj0,&obj1,&obj2)) SWIG_fail;
   res1 = SWIG_AsCharPtrAndSize(obj0, &buf1, NULL, &alloc1);
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CreateConectors" "', argument " "1"" of type '" "char *""'");
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CreateConnectors" "', argument " "1"" of type '" "char *""'");
   }
   arg1 = reinterpret_cast< char * >(buf1);
   res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_GML__Utils__INotifier,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CreateConectors" "', argument " "2"" of type '" "GML::Utils::INotifier &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CreateConnectors" "', argument " "2"" of type '" "GML::Utils::INotifier &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "CreateConectors" "', argument " "2"" of type '" "GML::Utils::INotifier &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "CreateConnectors" "', argument " "2"" of type '" "GML::Utils::INotifier &""'"); 
   }
   arg2 = reinterpret_cast< GML::Utils::INotifier * >(argp2);
   res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_GML__DB__IDataBase,  0 );
   if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CreateConectors" "', argument " "3"" of type '" "GML::DB::IDataBase &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "CreateConnectors" "', argument " "3"" of type '" "GML::DB::IDataBase &""'"); 
   }
   if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "CreateConectors" "', argument " "3"" of type '" "GML::DB::IDataBase &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "CreateConnectors" "', argument " "3"" of type '" "GML::DB::IDataBase &""'"); 
   }
   arg3 = reinterpret_cast< GML::DB::IDataBase * >(argp3);
-  result = (GML::ML::IConector *)GML::Builder::CreateConectors(arg1,*arg2,*arg3);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GML__ML__IConector, 0 |  0 );
+  result = (GML::ML::IConnector *)GML::Builder::CreateConnectors(arg1,*arg2,*arg3);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_GML__ML__IConnector, 0 |  0 );
   if (alloc1 == SWIG_NEWOBJ) delete[] buf1;
   return resultobj;
 fail:
@@ -3025,9 +3025,9 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
 	 { (char *)"CreateNotifier", _wrap_CreateNotifier, METH_VARARGS, (char *)"CreateNotifier(char pluginName) -> GML::Utils::INotifier"},
 	 { (char *)"CreateDataBase", _wrap_CreateDataBase, METH_VARARGS, (char *)"CreateDataBase(char pluginName, GML::Utils::INotifier notifier) -> GML::DB::IDataBase"},
-	 { (char *)"CreateConectors", _wrap_CreateConectors, METH_VARARGS, (char *)"\n"
-		"CreateConectors(char conectorsList, GML::Utils::INotifier notifier, \n"
-		"    GML::DB::IDataBase database) -> GML::ML::IConector\n"
+	 { (char *)"CreateConnectors", _wrap_CreateConnectors, METH_VARARGS, (char *)"\n"
+		"CreateConnectors(char conectorsList, GML::Utils::INotifier notifier, \n"
+		"    GML::DB::IDataBase database) -> GML::ML::IConnector\n"
 		""},
 	 { (char *)"CreateAlgorithm", _wrap_CreateAlgorithm, METH_VARARGS, (char *)"CreateAlgorithm(char algorithmLib) -> GML::Algorithm::IAlgorithm"},
 	 { NULL, NULL, 0, NULL }
@@ -3038,28 +3038,28 @@ static PyMethodDef SwigMethods[] = {
 
 static swig_type_info _swigt__p_GML__Algorithm__IAlgorithm = {"_p_GML__Algorithm__IAlgorithm", "GML::Algorithm::IAlgorithm *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_GML__DB__IDataBase = {"_p_GML__DB__IDataBase", "GML::DB::IDataBase *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_GML__ML__IConector = {"_p_GML__ML__IConector", "GML::ML::IConector *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_GML__ML__IConnector = {"_p_GML__ML__IConnector", "GML::ML::IConnector *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_GML__Utils__INotifier = {"_p_GML__Utils__INotifier", "GML::Utils::INotifier *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_GML__Algorithm__IAlgorithm,
   &_swigt__p_GML__DB__IDataBase,
-  &_swigt__p_GML__ML__IConector,
+  &_swigt__p_GML__ML__IConnector,
   &_swigt__p_GML__Utils__INotifier,
   &_swigt__p_char,
 };
 
 static swig_cast_info _swigc__p_GML__Algorithm__IAlgorithm[] = {  {&_swigt__p_GML__Algorithm__IAlgorithm, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_GML__DB__IDataBase[] = {  {&_swigt__p_GML__DB__IDataBase, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_GML__ML__IConector[] = {  {&_swigt__p_GML__ML__IConector, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_GML__ML__IConnector[] = {  {&_swigt__p_GML__ML__IConnector, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_GML__Utils__INotifier[] = {  {&_swigt__p_GML__Utils__INotifier, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_GML__Algorithm__IAlgorithm,
   _swigc__p_GML__DB__IDataBase,
-  _swigc__p_GML__ML__IConector,
+  _swigc__p_GML__ML__IConnector,
   _swigc__p_GML__Utils__INotifier,
   _swigc__p_char,
 };

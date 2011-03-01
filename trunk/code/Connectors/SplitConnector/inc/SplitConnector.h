@@ -10,7 +10,7 @@ using namespace GML::Utils;
 
 
 
-class SplitConnector : public IConector
+class SplitConnector : public IConnector
 {
 protected:
 	enum 

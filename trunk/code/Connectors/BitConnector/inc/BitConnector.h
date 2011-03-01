@@ -1,6 +1,6 @@
 #include "gmllib.h"
 
-class BitConnector: public GML::ML::IConector
+class BitConnector: public GML::ML::IConnector
 {
 	UInt32	nrRecords;
 	UInt8	*Data;
