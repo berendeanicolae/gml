@@ -14,6 +14,7 @@ namespace GML
 			double				Weight;
 			GML::DB::RecordHash	Hash;	
 			double				Label;
+			MLRecord*			Parent;
 		};
 	}
 }
