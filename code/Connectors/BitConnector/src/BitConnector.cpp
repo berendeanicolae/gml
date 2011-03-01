@@ -13,6 +13,8 @@ bool	BitConnector::OnInit()
 	UInt8										*cPoz;
 	GML::DB::DBRecord							*rec;
 
+	notifier->Info("BitConnect loading data");
+
 	if (database->Connect()==false)
 	{
 		notifier->Error("could not connect to database");
@@ -38,7 +40,7 @@ bool	BitConnector::OnInit()
 	memset(Data,0,nrRecords*Align8Size);
 	// sunt exact la inceput
 	cPoz = Data;
-	notifier->Info("BitConect data (Records=%d,Features=%d,MemSize=%d,RecordsSize=%d)",nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
+	notifier->Info("BitConnect data (Records=%d,Features=%d,MemSize=%d,RecordsSize=%d)",nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
 
 
 

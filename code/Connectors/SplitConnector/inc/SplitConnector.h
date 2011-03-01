@@ -21,7 +21,7 @@ protected:
 
 private:
 	UInt32 RecordCount, FeatureCount, TotalRecordCount;
-	double	*RecordIndexCache;
+	UInt32	*RecordIndexCache;
 
 	//properties
 	UInt32 SplitMode;
