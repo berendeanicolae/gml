@@ -72,12 +72,12 @@ bool	GenericPerceptron::Create(PerceptronThreadData &ptd,UInt32 id)
 {
 	if (con->CreateMlRecord(ptd.Record)==false)
 	{
-		notif->Error("Unable to create MLRecord !");
+		notif->Error("[%s] -> Unable to create MLRecord !",ObjectName);
 		return false;
 	}
 	if ((ptd.Weight = new double[con->GetFeatureCount()])==NULL)
 	{
-		notif->Error("Unable to allocate weight vector !");
+		notif->Error("[%s] -> Unable to allocate weight vector !",ObjectName);
 		return false;
 	}
 	memset(ptd.Weight,0,sizeof(double)*con->GetFeatureCount());
@@ -86,7 +86,7 @@ bool	GenericPerceptron::Create(PerceptronThreadData &ptd,UInt32 id)
 	{
 		if ((ptd.Delta = new double[con->GetFeatureCount()])==NULL)
 		{
-			notif->Error("Unable to allocate delta vector !");
+			notif->Error("[%s] -> Unable to allocate delta vector !",ObjectName);
 			return false;
 		}		
 	} else {
@@ -222,17 +222,17 @@ bool	GenericPerceptron::Init()
 		return false;
 	if ((db = GML::Builder::CreateDataBase(DataBase.GetText(),*notif))==NULL)
 	{
-		notif->Error("Unable to create Database (%s)",DataBase.GetText());
+		notif->Error("[%s] -> Unable to create Database (%s)",ObjectName,DataBase.GetText());
 		return false;
 	}
 	if (db->Connect()==false)
 	{
-		notif->Error("Unable to connect to Database (%s)",DataBase.GetText());
+		notif->Error("[%s] -> Unable to connect to Database (%s)",ObjectName,DataBase.GetText());
 		return false;
 	}
 	if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif,*db))==NULL)
 	{
-		notif->Error("Unable to create Conector (%s)",Conector.GetText());
+		notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,Conector.GetText());
 		return false;
 	}
 	if (batchPerceptron==false)
@@ -250,7 +250,7 @@ bool	GenericPerceptron::Init()
 	
 	if ((FullData.RecordIndexes=new UInt32[con->GetRecordCount()])==NULL)
 	{
-		notif->Error("Unable to create RecordIndexes[%d] !",con->GetRecordCount());
+		notif->Error("[%s] -> Unable to create RecordIndexes[%d] !",ObjectName,con->GetRecordCount());
 		return false;
 	}
 	FullData.RecordIndexesCount = con->GetRecordCount();
@@ -262,7 +262,7 @@ bool	GenericPerceptron::Init()
 	{
 		if ((ptData = new PerceptronThreadData[threadsCount])==NULL)
 		{
-			notif->Error("Unable to allocate PerceptronThreadData[%d]",threadsCount);
+			notif->Error("[%s] -> Unable to allocate PerceptronThreadData[%d]",ObjectName,threadsCount);
 			return false;
 		}
 		for (tr=0;tr<threadsCount;tr++)
@@ -275,14 +275,14 @@ bool	GenericPerceptron::Init()
 		
 		if ((tpu = new GML::Utils::ThreadParalelUnit[threadsCount])==NULL)
 		{
-			notif->Error("Unable to create %d threads ",threadsCount);
+			notif->Error("[%s] -> Unable to create %d threads ",ObjectName,threadsCount);
 			return false;
 		}
 		for (tr=0;tr<threadsCount;tr++)
 		{
 			if (tpu[tr].Init(tr,this,ThreadRedirectFunction)==false)
 			{
-				notif->Error("Unable to start thread #%d",tr);
+				notif->Error("[%s] -> Unable to start thread #%d",ObjectName,tr);
 				return false;
 			}
 		}

@@ -14,17 +14,15 @@ bool	BitConnector::OnInit()
 	UInt8										*cPoz;
 	GML::DB::DBRecord							*rec;
 
-	notifier->Info("BitConnect loading data");
-
 	if (database->Connect()==false)
 	{
-		notifier->Error("could not connect to database");
+		notifier->Error("[%s] -> Could not connect to database",ObjectName);
 		return false;
 	}
 	nrRecords = database->Select("*");
 	if (nrRecords==0) 
 	{
-		notifier->Error("I received 0 records from the database");
+		notifier->Error("[%s] -> I received 0 records from the database",ObjectName);
 		return false;
 	}
 	// aloca data :D
@@ -35,21 +33,18 @@ bool	BitConnector::OnInit()
 
 	if ((Data = new UInt8[nrRecords*Align8Size])==NULL)
 	{
-		notifier->Error("Unable to allocate %ud bytes for data indexes !",nrRecords*Align8Size);
+		notifier->Error("[%s] -> Unable to allocate %ud bytes for data indexes !",ObjectName,nrRecords*Align8Size);
 		return false;
 	}
 	memset(Data,0,nrRecords*Align8Size);
 	// sunt exact la inceput
 	cPoz = Data;
-	notifier->Info("BitConnect data (Records=%d,Features=%d,MemSize=%d,RecordsSize=%d)",nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
-
-
 
 	for (tr=0;tr<nrRecords;tr++)
 	{
 		if (database->FetchNextRow(VectPtr)==false)
 		{
-			notifier->Error("Error reading #%d record !",tr);
+			notifier->Error("[%s] -> Error reading #%d record !",ObjectName,tr);
 			return false;
 		}
 		// pentru fiecare record pun valorile
@@ -57,7 +52,7 @@ bool	BitConnector::OnInit()
 		{
 			if ((rec=VectPtr.GetPtrToObject(columns.indexFeature[gr]))==NULL)
 			{
-				notifier->Error("Unable to read record #%d",gr);
+				notifier->Error("[%s] -> Unable to read record #%d",ObjectName,gr);
 				return false;
 			}
 			if (rec->DoubleVal==1.0)
@@ -66,7 +61,7 @@ bool	BitConnector::OnInit()
 		// pun si label-ul
 		if ((rec=VectPtr.GetPtrToObject(columns.indexLabel))==NULL)
 		{
-			notifier->Error("Unable to read record #%d",columns.indexLabel);
+			notifier->Error("[%s] -> Unable to read record #%d",ObjectName,columns.indexLabel);
 			return false;
 		}
 		if (rec->DoubleVal==1.0)
@@ -75,6 +70,7 @@ bool	BitConnector::OnInit()
 		cPoz+=Align8Size;
 	}	
 	// all ok , am incarcat datele
+	notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d,RecordsSize=%d",ObjectName,nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
 	return true;
 }
 bool	BitConnector::Close()
