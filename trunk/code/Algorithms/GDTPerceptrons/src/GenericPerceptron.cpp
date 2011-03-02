@@ -367,6 +367,8 @@ bool	GenericPerceptron::PerformTrain()
 	UInt32					it;
 	GML::Utils::GString		saveNM;
 
+	FullData.Res.time.Start();
+
 	for (it=0;it<maxIterations;it++)
 	{
 		if (PerformTrainIteration()==false)
@@ -405,6 +407,7 @@ bool	GenericPerceptron::PerformTrain()
 				saveNM.SetFormated("%s_it_%d.txt",Name.GetText(),it+1);
 				OnSaveData(saveNM.GetText());
 			}
+			FullData.Res.time.Start();
 		}
 	}
 	if (saveData==SAVE_DATA_AT_FINISH)

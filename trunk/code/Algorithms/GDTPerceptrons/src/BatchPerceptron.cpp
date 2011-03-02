@@ -61,6 +61,7 @@ bool BatchPerceptron::PerformTestIteration()
 			FullData.Res.Add(&ptData[tr].Res);
 		FullData.Res.Compute();
 	}
+	FullData.Res.time.Stop();
 	notif->Notify(100,&FullData.Res,sizeof(FullData.Res));
 	return true;
 }

@@ -13,6 +13,7 @@ bool RosenblattPerceptron::PerformTestIteration()
 {
 	if (Test(&FullData)==false)
 		return false;
+	FullData.Res.time.Stop();
 	notif->Notify(100,&FullData.Res,sizeof(FullData.Res));
 	return true;
 }
