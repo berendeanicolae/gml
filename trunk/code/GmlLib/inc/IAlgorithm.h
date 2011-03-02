@@ -26,7 +26,6 @@ namespace GML
 			bool			Execute(char *command);
 			bool			Wait();
 			bool			Wait(UInt32 nrMiliseconds);
-
 		};
 	}
 }
