@@ -30,21 +30,22 @@ bool GML::Algorithm::IAlgorithm::Execute(char *command)
 
 	if (notif==NULL)
 		return false;
+	notif->Info("[%s] -> Executing command: %s",ObjectName,command);
 	if (hMainThread!=NULL)
 	{
-		notif->Error("Already working. Unable to execute commnad %s !",command);
+		notif->Error("[%s] -> Already working. Unable to execute commnad %s !",ObjectName,command);
 		return false;
 	}
 	// altfel execut datele
 	if ((tld = new ThreadLocalData())==NULL)
 	{
-		notif->Error("Internal error => Unable to create ThreadLocalData object");
+		notif->Error("[%s] -> Internal error => Unable to create ThreadLocalData object",ObjectName);
 		return false;
 	}
 	if (tld->command.Set(command)==false)
 	{
 		delete tld;
-		notif->Error("Internal error => Unable to set string ... ");
+		notif->Error("[%s] -> Internal error => Unable to set string ... ",ObjectName);
 		return false;
 	}
 	tld->me = this;
@@ -53,7 +54,7 @@ bool GML::Algorithm::IAlgorithm::Execute(char *command)
 	if ((hMainThread = CreateThread(NULL,0,IAlgorithm_ThreadProc,tld,CREATE_SUSPENDED,NULL))==NULL)
 	{
 		delete tld;
-		notif->Error("Internal error => Unable to create working thread");
+		notif->Error("[%s] -> Internal error => Unable to create working thread",ObjectName);
 		return false;
 	}
 	ResumeThread(hMainThread);
