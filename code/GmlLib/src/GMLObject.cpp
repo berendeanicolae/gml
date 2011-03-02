@@ -83,8 +83,7 @@ bool ListIndexToAttribute(GML::Utils::AttributeLink	*link,Int64 intValue,GML::Ut
 //=========================================================================================================================================================
 GML::Utils::GMLObject::GMLObject()
 {
-	Description = "";
-	Author = "";
+	ObjectName = "GMLObject";
 	AttrLinks.DeleteAll();
 }
 bool GML::Utils::GMLObject::LinkPropertyToString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *Description)

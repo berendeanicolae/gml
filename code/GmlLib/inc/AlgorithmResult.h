@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Timer.h"
 #include "compat.h"
 
 namespace GML
@@ -12,6 +13,7 @@ namespace GML
 			UInt32		Iteration;
 			double		tp,tn,fp,fn;
 			double		sp,se,acc;
+			Timer		time;
 
 		public:
 			AlgorithmResult(void);

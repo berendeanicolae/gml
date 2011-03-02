@@ -4,6 +4,7 @@ BitConnector::BitConnector()
 {
 	nrRecords = 0;
 	Data = NULL;
+	ObjectName = "BitConnector";
 }
 
 bool	BitConnector::OnInit()

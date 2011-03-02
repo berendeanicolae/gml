@@ -10,7 +10,7 @@ class RosenblattPerceptron: public GenericPerceptron
 	bool	OnUpdateBestData();
 	bool	OnSaveData(char *fileName);	
 public:
-
+	RosenblattPerceptron();
 };
 
 

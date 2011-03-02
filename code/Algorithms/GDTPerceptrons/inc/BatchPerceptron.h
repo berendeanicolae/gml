@@ -10,6 +10,8 @@ class BatchPerceptron: public GenericPerceptron
 	bool	OnUpdateBestData();
 	bool	OnSaveData(char *fileName);	
 	void	OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command);
+public:
+	BatchPerceptron();
 }; 
 
 #endif

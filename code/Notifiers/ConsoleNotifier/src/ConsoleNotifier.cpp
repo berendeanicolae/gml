@@ -3,6 +3,7 @@
 
 ConsoleNotifier::ConsoleNotifier()
 {
+	ObjectName = "ConsoleNotifier";
 	LinkPropertyToBool("UseColors",useColors,false,"Specifies if colors should be used when showing mesages");
 }
 void ConsoleNotifier::SetColor(unsigned char Fore, unsigned char Back)

@@ -3,6 +3,11 @@
 #define COMMAND_TRAIN		0
 #define COMMAND_TEST		1
 
+
+BatchPerceptron::BatchPerceptron()
+{
+	ObjectName = "BatchPerceptron";
+}
 void BatchPerceptron::OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command)
 {
 	switch (command)

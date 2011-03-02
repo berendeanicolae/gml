@@ -5,6 +5,7 @@ SplitConnector::SplitConnector()
 	RecordCount = 0;
 	FeatureCount = 0;
 	RecordIndexCache = NULL;
+	ObjectName = "SplitCacheConnector";
 
 	LinkPropertyToUInt32("SplitMode", SplitMode, Percentage, "!!LIST:Percentage=0,Range!!");
 	LinkPropertyToUInt32("Start", Start, 0, "The start percentage/item to split from\n this can mean Percentage Start or Numeric Start\n zero indexed");
