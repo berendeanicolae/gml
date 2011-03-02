@@ -12,6 +12,7 @@ void ConsoleNotifier::SetColor(unsigned char Fore, unsigned char Back)
 }
 bool ConsoleNotifier::OnInit()
 {	
+	tempStr.Create();
 	return true;
 }
 bool ConsoleNotifier::Uninit()
@@ -28,8 +29,8 @@ bool ConsoleNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 	{
 		if (useColors)
 			SetColor(14,0);
-		GML::Utils::AlgorithmResult	*res = (GML::Utils::AlgorithmResult *)Data;
-		printf("TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|\n",(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc);
+		GML::Utils::AlgorithmResult	*res = (GML::Utils::AlgorithmResult *)Data;	
+		printf("TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|%s\n",(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc,res->time.GetPeriodAsString(tempStr));
 		SetColor(7,0);
 		return true;
 	}
