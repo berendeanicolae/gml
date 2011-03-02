@@ -946,17 +946,15 @@ namespace GML
 	{
 		class  Timer
 		{
-			UInt32			timeStart,timeDiff;
-			GString			Result;
+			UInt32			timeStart,timeDiff;			
 		public:
 
 			void			Start();
 			void			Stop();
 			UInt32			GetPeriodAsMiliSeconds();
-			char*			GetPeriodAsString();
-			char*			EstimateTotalTime(UInt32 parts,UInt32 total);
-			char*			EstimateETA(UInt32 parts,UInt32 total);
-
+			char*			GetPeriodAsString(GString &str);
+			char*			EstimateTotalTime(GString &str,UInt32 parts,UInt32 total);
+			char*			EstimateETA(GString &str,UInt32 parts,UInt32 total);
 		};
 	}
 }
@@ -974,6 +972,7 @@ namespace GML
 			UInt32		Iteration;
 			double		tp,tn,fp,fn;
 			double		sp,se,acc;
+			Timer		time;
 
 		public:
 			AlgorithmResult(void);
@@ -1121,8 +1120,8 @@ namespace GML
 		class  GMLObject
 		{
 			GML::Utils::GTFVector<GML::Utils::AttributeLink>	AttrLinks;
-			char*												Description;
-			char*												Author;
+		protected:
+			char*												ObjectName;
 		protected:
 			bool			LinkPropertyToString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *Description=NULL);
 			bool			LinkPropertyToBool(char *Name,bool &LocalAddr,bool defaultValue,char *Description=NULL);

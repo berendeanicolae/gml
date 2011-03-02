@@ -293,7 +293,9 @@ FullCacheConnector::FullCacheConnector()
 	 Initialized = FALSE;
 
 	 FeatureCache = NULL;
-	 LabelStorage  = NULL;	 	 	 
+	 LabelStorage  = NULL;	 
+
+	 ObjectName = "FullCacheConnector";
 }
 
 FullCacheConnector::~FullCacheConnector()

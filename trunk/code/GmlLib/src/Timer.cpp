@@ -23,12 +23,12 @@ void TranslateToTime(UInt32 Diff,GML::Utils::GString *text)
 	text->SetFormated("%4d:%02d:%02d.%03d",h,m,s,ms);
 }
 //===============================================
-void GML::Utils::Timer::Start()
+void    GML::Utils::Timer::Start()
 {
 	timeStart = GetTimeInMiliSeconds();
 	timeDiff = 0;
 }
-void GML::Utils::Timer::Stop()
+void    GML::Utils::Timer::Stop()
 {
 	UInt32	End;
 
@@ -39,38 +39,45 @@ void GML::Utils::Timer::Stop()
 	else
 		timeDiff = (0xFFFFFFFF-timeStart)+End;
 
-	TranslateToTime(timeDiff,&Result);
+	//TranslateToTime(timeDiff,&Result);
 }
 UInt32	GML::Utils::Timer::GetPeriodAsMiliSeconds()
 {
 	return timeDiff;
 }
-char*	GML::Utils::Timer::GetPeriodAsString()
+char*	GML::Utils::Timer::GetPeriodAsString(GString &str)
 {
-	return Result.GetText();
+	TranslateToTime(timeDiff,&str);
+	return str.GetText();
 }
-char* GML::Utils::Timer::EstimateTotalTime(UInt32 parts,UInt32 total)
+char*   GML::Utils::Timer::EstimateTotalTime(GString &str,UInt32 parts,UInt32 total)
 {
 	UInt32 new_diff;
 
 	if (parts==0)
+	{
+		str.Set("");
 		return "";
+	}
 	if (parts>total)
 		parts = total;
 	new_diff = (UInt32)( ((double)total) * ((double)timeDiff) / ((double)parts) );
-	TranslateToTime(new_diff,&Result);
-	return Result.GetText();
+	TranslateToTime(new_diff,&str);
+	return str.GetText();
 }
-char* GML::Utils::Timer::EstimateETA(UInt32 parts,UInt32 total)
+char*   GML::Utils::Timer::EstimateETA(GString &str,UInt32 parts,UInt32 total)
 {
 	UInt32 new_diff;
 
 	if (parts==0)
+	{
+		str.Set("");
 		return "";
+	}
 	if (parts>total)
 		parts = total;
 	new_diff = (UInt32)(((double)(total-parts)) * ((double)timeDiff) / ((double)parts) );
-	TranslateToTime(new_diff,&Result);
-	return Result.GetText();
+	TranslateToTime(new_diff,&str);
+	return str.GetText();
 }
 

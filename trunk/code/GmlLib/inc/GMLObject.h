@@ -12,8 +12,8 @@ namespace GML
 		class EXPORT GMLObject
 		{
 			GML::Utils::GTFVector<GML::Utils::AttributeLink>	AttrLinks;
-			char*												Description;
-			char*												Author;
+		protected:
+			char*												ObjectName;
 		protected:
 			bool			LinkPropertyToString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *Description=NULL);
 			bool			LinkPropertyToBool(char *Name,bool &LocalAddr,bool defaultValue,char *Description=NULL);
