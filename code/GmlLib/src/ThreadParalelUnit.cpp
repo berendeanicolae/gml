@@ -31,7 +31,7 @@ bool GML::Utils::ThreadParalelUnit::WaitToFinish()
 {
 	if (eventWorking==NULL)
 		return false;
-	if (WaitForSingleObject(eventWorking,INFINITE)!=WAIT_OBJECT_0)
+	if (WaitForSingleObject(eventWorking,INFINITE)==WAIT_OBJECT_0)
 		return true;
 	return false;
 }

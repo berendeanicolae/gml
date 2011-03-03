@@ -7,6 +7,7 @@
 BatchPerceptron::BatchPerceptron()
 {
 	ObjectName = "BatchPerceptron";
+	batchPerceptron = true;
 }
 void BatchPerceptron::OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command)
 {
