@@ -37,7 +37,7 @@ void GML::Utils::AlgorithmResult::Add(AlgorithmResult *res)
 		return;
 	tp += res->tp;
 	tn += res->tn;
-	fp += res->fn;
+	fp += res->fp;
 	fn += res->fn;
 }
 void GML::Utils::AlgorithmResult::Copy(AlgorithmResult *res)
