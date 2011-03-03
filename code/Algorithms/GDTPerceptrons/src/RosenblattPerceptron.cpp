@@ -7,7 +7,7 @@ RosenblattPerceptron::RosenblattPerceptron()
 
 bool RosenblattPerceptron::PerformTrainIteration()
 {
-	return Train(&FullData);
+	return Train(&FullData,false,false);
 }
 bool RosenblattPerceptron::PerformTestIteration()
 {
