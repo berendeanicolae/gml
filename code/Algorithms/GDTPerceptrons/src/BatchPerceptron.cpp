@@ -13,7 +13,7 @@ void BatchPerceptron::OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 comman
 	switch (command)
 	{
 		case COMMAND_TRAIN:
-			Train(&ptd);
+			Train(&ptd,true,false);
 			break;
 		case COMMAND_TEST:
 			Test(&ptd);
@@ -22,39 +22,27 @@ void BatchPerceptron::OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 comman
 }
 bool BatchPerceptron::PerformTrainIteration()
 {
-	UInt32	tr,count;
+	UInt32	tr;
 	if (threadsCount==1)
-		return Train(&FullData);
+		return Train(&FullData,true,true);
+	
 	// paralel mode
-	count = con->GetFeatureCount();
-	for (tr=0;tr<threadsCount;tr++)
-	{
-		memcpy(ptData[tr].Weight,FullData.Weight,sizeof(double)*count);
-		ptData[tr].b_Weight = FullData.b_Weight;
-	}
 	ExecuteParalelCommand(COMMAND_TRAIN);
 	// aditie de date
 	
-	memset(FullData.Weight,0,sizeof(double)*count);
 	for (tr=0;tr<threadsCount;tr++)
-		GML::ML::VectorOp::AddVectors(FullData.Weight,ptData[tr].Weight,count);
+		FullData.Primary.Add(ptData[tr].Delta);		
 	return true;
 }
 bool BatchPerceptron::PerformTestIteration()
 {
-	UInt32	tr,count;
+	UInt32	tr;
 
 	if (threadsCount==1)
 	{
 		if (Test(&FullData)==false)
 			return false;
 	} else {
-		count = con->GetFeatureCount();
-		for (tr=0;tr<threadsCount;tr++)
-		{
-			memcpy(ptData[tr].Weight,FullData.Weight,sizeof(double)*count);
-			ptData[tr].b_Weight = FullData.b_Weight;
-		}
 		ExecuteParalelCommand(COMMAND_TEST);
 		FullData.Res.Clear();
 		for (tr=0;tr<threadsCount;tr++)

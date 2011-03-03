@@ -19,7 +19,6 @@ namespace GML
 		public:			
 			IAlgorithm();
 
-
 			virtual bool	Init() = 0;
 			virtual void	OnExecute(char* command)=0;
 

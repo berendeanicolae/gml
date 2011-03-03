@@ -1523,14 +1523,12 @@ namespace GML
 		public:			
 			IAlgorithm();
 
-
 			virtual bool	Init() = 0;
 			virtual void	OnExecute(char* command)=0;
 
 			bool			Execute(char *command);
 			bool			Wait();
 			bool			Wait(UInt32 nrMiliseconds);
-
 		};
 	}
 }
