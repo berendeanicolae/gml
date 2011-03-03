@@ -30,7 +30,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		"useBias=false;"
 		"SaveData=AfterEachIteration;"
 		"SaveBest=BestACC;"
-		"ThreadsCount=2;"
+		"ThreadsCount=1;"
 		"MaxIterations=(INT32)30;")==false)
 		return 1;
 	if (alg->Init()==false)
