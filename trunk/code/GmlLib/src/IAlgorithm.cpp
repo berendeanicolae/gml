@@ -1,5 +1,6 @@
 #include "IAlgorithm.h"
 
+
 struct ThreadLocalData
 {
 	GML::Algorithm::IAlgorithm	*me;

@@ -3,17 +3,32 @@
 
 #include "gmllib.h"
 
+struct PerceptronVector
+{
+	double	*Weight;
+	double	*Bias;
+	UInt32	Count;
+public:
+	PerceptronVector();
+	~PerceptronVector();
+
+	bool	Create(UInt32 count);
+	bool	Create(PerceptronVector &pv);
+	void	Destroy();
+	void	Add(PerceptronVector &pv);
+};
 struct PerceptronThreadData
 {
 	GML::ML::MLRecord				Record;
-	double							*Weight;
-	double							*Delta;
-	double							b_Weight;
-	double							b_Delta;
+	PerceptronVector				Primary;
+	PerceptronVector				Delta;
 	UInt32							ID;
 	GML::Utils::AlgorithmResult		Res;
 	UInt32							*RecordIndexes;
 	UInt32							RecordIndexesCount;
+	void							*ExtraData;
+public:
+	PerceptronThreadData();
 };
 
 class GenericPerceptron : public GML::Algorithm::IAlgorithm
@@ -73,17 +88,17 @@ protected:
 public:
 	PerceptronThreadData			*ptData;
 protected:
-	bool					Train(PerceptronThreadData *ptd);
+	bool					Train(PerceptronThreadData *ptd,bool clearDelta,bool addDeltaToPrimary);
 	bool					Test(PerceptronThreadData *ptd);
 	bool					SplitIndexes(PerceptronThreadData *ptd,UInt32 ptdElements,PerceptronThreadData *original);
-	bool					Create(PerceptronThreadData &ptd,UInt32 id);
+	bool					Create(PerceptronThreadData &ptd,UInt32 id,PerceptronThreadData *original=NULL);
 	bool					UpdateBest(PerceptronThreadData &ptd);
 	bool					Save(PerceptronThreadData &ptd,char *fileName);
 	bool					Load(PerceptronThreadData &ptd,char *fileName);
 	bool					InitWeight(PerceptronThreadData &ptd);
 	bool					ExecuteParalelCommand(UInt32 command);
 
-
+	virtual bool			OnInit();
 	virtual bool			PerformTrainIteration()=0;
 	virtual bool			PerformTestIteration()=0;
 	virtual bool			OnUpdateBestData()=0;
