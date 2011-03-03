@@ -129,7 +129,7 @@ bool	GenericPerceptron::Create(PerceptronThreadData &ptd,UInt32 id,PerceptronThr
 		notif->Error("[%s] -> Unable to create MLRecord !",ObjectName);
 		return false;
 	}
-	if (original)
+	if (original==NULL)
 	{
 		if (ptd.Primary.Create(con->GetFeatureCount())==false)
 		{
@@ -284,6 +284,11 @@ bool	GenericPerceptron::Init()
 	if ((db = GML::Builder::CreateDataBase(DataBase.GetText(),*notif))==NULL)
 	{
 		notif->Error("[%s] -> Unable to create Database (%s)",ObjectName,DataBase.GetText());
+		return false;
+	}
+	if (db->Connect()==false)
+	{
+		notif->Error("[%s] -> Unable to connesct to Database (%s)",ObjectName,DataBase.GetText());
 		return false;
 	}
 	if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif,*db))==NULL)

@@ -56,7 +56,6 @@ bool	SimpleTextFileDB::Connect ()
 		notifier->Error("Invalid numeric value for features number: %s",tempStr.GetText());
 		return false;
 	}
-	// all ok
 	if ((FeatNames = new GML::Utils::GString[nrFeatures])==NULL)
 		return false;
 	for (UInt32 tr = 0;tr<nrFeatures;tr++)
