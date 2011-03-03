@@ -25,7 +25,10 @@ bool BatchPerceptron::PerformTrainIteration()
 {
 	UInt32	tr;
 	if (threadsCount==1)
+	{
 		return Train(&FullData,true,true);
+	}
+	
 	
 	// paralel mode
 	ExecuteParalelCommand(COMMAND_TRAIN);
