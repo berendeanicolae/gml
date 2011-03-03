@@ -380,7 +380,7 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd,bool clearDelta,bool 
 			notif->Error("(TRAIN)::Error reading record #%d from thread #%d",(*ptrIndex),ptd->ID);
 			return false;
 		}
-		if (GML::ML::VectorOp::IsPerceptronTrained(ptd->Record.Features,w,nrFeatures,*b,ptd->Record.Label)==false)
+		if (GML::ML::VectorOp::IsPerceptronTrained(ptd->Record.Features,ptd->Primary.Weight,nrFeatures,*b,ptd->Record.Label)==false)
 		{
 			if (useWeight)
 				error = ptd->Record.Label * ptd->Record.Weight * learningRate;
