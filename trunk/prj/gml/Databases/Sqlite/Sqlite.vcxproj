@@ -67,7 +67,8 @@
       <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib;$(SolutionDir)..\..\lib\sqlite3_debug.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)*.db $(SolutionDir)..\..\Bin\DataBases\*.*</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -91,7 +92,8 @@
       </ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)*.db $(SolutionDir)..\..\Bin\DataBases\*.*</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
