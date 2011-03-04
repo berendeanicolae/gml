@@ -78,8 +78,8 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToUInt32("SaveBest"					,saveBest				,SAVE_BEST_NONE,"!!LIST:None=0,BestACC,BestSE,BestSP!!");
 	LinkPropertyToUInt32("TestAfterIterations"		,testAfterIterations	,1);
 	LinkPropertyToDouble("MinimAcc"					,minimAcc				,100.0);
-	LinkPropertyToDouble("MinimSe"					,minimAcc				,100.1);
-	LinkPropertyToDouble("MinimSp"					,minimAcc				,100.1);
+	LinkPropertyToDouble("MinimSe"					,minimSe				,100.1);
+	LinkPropertyToDouble("MinimSp"					,minimSp				,100.1);
 	LinkPropertyToUInt32("MaxIterations"			,maxIterations			,10);
 	LinkPropertyToString("WeightFileName"			,WeightFileName			,"");
 	LinkPropertyToUInt32("InitialWeight"			,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,FromFile!!");
@@ -432,8 +432,9 @@ bool	GenericPerceptron::PerformTrain()
 
 	FullData.Res.time.Start();
 
-	for (it=0;it<maxIterations;it++)
+	for (it=0;(it<maxIterations) && (!StopAlgorithm);it++)
 	{
+		FullData.Res.Iteration = it;
 		if (PerformTrainIteration()==false)
 		{
 			notif->Error("Error on training iteration ...");
@@ -441,11 +442,12 @@ bool	GenericPerceptron::PerformTrain()
 		}
 		if ((it % testAfterIterations)==0)
 		{
-			if (PerformTestIteration()==false)
+			if (PerformTest()==false)			
 			{
 				notif->Error("Error on test iteration ...");
 				return false;
 			}
+			CheckTerminateCondition(FullData);
 			if (OnUpdateBestData())
 			{
 				switch (saveBest)
@@ -482,16 +484,19 @@ bool	GenericPerceptron::PerformTrain()
 }
 bool	GenericPerceptron::PerformTest()
 {
-	GML::Utils::GString		saveNM;
+	//GML::Utils::GString		saveNM;
 	if (PerformTestIteration()==false)
 	{
 		notif->Error("Error on test iteration ...");
 		return false;
-	}		
+	}	
+	FullData.Res.time.Stop();
+	notif->Notify(100,&FullData.Res,sizeof(FullData.Res));
 	return true;
 }
 void	GenericPerceptron::OnExecute(char *command)
 {
+	StopAlgorithm = false;
 	if (GML::Utils::GString::Equals(command,"train",true))
 	{
 		PerformTrain();
@@ -528,4 +533,37 @@ bool    GenericPerceptron::ExecuteParalelCommand(UInt32 command)
 bool	GenericPerceptron::OnInit()
 {
 	return true;
+}
+void	GenericPerceptron::OnTestTerminateCondition(PerceptronThreadData &ptd)
+{
+}
+void	GenericPerceptron::CheckTerminateCondition(PerceptronThreadData &ptd)
+{
+	if (ptd.Res.acc>=minimAcc)
+	{
+		notif->Info("[%s] -> Accuracy (Acc) exceded %2.3lf (%2.3lf) -> Terminating Algorithm !",ObjectName,minimAcc,ptd.Res.acc);
+		StopAlgorithm = true;
+		return;
+	}
+	if (ptd.Res.se>=minimSe)
+	{
+		notif->Info("[%s] -> Sensitivity (Se) exceded %2.3lf (%2.3lf) -> Terminating Algorithm !",ObjectName,minimSe,ptd.Res.se);
+		StopAlgorithm = true;
+		return;
+	}
+	if (ptd.Res.sp>=minimSp)
+	{
+		notif->Info("[%s] -> Specificity (Sp) exceded %2.3lf (%2.3lf) -> Terminating Algorithm !",ObjectName,minimSp,ptd.Res.sp);
+		StopAlgorithm = true;
+		return;
+	}
+	OnTestTerminateCondition(ptd);
+}
+bool	GenericPerceptron::OnUpdateBestData()
+{
+	return UpdateBest(FullData);
+}
+bool	GenericPerceptron::OnSaveData(char *fileName)
+{
+	return Save(FullData,fileName);
 }

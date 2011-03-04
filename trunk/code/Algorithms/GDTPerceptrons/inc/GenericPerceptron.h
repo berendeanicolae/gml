@@ -85,6 +85,8 @@ protected:
 	// Thread data	
 	PerceptronThreadData			FullData,BestData;
 	GML::Utils::ThreadParalelUnit	*tpu;
+	
+
 public:
 	PerceptronThreadData			*ptData;
 protected:
@@ -97,12 +99,15 @@ protected:
 	bool					Load(PerceptronThreadData &ptd,char *fileName);
 	bool					InitWeight(PerceptronThreadData &ptd);
 	bool					ExecuteParalelCommand(UInt32 command);
+	void					CheckTerminateCondition(PerceptronThreadData &ptd);
 
+	virtual void			OnTestTerminateCondition(PerceptronThreadData &ptd);
 	virtual bool			OnInit();
+	virtual bool			OnUpdateBestData();
+	virtual bool			OnSaveData(char *fileName);		
+
 	virtual bool			PerformTrainIteration()=0;
 	virtual bool			PerformTestIteration()=0;
-	virtual bool			OnUpdateBestData()=0;
-	virtual bool			OnSaveData(char *fileName)=0;		
 
 public:
 	GenericPerceptron();

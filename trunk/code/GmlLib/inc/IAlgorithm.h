@@ -14,8 +14,10 @@ namespace GML
 		class EXPORT IAlgorithm: public GML::Utils::GMLObject
 		{
 		protected:
-			HANDLE												hMainThread;
-			GML::Utils::INotifier								*notif;
+			HANDLE						hMainThread;
+			GML::Utils::INotifier		*notif;
+			bool						StopAlgorithm;
+			
 		public:			
 			IAlgorithm();
 

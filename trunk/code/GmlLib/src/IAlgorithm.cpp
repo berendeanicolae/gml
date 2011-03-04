@@ -23,6 +23,7 @@ GML::Algorithm::IAlgorithm::IAlgorithm()
 {
 	notif = NULL;
 	hMainThread = NULL;
+	StopAlgorithm = false;
 }
 
 bool GML::Algorithm::IAlgorithm::Execute(char *command)
