@@ -3,6 +3,7 @@
 RosenblattPerceptron::RosenblattPerceptron()
 {
 	ObjectName = "RosenblattPerceptron";
+	RemoveProperty("ThreadsCount");
 }
 
 bool RosenblattPerceptron::PerformTrainIteration()

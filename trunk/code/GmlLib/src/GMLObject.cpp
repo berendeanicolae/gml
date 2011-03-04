@@ -147,6 +147,19 @@ bool GML::Utils::GMLObject::LinkPropertyToInt32(char *Name,Int32 &LocalAddr,Int3
 
 	return AttrLinks.PushByRef(link);
 }
+bool GML::Utils::GMLObject::RemoveProperty(char *Name)
+{
+	GML::Utils::AttributeLink	*link;
+	UInt32						tr;
+
+	for (tr=0;tr<AttrLinks.Len();tr++)
+		if ((link=(GML::Utils::AttributeLink *)AttrLinks.GetPtrToObject(tr))!=NULL)
+		{
+			if (GML::Utils::GString::Equals(link->Name,Name,true))
+				return AttrLinks.Delete(tr);
+		}
+	return true;
+}
 bool GML::Utils::GMLObject::SetProperty(GML::Utils::AttributeList &config)
 {
 	UInt32						tr;
