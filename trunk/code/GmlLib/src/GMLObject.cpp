@@ -337,3 +337,10 @@ bool GML::Utils::GMLObject::GetProperty(GML::Utils::AttributeList &config)
 	}
 	return true;
 }
+bool GML::Utils::GMLObject::SavePropery(char *fileName)
+{
+	GML::Utils::AttributeList	config;
+	if (GetProperty(config)==false)
+		return false;
+	return config.Save(fileName);
+}

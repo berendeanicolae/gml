@@ -504,6 +504,7 @@ void	GenericPerceptron::OnExecute(char *command)
 	}
 	if (GML::Utils::GString::Equals(command,"test",true))
 	{
+		FullData.Res.time.Start();
 		PerformTest();
 		return;
 	}
