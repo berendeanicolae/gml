@@ -28,9 +28,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		"LearningRate=0.02;"
 		"InitialWeight=zeros;"
 		"useBias=false;"
+		"minimAcc=95.0;"
 		"SaveData=AfterEachIteration;"
 		"SaveBest=BestACC;"
-		"ThreadsCount=1;"
+		"ThreadsCount=2;"
 		"MaxIterations=(INT32)30;")==false)
 		return 1;
 	if (alg->Init()==false)

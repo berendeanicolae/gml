@@ -3,6 +3,7 @@
 GML::Utils::AlgorithmResult::AlgorithmResult(void)
 {
 	Clear();
+	Iteration = 0;
 }
 void GML::Utils::AlgorithmResult::Update(bool classType,bool corectellyClasified,double updateValue)
 {
@@ -23,7 +24,6 @@ void GML::Utils::AlgorithmResult::Clear()
 {
     tp = tn = fp = fn = 0;
     sp = se = acc = 0.0;
-	Iteration = 0;
 }
 void GML::Utils::AlgorithmResult::Compute()
 {

@@ -12,17 +12,5 @@ bool RosenblattPerceptron::PerformTrainIteration()
 }
 bool RosenblattPerceptron::PerformTestIteration()
 {
-	if (Test(&FullData)==false)
-		return false;
-	FullData.Res.time.Stop();
-	notif->Notify(100,&FullData.Res,sizeof(FullData.Res));
-	return true;
-}
-bool RosenblattPerceptron::OnUpdateBestData()
-{
-	return UpdateBest(FullData);
-}
-bool RosenblattPerceptron::OnSaveData(char *fileName)
-{
-	return Save(FullData,fileName);
+	return Test(&FullData);
 }

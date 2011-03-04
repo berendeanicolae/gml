@@ -53,15 +53,6 @@ bool BatchPerceptron::PerformTestIteration()
 			FullData.Res.Add(&ptData[tr].Res);
 		FullData.Res.Compute();
 	}
-	FullData.Res.time.Stop();
-	notif->Notify(100,&FullData.Res,sizeof(FullData.Res));
+
 	return true;
-}
-bool BatchPerceptron::OnUpdateBestData()
-{
-	return UpdateBest(FullData);
-}
-bool BatchPerceptron::OnSaveData(char *fileName)
-{
-	return Save(FullData,fileName);
 }

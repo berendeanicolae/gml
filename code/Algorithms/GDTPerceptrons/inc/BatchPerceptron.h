@@ -7,8 +7,6 @@ class BatchPerceptron: public GenericPerceptron
 {
 	bool	PerformTrainIteration();
 	bool	PerformTestIteration();
-	bool	OnUpdateBestData();
-	bool	OnSaveData(char *fileName);	
 	void	OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command);
 public:
 	BatchPerceptron();
