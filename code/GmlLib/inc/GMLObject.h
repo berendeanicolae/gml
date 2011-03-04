@@ -29,6 +29,7 @@ namespace GML
 			bool			SetPropertyFromFile(char *fileName);
 			
 			bool			GetProperty(GML::Utils::AttributeList &config);
+			bool			SavePropery(char *fileName);
 		public:
 			GMLObject();
 		};
