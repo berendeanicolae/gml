@@ -3,13 +3,13 @@
 
 #include "GenericPerceptron.h"
 
-class BatchPerceptron: public GenericPerceptron
+class OneSidePerceptron: public GenericPerceptron
 {
 	bool	PerformTrainIteration();
 	bool	PerformTestIteration();
 	void	OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command);
 public:
-	BatchPerceptron();
+	OneSidePerceptron();
 }; 
 
 #endif

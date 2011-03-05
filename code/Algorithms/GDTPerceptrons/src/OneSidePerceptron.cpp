@@ -1,15 +1,15 @@
-#include "BatchPerceptron.h"
+#include "OneSidePerceptron.h"
 
 #define COMMAND_TRAIN		0
 #define COMMAND_TEST		1
 
 
-BatchPerceptron::BatchPerceptron()
+OneSidePerceptron::OneSidePerceptron()
 {
-	ObjectName = "BatchPerceptron";
+	ObjectName = "OneSidePerceptron";
 	batchPerceptron = true;
 }
-void BatchPerceptron::OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command)
+void OneSidePerceptron::OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command)
 {
 	switch (command)
 	{
@@ -21,7 +21,7 @@ void BatchPerceptron::OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 comman
 			break;
 	}
 }
-bool BatchPerceptron::PerformTrainIteration()
+bool OneSidePerceptron::PerformTrainIteration()
 {
 	UInt32	tr;
 	if (threadsCount==1)
@@ -38,7 +38,7 @@ bool BatchPerceptron::PerformTrainIteration()
 		FullData.Primary.Add(ptData[tr].Delta);		
 	return true;
 }
-bool BatchPerceptron::PerformTestIteration()
+bool OneSidePerceptron::PerformTestIteration()
 {
 	UInt32	tr;
 
