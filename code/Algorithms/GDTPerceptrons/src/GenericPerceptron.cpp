@@ -55,8 +55,6 @@ bool PerceptronVector::Create(PerceptronVector &pv)
 //====================================================================================================
 PerceptronThreadData::PerceptronThreadData()
 {
-	RecordIndexes = NULL;
-	RecordIndexesCount = 0;
 	ExtraData = NULL;
 }
 //====================================================================================================
@@ -85,39 +83,18 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToUInt32("InitialWeight"			,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,FromFile!!");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1);
 }
-bool	GenericPerceptron::SplitIndexes(PerceptronThreadData *ptd,UInt32 ptdElements,PerceptronThreadData *original)
+bool	GenericPerceptron::SplitInterval(PerceptronThreadData *ptd,UInt32 ptdElements,GML::Utils::Interval &interval)
 {
-	UInt32	tr,idx;
-	UInt32	rap = (original->RecordIndexesCount/threadsCount)+1;
-	UInt32	index[2] = {0,0};
-	double	label;
+	UInt32	tr;
+	UInt32	rap = (interval.Size()/threadsCount)+1;
 
 	// aloc memorie pentru indexi
 	for (tr=0;tr<threadsCount;tr++)
 	{
-		if ((ptd[tr].RecordIndexes = new UInt32[rap])==NULL)
-		{
-			notif->Error("Unable to allocate RecordIndexes[%d] vector !",rap);
-			return false;
-		}
-		ptd[tr].RecordIndexesCount = 0;
-	}
-	// completez lista
-	for (tr=0;tr<original->RecordIndexesCount;tr++)
-	{
-		if (con->GetRecordLabel(label,original->RecordIndexes[tr])==false)
-		{
-			notif->Error("Unable to read record with index #%d",original->RecordIndexes[tr]);
-			return false;
-		}
-		if (label==1)
-			idx= 1;
+		if (tr+1==threadsCount)
+			ptd[tr].Range.Set(tr*rap+interval.Start,interval.End);
 		else
-			idx = 0;
-		ptd[index[idx]].RecordIndexes[ptd[index[idx]].RecordIndexesCount++]=original->RecordIndexes[tr];
-		index[idx]++;
-		if (index[idx]>=ptdElements)
-			index[idx]=0;
+			ptd[tr].Range.Set(tr*rap+interval.Start,(tr+1)*rap+interval.Start);
 	}
 
 	return true;
@@ -153,11 +130,28 @@ bool	GenericPerceptron::Create(PerceptronThreadData &ptd,UInt32 id,PerceptronThr
 	} else {
 		ptd.Delta.Destroy();
 	}
-	ptd.RecordIndexes = NULL;
-	ptd.RecordIndexesCount = 0;
 	ptd.Res.Clear();
 	ptd.ID = id;
 	return true;	
+}
+bool	GenericPerceptron::CreateIndexes()
+{
+	UInt32	tr;
+
+	if (RecordIndexes.Create(con->GetRecordCount())==false)
+	{
+		notif->Error("[%s] -> Unable to create Indexes[%d] !",ObjectName,con->GetRecordCount());
+		return false;
+	}
+	for (tr=0;tr<RecordIndexes.GetTotalAlloc();tr++)
+	{
+		if (RecordIndexes.Push(tr)==false)
+		{
+			notif->Error("[%s] -> Unable to add Indexes %d !",ObjectName,tr);
+			return false;
+		}
+	}
+	return true;
 }
 bool	GenericPerceptron::UpdateBest(PerceptronThreadData &ptd)
 {
@@ -300,23 +294,18 @@ bool	GenericPerceptron::Init()
 		threadsCount = 1;
 	if (threadsCount<1)
 		threadsCount = 1;
-
+	
+	if (CreateIndexes()==false)
+		return false;
 	// creez indexii pentru toate
 	if (Create(FullData,0xFFFFFFFF)==false)
 		return false;
+	FullData.Range.Set(0,RecordIndexes.Len());
 	if (InitWeight(FullData)==false)
 		return false;
 	if (Create(BestData,0xFFFFFFFF)==false)
 		return false;
 	
-	if ((FullData.RecordIndexes = new UInt32[con->GetRecordCount()])==NULL)
-	{
-		notif->Error("[%s] -> Unable to create RecordIndexes[%d] !",ObjectName,con->GetRecordCount());
-		return false;
-	}
-	FullData.RecordIndexesCount = con->GetRecordCount();
-	for (tr=0;tr<FullData.RecordIndexesCount;tr++)
-		FullData.RecordIndexes[tr]=tr;
 
 
 	if (threadsCount>1)
@@ -331,7 +320,7 @@ bool	GenericPerceptron::Init()
 			if (Create(ptData[tr],tr,&FullData)==false)
 				return false;
 		}
-		if (SplitIndexes(ptData,threadsCount,&FullData)==false)
+		if (SplitInterval(ptData,threadsCount,FullData.Range)==false)
 			return false;
 		
 		if ((tpu = new GML::Utils::ThreadParalelUnit[threadsCount])==NULL)
@@ -351,14 +340,26 @@ bool	GenericPerceptron::Init()
 
 	return OnInit();
 }
-bool    GenericPerceptron::Train(PerceptronThreadData *ptd,bool clearDelta,bool addDeltaToPrimary)
+bool	GenericPerceptron::Train(PerceptronThreadData *ptd,bool clearDelta,bool addDeltaToPrimary)
 {
-	UInt32	*ptrIndex = ptd->RecordIndexes;
-	UInt32	count = ptd->RecordIndexesCount;
+	return Train(ptd,&RecordIndexes,clearDelta,addDeltaToPrimary);
+}
+bool    GenericPerceptron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *indexes,bool clearDelta,bool addDeltaToPrimary)
+{
+	UInt32	*ptrIndex = indexes->GetList();
+	UInt32	count;
 	UInt32	nrFeatures = con->GetFeatureCount();
 	double	*w = ptd->Primary.Weight;
 	double	*b = ptd->Primary.Bias;
 	double	error;
+
+	if (ptd->Range.End>indexes->Len())
+	{
+		notif->Error("[%s] -> (TRAIN)::Invalid Range (%d..%d) for thread %d with %d records",ObjectName,ptd->Range.Start,ptd->Range.End,ptd->ID,indexes->Len());
+		return false;
+	}
+	ptrIndex += ptd->Range.Start;
+	count=ptd->Range.Size();
 
 	if (ptd->Delta.Weight!=NULL)
 	{
@@ -399,8 +400,12 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd,bool clearDelta,bool 
 }
 bool	GenericPerceptron::Test(PerceptronThreadData *ptd)
 {
-	UInt32	*ptrIndex = ptd->RecordIndexes;
-	UInt32	count = ptd->RecordIndexesCount;
+	return Test(ptd,&RecordIndexes);
+}
+bool	GenericPerceptron::Test(PerceptronThreadData *ptd,GML::Utils::Indexes *indexes)
+{
+	UInt32	*ptrIndex = indexes->GetList();
+	UInt32	count = ptd->Range.Size();
 	UInt32	nrFeatures = con->GetFeatureCount();
 	double	*w = ptd->Primary.Weight;
 	double	*b = ptd->Primary.Bias;
@@ -409,6 +414,7 @@ bool	GenericPerceptron::Test(PerceptronThreadData *ptd)
 		(*b)=0;
 
 	ptd->Res.Clear();
+	ptrIndex+=ptd->Range.Start;
 
 	while (count>0)
 	{

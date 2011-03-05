@@ -765,6 +765,7 @@ namespace GML
 
 			Interval();
 			void	Set(UInt32 _start,UInt32 _end);
+			UInt32	Size();
 		};
 		class  Indexes
 		{
