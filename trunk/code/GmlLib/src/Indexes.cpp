@@ -15,7 +15,10 @@ void GML::Utils::Interval::Set(UInt32 _start,UInt32 _end)
 		End = _start;
 	}
 }
-
+UInt32 GML::Utils::Interval::Size()
+{
+	return End-Start;
+}
 GML::Utils::Indexes::Indexes()
 {
 	List = NULL;

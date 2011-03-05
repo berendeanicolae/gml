@@ -24,8 +24,7 @@ struct PerceptronThreadData
 	PerceptronVector				Delta;
 	UInt32							ID;
 	GML::Utils::AlgorithmResult		Res;
-	UInt32							*RecordIndexes;
-	UInt32							RecordIndexesCount;
+	GML::Utils::Interval			Range;
 	void							*ExtraData;
 public:
 	PerceptronThreadData();
@@ -83,6 +82,7 @@ protected:
 	
 
 	// Thread data	
+	GML::Utils::Indexes				RecordIndexes;
 	PerceptronThreadData			FullData,BestData;
 	GML::Utils::ThreadParalelUnit	*tpu;
 	
@@ -91,9 +91,14 @@ public:
 	PerceptronThreadData			*ptData;
 protected:
 	bool					Train(PerceptronThreadData *ptd,bool clearDelta,bool addDeltaToPrimary);
+	bool					Train(PerceptronThreadData *ptd,GML::Utils::Indexes *recordIndexes,bool clearDelta,bool addDeltaToPrimary);
+	
 	bool					Test(PerceptronThreadData *ptd);
-	bool					SplitIndexes(PerceptronThreadData *ptd,UInt32 ptdElements,PerceptronThreadData *original);
+	bool					Test(PerceptronThreadData *ptd,GML::Utils::Indexes *recordIndexes);
+	
+	bool					SplitInterval(PerceptronThreadData *ptd,UInt32 ptdElements,GML::Utils::Interval &interval);
 	bool					Create(PerceptronThreadData &ptd,UInt32 id,PerceptronThreadData *original=NULL);
+	bool					CreateIndexes();
 	bool					UpdateBest(PerceptronThreadData &ptd);
 	bool					Save(PerceptronThreadData &ptd,char *fileName);
 	bool					Load(PerceptronThreadData &ptd,char *fileName);
