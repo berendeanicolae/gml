@@ -39,13 +39,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Configuration)\Python\</OutDir>
-    <IntDir>$(SolutionDir)$(Configuration)\Python\</IntDir>
+    <IntDir>$(SolutionDir)PythonInterface\$(ProjectName)\$(Configuration)</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetExt>.pyd</TargetExt>
+    <TargetName>_$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)$(Configuration)\Python\</OutDir>
-    <IntDir>$(SolutionDir)$(Configuration)\Python\</IntDir>
+    <IntDir>$(SolutionDir)$(ProjectName)$(Configuration)</IntDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.pyd</TargetExt>
   </PropertyGroup>
@@ -84,15 +85,17 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <SubSystem>Console</SubSystem>
-      <OutputFile>_$(TargetName).pyd</OutputFile>
+      <OutputFile>$(OutDir)\$(TargetName).pyd</OutputFile>
       <ImportLibrary>.\Release\_builder.lib</ImportLibrary>
       <AdditionalDependencies>$(PYTHON_LIB);$(SolutionDir)..\..\lib\gmllib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy _$(TargetName).pyd $(SolutionDir)..\..\bin\Python\*.*|copy $(TargetName).py $(SolutionDir)..\..\bin\Python\*.*</Command>
+      <Command>copy $(ProjectName).py $(OutDir)\$(ProjectName).py
+copy $(SolutionDir)$(Configuration)\Python\*.py* $(SolutionDir)Debug\Python\*.py*</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>set PYTHON_LIB="$(SolutionDir)..\..\lib\python31.lib";set PYTHON_INCLUDE=%PYTHON_PATH%\include"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
