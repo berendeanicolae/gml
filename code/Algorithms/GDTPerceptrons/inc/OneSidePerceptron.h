@@ -11,7 +11,6 @@ class OneSidePerceptron: public GenericPerceptron
 	};
 
 	UInt32							OneSideMargin;
-	UInt32							MaxError;
 	GML::Utils::Indexes				MarginIndexes;
 
 protected:
