@@ -59,11 +59,11 @@ bool SqliteDatabase::OnInit()
 		return false;
 	}
 	this->database_name = (char*)malloc(sizeof(char) * strlen(_text));
-	if(this->database == NULL)
+	if(this->database_name == NULL)
 	{
 		notifier->Error("Error, could not allocate memory for private buffer!");
 		return false;
-	}
+	}	
 	strcpy((char*)this->database_name, _text);
 	return true;
 }
@@ -432,7 +432,65 @@ bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTFVector<GML::DB::D
 
 bool SqliteDatabase::GetColumnInformations( char* TableName, GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr )
 {
-	return false;
+	char* statement = (char*)malloc(sizeof(char) * 15 + strlen(TableName));
+	if(NULL == statement)
+	{
+		notifier->Error("Failed to allocate memory for SqlStatement");
+		return false;
+	}
+	sprintf(statement, "");
+	sprintf(statement, "select * from %s", TableName);		
+	UInt32 counter = this->Select(statement);	
+	UInt32 column_count = 0;
+	UInt32 result = sqlite3_step(this->res);
+	if(result == SQLITE_ROW)
+	{
+		column_count = sqlite3_column_count(this->res);
+		for(UInt32 i=0; i < column_count; i++)
+		{
+			GML::DB::DBRecord rec;
+			UInt32 current_type = 0;
+			current_type = sqlite3_column_type(this->res, i);
+			rec.Name = (char*)sqlite3_column_name(this->res, i);				
+			switch(current_type)
+			{							
+				case SQLITE3_TEXT:
+					if (strcmp (rec.Name, "Hash") != 0)
+					{
+						current_type = GML::DB::ASCIISTTVAL;					
+					}
+					else
+					{					
+						current_type = GML::DB::HASHVAL;		
+					}
+					break;
+				case SQLITE_FLOAT:
+					current_type = GML::DB::DOUBLEVAL;									
+					break;
+				case SQLITE_NULL:
+					current_type = GML::DB::NULLVAL;
+					break;
+				case SQLITE_BLOB:					
+					current_type = GML::DB::BYTESVAL;
+					break;
+				case SQLITE_INTEGER:
+					current_type = GML::DB::INT32VAL;				
+					break;
+				default:					
+					notifier->Error("Unknown type of column.");
+			}			
+			rec.Type = current_type;
+			VectPtr.Push(rec);
+		}
+	}
+	else
+	{
+		free(statement);
+		return false;
+	}
+	
+	free(statement);
+	return true;
 }
 
 
