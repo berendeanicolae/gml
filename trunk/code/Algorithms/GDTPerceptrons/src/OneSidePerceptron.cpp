@@ -10,7 +10,6 @@ OneSidePerceptron::OneSidePerceptron()
 	batchPerceptron = true;
 
 	LinkPropertyToUInt32("OneSideMargin"			,OneSideMargin			,ONESIDE_NEGATIVE,"!!LIST:Positive=0,Negative!!");
-	LinkPropertyToUInt32("MaxError"					,MaxError				,0);
 }
 void OneSidePerceptron::OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command)
 {
@@ -40,6 +39,7 @@ bool OneSidePerceptron::OnInit()
 		//if (
 	}
 
+	return true;
 }
 bool OneSidePerceptron::PerformTrainIteration()
 {
