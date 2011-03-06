@@ -6,20 +6,22 @@
 class OneSidePerceptron: public GenericPerceptron
 {
 	enum {
-		ONESIDE_POZITIVE = 0,
-		ONESIDE_NEGATIVE
+		MARGIN_POZITIVE = 0,
+		MARGIN_NEGATIVE
 	};
 
-	UInt32							OneSideMargin;
-	GML::Utils::Indexes				MarginIndexes;
+	UInt32							MarginType;
+	GML::Utils::Indexes				MarginIndexes,WorkMarginIndexes,TrainIndexes;
 
 protected:
 	bool	PerformTrainIteration();
 	bool	PerformTestIteration();
 	void	OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command);
 	bool	OnInit();
+	bool	TestAndReduce(GML::Utils::Indexes *indexes,PerceptronThreadData *ptd);
 public:
 	OneSidePerceptron();
-}; 
+
+};
 
 #endif

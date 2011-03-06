@@ -17,7 +17,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("MarginPerceptron");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("OneSidePerceptron");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
@@ -32,8 +32,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		"SaveData=AfterEachIteration;"
 		"SaveBest=BestACC;"
 		"ThreadsCount=2;"
-		"MaxError=10;"
-		"MarginType=positive;"
+		"MaxError=0;"
+		"MarginType=Negative;"
 		"MaxIterations=(INT32)30;")==false)
 		return 1;
 	if (alg->Init()==false)
