@@ -11,6 +11,9 @@ GML::Utils::ThreadParalelUnit::ThreadParalelUnit(void)
 {
 	eventWorking = CreateEvent(NULL,TRUE,FALSE,NULL);
 	eventWaiting = CreateEvent(NULL,TRUE,TRUE,NULL);
+	// manual reset nu seteaza starea initiala
+	ResetEvent(eventWaiting);
+	SetEvent(eventWorking);
 	hThread = CreateThread(NULL,0,ThreadParalelUnit_ThreadProc,this,0,NULL);
 }
 
