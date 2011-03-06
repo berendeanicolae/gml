@@ -308,7 +308,7 @@ bool	GenericPerceptron::Init()
 	
 
 
-	if (threadsCount>1)
+	if (threadsCount>=1)
 	{
 		if ((ptData = new PerceptronThreadData[threadsCount])==NULL)
 		{

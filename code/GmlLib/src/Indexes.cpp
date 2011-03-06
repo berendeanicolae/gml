@@ -93,5 +93,7 @@ bool	GML::Utils::Indexes::CopyTo(GML::Utils::Indexes &idx)
 			return false;
 	}
 	memcpy(idx.List,List,sizeof(UInt32)*Count);
+	idx.Count = Count;
+
 	return true;
 }
