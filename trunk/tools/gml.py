@@ -1,12 +1,17 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 __author__		="HSC, GDT, MCU"
 __date__		="$Feb 27, 2011 03:02:34 PM$"
 __version__		="0.1.0.1"
-__copyright__	= "Copytight 2011 %s" %__author__
+__copyright__		= "Copytight 2011 %s" %__author__
 __webpage__		= "http://code.google.com/p/gml/"
 
 REPO = "http://www.infoiasi.ro/gml/repo.lst"
+LOCAL_REPOSITORY = "repo.lst"
 
-import sys, hashlib, zipfile
+# === DO NOT MODIFY BELOW ===
+
+import sys, os, re, hashlib, zipfile
 
 if sys.version_info < (2, 6):
 	raise("Not tested on this version of python. If you think it might work, please disable this check.")
@@ -16,14 +21,115 @@ elif sys.version_info > (3, 0):
 else:
 	from urllib import urlretrieve
 
-from optparse import OptionParser, OptionGroup
+from ctypes import *
+from glob import glob
 from time import strftime, localtime
 from os.path import basename, dirname, isfile, exists, join
 from os import makedirs
 from os import name as OS_TYPE
 
-LOCAL_REPOSITORY = "repo.lst"
+plugin_data = {"algorithms":"alg", "connectors":"dbc", "databases":"db", "notifiers":"ntf"}
 
+class OParse:
+	__options = {}
+
+	def __init__(self, argv, version):
+		self.argv = argv
+		self.version = version
+
+		self.add_option('version', short_alias='-v', long_alias='--version', param_nr=0, help='Display version information and exit', callback=self.display_version)
+		self.add_option('help', short_alias='-h', long_alias='--help', param_nr=0, help='Display commands and a description', callback=self.usage)
+
+	def __is_short_opt(self, opt):
+		if not opt.startswith("-") or len(opt) != 2:
+			return ""
+		for _opt in self.__options.keys():
+			if self.__options[_opt].short_alias == opt.lower():
+				return self.__options[_opt].__name__
+
+	def __is_long_opt(self, opt):
+		if not opt.startswith("--") or len(opt) < 4:
+			return ""
+		for _opt in self.__options.keys():
+			if self.__options[_opt].long_alias == opt.lower():
+				return self.__options[_opt].__name__
+
+	def display_version(self, params):
+		print("Version: %s" %self.version)
+	
+	def usage(self, params):
+		from os.path import basename
+		print("Usage: %s command [options]\n\nCommands:" %basename(self.argv[0]))
+		options = [x for x in self.__options.keys()]
+		options.sort()
+		for opt in options:
+			print("  %s, %s, %s\n\tdescription: %s\n\tparameters: %s" %(
+				self.__options[opt].__name__,
+				self.__options[opt].short_alias,
+				self.__options[opt].long_alias,
+				self.__options[opt].help,
+				str(self.__options[opt].param_nr)
+				)
+			)
+
+	def add_option(self, name, short_alias="", long_alias="", param_nr=0, accept_no_param=False, help="", callback=None):
+		name = name.lower()
+		short_alias = short_alias.lower()
+		long_alias = long_alias.lower()
+		if name in self.__options.keys():
+			raise NameError("Duplicate option: %s" %name)
+		for argv in self.__options.keys():
+			if self.__options[argv].short_alias == short_alias:
+				raise NameError("Duplicate short alias: %s. Already used for '%s' option." %(short_alias, argv))
+			if self.__options[argv].long_alias == long_alias:
+				raise NameError("Duplicate long alias: %s. Already used for '%s' option." %(long_alias, argv))
+		tmp_obj = type(
+				name,
+				(object,),
+				{
+					'callback':callback,
+					'help':help,
+					'short_alias':short_alias.lower(),
+					'long_alias':long_alias.lower(),
+					'param_nr':param_nr,
+					'accept_no_param':accept_no_param
+				}
+			      )
+		self.__options[name] = tmp_obj
+	
+	def parse(self):
+		if len(sys.argv) == 1:
+			self.usage([])
+			return
+		consumed = []
+		for argv in self.argv[1:]:
+			if argv in consumed:
+				continue
+			tmp = ""
+			if not argv in self.__options.keys():
+				tmp = self.__is_short_opt(argv)
+				if tmp == "":
+					tmp = self.__is_long_opt(argv)
+				if tmp == "" and not tmp is None:
+					print("Unknown option: %s" %argv)
+					return
+				else:
+					argv = tmp
+			opt = self.__options[argv]
+			if opt.param_nr == -1:
+				opt.param_nr = len(self.argv) - 2
+			if len(self.argv) < 2 + opt.param_nr and not opt.accept_no_param: #FIXME
+				print("[ERROR] Expecting %d parameters" %opt.param_nr)
+				return
+			if not opt.callback is None:
+				opt.callback(self.argv[2:2+opt.param_nr])
+			else:
+				print("[WARN] No callback function for '%s' option set!" %argv)
+			consumed += (self.argv[:2+opt.param_nr])
+			break #FIXME: allows only one command at a time
+		if len(consumed) != len(self.argv):
+			print("Some options did not get parsed") #TODO: add what options
+			
 def md5sum(filePath):
 	md5 = hashlib.md5()
 	file = open(filePath, "rb")
@@ -60,12 +166,57 @@ def __add_to_path(path):
 		return False
 		
 def add_to_path(path):
+	cm = ConsoleMessages()
 	cm.print_msg("\n[Registry operations]")
 	if not __add_to_path(path):
 		cm.print_error("Could not add GML root dir to PATH")
 		exit(1)
 	else:
 		cm.print_msg("Done adding GML root dir to PATH. Changes will be\nvisible the next time you login using this user")
+		
+class Plugin:
+	__no_data = b"No data set"
+	
+	def __init__(self, plg_name):
+		self.plg_name = plg_name
+		self.__cm = ConsoleMessages()
+		try:
+			self.dll = CDLL(self.plg_name)
+		except:
+			self.__cm.print_error("Could not load plugin: %s" %self.plg_name)
+	
+	def get_author(self):
+		author = c_char_p(self.__no_data)
+		try:
+			author = c_char_p(self.dll.GetInterfaceAuthor())
+		except:
+			pass
+		if author.value is None or author.value == "":
+			return self.__no_data.decode('ascii')
+		else:
+			return author.value.decode('ascii')
+			
+	def get_description(self):
+		description = c_char_p(self.__no_data)
+		try:
+			description = c_char_p(self.dll.GetInterfaceDescription())
+		except:
+			pass
+		if description.value is None or description.value == "":
+			return self.__no_data.decode('ascii')
+		else:
+			return description.value.decode('ascii')
+			
+	def get_version(self, ret_type=str):
+		version = c_int(0)
+		try:
+			version = c_int(self.dll.GetInterfaceVersion())
+		except:
+			pass
+		if version.value is None or version.value == 0:
+			return self.__no_data
+		else:
+			return version.value
 
 class ConsoleMessages:
 	def __source_info(self):
@@ -183,13 +334,13 @@ class Downloader:
 								sys.stdout.write("[ -- ] %-63s [OK]\n" %fname)
 						else:
 							ret &= self.download(sline[1], fname)
-					elif action == "deflate":
+					elif action == "inflate":
 						unz = unzip()
-						sys.stdout.write("Deflating %s ..." %sline[1])
+						sys.stdout.write("Inflating %s ..." %sline[1])
 						if not unz.extract(join(self.root, sline[1]), join(self.root, sline[2])):
 							return False
 						sys.stdout.write("\b"*70)
-						sys.stdout.write("[ -- ] Deflating %-53s [OK]\n" %fname)
+						sys.stdout.write("[ -- ] Inflating %-53s [OK]\n" %fname)
 					else:
 						return self.cm.print_error("Unknown action from repository file: \"%s\". Will not continue" %action)
 				else:
@@ -217,61 +368,74 @@ class Downloader:
 			sys.stdout.write(" [OK]\n")
 		return True
 
-#upgrade, version, status, install, create-project, etc
-def get_cmd_options():
-	parser = OptionParser(version=__version__)
+class ActionHandler:
+	def __init__(self):
+		self.__cm = ConsoleMessages()
 
-	pkg_group = OptionGroup(
-			parser,
-			"Installation options",
-			"These options control install and update related actions"
-			)
-	pkg_group.add_option(
-			"-i", "--install",
-			action = "store",
-			dest   = "install_path",
-			default= None,
-			help   = "Download and install GML to given path. An example would be: \"gml.py -i C:\\GML\". This option implies --environ"
-			)
-			
-	pkg_group.add_option(
-			"-e", "--environ",
-			action = "store_true",
-			dest   = "set_env",
-			default= False,
-			help   = "Tries to add GML root path to current user's PATH variable. Changes will be visible on next login"
-			)
-
-	parser.add_option_group(pkg_group)
-
-	return parser.parse_args()
-
-if __name__ == '__main__':
-	cm = ConsoleMessages()
-	
-	if len(sys.argv) == 1:
-		cm.print_msg("Nothing to do. Use -h or --help for more information")
-
-	(options, args) = get_cmd_options()
-
-	if not (options.install_path is None) and (len(options.install_path) > 0):
-		if exists(options.install_path):
-			if isfile(options.install_path):
-				cm.print_error("Install destination exists and is a file. Will not continue")
-				exit(1)
+	def handle_install(self, params):
+		if os.path.exists(params[0]):
+			if os.path.isfile(params[0]):
+				self.__cm.print_error("Installation directory exists and it is a file. Install aborted")
+				return False
 		else:
 			try:
-				makedirs(options.install_path)
+				os.makedirs(params[0])
 			except:
-				cm.print_error("Could not create %s. Please check if current user has enough rights" %options.install_path)
-				exit(1)
-		d = Downloader(repository=REPO, root=options.install_path)
+				self.__cm.print_error("Could not create %s. Please check is user has enough rights" %params[0])
+				return False
+		d = Downloader(repository=REPO, root=params[0])
 		if not d.update():
-			cm.print_error("Could not update GML")
-			exit(1)
-		add_to_path(options.install_path)
-		cm.print_msg("== Done ==")
-	if options.set_env:
-		print("Currently not available without -i option")
-		#add_to_path(options.install_path)
-		cm.print_msg("== Done ==")
+			self.__cm.print_error("Could not update GML")
+			return False
+		add_to_path(params[0])
+		self.__cm.print_msg("== Done ==")
+		
+	def handle_list(self, params, show_info=False):
+		if len(params) == 0:
+			self.__cm.print_msg("Posible parameters:")
+			for elem in plugin_data.keys():
+				self.__cm.print_msg("  %s" %elem)
+		else:
+			param = params[0].lower()
+			err = True
+			for lparam in [x.lower() for x in plugin_data.keys()]: #FIXME: beautifie codes
+				for found in re.findall(param, lparam):
+					found = found.lower()
+					if found in [x.lower() for x in plugin_data.keys()]:
+						err = False
+						for fname in glob(os.path.join(found, "*." + plugin_data[found])):
+							self.__cm.print_msg("%s" %os.path.basename(fname).split(".")[0])
+							if show_info:
+								plugin = Plugin(fname)
+								self.__cm.print_msg("  Author: %s\n  Version: %d\n  Description: %s\n" %(plugin.get_author(), plugin.get_version(), str(plugin.get_description())))
+			if err:
+				self.__cm.print_msg("Unknown parameter for 'list' command: %s" %param)
+				return
+		
+	def handle_info(self, params):
+		if len(params) < 2:
+			self.handle_list(params, show_info=True)
+
+if __name__ == '__main__':
+	action_handler = ActionHandler()
+	optparse = OParse(sys.argv, "0.1.0.1")
+	optparse.add_option('info', 
+				short_alias='-i',  
+				long_alias='--info', 
+				param_nr=-1, 
+				accept_no_param=True, 
+				help='Display a description for the given plugins', 
+				callback=action_handler.handle_info)
+	optparse.add_option('list', 
+				short_alias='-l', 
+				long_alias='--list', 
+				param_nr=1, 
+				accept_no_param=True, 
+				help='List available options for given pattern', 
+				callback=action_handler.handle_list)
+	optparse.add_option('install', 
+				long_alias='--install', 
+				param_nr=1, 
+				help='Install GML', 
+				callback=action_handler.handle_install)
+	optparse.parse()
