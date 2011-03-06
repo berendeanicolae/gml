@@ -6,14 +6,19 @@ struct ThreadLocalData
 	GML::Algorithm::IAlgorithm	*me;
 	GML::Utils::GString			command;
 	HANDLE						*ptrhMainThread;
+	GML::Utils::INotifier		*notif;
+	GML::Utils::Timer			*algTimer;
 };
 DWORD WINAPI IAlgorithm_ThreadProc(LPVOID lpParameter)
 {
 	ThreadLocalData *tld = (ThreadLocalData *)lpParameter;
+	tld->algTimer->Start();
 	tld->me->OnExecute(tld->command.GetText());
 	CloseHandle(*(tld->ptrhMainThread));
 	tld->command.Distroy();
 	(*(tld->ptrhMainThread)) = NULL;
+	tld->algTimer->Stop();
+	tld->notif->Info("[%s] -> Total algorithm time: %s",tld->me->GetObjectName(),tld->algTimer->GetPeriodAsString(tld->command));
 	// sterg obiectul
 	delete tld;
 	return 0;
@@ -52,6 +57,9 @@ bool GML::Algorithm::IAlgorithm::Execute(char *command)
 	}
 	tld->me = this;
 	tld->ptrhMainThread = &hMainThread;
+	tld->algTimer = &algTimer;
+	tld->notif = notif;
+	
 	// creez firul
 	if ((hMainThread = CreateThread(NULL,0,IAlgorithm_ThreadProc,tld,CREATE_SUSPENDED,NULL))==NULL)
 	{

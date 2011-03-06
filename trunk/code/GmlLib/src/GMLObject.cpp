@@ -344,3 +344,7 @@ bool GML::Utils::GMLObject::SavePropery(char *fileName)
 		return false;
 	return config.Save(fileName);
 }
+char*GML::Utils::GMLObject::GetObjectName()
+{
+	return ObjectName;
+}
