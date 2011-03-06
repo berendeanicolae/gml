@@ -1185,6 +1185,7 @@ namespace GML
 			
 			bool			GetProperty(GML::Utils::AttributeList &config);
 			bool			SavePropery(char *fileName);
+			char*			GetObjectName();
 		public:
 			GMLObject();
 		};
@@ -1568,9 +1569,10 @@ namespace GML
 		{
 		protected:
 			HANDLE						hMainThread;
-			GML::Utils::INotifier		*notif;
-			bool						StopAlgorithm;
-			
+			bool						StopAlgorithm;		
+			GML::Utils::INotifier		*notif;			
+			GML::Utils::Timer			algTimer;
+
 		public:			
 			IAlgorithm();
 

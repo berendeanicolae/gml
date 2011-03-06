@@ -30,6 +30,7 @@ namespace GML
 			
 			bool			GetProperty(GML::Utils::AttributeList &config);
 			bool			SavePropery(char *fileName);
+			char*			GetObjectName();
 		public:
 			GMLObject();
 		};
