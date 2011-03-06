@@ -3,24 +3,25 @@
 
 #include "GenericPerceptron.h"
 
-class OneSidePerceptron: public GenericPerceptron
+class MarginPerceptron: public GenericPerceptron
 {
 	enum {
-		ONESIDE_POZITIVE = 0,
-		ONESIDE_NEGATIVE
+		MARGIN_POZITIVE = 0,
+		MARGIN_NEGATIVE
 	};
 
-	UInt32							OneSideMargin;
+	UInt32							MarginType;
 	UInt32							MaxError;
-	GML::Utils::Indexes				MarginIndexes;
+	GML::Utils::Indexes				MarginIndexes,WorkMarginIndexes;
 
 protected:
 	bool	PerformTrainIteration();
 	bool	PerformTestIteration();
 	void	OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command);
 	bool	OnInit();
+	bool	TestAndReduce(GML::Utils::Indexes *indexes,PerceptronThreadData *ptd);
 public:
-	OneSidePerceptron();
+	MarginPerceptron();
 }; 
 
 #endif

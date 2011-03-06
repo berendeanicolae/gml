@@ -8,6 +8,9 @@ OneSidePerceptron::OneSidePerceptron()
 {
 	ObjectName = "OneSidePerceptron";
 	batchPerceptron = true;
+
+	LinkPropertyToUInt32("OneSideMargin"			,OneSideMargin			,ONESIDE_NEGATIVE,"!!LIST:Positive=0,Negative!!");
+	LinkPropertyToUInt32("MaxError"					,MaxError				,0);
 }
 void OneSidePerceptron::OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command)
 {
@@ -20,6 +23,23 @@ void OneSidePerceptron::OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 comm
 			Test(&ptd);
 			break;
 	}
+}
+bool OneSidePerceptron::OnInit()
+{
+	UInt32	tr,count;
+	UInt32	*list = RecordIndexes.GetList();
+	double	label;
+
+	for (tr=0,count;tr<RecordIndexes.Len();tr++,list++)
+	{
+		if (con->GetRecordLabel(label,*list)==false)
+		{
+			notif->Error("[%s] -> Unable to read record #d label",ObjectName,(*list));
+			return false;
+		}
+		//if (
+	}
+
 }
 bool OneSidePerceptron::PerformTrainIteration()
 {
