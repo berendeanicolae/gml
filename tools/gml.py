@@ -23,7 +23,7 @@ else:
 
 from ctypes import *
 from glob import glob
-from time import strftime, localtime
+from time import strftime, localtime, sleep
 from os.path import basename, dirname, isfile, exists, join
 from os import makedirs
 from os import name as OS_TYPE
@@ -63,13 +63,22 @@ class OParse:
 		options = [x for x in self.__options.keys()]
 		options.sort()
 		for opt in options:
+			tmp_params = "0"
+			if self.__options[opt].param_nr < 0:
+				tmp_params = "variable number"
+			else:
+				if self.__options[opt].param_nr == 0:
+					tmp_params = "None"
+				else:
+					tmp_params = str(self.__options[opt].param_nr)
+			if self.__options[opt].accept_no_param:
+				tmp_params += " (use with 0 parameters for more info)"
 			print("  %s, %s, %s\n\tdescription: %s\n\tparameters: %s" %(
 				self.__options[opt].__name__,
 				self.__options[opt].short_alias,
 				self.__options[opt].long_alias,
 				self.__options[opt].help,
-				str(self.__options[opt].param_nr)
-				)
+				tmp_params)
 			)
 
 	def add_option(self, name, short_alias="", long_alias="", param_nr=0, accept_no_param=False, help="", callback=None):
@@ -144,8 +153,8 @@ def md5sum(filePath):
 def __add_to_path(path):
 	if OS_TYPE == 'nt':
 		from winreg import CreateKey, SetValueEx, QueryValueEx, HKEY_CURRENT_USER, REG_EXPAND_SZ
-		import os
-		from os.path import isdir
+		from win32gui import SendMessage
+		from win32con import HWND_BROADCAST, WM_SETTINGCHANGE
 		envpath = None
 		HKCU = HKEY_CURRENT_USER
 		ENV = "Environment"
@@ -157,10 +166,37 @@ def __add_to_path(path):
 			except WindowsError:
 				envpath = DEFAULT
 			paths = [envpath]
-			if path and path not in envpath and isdir(path):
+			if path and path not in envpath and os.path.isdir(path):
 					paths.append(path)
 			envpath = os.pathsep.join(paths)
-			SetValueEx(key, PATH, 0, REG_EXPAND_SZ, envpath)
+			try:
+				SetValueEx(key, PATH, 0, REG_EXPAND_SZ, envpath)
+				SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, 'Environment')
+			except WindowsError:
+				return False
+			return True
+	else:
+		return False
+		
+def __add_to_pypath(path):
+	if OS_TYPE == 'nt':
+		from winreg import CreateKey, SetValueEx, QueryValueEx, HKEY_LOCAL_MACHINE, REG_SZ
+		envpath = ""
+		HKLM = HKEY_LOCAL_MACHINE
+		PythonPath = r"SOFTWARE\Python\PythonCore\%s\PythonPath" %sys.version.split()[0]
+		with CreateKey(HKLM, PythonPath) as key:
+			try:
+				envpath = QueryValueEx(key, "")[0]
+			except WindowsError:
+				return False
+			paths = [envpath]
+			if path and path not in envpath and os.path.isdir(path):
+					paths.append(path)
+			envpath = os.pathsep.join(paths)
+			try:
+				SetValueEx(key, "", 0, REG_SZ, envpath)
+			except WindowsError:
+				return False
 			return True
 	else:
 		return False
@@ -172,7 +208,12 @@ def add_to_path(path):
 		cm.print_error("Could not add GML root dir to PATH")
 		exit(1)
 	else:
-		cm.print_msg("Done adding GML root dir to PATH. Changes will be\nvisible the next time you login using this user")
+		cm.print_msg("  [ -- ] Done adding GML root dir to PATH. Changes will be\n  visible in a new command line")
+	#if not __add_to_pypath(path):
+	#	cm.print_error("Could not add GML root dir to PYTHONPATH")
+	#	exit(1)
+	#else:
+	#	cm.print_msg("  [ -- ] Done adding GML root dir to PYTHONPATH")
 		
 class Plugin:
 	__no_data = b"No data set"
@@ -217,6 +258,46 @@ class Plugin:
 			return self.__no_data
 		else:
 			return version.value
+			
+	def get_properties(self):
+		tmp_fname = b"~prop.tmp"
+		ret = "\n"
+		ready = c_bool(False)
+		try:
+			ready = c_bool(self.dll.SaveInterfaceTemplate(c_char_p(tmp_fname)))
+		except:
+			pass
+		if ready:
+			RFILE = None
+			lines = []
+			try:
+				RFILE = open(tmp_fname, "rt")
+				lines = RFILE.readlines()
+			except:
+				pass
+			finally:
+				if RFILE != None:
+					RFILE.close()
+				if os.path.isfile(tmp_fname):
+					try:
+						os.remove(tmp_fname)
+					except:
+						pass
+			ignore = False
+			for line in lines:
+				line = line.strip();
+				if len(line) == 0:
+					continue
+				if line.startswith("["):
+					ignore = True
+				if line.endswith("]"):
+					ignore = False
+					continue
+				if ignore:
+					continue
+				ret += "\t" + line + "\n"
+		return ret
+			
 
 class ConsoleMessages:
 	def __source_info(self):
@@ -296,7 +377,7 @@ class Downloader:
 			percent = 100
 		if numblocks != 0:
 			sys.stdout.write("\b"*70)
-			sys.stdout.write("[%3d%%] %-63s" % (percent, dest))
+			sys.stdout.write("  [%3d%%] %-61s" % (percent, dest))
 	
 	def update(self):
 		self.cm.print_msg("[Update process]")
@@ -331,7 +412,7 @@ class Downloader:
 							if sline[3] != md5sum(fname):
 								ret &= self.download(sline[1], fname)
 							else:
-								sys.stdout.write("[ -- ] %-63s [OK]\n" %fname)
+								sys.stdout.write("  [ -- ] %-61s [OK]\n" %fname)
 						else:
 							ret &= self.download(sline[1], fname)
 					elif action == "inflate":
@@ -340,7 +421,7 @@ class Downloader:
 						if not unz.extract(join(self.root, sline[1]), join(self.root, sline[2])):
 							return False
 						sys.stdout.write("\b"*70)
-						sys.stdout.write("[ -- ] Inflating %-53s [OK]\n" %fname)
+						sys.stdout.write("  [ -- ] Inflating %-51s [OK]\n" %fname)
 					else:
 						return self.cm.print_error("Unknown action from repository file: \"%s\". Will not continue" %action)
 				else:
@@ -369,8 +450,9 @@ class Downloader:
 		return True
 
 class ActionHandler:
-	def __init__(self):
+	def __init__(self, root):
 		self.__cm = ConsoleMessages()
+		self.__root = os.path.dirname(root)
 
 	def handle_install(self, params):
 		if os.path.exists(params[0]):
@@ -398,16 +480,16 @@ class ActionHandler:
 		else:
 			param = params[0].lower()
 			err = True
-			for lparam in [x.lower() for x in plugin_data.keys()]: #FIXME: beautifie codes
+			for lparam in [x.lower() for x in plugin_data.keys()]: #FIXME: beautifie code
 				for found in re.findall(param, lparam):
 					found = found.lower()
 					if found in [x.lower() for x in plugin_data.keys()]:
 						err = False
-						for fname in glob(os.path.join(found, "*." + plugin_data[found])):
+						for fname in glob(os.path.join(os.path.join(self.__root, found), "*." + plugin_data[found])):
 							self.__cm.print_msg("%s" %os.path.basename(fname).split(".")[0])
 							if show_info:
 								plugin = Plugin(fname)
-								self.__cm.print_msg("  Author: %s\n  Version: %d\n  Description: %s\n" %(plugin.get_author(), plugin.get_version(), str(plugin.get_description())))
+								self.__cm.print_msg("  Author: %s\n  Version: %d\n  Description: %s\n  Properties: %s\n" %(plugin.get_author(), plugin.get_version(), plugin.get_description(), plugin.get_properties()))
 			if err:
 				self.__cm.print_msg("Unknown parameter for 'list' command: %s" %param)
 				return
@@ -417,7 +499,7 @@ class ActionHandler:
 			self.handle_list(params, show_info=True)
 
 if __name__ == '__main__':
-	action_handler = ActionHandler()
+	action_handler = ActionHandler(sys.argv[0])
 	optparse = OParse(sys.argv, "0.1.0.1")
 	optparse.add_option('info', 
 				short_alias='-i',  
