@@ -86,8 +86,18 @@
 		if (t!=NULL)										\
 			return t->GetProperty(attr);					\
 		return false;										\
-	};		
-
+	};														\
+	extern "C" EXPORT bool	SaveInterfaceTemplate(char* fileName)	\
+	{																\
+		GML::Utils::AttributeList attr;								\
+		tip* t = new tip();											\
+		if (t!=NULL) {												\
+			if (t->GetProperty(attr))								\
+				return attr.Save(fileName);							\
+			}														\
+		return false;												\
+	};															
+	
 
 #endif
 
