@@ -631,7 +631,8 @@ bool GML::Utils::AttributeList::Load(char *fileName)
 bool GML::Utils::AttributeList::Create(char *text,char separator)
 {
 	GML::Utils::GString			temp;
-	char						sep[2];
+	char*						txt;
+	int							tr,count;
 
 	Clear();
 
@@ -641,10 +642,17 @@ bool GML::Utils::AttributeList::Create(char *text,char separator)
 		return false;
 	if ((separator!=0) && (separator!='\n'))
 	{
-		sep[0]=separator;
-		sep[1]=0;
-		if (temp.Replace(sep,"\n")==false)
-			return false;
+		txt = temp.GetText();
+		count=0;
+		for (tr=0;txt[tr]!=0;tr++)
+		{
+			if ((txt[tr]==separator) && (count==0))
+				txt[tr]='\n';
+			if (txt[tr]=='{')
+				count++;
+			if (txt[tr]=='}')
+				count--;
+		}
 	}
 
 	return FromString(temp);
