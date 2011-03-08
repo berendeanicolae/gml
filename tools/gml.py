@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-__author__		="HSC, GDT, MCU"
-__date__		="$Feb 27, 2011 03:02:34 PM$"
-__version__		="0.1.0.1"
+__author__		= "HSC, GDT, MCU"
+__date__		= "$March 8, 2011 12:02:34 PM$"
+__version__		= "0.1.0.1"
 __copyright__		= "Copytight 2011 %s" %__author__
 __webpage__		= "http://code.google.com/p/gml/"
 
@@ -11,7 +11,7 @@ LOCAL_REPOSITORY = "repo.lst"
 
 # === DO NOT MODIFY BELOW ===
 
-import sys, os, re, hashlib, zipfile
+import sys, os, re, hashlib, zipfile, shutil
 
 if sys.version_info < (2, 6):
 	raise("Not tested on this version of python. If you think it might work, please disable this check.")
@@ -183,7 +183,7 @@ def __add_to_pypath(path):
 		from winreg import CreateKey, SetValueEx, QueryValueEx, HKEY_LOCAL_MACHINE, REG_SZ
 		envpath = ""
 		HKLM = HKEY_LOCAL_MACHINE
-		PythonPath = r"SOFTWARE\Python\PythonCore\%s\PythonPath" %sys.version.split()[0]
+		PythonPath = r"SOFTWARE\Python\PythonCore\%s\PythonPath" %sys.version.split()[0] #FIXME: 3.1.3 --> 3.1
 		with CreateKey(HKLM, PythonPath) as key:
 			try:
 				envpath = QueryValueEx(key, "")[0]
@@ -465,11 +465,16 @@ class ActionHandler:
 			except:
 				self.__cm.print_error("Could not create %s. Please check is user has enough rights" %params[0])
 				return False
+		self.__install_root = params[0]
 		d = Downloader(repository=REPO, root=params[0])
 		if not d.update():
 			self.__cm.print_error("Could not update GML")
 			return False
 		add_to_path(params[0])
+		try:
+			shutil.copyfile(os.path.join(self.__install_root, "gmllib.py"), os.path.join(sys.prefix, "Lib\\gmllib.py"))
+		except:
+			self.__cm.print_error("Could not copy 'gmllib.py' to %s" %(os.path.join(sys.prefix, "Lib")))
 		self.__cm.print_msg("== Done ==")
 		
 	def handle_list(self, params, show_info=False):
