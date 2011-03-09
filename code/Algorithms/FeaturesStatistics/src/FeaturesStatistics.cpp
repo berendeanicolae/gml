@@ -14,6 +14,10 @@ double Compute_RapPozNeg(FeaturesInformations *f)
 	else
 		return -(f->countNegative/f->countPozitive);
 }
+double Compute_ProcDiff(FeaturesInformations *f)
+{
+	return ((f->countPozitive*100)/f->totalPozitive)-((f->countNegative*100)/f->totalNegative);
+}
 double Compute_F1(FeaturesInformations *f)
 {
 	double t_mal = f->countPozitive;
@@ -52,7 +56,8 @@ FeaturesStatistics::FeaturesStatistics()
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1);
 
 	StatsData[0].Create("Poz/Neg",Compute_RapPozNeg);
-	StatsData[1].Create("F1",Compute_F1);
+	StatsData[1].Create("ProcDiff",Compute_ProcDiff);
+	StatsData[2].Create("F1",Compute_F1);
 }
 bool FeaturesStatistics::CreateFeaturesInfo(FeaturesThreadData *fInfo)
 {
