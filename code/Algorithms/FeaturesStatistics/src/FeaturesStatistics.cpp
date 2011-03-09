@@ -18,6 +18,10 @@ double Compute_ProcDiff(FeaturesInformations *f)
 {
 	return ((f->countPozitive*100)/f->totalPozitive)-((f->countNegative*100)/f->totalNegative);
 }
+double Compute_Diff(FeaturesInformations *f)
+{
+	return f->countPozitive-f->countNegative;
+}
 double Compute_F1(FeaturesInformations *f)
 {
 	double t_mal = f->countPozitive;
@@ -76,8 +80,9 @@ FeaturesStatistics::FeaturesStatistics()
 
 	StatsData[0].Create("Poz/Neg",Compute_RapPozNeg);
 	StatsData[1].Create("ProcDiff",Compute_ProcDiff);
-	StatsData[2].Create("F1",Compute_F1);
-	StatsData[3].Create("F2",Compute_F2);
+	StatsData[2].Create("Diff",Compute_Diff);
+	StatsData[3].Create("F1",Compute_F1);
+	StatsData[4].Create("F2",Compute_F2);
 }
 bool FeaturesStatistics::CreateFeaturesInfo(FeaturesThreadData *fInfo)
 {
