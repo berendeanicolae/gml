@@ -17,7 +17,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("MarginPerceptron");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("FeaturesStatistics");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
@@ -39,7 +39,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (alg->Init()==false)
 		return 1;
 		
-	alg->Execute("train");
+	alg->Execute("compute");
 	alg->Wait();
 
 	printf("Algorithm done !\n");
