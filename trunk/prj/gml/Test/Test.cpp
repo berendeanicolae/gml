@@ -8,7 +8,7 @@
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	GML::Utils::AttributeList	attr;
+	//GML::Utils::AttributeList	attr;
 
 	//attr.AddString("DbName","SimpleTextFileDB");
 	//attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\a.txt");  
