@@ -1,4 +1,5 @@
 #include "FeaturesStatistics.h"
+#include <math.h>
 
 void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
 {
@@ -6,6 +7,41 @@ void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
 	fs->OnRunThreadCommand(fs->fData[paralel->GetID()],paralel->GetCodeID());
 }
 //====================================================================================================
+double Compute_RapPozNeg(FeaturesInformations *f)
+{
+	if (f->countPozitive>=f->countNegative)
+		return f->countPozitive/f->countNegative;
+	else
+		return -(f->countNegative/f->countPozitive);
+}
+double Compute_F1(FeaturesInformations *f)
+{
+	double t_mal = f->countPozitive;
+	double f_mal = f->totalPozitive - t_mal;
+	double t_clean = f->countNegative;
+	double f_clean = f->totalNegative - t_clean;
+
+	double all_mal = f->totalPozitive;
+	double all_clean = f->totalNegative;
+	double miu_pl = (double)t_mal / all_mal;
+	double miu_min = (double)t_clean / all_clean;
+	double sigma_pl = sqrt((double)(t_mal * (1 - miu_pl) * (1 - miu_pl) + f_mal * miu_pl * miu_pl));
+	double sigma_min = sqrt((double)(t_clean * (1 - miu_min) * (1 - miu_min) + f_clean * miu_min * miu_min));
+	double v1 = miu_pl - miu_min;
+	double v2 = sigma_pl + sigma_min;
+	//if (v1 < 0) v1 = -v1;
+	if (v2 < 0) v2 = -v2;
+	if (t_mal + t_clean == 0) return 0;
+	return (v1*100000) / v2;
+	//double precision = (double)(f.t_mal) / ((double)f.t_mal);
+}
+
+//====================================================================================================
+void Stats::Create(char *_name,double (*_fnCompute) ( FeaturesInformations *info))
+{
+	Name = _name;
+	fnCompute = _fnCompute;
+}
 FeaturesStatistics::FeaturesStatistics()
 {
 	ObjectName = "FeaturesStatistics";
@@ -14,6 +50,9 @@ FeaturesStatistics::FeaturesStatistics()
 	LinkPropertyToString("Connector"				,Conector				,"");
 	LinkPropertyToString("Notifier"					,Notifier				,"");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1);
+
+	StatsData[0].Create("Poz/Neg",Compute_RapPozNeg);
+	StatsData[1].Create("F1",Compute_F1);
 }
 bool FeaturesStatistics::CreateFeaturesInfo(FeaturesThreadData *fInfo)
 {
@@ -34,6 +73,8 @@ bool FeaturesStatistics::CreateFeaturesInfo(FeaturesThreadData *fInfo)
 		fInfo->FI[tr].NegativeCount = 0;
 		fInfo->FI[tr].PozitiveCount = 0;
 	}
+	fInfo->totalNegative = 0;
+	fInfo->totalPozitive = 0;
 
 	return true;
 }
@@ -108,6 +149,10 @@ void FeaturesStatistics::OnRunThreadCommand(FeaturesThreadData &ftd,UInt32 comma
 			notif->Error("[%s] -> Unable to read record %d",ObjectName,tr);
 			return;
 		}
+		if (ftd.Record.Label==1)
+			ftd.totalPozitive++;
+		else
+			ftd.totalNegative++;
 		for (gr=0;(gr<count) && (StopAlgorithm==false);gr++)
 			if (ftd.Record.Features[gr]!=0)
 			{
@@ -120,10 +165,26 @@ void FeaturesStatistics::OnRunThreadCommand(FeaturesThreadData &ftd,UInt32 comma
 }
 void FeaturesStatistics::PrintStats()
 {
-	UInt32	tr;
+	UInt32					tr,gr;
+	GML::Utils::GString		str;
+	FeaturesInformations	info;
+
+	info.totalNegative = All.totalNegative;
+	info.totalPozitive = All.totalPozitive;
 
 	for (tr=0;tr<con->GetFeatureCount();tr++)
-		notif->Info("%3d|Poz=%6d|Neg=%6d|",tr,All.FI[tr].PozitiveCount,All.FI[tr].NegativeCount);
+	{
+		info.countNegative = All.FI[tr].NegativeCount;
+		info.countPozitive = All.FI[tr].PozitiveCount;
+
+		str.SetFormated("%3d|Poz=%6d|Neg=%6d|",tr,All.FI[tr].PozitiveCount,All.FI[tr].NegativeCount);
+		for (gr=0;gr<STATS_FNC_COUNT;gr++)
+		{
+			str.AddFormated("%s=",StatsData[gr].Name);
+			str.AddFormated("%.3lf|",StatsData[gr].fnCompute(&info));
+		}
+		notif->Info(str.GetText());
+	}
 
 }
 bool FeaturesStatistics::Compute()
@@ -153,6 +214,8 @@ bool FeaturesStatistics::Compute()
 			All.FI[gr].PozitiveCount+=fData[tr].FI[gr].PozitiveCount;
 			All.FI[gr].NegativeCount+=fData[tr].FI[gr].NegativeCount;
 		}
+		All.totalNegative+=fData[tr].totalNegative;
+		All.totalPozitive+=fData[tr].totalPozitive;
 	}
 	notif->Info("[%s] -> DataBase processed ok",ObjectName);
 	PrintStats();
