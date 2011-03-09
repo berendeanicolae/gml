@@ -475,6 +475,22 @@ class ActionHandler:
 			shutil.copyfile(os.path.join(self.__install_root, "gmllib.py"), os.path.join(sys.prefix, "Lib\\gmllib.py"))
 		except:
 			self.__cm.print_error("Could not copy 'gmllib.py' to %s" %(os.path.join(sys.prefix, "Lib")))
+		WFILE = None
+		try:
+			WFILE = open(os.path.join(sys.prefix, "Lib\\gmllib.py"), "wt")
+			WFILE.write("""import sys
+sys.path.append(r'%s')
+from attributelist import *
+from ialgorithm import *
+from builder import *
+""" %os.path.join(self.__install_root, "Python"))
+			WFILE.close()
+		except:
+			self.__cm.print_error("Could not modify 'gmllib.py'")
+		try:
+			shutil.move(os.path.join(self.__install_root, "gmllib.py"), os.path.join(self.__install_root, "gmllib.py.bak"))
+		except:
+			pass
 		self.__cm.print_msg("== Done ==")
 		
 	def handle_list(self, params, show_info=False):
