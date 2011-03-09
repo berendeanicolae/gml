@@ -39,6 +39,25 @@ double Compute_F1(FeaturesInformations *f)
 	return (v1*100000) / v2;
 	//double precision = (double)(f.t_mal) / ((double)f.t_mal);
 }
+double Compute_F2(FeaturesInformations *f)
+{
+	double t_mal = f->countPozitive;
+	double f_mal = f->totalPozitive - t_mal;
+	double t_clean = f->countNegative;
+	double f_clean = f->totalNegative - t_clean;
+
+	double all_mal = f->totalPozitive;
+	double all_clean = f->totalNegative;
+    double miu_pl = (double)t_mal / all_mal;
+    double miu_min = (double)t_clean / all_clean;
+    double miu_total = (double)(t_mal + t_clean) / (all_mal + all_clean);
+    double sigma_pl = sqrt((double)(t_mal * (1 - miu_pl) * (1 - miu_pl) + f_mal * miu_pl * miu_pl));
+    double sigma_min = sqrt((double)(t_clean * (1 - miu_min) * (1 - miu_min) + f_clean * miu_min * miu_min));
+    double v1 = (miu_pl - miu_total) * (miu_pl - miu_total) + (miu_min - miu_total) * (miu_min - miu_total);
+    double v2 = sigma_pl*sigma_pl + sigma_min*sigma_min;
+    if (t_mal + t_clean == 0) return 0;
+    return (v1*10000000) / v2;
+}
 
 //====================================================================================================
 void Stats::Create(char *_name,double (*_fnCompute) ( FeaturesInformations *info))
@@ -58,6 +77,7 @@ FeaturesStatistics::FeaturesStatistics()
 	StatsData[0].Create("Poz/Neg",Compute_RapPozNeg);
 	StatsData[1].Create("ProcDiff",Compute_ProcDiff);
 	StatsData[2].Create("F1",Compute_F1);
+	StatsData[3].Create("F2",Compute_F2);
 }
 bool FeaturesStatistics::CreateFeaturesInfo(FeaturesThreadData *fInfo)
 {
