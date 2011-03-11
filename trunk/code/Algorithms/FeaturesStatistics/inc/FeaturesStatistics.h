@@ -30,7 +30,7 @@ public:
 	FeaturesThreadData() { FI=NULL; }
 };
 
-#define STATS_FNC_COUNT	5
+#define STATS_FNC_COUNT	6
 
 class FeaturesStatistics: public GML::Algorithm::IAlgorithm
 {
