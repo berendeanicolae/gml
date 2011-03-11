@@ -11,6 +11,12 @@
 #define CONNECTOR_FOLDER	"Connectors"
 #define ALGORITHM_FOLDER	"Algorithms"
 
+#ifdef _DEBUG
+	#define DEBUGMSG	printf
+#else
+	#define DEBUGMSG
+#endif
+
 #ifdef WIN32
 	#define OS_WINDOWS
 #endif

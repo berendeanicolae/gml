@@ -62,6 +62,14 @@ double Compute_F2(FeaturesInformations *f)
     if (t_mal + t_clean == 0) return 0;
     return (v1*10000000) / v2;
 }
+double Compute_ProcTo100(FeaturesInformations *f)
+{
+	if (f->countPozitive>f->countNegative)
+		return 100-(f->countNegative/f->countPozitive)*100;
+	if (f->countPozitive<f->countNegative)
+		return -(100-(f->countPozitive/f->countNegative)*100);
+	return 0;
+}
 
 //====================================================================================================
 void Stats::Create(char *_name,double (*_fnCompute) ( FeaturesInformations *info))
@@ -83,6 +91,7 @@ FeaturesStatistics::FeaturesStatistics()
 	StatsData[2].Create("Diff",Compute_Diff);
 	StatsData[3].Create("F1",Compute_F1);
 	StatsData[4].Create("F2",Compute_F2);
+	StatsData[5].Create("ProcTo100",Compute_ProcTo100);
 }
 bool FeaturesStatistics::CreateFeaturesInfo(FeaturesThreadData *fInfo)
 {

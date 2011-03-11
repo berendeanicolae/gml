@@ -12,6 +12,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Connectors", "Connectors", "{CB091987-2341-425C-835B-C77596F5ABB0}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcxproj", "{0EFF33E4-4013-4FC7-AA4C-D2E1DAF9A43D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Python", "Python", "{662119E1-C7A2-4567-859F-E310E228EE46}"
 EndProject
@@ -22,26 +25,59 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ialgorithm", "PythonInterface\ialgorithm\ialgorithm.vcxproj", "{FEF29EBE-29A3-77BA-9965-5CF73C18CCD6}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BatchPerceptron", "Algorithms\BatchPerceptron\BatchPerceptron.vcxproj", "{885E1B6D-F1F8-41D6-AE93-2EC44C48077B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RosenblattPerceptron", "Algorithms\RosenblattPerceptron\RosenblattPerceptron.vcxproj", "{70C2658A-6177-49F0-97A1-0EF9BA8FF6E3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BitConnector", "Connectors\BitConnector\BitConnector.vcxproj", "{DABE1B18-56F3-460C-9E58-25F89B9C9765}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FullCacheConnector", "Connectors\FullCacheConnector\FullCacheConnector.vcxproj", "{1ECE0CF3-CB18-43D2-B8C8-F910F224CD97}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SplitConnector", "Connectors\SplitConnector\SplitConnector.vcxproj", "{951EFEE3-BF89-42EC-AA4E-E6CAE473E2CB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleTextFileDB", "Databases\SimpleTextFileDB\SimpleTextFileDB.vcxproj", "{089301A7-B086-4B1F-943B-9C110F719835}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sqlite", "Databases\Sqlite\Sqlite.vcxproj", "{B560B716-6C44-487D-96E3-315230CEEAB4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConsoleNotifier", "Notifiers\ConsoleNotifier\ConsoleNotifier.vcxproj", "{EB787576-09FE-4AD3-9953-6FA1AA64D612}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MarginPerceptron", "Algorithms\MarginPerceptron\MarginPerceptron.vcxproj", "{E974EB5F-F042-4C4E-ACFA-DFC6A53A5CC5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OneSidePerceptron", "Algorithms\OneSidePerceptron\OneSidePerceptron.vcxproj", "{4A132877-BADC-4859-8F5E-0B5935E8B997}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FeaturesStatistics", "Algorithms\FeaturesStatistics\FeaturesStatistics.vcxproj", "{B0A2D5CC-E222-40BE-93EB-3CED4B837D82}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

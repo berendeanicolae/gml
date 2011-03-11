@@ -22,7 +22,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 1;
 	if (alg->SetProperty(
 		"Name=Test;"
-		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\log_all.txt};"
+		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\log_all_cleanset_mare.txt};"
 		"Connector=BitConnector{Table=RecordTable};"
 		"Notifier=ConsoleNotifier{useColors=True};"
 		"LearningRate=0.02;"
@@ -32,14 +32,14 @@ int _tmain(int argc, _TCHAR* argv[])
 		"SaveData=AfterEachIteration;"
 		"SaveBest=BestACC;"
 		"ThreadsCount=2;"
-		"MaxError=0;"
+		"MaxError=10000;"
 		"MarginType=Negative;"
 		"MaxIterations=(INT32)30;")==false)
 		return 1;
 	if (alg->Init()==false)
 		return 1;
 		
-	alg->Execute("compute");
+	alg->Execute("train");
 	alg->Wait();
 
 	printf("Algorithm done !\n");

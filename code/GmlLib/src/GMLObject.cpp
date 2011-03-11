@@ -1,6 +1,5 @@
 #include "GMLObject.h"
 
-#define DEBUGMSG	printf
 
 #define TEST_SET_PROP(attr_sursa_name,tip,tip_sursa) \
 				if (attr->AttributeType==attr_sursa_name) \

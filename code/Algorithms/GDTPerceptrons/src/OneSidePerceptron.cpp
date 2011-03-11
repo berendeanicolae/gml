@@ -180,6 +180,7 @@ bool OneSidePerceptron::PerformTrainIteration()
 		ExecuteParalelCommand(COMMAND_REDUCE);
 		for (tr=0,errorCount=0;tr<threadsCount;tr++)
 			errorCount+=ptData[tr].Range.Size();
+		DEBUGMSG("ERROR_COUNT = %d\n",errorCount);
 	} while (errorCount>0);
 
 	return true;
