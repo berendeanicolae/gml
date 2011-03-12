@@ -93,7 +93,7 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToString("WeightFileName"			,WeightFileName			,"");
 	LinkPropertyToUInt32("InitialWeight"			,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,FromFile!!");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1);
-	LinkPropertyToUInt32("AdjustWeightMode"			,adjustWeightMode		,ADJUST_WEIGHT_LEARNING_RATE,"!!LIST:UseLearningRate=0,UseWeight,UseLeastMeanSquare,UseSplitLearningRate!!");
+	LinkPropertyToUInt32("AdjustWeightMode"			,adjustWeightMode		,ADJUST_WEIGHT_LEARNING_RATE,"!!LIST:UseLearningRate=0,UseWeight,UseLeastMeanSquare,UseSplitLearningRate,UseSplitLeastMeanSquare!!");
 }
 bool	GenericPerceptron::SplitInterval(PerceptronThreadData *ptd,UInt32 ptdElements,GML::Utils::Interval &interval)
 {
@@ -415,6 +415,14 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *
 				case ADJUST_WEIGHT_SPLIT_LEARNING_RATE:
 					act_featCount = CountActiveFeatures(ptd->Record.Features,nrFeatures)+1; // +1 pentru Bias si ca sa fiu sigur ca e mai mare ca 0
 					error = (ptd->Record.Label * learningRate) / ((double)act_featCount);
+					break;
+				case ADJUST_WEIGHT_SPLIT_LEASTMEANSQUARE:
+					if (sum==0)
+						error = ptd->Record.Label * learningRate;
+					else
+						error = -learningRate * sum;
+					act_featCount = CountActiveFeatures(ptd->Record.Features,nrFeatures)+1; // +1 pentru Bias si ca sa fiu sigur ca e mai mare ca 0
+					error = error / ((double)act_featCount);
 					break;
 				default:
 					error = 0;
