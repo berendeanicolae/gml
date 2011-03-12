@@ -5,6 +5,18 @@ void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
 	GenericPerceptron *gp = (GenericPerceptron *)context;
 	gp->OnRunThreadCommand(gp->ptData[paralel->GetID()],paralel->GetCodeID());
 }
+UInt32 CountActiveFeatures(double *feat,UInt32 nrElements)
+{
+	UInt32	sum = 0;
+	while (nrElements>0)
+	{
+		if ((*feat)!=0)
+			sum++;
+		feat++;
+		nrElements--;
+	}
+	return sum;
+}
 //====================================================================================================
 PerceptronVector::PerceptronVector()
 {
@@ -81,7 +93,7 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToString("WeightFileName"			,WeightFileName			,"");
 	LinkPropertyToUInt32("InitialWeight"			,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,FromFile!!");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1);
-	LinkPropertyToUInt32("AdjustWeightMode"			,adjustWeightMode		,ADJUST_WEIGHT_LEARNING_RATE,"!!LIST:UseLearningRate=0,UseWeight,UseLeastMeanSquare!!");
+	LinkPropertyToUInt32("AdjustWeightMode"			,adjustWeightMode		,ADJUST_WEIGHT_LEARNING_RATE,"!!LIST:UseLearningRate=0,UseWeight,UseLeastMeanSquare,UseSplitLearningRate!!");
 }
 bool	GenericPerceptron::SplitInterval(PerceptronThreadData *ptd,UInt32 ptdElements,GML::Utils::Interval &interval)
 {
@@ -347,7 +359,7 @@ bool	GenericPerceptron::Train(PerceptronThreadData *ptd,bool clearDelta,bool add
 bool    GenericPerceptron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *indexes,bool clearDelta,bool addDeltaToPrimary)
 {
 	UInt32	*ptrIndex = indexes->GetList();
-	UInt32	count;
+	UInt32	count,act_featCount;
 	UInt32	nrFeatures = con->GetFeatureCount();
 	double	*w = ptd->Primary.Weight;
 	double	*b = ptd->Primary.Bias;
@@ -399,6 +411,10 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *
 						error = ptd->Record.Label * learningRate;
 					else
 						error = -learningRate * sum;
+					break;
+				case ADJUST_WEIGHT_SPLIT_LEARNING_RATE:
+					act_featCount = CountActiveFeatures(ptd->Record.Features,nrFeatures)+1; // +1 pentru Bias si ca sa fiu sigur ca e mai mare ca 0
+					error = (ptd->Record.Label * learningRate) / ((double)act_featCount);
 					break;
 				default:
 					error = 0;
