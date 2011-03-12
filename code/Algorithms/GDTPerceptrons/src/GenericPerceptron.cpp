@@ -70,7 +70,6 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToString("Connector"				,Conector				,"");
 	LinkPropertyToString("Notifier"					,Notifier				,"");
 	LinkPropertyToDouble("LearningRate"				,learningRate			,0.01);
-	LinkPropertyToBool  ("UseWeight"				,useWeight				,false);
 	LinkPropertyToBool  ("UseBias"					,useB					,true);
 	LinkPropertyToUInt32("SaveData"					,saveData				,SAVE_DATA_AT_FINISH,"!!LIST:None=0,AfterEachIteration,WhenAlgorithmEnds!!");
 	LinkPropertyToUInt32("SaveBest"					,saveBest				,SAVE_BEST_NONE,"!!LIST:None=0,BestACC,BestSE,BestSP!!");
@@ -82,6 +81,7 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToString("WeightFileName"			,WeightFileName			,"");
 	LinkPropertyToUInt32("InitialWeight"			,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,FromFile!!");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1);
+	LinkPropertyToUInt32("AdjustWeightMode"			,adjustWeightMode		,ADJUST_WEIGHT_LEARNING_RATE,"!!LIST:UseLearningRate=0,UseWeight,UseLeastMeanSquare!!");
 }
 bool	GenericPerceptron::SplitInterval(PerceptronThreadData *ptd,UInt32 ptdElements,GML::Utils::Interval &interval)
 {
@@ -352,6 +352,7 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *
 	double	*w = ptd->Primary.Weight;
 	double	*b = ptd->Primary.Bias;
 	double	error;
+	double	sum;
 
 	if (ptd->Range.End>indexes->Len())
 	{
@@ -381,12 +382,28 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *
 			notif->Error("(TRAIN)::Error reading record #%d from thread #%d",(*ptrIndex),ptd->ID);
 			return false;
 		}
-		if (GML::ML::VectorOp::IsPerceptronTrained(ptd->Record.Features,ptd->Primary.Weight,nrFeatures,*b,ptd->Record.Label)==false)
+		sum = GML::ML::VectorOp::ComputeVectorsSum(ptd->Record.Features,ptd->Primary.Weight,nrFeatures)+(*b);
+		// daca nu e antrenat
+		if ((sum * ptd->Record.Label)<=0)
 		{
-			if (useWeight)
-				error = ptd->Record.Label * ptd->Record.Weight * learningRate;
-			else
-				error = ptd->Record.Label * learningRate;
+			switch (adjustWeightMode)
+			{
+				case ADJUST_WEIGHT_LEARNING_RATE:
+					error = ptd->Record.Label * learningRate;
+					break;
+				case ADJUST_WEIGHT_USE_WEIGHT:
+					error = ptd->Record.Label * ptd->Record.Weight * learningRate;
+					break;
+				case ADJUST_WEIGHT_LEASTMEANSQUARE:					
+					if (sum==0)
+						error = ptd->Record.Label * learningRate;
+					else
+						error = -learningRate * sum;
+					break;
+				default:
+					error = 0;
+					break;
+			};
 			GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(ptd->Record.Features,w,nrFeatures,error);
 			if (useB)
 				(*b) += error;
