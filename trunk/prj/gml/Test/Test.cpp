@@ -17,24 +17,24 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("FeaturesStatistics");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("RosenblattPerceptron");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
 		"Name=Test;"
-		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\log_all_cleanset_mare.txt};"
+		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\log_all.txt};"
 		"Connector=BitConnector{Table=RecordTable};"
 		"Notifier=ConsoleNotifier{useColors=True};"
-		"LearningRate=0.02;"
+		"LearningRate=5;"
 		"InitialWeight=zeros;"
-		"useBias=false;"
+		"useBias=true;"
 		"minimAcc=95.0;"
 		"SaveData=AfterEachIteration;"
 		"SaveBest=BestACC;"
 		"ThreadsCount=2;"
 		"MaxError=10000;"
 		"MarginType=Negative;"
-		"MaxIterations=(INT32)30;")==false)
+		"MaxIterations=(INT32)300;")==false)
 		return 1;
 	if (alg->Init()==false)
 		return 1;
