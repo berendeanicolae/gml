@@ -1,5 +1,5 @@
 #include "VectorOp.h"
-
+#include <math.h>
 
 void	GML::ML::VectorOp::AddVectors(double *v1,double *v2,UInt32 elements)
 {
@@ -51,4 +51,50 @@ void GML::ML::VectorOp::AdjustPerceptronWeights(double *features,double *weights
 		weights++;
 		elements--;
 	}
+}
+double	GML::ML::VectorOp::PointToPlaneDistanceSquared(double *plane,double *point,UInt32 elements,double planeBias)
+{
+	double	sum2 = 0.0;	
+	// dist Point(x1,x2,...xn) to Plane(a1,a2,...an,bias) = (x1*a1+x2*a2+ ... xn*an+bias)/(a1*a1+a2*a2+...an*an)
+
+	while (elements>0)
+	{
+		sum2+=((*plane)*(*plane));
+		planeBias+=((*plane)*(*point));
+		plane++;
+		point++;
+		elements--;
+	}
+	
+	return (planeBias*planeBias)/sum2;
+}
+double	GML::ML::VectorOp::PointToPlaneDistance(double *plane,double *point,UInt32 elements,double planeBias)
+{
+	return sqrt(PointToPlaneDistanceSquared(plane,point,elements,planeBias));
+}
+double	GML::ML::VectorOp::PointToPlaneDistanceSquaredSigned(double *plane,double *point,UInt32 elements,double planeBias)
+{
+	double	sum2 = 0.0;	
+	// dist Point(x1,x2,...xn) to Plane(a1,a2,...an,bias) = (x1*a1+x2*a2+ ... xn*an+bias)/(a1*a1+a2*a2+...an*an)
+
+	while (elements>0)
+	{
+		sum2+=((*plane)*(*plane));
+		planeBias+=((*plane)*(*point));
+		plane++;
+		point++;
+		elements--;
+	}
+	
+	if (planeBias<0)
+		return -(planeBias*planeBias)/sum2;
+	else
+		return (planeBias*planeBias)/sum2;
+}
+double	GML::ML::VectorOp::PointToPlaneDistanceSigned(double *plane,double *point,UInt32 elements,double planeBias)
+{
+	double dist = PointToPlaneDistanceSquaredSigned(plane,point,elements,planeBias);
+	if (dist<0)
+		return sqrt(-dist);
+	return sqrt(dist);
 }

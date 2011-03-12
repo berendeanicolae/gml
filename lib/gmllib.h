@@ -1257,7 +1257,11 @@ namespace GML
 			static bool		IsPerceptronTrained(double *features,double *weights,UInt32 elements,double b,double label);
 			static void		AdjustTwoStatePerceptronWeights(double *features,double *weights,UInt32 elements,double error);
 			static void		AdjustPerceptronWeights(double *features,double *weights,UInt32 elements,double error);
-
+			static double	PointToPlaneDistance(double *plane,double *point,UInt32 elements,double planeBias);
+			static double	PointToPlaneDistanceSquared(double *plane,double *point,UInt32 elements,double planeBias);
+			static double	PointToPlaneDistanceSigned(double *plane,double *point,UInt32 elements,double planeBias);	
+			static double	PointToPlaneDistanceSquaredSigned(double *plane,double *point,UInt32 elements,double planeBias);			
+			
 		};
 	}
 }
