@@ -49,6 +49,12 @@ protected:
 		SAVE_DATA_AFTER_EACH_ITERATION,
 		SAVE_DATA_AT_FINISH,
 	};
+	enum {
+		ADJUST_WEIGHT_LEARNING_RATE = 0,
+		ADJUST_WEIGHT_USE_WEIGHT,
+		ADJUST_WEIGHT_LEASTMEANSQUARE,
+		
+	};
 protected:
 	GML::DB::IDataBase				*db;
 	GML::ML::IConnector				*con;
@@ -63,13 +69,12 @@ protected:
 
 	// proprietati de training
 	double							learningRate;
-	bool							useWeight;
 	bool							useB;
 	bool							batchPerceptron;
 	UInt32							saveData;
 	UInt32							saveBest;
 	UInt32							testAfterIterations;
-
+	UInt32							adjustWeightMode;
 
 	// proprietati de oprire
 	double							minimAcc;
