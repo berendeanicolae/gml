@@ -17,30 +17,30 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("BatchPerceptron");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("FeaturesStatistics");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
 		"Name=Test;"
-		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"
+		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_50_clean.txt};"
 		"Connector=BitConnector{Table=RecordTable};"
 		"Notifier=ConsoleNotifier{useColors=True};"
-		"LearningRate=0.01;"
-		"AdjustWeightMode=UseSplitLearningRate;"
+		"LearningRate=0.0002;"
+		"AdjustWeightMode=UseSplitLeastMeanSquare;"
 		"InitialWeight=zeros;"
 		"useBias=true;"
 		"minimAcc=101.0;"
 		"SaveData=AfterEachIteration;"
 		"SaveBest=BestACC;"
 		"ThreadsCount=2;"
-		"MaxError=10000;"
+		"MaxError=0;"
 		"MarginType=Negative;"
-		"MaxIterations=(INT32)30;")==false)
+		"MaxIterations=(INT32)300;")==false)
 		return 1;
 	if (alg->Init()==false)
 		return 1;
 		
-	alg->Execute("train");
+	alg->Execute("compute");
 	alg->Wait();
 
 	printf("Algorithm done !\n");

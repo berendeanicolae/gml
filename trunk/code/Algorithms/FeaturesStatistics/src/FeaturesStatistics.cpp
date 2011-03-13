@@ -6,6 +6,7 @@ void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
 	FeaturesStatistics *fs = (FeaturesStatistics *)context;
 	fs->OnRunThreadCommand(fs->fData[paralel->GetID()],paralel->GetCodeID());
 }
+
 //====================================================================================================
 double Compute_RapPozNeg(FeaturesInformations *f)
 {
@@ -79,12 +80,16 @@ void Stats::Create(char *_name,double (*_fnCompute) ( FeaturesInformations *info
 }
 FeaturesStatistics::FeaturesStatistics()
 {
+	GML::Utils::GString		tmp;
+	UInt32					tr;
+
 	ObjectName = "FeaturesStatistics";
 
 	LinkPropertyToString("DataBase"					,DataBase				,"");
 	LinkPropertyToString("Connector"				,Conector				,"");
 	LinkPropertyToString("Notifier"					,Notifier				,"");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1);
+	LinkPropertyToUInt32("ColumnWidth"				,columnWidth			,12,"Sets the column width (0 for no aligniation)");
 
 	StatsData[0].Create("Poz/Neg",Compute_RapPozNeg);
 	StatsData[1].Create("ProcDiff",Compute_ProcDiff);
@@ -92,6 +97,15 @@ FeaturesStatistics::FeaturesStatistics()
 	StatsData[3].Create("F1",Compute_F1);
 	StatsData[4].Create("F2",Compute_F2);
 	StatsData[5].Create("ProcTo100",Compute_ProcTo100);
+
+	tmp.Set("!!LIST:NoSort=0xFFFF");
+	for (tr=0;tr<STATS_FNC_COUNT;tr++)
+		tmp.AddFormated(",%s=%d",StatsData[tr].Name,tr);
+	tmp.Add("!!");
+
+	LinkPropertyToUInt32("SortBy"					,sortBy					,0xFFFF,tmp.GetText());
+	LinkPropertyToUInt32("SortDirection"			,sortDirection			,0,"!!LIST:Ascendet=0,Descendent!!");
+
 }
 bool FeaturesStatistics::CreateFeaturesInfo(FeaturesThreadData *fInfo)
 {
@@ -173,6 +187,7 @@ bool FeaturesStatistics::Init()
 		else
 			fData[tr].Range.Set(tr*rap,(tr+1)*rap);
 	}
+
 	return true;
 }
 void FeaturesStatistics::OnRunThreadCommand(FeaturesThreadData &ftd,UInt32 command)
@@ -202,33 +217,101 @@ void FeaturesStatistics::OnRunThreadCommand(FeaturesThreadData &ftd,UInt32 comma
 			}
 	}
 }
+bool FeaturesStatistics::CreateHeaders(GML::Utils::GString &str)
+{
+	UInt32				tr;
+	GML::Utils::GString	tmp;
+
+	if (columnWidth==0)
+	{
+		if (str.Set("#|Pozitive|Negative|")==false)
+			return false;
+	} else {
+		if (str.Set("    #|Pozitive|Negative|")==false)
+			return false;
+	}
+
+	for (tr=0;tr<STATS_FNC_COUNT;tr++)
+	{
+		if (tmp.Set(StatsData[tr].Name)==false)
+			return false;
+		while (tmp.Len()<columnWidth)
+		{
+			if (tmp.Add("                                                                                                     ")==false)
+				return false;
+		}
+		if (columnWidth>0)
+			tmp.Truncate(columnWidth);
+		if (str.Add(&tmp)==false)
+			return false;
+		if (str.Add("|")==false)
+			return false;
+	}
+	return true;
+}
+bool FeaturesStatistics::CreateRecordInfo(FeaturesInformations &finf,GML::Utils::GString &str)
+{
+	UInt32				tr;
+	GML::Utils::GString	tmp;
+
+	if (columnWidth==0)
+	{
+		if (str.SetFormated("%d|%d|%d|",finf.Index,(UInt32)finf.countPozitive,(UInt32)finf.countNegative)==false)
+			return false;
+	} else {
+		if (str.SetFormated("%5d|%8d|%8d|",finf.Index,(UInt32)finf.countPozitive,(UInt32)finf.countNegative)==false)
+			return false;
+	}
+	for (tr=0;tr<STATS_FNC_COUNT;tr++)
+	{
+		if (tmp.SetFormated("%.4lf",finf.fnValue[tr])==false)
+			return false;
+		while (tmp.Len()<columnWidth)
+		{
+			if (tmp.Insert(" ",0)==false)
+				return false;
+		}
+		if (columnWidth>0)
+			tmp.Truncate(columnWidth);
+		if (str.Add(&tmp)==false)
+			return false;
+		if (str.Add("|")==false)
+			return false;
+	}
+	return true;
+}
+
 void FeaturesStatistics::PrintStats()
 {
-	UInt32					tr,gr;
-	GML::Utils::GString		str;
-	FeaturesInformations	info;
+	UInt32					tr;
+	GML::Utils::GString		str,line;
 
-	info.totalNegative = All.totalNegative;
-	info.totalPozitive = All.totalPozitive;
-
-	for (tr=0;tr<con->GetFeatureCount();tr++)
+	if (CreateHeaders(str)==false)
 	{
-		info.countNegative = All.FI[tr].NegativeCount;
-		info.countPozitive = All.FI[tr].PozitiveCount;
-
-		str.SetFormated("%3d|Poz=%6d|Neg=%6d|",tr,All.FI[tr].PozitiveCount,All.FI[tr].NegativeCount);
-		for (gr=0;gr<STATS_FNC_COUNT;gr++)
+		notif->Error("[%s] -> Unable to create table headers !",ObjectName);
+		return;
+	}
+	line.Set("");
+	while (line.Len()<str.Len())
+		line.AddChar('-');
+	notif->Info(str.GetText());
+	notif->Info(line.GetText());
+	for (tr=0;tr</*con->GetFeatureCount()*/10;tr++)
+	{
+		if (CreateRecordInfo(ComputedData[tr],str)==false)
 		{
-			str.AddFormated("%s=",StatsData[gr].Name);
-			str.AddFormated("%.3lf|",StatsData[gr].fnCompute(&info));
+			notif->Error("[%s] -> Unable to create record line !",ObjectName);
+			return;
 		}
 		notif->Info(str.GetText());
 	}
-
+	notif->Info(line.GetText());
 }
 bool FeaturesStatistics::Compute()
 {
-	UInt32	tr,gr;
+	UInt32					tr,gr;
+	FeaturesInformations	info;
+	
 
 	notif->Info("[%s] -> Computing statistics ...",ObjectName);
 	// executie
@@ -257,6 +340,25 @@ bool FeaturesStatistics::Compute()
 		All.totalPozitive+=fData[tr].totalPozitive;
 	}
 	notif->Info("[%s] -> DataBase processed ok",ObjectName);
+	// calculez si functiile
+	for (tr=0;tr<con->GetFeatureCount();tr++)
+	{
+		info.Index = tr;
+		info.totalPozitive = All.totalPozitive;
+		info.totalNegative = All.totalNegative;
+		info.countNegative = All.FI[tr].NegativeCount;
+		info.countPozitive = All.FI[tr].PozitiveCount;
+		
+		for (gr=0;gr<STATS_FNC_COUNT;gr++)
+			info.fnValue[gr] = StatsData[gr].fnCompute(&info);
+
+		if (ComputedData.PushByRef(info)==false)
+		{
+			notif->Error("[%s] Unable to add informations to vector !",ObjectName);
+			return false;
+		}
+	}
+	// printez
 	PrintStats();
 	return true;
 }
