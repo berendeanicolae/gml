@@ -22,7 +22,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 1;
 	if (alg->SetProperty(
 		"Name=Test;"
-		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_50_clean.txt};"
+		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"
 		"Connector=BitConnector{Table=RecordTable};"
 		"Notifier=ConsoleNotifier{useColors=True};"
 		"LearningRate=0.0002;"
@@ -35,6 +35,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		"ThreadsCount=2;"
 		"MaxError=0;"
 		"MarginType=Negative;"
+		"SortBy=F1;"
+		"SortDirection=descendent;"
+		"NotifyResult=false;"
+		"ResultFile=E:\\a.txt;"
 		"MaxIterations=(INT32)300;")==false)
 		return 1;
 	if (alg->Init()==false)

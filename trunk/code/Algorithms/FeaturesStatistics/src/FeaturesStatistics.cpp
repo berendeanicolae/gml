@@ -6,7 +6,27 @@ void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
 	FeaturesStatistics *fs = (FeaturesStatistics *)context;
 	fs->OnRunThreadCommand(fs->fData[paralel->GetID()],paralel->GetCodeID());
 }
+//====================================================================================================
+int    Compare_FeaturesInformations(FeaturesInformations &f1,FeaturesInformations &f2,void *context)
+{
+	UInt32	column = *((UInt32 *)context);
 
+	if (column>=STATS_FNC_COUNT)
+		return 0;
+	if (f1.fnValue[column]>f2.fnValue[column])
+		return 1;
+	if (f1.fnValue[column]<f2.fnValue[column])
+		return -1;
+	return 0;
+}
+bool FeaturesInformations::operator< (FeaturesInformations &a)
+{
+	return (bool)(Index<a.Index);
+}
+bool FeaturesInformations::operator> (FeaturesInformations &a)
+{
+	return (bool)(Index>a.Index);
+}
 //====================================================================================================
 double Compute_RapPozNeg(FeaturesInformations *f)
 {
@@ -90,6 +110,8 @@ FeaturesStatistics::FeaturesStatistics()
 	LinkPropertyToString("Notifier"					,Notifier				,"");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1);
 	LinkPropertyToUInt32("ColumnWidth"				,columnWidth			,12,"Sets the column width (0 for no aligniation)");
+	LinkPropertyToString("ResultFile"				,ResultFile				,"","Name of the file to save the result table or none if no save is requared");
+	LinkPropertyToBool  ("NotifyResult"				,notifyResults			,true);
 
 	StatsData[0].Create("Poz/Neg",Compute_RapPozNeg);
 	StatsData[1].Create("ProcDiff",Compute_ProcDiff);
@@ -98,12 +120,12 @@ FeaturesStatistics::FeaturesStatistics()
 	StatsData[4].Create("F2",Compute_F2);
 	StatsData[5].Create("ProcTo100",Compute_ProcTo100);
 
-	tmp.Set("!!LIST:NoSort=0xFFFF");
+	SortProps.Set("!!LIST:NoSort=0xFFFF");
 	for (tr=0;tr<STATS_FNC_COUNT;tr++)
-		tmp.AddFormated(",%s=%d",StatsData[tr].Name,tr);
-	tmp.Add("!!");
+		SortProps.AddFormated(",%s=%d",StatsData[tr].Name,tr);
+	SortProps.Add("!!");
 
-	LinkPropertyToUInt32("SortBy"					,sortBy					,0xFFFF,tmp.GetText());
+	LinkPropertyToUInt32("SortBy"					,sortBy					,0xFFFF,SortProps.GetText());
 	LinkPropertyToUInt32("SortDirection"			,sortDirection			,0,"!!LIST:Ascendet=0,Descendent!!");
 
 }
@@ -296,7 +318,7 @@ void FeaturesStatistics::PrintStats()
 		line.AddChar('-');
 	notif->Info(str.GetText());
 	notif->Info(line.GetText());
-	for (tr=0;tr</*con->GetFeatureCount()*/10;tr++)
+	for (tr=0;tr<con->GetFeatureCount();tr++)
 	{
 		if (CreateRecordInfo(ComputedData[tr],str)==false)
 		{
@@ -306,6 +328,61 @@ void FeaturesStatistics::PrintStats()
 		notif->Info(str.GetText());
 	}
 	notif->Info(line.GetText());
+}
+void FeaturesStatistics::SaveToFile()
+{
+	GML::Utils::File	f;
+
+	if (f.Create(ResultFile.GetText())==false)
+	{
+		notif->Error("[%s] -> Unable to create file : %s",ObjectName,ResultFile.GetText());
+		return;
+	}
+	UInt32					tr;
+	GML::Utils::GString		str,line;
+
+	if (CreateHeaders(str)==false)
+	{
+		notif->Error("[%s] -> Unable to create table headers !",ObjectName);
+		return;
+	}
+	line.Set("");
+	while (line.Len()<str.Len())
+		line.AddChar('-');
+	str.Add("\n");
+	line.Add("\n");
+	if (f.Write(str.GetText(),str.Len())==false)
+	{
+		notif->Error("[%s] -> Unable to write to file : %s",ObjectName,ResultFile.GetText());
+		return;
+	}
+	if (f.Write(line.GetText(),str.Len())==false)
+	{
+		notif->Error("[%s] -> Unable to write to file : %s",ObjectName,ResultFile.GetText());
+		return;
+	}
+
+	for (tr=0;tr<con->GetFeatureCount();tr++)
+	{
+		if (CreateRecordInfo(ComputedData[tr],str)==false)
+		{
+			notif->Error("[%s] -> Unable to create record line !",ObjectName);
+			return;
+		}
+		str.Add("\n");
+		if (f.Write(str.GetText(),str.Len())==false)
+		{
+			notif->Error("[%s] -> Unable to write to file : %s",ObjectName,ResultFile.GetText());
+			return;
+		}		
+	}
+	if (f.Write(line.GetText(),str.Len())==false)
+	{
+		notif->Error("[%s] -> Unable to write to file : %s",ObjectName,ResultFile.GetText());
+		return;
+	}
+	f.Close();
+	notif->Info("[%s] %s saved !",ObjectName,ResultFile.GetText());
 }
 bool FeaturesStatistics::Compute()
 {
@@ -358,8 +435,17 @@ bool FeaturesStatistics::Compute()
 			return false;
 		}
 	}
+	// sortez
+	if (sortBy!=0xFFFF)
+	{
+		ComputedData.Sort(sortDirection==0,Compare_FeaturesInformations,&sortBy);
+	}
 	// printez
-	PrintStats();
+	if (notifyResults)
+		PrintStats();
+	// salvez
+	if (ResultFile.Len()>0)
+		SaveToFile();
 	return true;
 }
 void FeaturesStatistics::OnExecute(char *command)
