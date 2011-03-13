@@ -17,7 +17,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("FeaturesStatistics");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("OneSidePerceptron");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
@@ -25,8 +25,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"
 		"Connector=BitConnector{Table=RecordTable};"
 		"Notifier=ConsoleNotifier{useColors=True};"
-		"LearningRate=0.0002;"
-		"AdjustWeightMode=UseSplitLeastMeanSquare;"
+		"LearningRate=1;"
+		"AdjustWeightMode=UseFeaturesWeight;"
 		"InitialWeight=zeros;"
 		"useBias=true;"
 		"minimAcc=101.0;"
@@ -35,20 +35,20 @@ int _tmain(int argc, _TCHAR* argv[])
 		"ThreadsCount=2;"
 		"MaxError=0;"
 		"MarginType=Negative;"
-		"SortBy=F1;"
+		"SortBy=F2;"
 		"SortDirection=descendent;"
 		"NotifyResult=false;"
 		"ResultFile=E:\\a.txt;"
 		"MultiplyFactor=1000;"
 		"ColumnWidth=20;"
-		"SaveFeaturesWeight=F1;"
+		"SaveFeaturesWeight=F2;"
 		"FeaturesWeightFile=E:\\a.a;"
-		"MaxIterations=(INT32)300;")==false)
+		"MaxIterations=(INT32)20;")==false)
 		return 1;
 	if (alg->Init()==false)
 		return 1;
 		
-	alg->Execute("compute");
+	alg->Execute("train");
 	alg->Wait();
 
 	printf("Algorithm done !\n");
