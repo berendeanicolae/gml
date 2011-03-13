@@ -148,14 +148,18 @@ bool	GenericPerceptron::Create(PerceptronThreadData &ptd,UInt32 id,PerceptronThr
 }
 bool	GenericPerceptron::CreateIndexes()
 {
-	UInt32	tr;
+	UInt32	tr,nrRec;
 
-	if (RecordIndexes.Create(con->GetRecordCount())==false)
+	nrRec = con->GetRecordCount();
+	//nrRec = 50;
+
+	notif->Info("[%s] -> Creating %d indexes ",ObjectName,nrRec);
+	if (RecordIndexes.Create(nrRec)==false)
 	{
-		notif->Error("[%s] -> Unable to create Indexes[%d] !",ObjectName,con->GetRecordCount());
+		notif->Error("[%s] -> Unable to create Indexes[%d] !",ObjectName,nrRec);
 		return false;
 	}
-	for (tr=0;tr<RecordIndexes.GetTotalAlloc();tr++)
+	for (tr=0;tr<nrRec;tr++)
 	{
 		if (RecordIndexes.Push(tr)==false)
 		{
@@ -385,17 +389,17 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *
 		}
 	}
 	if (!useB)
-		(*b)=0;
+		(*ptd->Primary.Bias)=0;
 
 	while (count>0)
-	{
+	{		
 		if (con->GetRecord(ptd->Record,*ptrIndex)==false)
 		{
 			notif->Error("(TRAIN)::Error reading record #%d from thread #%d",(*ptrIndex),ptd->ID);
 			return false;
 		}
-		sum = GML::ML::VectorOp::ComputeVectorsSum(ptd->Record.Features,ptd->Primary.Weight,nrFeatures)+(*b);
-		// daca nu e antrenat
+		sum = GML::ML::VectorOp::ComputeVectorsSum(ptd->Record.Features,ptd->Primary.Weight,nrFeatures)+(*ptd->Primary.Bias);
+
 		if ((sum * ptd->Record.Label)<=0)
 		{
 			switch (adjustWeightMode)
@@ -428,6 +432,7 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *
 					error = 0;
 					break;
 			};
+
 			GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(ptd->Record.Features,w,nrFeatures,error);
 			if (useB)
 				(*b) += error;
