@@ -4,7 +4,7 @@ static unsigned int AttributeSizes[]={1,1,2,4,8,1,2,4,8,4,8,0};
 static char *AttributeTypeName[]={"BOOL","INT8","INT16","INT32","INT64","UINT8","UINT16","UINT32","UINT64","FLOAT","DOUBLE","STRING"};
 
 
-int  AttributeCompare(GML::Utils::Attribute &a1,GML::Utils::Attribute &a2)
+int  AttributeCompare(GML::Utils::Attribute &a1,GML::Utils::Attribute &a2,void *context)
 {
 	return GML::Utils::GString::Compare(a1.Name,a2.Name,true);
 }

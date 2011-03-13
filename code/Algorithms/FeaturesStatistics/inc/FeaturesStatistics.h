@@ -1,5 +1,7 @@
 #include "gmllib.h"
 
+#define STATS_FNC_COUNT	6
+
 struct FeaturesInfo
 {
 	UInt32 PozitiveCount;
@@ -7,10 +9,12 @@ struct FeaturesInfo
 };
 struct FeaturesInformations
 {
+	UInt32			Index;
 	double			countPozitive;
 	double			countNegative;
 	double			totalPozitive;
 	double			totalNegative;
+	double			fnValue[STATS_FNC_COUNT];
 };
 struct Stats
 {
@@ -29,16 +33,14 @@ struct FeaturesThreadData
 public:
 	FeaturesThreadData() { FI=NULL; }
 };
-
-#define STATS_FNC_COUNT	6
-
 class FeaturesStatistics: public GML::Algorithm::IAlgorithm
 {
-	GML::DB::IDataBase				*db;
-	GML::ML::IConnector				*con;
-	GML::Utils::ThreadParalelUnit	*tpu;
-	FeaturesThreadData				All;
-	Stats							StatsData[STATS_FNC_COUNT];
+	GML::DB::IDataBase							*db;
+	GML::ML::IConnector							*con;
+	GML::Utils::ThreadParalelUnit				*tpu;
+	FeaturesThreadData							All;
+	Stats										StatsData[STATS_FNC_COUNT];
+	GML::Utils::GTVector<FeaturesInformations>	ComputedData;
 public:
 	FeaturesThreadData				*fData;
 private:
@@ -48,10 +50,16 @@ private:
 	GML::Utils::GString				Notifier;
 
 	UInt32							threadsCount;
+	UInt32							columnWidth;
+	UInt32							sortBy;
+	UInt32							sortDirection;
 
 	bool							CreateFeaturesInfo(FeaturesThreadData *fInfo);
 	bool							Compute();
 	void							PrintStats();
+	bool							CreateHeaders(GML::Utils::GString &str);
+	bool							CreateRecordInfo(FeaturesInformations &finf,GML::Utils::GString &str);
+	void							Sort();
 public:
 	FeaturesStatistics();
 
