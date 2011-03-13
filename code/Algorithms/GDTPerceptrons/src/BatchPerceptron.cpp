@@ -24,18 +24,19 @@ void BatchPerceptron::OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 comman
 bool BatchPerceptron::PerformTrainIteration()
 {
 	UInt32	tr;
-	if (threadsCount==1)
-	{
-		return Train(&FullData,true,true);
-	}
-	
+	//if (threadsCount==1)
+	//{
+	//	bool res = Train(&FullData,true,true);		
+	//	return res;
+	//}
 	
 	// paralel mode
 	ExecuteParalelCommand(COMMAND_TRAIN);
 	// aditie de date
 	
 	for (tr=0;tr<threadsCount;tr++)
-		FullData.Primary.Add(ptData[tr].Delta);		
+		FullData.Primary.Add(ptData[tr].Delta);	
+	
 	return true;
 }
 bool BatchPerceptron::PerformTestIteration()
