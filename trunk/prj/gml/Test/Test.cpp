@@ -39,6 +39,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		"SortDirection=descendent;"
 		"NotifyResult=false;"
 		"ResultFile=E:\\a.txt;"
+		"MultiplyFactor=1000;"
+		"ColumnWidth=20;"
+		"SaveFeaturesWeight=F1;"
+		"FeaturesWeightFile=E:\\a.a;"
 		"MaxIterations=(INT32)300;")==false)
 		return 1;
 	if (alg->Init()==false)

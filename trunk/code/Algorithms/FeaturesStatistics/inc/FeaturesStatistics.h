@@ -45,7 +45,7 @@ class FeaturesStatistics: public GML::Algorithm::IAlgorithm
 	FeaturesThreadData							All;
 	Stats										StatsData[STATS_FNC_COUNT];
 	GML::Utils::GTVector<FeaturesInformations>	ComputedData;
-	GML::Utils::GString							SortProps;
+	GML::Utils::GString							SortProps,WeightFileType;
 public:
 	FeaturesThreadData				*fData;
 private:
@@ -54,17 +54,21 @@ private:
 	GML::Utils::GString				DataBase;
 	GML::Utils::GString				Notifier;
 	GML::Utils::GString				ResultFile;
+	GML::Utils::GString				FeaturesWeightFile;
 
 	UInt32							threadsCount;
 	UInt32							columnWidth;
 	UInt32							sortBy;
+	UInt32							saveFeatureWeightFile;
 	UInt32							sortDirection;
 	bool							notifyResults;
+	double							multiplyFactor;
 
 	bool							CreateFeaturesInfo(FeaturesThreadData *fInfo);
 	bool							Compute();
 	void							PrintStats();
 	void							SaveToFile();
+	void							SaveFeatureWeightFile();
 	bool							CreateHeaders(GML::Utils::GString &str);
 	bool							CreateRecordInfo(FeaturesInformations &finf,GML::Utils::GString &str);
 	void							Sort();

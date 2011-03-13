@@ -61,7 +61,7 @@ double Compute_F1(FeaturesInformations *f)
 	//if (v1 < 0) v1 = -v1;
 	if (v2 < 0) v2 = -v2;
 	if (t_mal + t_clean == 0) return 0;
-	return (v1*100000) / v2;
+	return v1 / v2;
 	//double precision = (double)(f.t_mal) / ((double)f.t_mal);
 }
 double Compute_F2(FeaturesInformations *f)
@@ -81,7 +81,7 @@ double Compute_F2(FeaturesInformations *f)
     double v1 = (miu_pl - miu_total) * (miu_pl - miu_total) + (miu_min - miu_total) * (miu_min - miu_total);
     double v2 = sigma_pl*sigma_pl + sigma_min*sigma_min;
     if (t_mal + t_clean == 0) return 0;
-    return (v1*10000000) / v2;
+    return v1 / v2;
 }
 double Compute_ProcTo100(FeaturesInformations *f)
 {
@@ -112,6 +112,8 @@ FeaturesStatistics::FeaturesStatistics()
 	LinkPropertyToUInt32("ColumnWidth"				,columnWidth			,12,"Sets the column width (0 for no aligniation)");
 	LinkPropertyToString("ResultFile"				,ResultFile				,"","Name of the file to save the result table or none if no save is requared");
 	LinkPropertyToBool  ("NotifyResult"				,notifyResults			,true);
+	LinkPropertyToDouble("MultiplyFactor"			,multiplyFactor			,1.0);
+	
 
 	StatsData[0].Create("Poz/Neg",Compute_RapPozNeg);
 	StatsData[1].Create("ProcDiff",Compute_ProcDiff);
@@ -121,13 +123,19 @@ FeaturesStatistics::FeaturesStatistics()
 	StatsData[5].Create("ProcTo100",Compute_ProcTo100);
 
 	SortProps.Set("!!LIST:NoSort=0xFFFF");
+	WeightFileType.Set("!!LIST:None=0xFFFF");
 	for (tr=0;tr<STATS_FNC_COUNT;tr++)
+	{
 		SortProps.AddFormated(",%s=%d",StatsData[tr].Name,tr);
+		WeightFileType.AddFormated(",%s=%d",StatsData[tr].Name,tr);
+	}
 	SortProps.Add("!!");
+	WeightFileType.Add("!!");
 
 	LinkPropertyToUInt32("SortBy"					,sortBy					,0xFFFF,SortProps.GetText());
 	LinkPropertyToUInt32("SortDirection"			,sortDirection			,0,"!!LIST:Ascendet=0,Descendent!!");
-
+	LinkPropertyToUInt32("SaveFeaturesWeight"		,saveFeatureWeightFile	,0xFFFF,WeightFileType.GetText());
+	LinkPropertyToString("FeaturesWeightFile"		,FeaturesWeightFile		,"");
 }
 bool FeaturesStatistics::CreateFeaturesInfo(FeaturesThreadData *fInfo)
 {
@@ -382,7 +390,45 @@ void FeaturesStatistics::SaveToFile()
 		return;
 	}
 	f.Close();
-	notif->Info("[%s] %s saved !",ObjectName,ResultFile.GetText());
+	notif->Info("[%s] -> %s table saved !",ObjectName,ResultFile.GetText());
+}
+void FeaturesStatistics::SaveFeatureWeightFile()
+{
+	GML::Utils::GTFVector<double>	list;
+	GML::Utils::AttributeList		attr;
+	UInt32							tr;
+
+	// adaug elementele
+	for (tr=0;tr<ComputedData.Len();tr++)
+	{
+		if (list.Push(ComputedData[tr].fnValue[saveFeatureWeightFile])==false)
+		{
+			notif->Error("[%s] -> Unable to add elements to weight vector in file : %s",ObjectName,FeaturesWeightFile.GetText());
+			return;
+		}
+	}
+
+	if (attr.AddAttribute("Weight",list.GetPtrToObject(0),GML::Utils::AttributeList::DOUBLE,list.Len())==false)
+	{
+		notif->Error("[%s] -> Unable to create AttributeList in file : %s",ObjectName,FeaturesWeightFile.GetText());
+		return;
+	}
+	if (attr.AddString("Method",StatsData[saveFeatureWeightFile].Name)==false)
+	{
+		notif->Error("[%s] -> Unable to create AttributeList in file : %s",ObjectName,FeaturesWeightFile.GetText());
+		return;
+	}
+	if (attr.AddDouble("MultiplyFactor",multiplyFactor)==false)
+	{
+		notif->Error("[%s] -> Unable to create AttributeList in file : %s",ObjectName,FeaturesWeightFile.GetText());
+		return;
+	}
+	if (attr.Save(FeaturesWeightFile.GetText())==false)
+	{
+		notif->Error("[%s] -> Unable to save file : %s",ObjectName,FeaturesWeightFile.GetText());
+		return;
+	}
+	notif->Info("[%s] -> File (%s) with '%s' features saved",ObjectName,FeaturesWeightFile.GetText(),StatsData[saveFeatureWeightFile].Name);
 }
 bool FeaturesStatistics::Compute()
 {
@@ -427,7 +473,7 @@ bool FeaturesStatistics::Compute()
 		info.countPozitive = All.FI[tr].PozitiveCount;
 		
 		for (gr=0;gr<STATS_FNC_COUNT;gr++)
-			info.fnValue[gr] = StatsData[gr].fnCompute(&info);
+			info.fnValue[gr] = StatsData[gr].fnCompute(&info) * multiplyFactor;
 
 		if (ComputedData.PushByRef(info)==false)
 		{
@@ -435,6 +481,17 @@ bool FeaturesStatistics::Compute()
 			return false;
 		}
 	}
+	// verific daca am vreun weight de salvat
+	if (saveFeatureWeightFile<STATS_FNC_COUNT)
+	{
+		if (FeaturesWeightFile.Len()==0)
+		{
+			notif->Error("[%s] In order to save '%s' values for a feature you have to complete 'FeaturesWeightFile' property with the name of the file where the features will be saved",ObjectName,StatsData[saveFeatureWeightFile].Name);
+		} else {
+			SaveFeatureWeightFile();
+		}
+	}
+
 	// sortez
 	if (sortBy!=0xFFFF)
 	{
