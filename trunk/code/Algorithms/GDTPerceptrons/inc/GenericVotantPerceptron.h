@@ -3,6 +3,26 @@
 
 #include "GenericPerceptron.h"
 
+struct VoteInformation
+{
+	PerceptronVector	Vector;
+	double				VoteWeigth;
+};
+struct VotantList
+{
+	VoteInformation		*Votes;
+	UInt32				*Order;
+	UInt32				Count;
+	UInt32				Max;
+public:
+	VotantList();
+	~VotantList();
+	bool				Create(UInt32 maxVotes);
+	void				Destroy();
+	bool				Add(PerceptronVector &v,double VoteWeigth);
+	bool				CouldAddVoteWeight(double VoteWeigth);
+};
+
 class GenericVotantPerceptron: public GenericPerceptron
 {
 };
