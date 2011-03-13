@@ -27,7 +27,8 @@ DB_MySQL::~DB_MySQL()
 	memset(&this->DBConnStr, 0, sizeof(this->DBConnStr));
 }
 
-bool DB_MySQL::Init (INotifier &notifier, char* Server, char* Database, char* Username, char* Password, UInt32 Port)
+//De mutat in OnInit
+/*bool DB_MySQL::Init (INotifier &notifier, char* Server, char* Database, char* Username, char* Password, UInt32 Port)
 {
 	if(this->conn != NULL)
 		return false;
@@ -48,9 +49,14 @@ bool DB_MySQL::Init (INotifier &notifier, char* Server, char* Database, char* Us
 	strcpy(this->DBConnStr.Password, Password);
 	
 	return true;
+}*/
+
+bool DB_MySQL::OnInit()
+{
+	return false;
 }
 
-bool DB_MySQL::Connect ()
+bool DB_MySQL::Connect()
 {
 	if((this->conn = mysql_init(NULL)) == NULL)
 	{
@@ -73,7 +79,7 @@ bool DB_MySQL::Connect ()
 	return true;
 }
 
-bool DB_MySQL::Disconnect ()
+bool DB_MySQL::Disconnect()
 {
 	if(this->DBResBuff.res != NULL)
 	{
@@ -141,7 +147,7 @@ bool DB_MySQL::CheckCursorPos(char *Statement)
 		if(this->DBResBuff.QueryStr != NULL)
 			free(this->DBResBuff.QueryStr);
 		this->DBResBuff.QueryStr = (char*)malloc(strlen(Statement)+sizeof(char)); //FIXME check for errors
-		strcpy(this->DBResBuff.QueryStr, Statement);
+		strcpy_s(this->DBResBuff.QueryStr, sizeof(QueryStr), Statement);
 		this->StripQ(this->DBResBuff.QueryStr, "select");
 	}
 
@@ -161,7 +167,7 @@ bool DB_MySQL::CheckCursorPos(char *Statement)
 		}
 		
 		memset(QueryStr, 0, sizeof(QueryStr));
-		sprintf(QueryStr, "select %s", this->DBResBuff.QueryStr); 
+		sprintf_s(QueryStr, sizeof(QueryStr), "select %s", this->DBResBuff.QueryStr); 
 
 		if(mysql_query(this->conn, QueryStr))
 		{
@@ -210,9 +216,9 @@ UInt32 DB_MySQL::SqlSelect (char* What, char* Where, char* From)
 		return 0;
 	}
 	if((Where == NULL) || (Where == ""))
-		sprintf(QueryStr, "select %s from %s", What, From);
+		sprintf_s(QueryStr, sizeof(QueryStr), "select %s from %s", What, From);
 	else
-		sprintf(QueryStr, "select %s from %s where %s", What, From, Where);
+		sprintf_s(QueryStr, sizeof(QueryStr), "select %s from %s where %s", What, From, Where);
 
 	return this->Select(QueryStr);
 }
@@ -240,19 +246,19 @@ bool DB_MySQL::SetDataType()
 			this->NotifyError("Could not malloc memory for column names");
 			return false;
 		}
-		strcpy(this->DBResBuff.ColumnNames[i], fields[i].name);
+		strcpy_s(this->DBResBuff.ColumnNames[i], (fields[i].name_length * sizeof(char) + 1), fields[i].name);
 		switch(fields[i].type)
 		{
 		case MYSQL_TYPE_DECIMAL:
-		case MYSQL_TYPE_TINY:  this->DBResBuff.ColumnTypes[i] = UINT8VAL; break;
-		case MYSQL_TYPE_SHORT: this->DBResBuff.ColumnTypes[i] = UINT16VAL; break; 
-		case MYSQL_TYPE_LONG:  this->DBResBuff.ColumnTypes[i] = UINT32VAL; break; 
-		case MYSQL_TYPE_FLOAT: this->DBResBuff.ColumnTypes[i] = UINT32VAL; break;  //FIXME: float
-		case MYSQL_TYPE_DOUBLE:this->DBResBuff.ColumnTypes[i] = UINT32VAL; break;  //FIXME: float
-		case MYSQL_TYPE_NULL:  this->DBResBuff.ColumnTypes[i] = NULLVAL; break;  
-		case MYSQL_TYPE_TIMESTAMP:this->DBResBuff.ColumnTypes[i] = UINT16VAL; break; 
-		case MYSQL_TYPE_LONGLONG: this->DBResBuff.ColumnTypes[i] = UINT64VAL; break; 
-		case MYSQL_TYPE_INT24:    this->DBResBuff.ColumnTypes[i] = UINT32VAL; break; 
+		case MYSQL_TYPE_TINY:  this->DBResBuff.ColumnTypes[i] = GML::DB::UINT8VAL; break;
+		case MYSQL_TYPE_SHORT: this->DBResBuff.ColumnTypes[i] = GML::DB::UINT16VAL; break; 
+		case MYSQL_TYPE_LONG:  this->DBResBuff.ColumnTypes[i] = GML::DB::UINT32VAL; break; 
+		case MYSQL_TYPE_FLOAT: this->DBResBuff.ColumnTypes[i] = GML::DB::FLOATVAL; break;  
+		case MYSQL_TYPE_DOUBLE:this->DBResBuff.ColumnTypes[i] = GML::DB::DOUBLEVAL; break; 
+		case MYSQL_TYPE_NULL:  this->DBResBuff.ColumnTypes[i] = GML::DB::NULLVAL; break;  
+		case MYSQL_TYPE_TIMESTAMP:this->DBResBuff.ColumnTypes[i] = GML::DB::UINT16VAL; break; 
+		case MYSQL_TYPE_LONGLONG: this->DBResBuff.ColumnTypes[i] = GML::DB::UINT64VAL; break; 
+		case MYSQL_TYPE_INT24:    this->DBResBuff.ColumnTypes[i] = GML::DB::UINT32VAL; break; 
 		case MYSQL_TYPE_DATE:   
 		case MYSQL_TYPE_TIME:
 		case MYSQL_TYPE_DATETIME:  
@@ -268,7 +274,7 @@ bool DB_MySQL::SetDataType()
 		case MYSQL_TYPE_LONG_BLOB:
 		case MYSQL_TYPE_BLOB:
 		case MYSQL_TYPE_VAR_STRING:
-		case MYSQL_TYPE_STRING: this->DBResBuff.ColumnTypes[i] = ASCIISTTVAL; break;
+		case MYSQL_TYPE_STRING: this->DBResBuff.ColumnTypes[i] = GML::DB::ASCIISTTVAL; break;
 		//case MYSQL_TYPE_GEOMETRY:
 		//case MAX_NO_FIELD_TYPES:
 		default:
@@ -278,39 +284,39 @@ bool DB_MySQL::SetDataType()
 	return true;
 }
 
-bool DB_MySQL::FillRow(DbRecordVect &VectPtr, MYSQL_ROW Row)
+bool DB_MySQL::FillRow(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr, MYSQL_ROW Row)
 {
 	for(UInt32 i = 0; i < this->DBResBuff.field_num; i++)
 	{
-		DbRecord dbr;
+		GML::DB::DBRecord dbr;
 		dbr.Type = this->DBResBuff.ColumnTypes[i];
 		if((dbr.Name = (char*)malloc(strlen(this->DBResBuff.ColumnNames[i])+1)) == NULL)
 		{
 			this->NotifyError("Could not malloc for result name");
 			return false;
 		}
-		strcpy(dbr.Name, this->DBResBuff.ColumnNames[i]);
+		strcpy_s(dbr.Name, strlen(this->DBResBuff.ColumnNames[i])+1, this->DBResBuff.ColumnNames[i]);
 		switch(dbr.Type)
 		{
-		case NULLVAL:   dbr.RawPtrVal = NULL; break;
-		case UINT8VAL:  dbr.UInt8Val  = atoi(Row[i]); break;
-		case UINT16VAL: dbr.UInt16Val = atoi(Row[i]); break;
-		case UINT32VAL: dbr.UInt32Val = atoi(Row[i]); break;
-		case UINT64VAL: dbr.UInt64Val = atoi(Row[i]); break;
-		case FLOATVAL:  dbr.FloatVal  = (float)atof(Row[i]); break; //Column type is float so there is no data loss
-		case DOUBLEVAL: dbr.DoubleVal = atof(Row[i]); break;
-		case RAWPTRVAL: dbr.RawPtrVal = NULL; break; //FIXME
-		case BYTESVAL:  dbr.BytesVal  = NULL; break; //FIXME
-		case ASCIISTTVAL: 
+		case GML::DB::NULLVAL:   dbr.RawPtrVal = NULL; break;
+		case GML::DB::UINT8VAL:  dbr.UInt8Val  = atoi(Row[i]); break;
+		case GML::DB::UINT16VAL: dbr.UInt16Val = atoi(Row[i]); break;
+		case GML::DB::UINT32VAL: dbr.UInt32Val = atoi(Row[i]); break;
+		case GML::DB::UINT64VAL: dbr.UInt64Val = atoi(Row[i]); break;
+		case GML::DB::FLOATVAL:  dbr.FloatVal  = (float)atof(Row[i]); break; //Column type is float so there is no data loss
+		case GML::DB::DOUBLEVAL: dbr.DoubleVal = atof(Row[i]); break;
+		case GML::DB::RAWPTRVAL: dbr.RawPtrVal = NULL; break; //FIXME
+		case GML::DB::BYTESVAL:  dbr.BytesVal  = NULL; break; //FIXME
+		case GML::DB::ASCIISTTVAL: 
 			{
 				if((dbr.AsciiStrVal = (char*)malloc(strlen(Row[i]) + 1)) == NULL)
 				{
 					this->NotifyError("Could not malloc for result value");
 					return false; //FIXME: free already alloc space
 				}
-				strcpy(dbr.AsciiStrVal, Row[i]);
+				strcpy_s(dbr.AsciiStrVal, strlen(Row[i])+1, Row[i]);
 			} break;
-		case UNICSTRVAL: dbr.UnicStrVal = NULL; break; //FIXME
+		case GML::DB::UNICSTRVAL: dbr.UnicStrVal = NULL; break; //FIXME
 		//case HASHVAL: dbr.HashVal = 0; break; //FIXME
 		default:
 			return false;
@@ -320,7 +326,7 @@ bool DB_MySQL::FillRow(DbRecordVect &VectPtr, MYSQL_ROW Row)
 	return true;
 }
 
-bool DB_MySQL::FetchNextRow (DbRecordVect &VectPtr)
+bool DB_MySQL::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
 	MYSQL_ROW Row;
 
@@ -348,7 +354,7 @@ bool DB_MySQL::FetchNextRow (DbRecordVect &VectPtr)
 	return FillRow(VectPtr, Row);
 }
 
-bool DB_MySQL::FetchRowNr (DbRecordVect &VectPtr, UInt32 RowNr)
+bool DB_MySQL::FetchRowNr (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr)
 {
 	char Query[1024] = "";
 	MYSQL_RES *Res;
@@ -363,7 +369,7 @@ bool DB_MySQL::FetchRowNr (DbRecordVect &VectPtr, UInt32 RowNr)
 		return false;
 	}
 
-	sprintf(Query, "select * %s limit %d,1", tmp, RowNr-1);
+	sprintf_s(Query, sizeof(Query), "select * %s limit %d,1", tmp, RowNr-1);
 	if(mysql_query(this->conn, Query)) 
 	{
 		free(Query);
@@ -385,16 +391,16 @@ bool DB_MySQL::FetchRowNr (DbRecordVect &VectPtr, UInt32 RowNr)
 	return ret;
 }
 
-bool DB_MySQL::FreeRow(DbRecordVect &Vect)
+bool DB_MySQL::FreeRow(GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
 {
 	for(UInt32 i = 0; i < Vect.Len(); i++)
 	{
 		switch(Vect[i].Type)
 		{
-		case BYTESVAL:
-		case ASCIISTTVAL:
-		case UNICSTRVAL:
-		case RAWPTRVAL:
+		case GML::DB::BYTESVAL:
+		case GML::DB::ASCIISTTVAL:
+		case GML::DB::UNICSTRVAL:
+		case GML::DB::RAWPTRVAL:
 			{
 				if(Vect[i].RawPtrVal != NULL)
 					free(Vect[i].RawPtrVal);
@@ -404,12 +410,17 @@ bool DB_MySQL::FreeRow(DbRecordVect &Vect)
 	return Vect.DeleteAll();
 }
 
-bool DB_MySQL::InsertRow (char* Table, DbRecordVect &Vect)
+bool DB_MySQL::GetColumnInformations(char *columnName,GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
+{
+	return false;
+}
+
+bool DB_MySQL::InsertRow (char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
 {
 	return this->InsertRow(Table, "", Vect);
 }
 
-bool DB_MySQL::InsertRow (char* Table, char* Fields, DbRecordVect &Vect)
+bool DB_MySQL::InsertRow (char* Table, char* Fields, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
 {
 	char Query[1024];
 
@@ -426,7 +437,7 @@ bool DB_MySQL::InsertRow (char* Table, char* Fields, DbRecordVect &Vect)
 	}
 
 	memset(Query, 0, sizeof(Query));
-	sprintf(Query, "insert into %s(%s) values(", Table, Fields);
+	sprintf_s(Query, sizeof(Query), "insert into %s(%s) values(", Table, Fields);
 	
 	char to_add[3] = ", ";
 
@@ -436,14 +447,14 @@ bool DB_MySQL::InsertRow (char* Table, char* Fields, DbRecordVect &Vect)
 			to_add[0] = ')';
 		switch(Vect[i].Type)
 		{
-		case NULLVAL: sprintf(Query, "%sNULL%s", Query, to_add); break;
-		case UINT8VAL:  sprintf(Query, "%s'%d'%s", Query, Vect[i].UInt8Val, to_add); break;
-		case UINT16VAL: sprintf(Query, "%s'%d'%s", Query, Vect[i].UInt16Val, to_add); break;
-		case UINT32VAL: sprintf(Query, "%s'%d'%s", Query, Vect[i].UInt32Val, to_add); break;
-		case UINT64VAL: sprintf(Query, "%s'%d'%s", Query, Vect[i].UInt64Val, to_add); break;
-		case FLOATVAL:  sprintf(Query, "%s'%f'%s", Query, Vect[i].FloatVal, to_add); break;
-		case DOUBLEVAL: sprintf(Query, "%s'%f'%s", Query, Vect[i].DoubleVal, to_add); break;
-		case ASCIISTTVAL: sprintf(Query, "%s'%s'%s", Query, Vect[i].AsciiStrVal, to_add); break;
+		case GML::DB::NULLVAL: sprintf_s(Query, sizeof(Query), "%sNULL%s", Query, to_add); break;
+		case GML::DB::UINT8VAL:  sprintf_s(Query, sizeof(Query), "%s'%d'%s", Query, Vect[i].UInt8Val, to_add); break;
+		case GML::DB::UINT16VAL: sprintf_s(Query, sizeof(Query), "%s'%d'%s", Query, Vect[i].UInt16Val, to_add); break;
+		case GML::DB::UINT32VAL: sprintf_s(Query, sizeof(Query), "%s'%d'%s", Query, Vect[i].UInt32Val, to_add); break;
+		case GML::DB::UINT64VAL: sprintf_s(Query, sizeof(Query), "%s'%d'%s", Query, Vect[i].UInt64Val, to_add); break;
+		case GML::DB::FLOATVAL:  sprintf_s(Query, sizeof(Query), "%s'%f'%s", Query, Vect[i].FloatVal, to_add); break;
+		case GML::DB::DOUBLEVAL: sprintf_s(Query, sizeof(Query), "%s'%f'%s", Query, Vect[i].DoubleVal, to_add); break;
+		case GML::DB::ASCIISTTVAL: sprintf_s(Query, sizeof(Query), "%s'%s'%s", Query, Vect[i].AsciiStrVal, to_add); break;
 		}
 	}
 
@@ -456,7 +467,7 @@ bool DB_MySQL::InsertRow (char* Table, char* Fields, DbRecordVect &Vect)
 	return true;
 }
 
-bool DB_MySQL::Update (char* SqlStatement, DbRecordVect &WhereVals, DbRecordVect &UpdateVals)
+bool DB_MySQL::Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTFVector<GML::DB::DBRecord> &UpdateVals)
 {
 	return false;
 }
@@ -464,9 +475,9 @@ bool DB_MySQL::Update (char* SqlStatement, DbRecordVect &WhereVals, DbRecordVect
 void DB_MySQL::NotifyError(char* Msg)
 {
 	if(Msg == "")
-		this->notifier->Notify((char*)mysql_error(this->conn));
+		this->notifier->NotifyString(0, (char*)mysql_error(this->conn));
 	else
-		this->notifier->Notify(Msg);
+		this->notifier->NotifyString(0, Msg);
 }
 
 bool DB_MySQL::StripQ(char* Query, const char* Word)
@@ -493,10 +504,10 @@ bool DB_MySQL::StripQ(char* Query, const char* Word)
 				this->NotifyError("Could not malloc for query");
 				return false;
 			}
-			strcpy(tmp, Query);
+			strcpy_s(tmp, slen+1, Query);
 			memset(Query, 0, slen);
-			strncpy(Query, tmp, i);
-			strcpy(&Query[i], &tmp[i+j]);
+			strncpy_s(Query, slen, tmp, i);
+			strcpy_s(&Query[i], slen, &tmp[i+j]);
 			return true;
 		}
 continue_iter:
