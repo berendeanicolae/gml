@@ -55,6 +55,7 @@ protected:
 		ADJUST_WEIGHT_LEASTMEANSQUARE,
 		ADJUST_WEIGHT_SPLIT_LEARNING_RATE,
 		ADJUST_WEIGHT_SPLIT_LEASTMEANSQUARE,
+		ADJUST_WEIGHT_USE_FEAT_WEIGHT,
 		
 	};
 protected:
@@ -67,6 +68,7 @@ protected:
 	GML::Utils::GString				DataBase;
 	GML::Utils::GString				Notifier;
 	GML::Utils::GString				WeightFileName;
+	GML::Utils::GString				FeaturesWeightFile;
 	UInt32							InitialWeight;
 
 	// proprietati de training
@@ -92,6 +94,7 @@ protected:
 	GML::Utils::Indexes				RecordIndexes;
 	PerceptronThreadData			FullData,BestData;
 	GML::Utils::ThreadParalelUnit	*tpu;
+	double							*featWeight;
 	
 
 public:
@@ -109,6 +112,7 @@ protected:
 	bool					UpdateBest(PerceptronThreadData &ptd);
 	bool					Save(PerceptronThreadData &ptd,char *fileName);
 	bool					Load(PerceptronThreadData &ptd,char *fileName);
+	bool					LoadFeatureWeightFile();
 	bool					InitWeight(PerceptronThreadData &ptd);
 	bool					ExecuteParalelCommand(UInt32 command);
 	void					CheckTerminateCondition(PerceptronThreadData &ptd);

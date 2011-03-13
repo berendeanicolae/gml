@@ -74,6 +74,7 @@ GenericPerceptron::GenericPerceptron()
 {
 	db = NULL;
 	con = NULL;
+	featWeight = NULL;
 
 	batchPerceptron = false;
 
@@ -93,7 +94,8 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToString("WeightFileName"			,WeightFileName			,"");
 	LinkPropertyToUInt32("InitialWeight"			,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,FromFile!!");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1);
-	LinkPropertyToUInt32("AdjustWeightMode"			,adjustWeightMode		,ADJUST_WEIGHT_LEARNING_RATE,"!!LIST:UseLearningRate=0,UseWeight,UseLeastMeanSquare,UseSplitLearningRate,UseSplitLeastMeanSquare!!");
+	LinkPropertyToUInt32("AdjustWeightMode"			,adjustWeightMode		,ADJUST_WEIGHT_LEARNING_RATE,"!!LIST:UseLearningRate=0,UseWeight,UseLeastMeanSquare,UseSplitLearningRate,UseSplitLeastMeanSquare,UseFeaturesWeight!!");
+	LinkPropertyToString("FeaturesWeightFile"		,FeaturesWeightFile		,"");
 }
 bool	GenericPerceptron::SplitInterval(PerceptronThreadData *ptd,UInt32 ptdElements,GML::Utils::Interval &interval)
 {
@@ -284,6 +286,38 @@ bool	GenericPerceptron::InitWeight(PerceptronThreadData &ptd)
 	}
 	return true;
 }
+bool	GenericPerceptron::LoadFeatureWeightFile()
+{
+	GML::Utils::AttributeList	attrList;
+	UInt32						tr;
+
+	if ((featWeight = new double[con->GetFeatureCount()])==NULL)
+	{
+		notif->Error("[%s] -> Unable to alloc featWeight[%d]",ObjectName,con->GetFeatureCount());
+		return false;
+	}
+	if (attrList.Load(FeaturesWeightFile.GetText())==false)
+	{
+		notif->Error("[%s] -> Unable to load FeaturesWeightFile : %s",ObjectName,FeaturesWeightFile.GetText());
+		return false;
+	}
+	if (attrList.Update("Weight",featWeight,sizeof(double)*con->GetFeatureCount())==false)
+	{
+		notif->Error("[%s] -> Unable to update 'Weight' property from %s",ObjectName,FeaturesWeightFile.GetText());
+		return false;
+	}
+	notif->Info("[%s] -> %s loaded ok ",ObjectName,FeaturesWeightFile.GetText());
+	// facem si un mic test
+
+	for (tr=0;tr<con->GetFeatureCount();tr++)
+	{
+		if (featWeight[tr]<=0.0)
+		{
+			notif->Error("[%s] -> Feature Weight %d is lower than 0.0 (%.4lf)",ObjectName,tr,featWeight[tr]);
+		}	
+	}
+	return true;
+}
 bool	GenericPerceptron::Init()
 {
 	UInt32		tr;
@@ -311,6 +345,12 @@ bool	GenericPerceptron::Init()
 	if (threadsCount<1)
 		threadsCount = 1;
 	
+	if (adjustWeightMode==ADJUST_WEIGHT_USE_FEAT_WEIGHT)
+	{
+		if (LoadFeatureWeightFile()==false)
+			return false;
+	}
+
 	if (CreateIndexes()==false)
 		return false;
 	// creez indexii pentru toate
@@ -428,14 +468,24 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *
 					act_featCount = CountActiveFeatures(ptd->Record.Features,nrFeatures)+1; // +1 pentru Bias si ca sa fiu sigur ca e mai mare ca 0
 					error = error / ((double)act_featCount);
 					break;
+				case ADJUST_WEIGHT_USE_FEAT_WEIGHT:
+					error = ptd->Record.Label * learningRate;
+					break;
 				default:
 					error = 0;
 					break;
 			};
-
-			GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(ptd->Record.Features,w,nrFeatures,error);
-			if (useB)
-				(*b) += error;
+			
+			if (adjustWeightMode==ADJUST_WEIGHT_USE_FEAT_WEIGHT)
+			{
+				GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(ptd->Record.Features,w,nrFeatures,error,featWeight);
+				if (useB)
+					(*b) += error;
+			} else {
+				GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(ptd->Record.Features,w,nrFeatures,error);
+				if (useB)
+					(*b) += error;
+			}
 		}
 		count--;
 		ptrIndex++;
