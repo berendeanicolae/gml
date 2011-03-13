@@ -7,14 +7,18 @@ struct FeaturesInfo
 	UInt32 PozitiveCount;
 	UInt32 NegativeCount;
 };
-struct FeaturesInformations
+class FeaturesInformations
 {
+public:
 	UInt32			Index;
 	double			countPozitive;
 	double			countNegative;
 	double			totalPozitive;
 	double			totalNegative;
 	double			fnValue[STATS_FNC_COUNT];
+
+	bool			operator< (FeaturesInformations &a);
+	bool			operator> (FeaturesInformations &a);
 };
 struct Stats
 {
@@ -41,6 +45,7 @@ class FeaturesStatistics: public GML::Algorithm::IAlgorithm
 	FeaturesThreadData							All;
 	Stats										StatsData[STATS_FNC_COUNT];
 	GML::Utils::GTVector<FeaturesInformations>	ComputedData;
+	GML::Utils::GString							SortProps;
 public:
 	FeaturesThreadData				*fData;
 private:
@@ -48,15 +53,18 @@ private:
 	GML::Utils::GString				Conector;
 	GML::Utils::GString				DataBase;
 	GML::Utils::GString				Notifier;
+	GML::Utils::GString				ResultFile;
 
 	UInt32							threadsCount;
 	UInt32							columnWidth;
 	UInt32							sortBy;
 	UInt32							sortDirection;
+	bool							notifyResults;
 
 	bool							CreateFeaturesInfo(FeaturesThreadData *fInfo);
 	bool							Compute();
 	void							PrintStats();
+	void							SaveToFile();
 	bool							CreateHeaders(GML::Utils::GString &str);
 	bool							CreateRecordInfo(FeaturesInformations &finf,GML::Utils::GString &str);
 	void							Sort();
