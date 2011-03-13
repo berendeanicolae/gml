@@ -39,7 +39,7 @@ bool ConsoleNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 		switch (messageID)
 		{
 			case GML::Utils::INotifier::NOTIFY_ERROR:
-				SetColor(10,0);
+				SetColor(12,0);
 				break;
 			case GML::Utils::INotifier::NOTIFY_INFO:
 				SetColor(11,0);
