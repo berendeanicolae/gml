@@ -26,7 +26,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		"Connector=BitConnector{Table=RecordTable};"
 		"Notifier=ConsoleNotifier{useColors=True};"
 		"LearningRate=1;"
-		"AdjustWeightMode=UseFeaturesWeight;"
+		"AdjustWeightMode=UseLearningRate;"
 		"InitialWeight=zeros;"
 		"useBias=true;"
 		"minimAcc=101.0;"
