@@ -37,6 +37,19 @@ Stats::Stats(Stats &ref)
 	this->Name.Set(ref.Name.GetText());
 }
 //====================================================================================================
+double log2(double x)
+{
+	if (x==0) return 0;
+	return log10(x) / (log10((double)2));
+}
+double entropy(double v_true,double v_false)
+{
+	if ((v_true+v_false)==0) return 0;
+	double v1=((double)v_true)/((double)(v_true+v_false));
+	double v2=((double)v_false)/((double)(v_true+v_false));
+	return -(v1*log2(v1)) - (v2*log2(v2));
+}
+
 double Compute_RapPozNeg(FeaturesInformations *f)
 {
 	if (f->countPozitive>=f->countNegative)
@@ -75,7 +88,7 @@ double Compute_F1(FeaturesInformations *f)
 	double v1 = miu_pl - miu_min;
 	double v2 = sigma_pl + sigma_min;
 	//if (v1 < 0) v1 = -v1;
-	if (v2 < 0) v2 = -v2;
+	//if (v2 < 0) v2 = -v2;
 	if (t_mal + t_clean == 0) return 0;
 	return v1 / v2;
 	//double precision = (double)(f.t_mal) / ((double)f.t_mal);
@@ -107,6 +120,16 @@ double Compute_ProcTo100(FeaturesInformations *f)
 		return -(100-(f->countPozitive/f->countNegative)*100);
 	return 0;
 }
+double Compute_InformationGain(FeaturesInformations *f)
+{
+	double e, e1, e2;
+	double total = f->totalPozitive+f->totalNegative;
+	e = entropy(f->countPozitive + (f->totalNegative-f->countNegative), f->countNegative + (f->totalNegative-f->countNegative));
+	e1 = entropy(f->countPozitive, f->countNegative);
+	e2 = entropy(f->countPozitive, (f->totalNegative-f->countNegative));
+
+	return e - ((double)(f->countPozitive + f->countNegative) / total) * e1 - ((double)((f->totalPozitive-f->countPozitive) + (f->totalNegative-f->countNegative)) / total) * e2;
+}
 
 //====================================================================================================
 
@@ -133,6 +156,7 @@ FeaturesStatistics::FeaturesStatistics()
 	AddNewStatFunction("Abs(Diff)",Compute_AbsDiff);
 	AddNewStatFunction("F1",Compute_F1);
 	AddNewStatFunction("F2",Compute_F2);
+	AddNewStatFunction("InformationGain",Compute_InformationGain);
 	AddNewStatFunction("ProcTo100",Compute_ProcTo100);
 
 	SortProps.Set("!!LIST:NoSort=0xFFFF");
