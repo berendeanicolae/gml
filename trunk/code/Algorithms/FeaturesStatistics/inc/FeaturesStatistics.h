@@ -1,7 +1,5 @@
 #include "gmllib.h"
 
-#define STATS_FNC_COUNT	6
-
 struct FeaturesInfo
 {
 	UInt32 PozitiveCount;
@@ -15,17 +13,19 @@ public:
 	double			countNegative;
 	double			totalPozitive;
 	double			totalNegative;
-	double			fnValue[STATS_FNC_COUNT];
+	double			*fnValue;
 
 	bool			operator< (FeaturesInformations &a);
 	bool			operator> (FeaturesInformations &a);
 };
-struct Stats
+class Stats
 {
-	char *Name;
-	double (*fnCompute) ( FeaturesInformations *info);
-
-	void	Create(char *name,double (*_fnCompute) ( FeaturesInformations *info));
+public:
+	GML::Utils::GString		Name;
+	double					(*fnCompute) ( FeaturesInformations *info);	
+	
+	Stats();
+	Stats(Stats &ref);
 };
 struct FeaturesThreadData
 {
@@ -43,7 +43,7 @@ class FeaturesStatistics: public GML::Algorithm::IAlgorithm
 	GML::ML::IConnector							*con;
 	GML::Utils::ThreadParalelUnit				*tpu;
 	FeaturesThreadData							All;
-	Stats										StatsData[STATS_FNC_COUNT];
+	GML::Utils::GTVector<Stats>					StatsData;
 	GML::Utils::GTVector<FeaturesInformations>	ComputedData;
 	GML::Utils::GString							SortProps,WeightFileType;
 public:
@@ -64,6 +64,7 @@ private:
 	bool							notifyResults;
 	double							multiplyFactor;
 
+	bool							AddNewStatFunction(char *name,double (*_fnCompute) ( FeaturesInformations *info));
 	bool							CreateFeaturesInfo(FeaturesThreadData *fInfo);
 	bool							Compute();
 	void							PrintStats();

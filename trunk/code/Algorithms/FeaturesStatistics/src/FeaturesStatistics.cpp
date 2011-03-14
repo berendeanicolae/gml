@@ -7,12 +7,11 @@ void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
 	fs->OnRunThreadCommand(fs->fData[paralel->GetID()],paralel->GetCodeID());
 }
 //====================================================================================================
-int    Compare_FeaturesInformations(FeaturesInformations &f1,FeaturesInformations &f2,void *context)
+int  Compare_FeaturesInformations(FeaturesInformations &f1,FeaturesInformations &f2,void *context)
 {
 	UInt32	column = *((UInt32 *)context);
 
-	if (column>=STATS_FNC_COUNT)
-		return 0;
+
 	if (f1.fnValue[column]>f2.fnValue[column])
 		return 1;
 	if (f1.fnValue[column]<f2.fnValue[column])
@@ -26,6 +25,16 @@ bool FeaturesInformations::operator< (FeaturesInformations &a)
 bool FeaturesInformations::operator> (FeaturesInformations &a)
 {
 	return (bool)(Index>a.Index);
+}
+//====================================================================================================
+Stats::Stats()
+{
+	fnCompute = NULL;
+}
+Stats::Stats(Stats &ref)
+{
+	fnCompute = ref.fnCompute;
+	this->Name.Set(ref.Name.GetText());
 }
 //====================================================================================================
 double Compute_RapPozNeg(FeaturesInformations *f)
@@ -42,6 +51,13 @@ double Compute_ProcDiff(FeaturesInformations *f)
 double Compute_Diff(FeaturesInformations *f)
 {
 	return f->countPozitive-f->countNegative;
+}
+double Compute_AbsDiff(FeaturesInformations *f)
+{
+	if (f->countPozitive>f->countNegative)
+		return f->countPozitive-f->countNegative;
+	else
+		return f->countNegative-f->countPozitive;
 }
 double Compute_F1(FeaturesInformations *f)
 {
@@ -93,11 +109,7 @@ double Compute_ProcTo100(FeaturesInformations *f)
 }
 
 //====================================================================================================
-void Stats::Create(char *_name,double (*_fnCompute) ( FeaturesInformations *info))
-{
-	Name = _name;
-	fnCompute = _fnCompute;
-}
+
 FeaturesStatistics::FeaturesStatistics()
 {
 	GML::Utils::GString		tmp;
@@ -115,19 +127,21 @@ FeaturesStatistics::FeaturesStatistics()
 	LinkPropertyToDouble("MultiplyFactor"			,multiplyFactor			,1.0);
 	
 
-	StatsData[0].Create("Poz/Neg",Compute_RapPozNeg);
-	StatsData[1].Create("ProcDiff",Compute_ProcDiff);
-	StatsData[2].Create("Diff",Compute_Diff);
-	StatsData[3].Create("F1",Compute_F1);
-	StatsData[4].Create("F2",Compute_F2);
-	StatsData[5].Create("ProcTo100",Compute_ProcTo100);
+	AddNewStatFunction("Poz/Neg",Compute_RapPozNeg);
+	AddNewStatFunction("ProcDiff",Compute_ProcDiff);
+	AddNewStatFunction("Diff",Compute_Diff);
+	AddNewStatFunction("Abs(Diff)",Compute_AbsDiff);
+	AddNewStatFunction("F1",Compute_F1);
+	AddNewStatFunction("F2",Compute_F2);
+	AddNewStatFunction("ProcTo100",Compute_ProcTo100);
 
 	SortProps.Set("!!LIST:NoSort=0xFFFF");
 	WeightFileType.Set("!!LIST:None=0xFFFF");
-	for (tr=0;tr<STATS_FNC_COUNT;tr++)
+	for (tr=0;tr<StatsData.Len();tr++)
 	{
-		SortProps.AddFormated(",%s=%d",StatsData[tr].Name,tr);
-		WeightFileType.AddFormated(",%s=%d",StatsData[tr].Name,tr);
+		char *text = StatsData[tr].Name.GetText();
+		SortProps.AddFormated(",%s=%d",text,tr);
+		WeightFileType.AddFormated(",%s=%d",StatsData[tr].Name.GetText(),tr);
 	}
 	SortProps.Add("!!");
 	WeightFileType.Add("!!");
@@ -136,6 +150,15 @@ FeaturesStatistics::FeaturesStatistics()
 	LinkPropertyToUInt32("SortDirection"			,sortDirection			,0,"!!LIST:Ascendet=0,Descendent!!");
 	LinkPropertyToUInt32("SaveFeaturesWeight"		,saveFeatureWeightFile	,0xFFFF,WeightFileType.GetText());
 	LinkPropertyToString("FeaturesWeightFile"		,FeaturesWeightFile		,"");
+}
+bool FeaturesStatistics::AddNewStatFunction(char *name,double (*_fnCompute) ( FeaturesInformations *info))
+{
+	Stats	tmp;
+
+	if (tmp.Name.Set(name)==false)
+		return false;
+	tmp.fnCompute = _fnCompute;
+	return StatsData.PushByRef(tmp);
 }
 bool FeaturesStatistics::CreateFeaturesInfo(FeaturesThreadData *fInfo)
 {
@@ -261,7 +284,7 @@ bool FeaturesStatistics::CreateHeaders(GML::Utils::GString &str)
 			return false;
 	}
 
-	for (tr=0;tr<STATS_FNC_COUNT;tr++)
+	for (tr=0;tr<StatsData.Len();tr++)
 	{
 		if (tmp.Set(StatsData[tr].Name)==false)
 			return false;
@@ -292,7 +315,7 @@ bool FeaturesStatistics::CreateRecordInfo(FeaturesInformations &finf,GML::Utils:
 		if (str.SetFormated("%5d|%8d|%8d|",finf.Index,(UInt32)finf.countPozitive,(UInt32)finf.countNegative)==false)
 			return false;
 	}
-	for (tr=0;tr<STATS_FNC_COUNT;tr++)
+	for (tr=0;tr<StatsData.Len();tr++)
 	{
 		if (tmp.SetFormated("%.4lf",finf.fnValue[tr])==false)
 			return false;
@@ -471,8 +494,12 @@ bool FeaturesStatistics::Compute()
 		info.totalNegative = All.totalNegative;
 		info.countNegative = All.FI[tr].NegativeCount;
 		info.countPozitive = All.FI[tr].PozitiveCount;
-		
-		for (gr=0;gr<STATS_FNC_COUNT;gr++)
+		if ((info.fnValue = new double[StatsData.Len()])==NULL)
+		{
+			notif->Error("[%s] Unable to allocate info.fnValue[%d] !",ObjectName,StatsData.Len());
+			return false;
+		}
+		for (gr=0;gr<StatsData.Len();gr++)
 			info.fnValue[gr] = StatsData[gr].fnCompute(&info) * multiplyFactor;
 
 		if (ComputedData.PushByRef(info)==false)
@@ -482,7 +509,7 @@ bool FeaturesStatistics::Compute()
 		}
 	}
 	// verific daca am vreun weight de salvat
-	if (saveFeatureWeightFile<STATS_FNC_COUNT)
+	if (saveFeatureWeightFile<StatsData.Len())
 	{
 		if (FeaturesWeightFile.Len()==0)
 		{
