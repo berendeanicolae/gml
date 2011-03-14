@@ -18,7 +18,7 @@ struct DB_RES_BUFF
 
 struct DB_CONN_STR 
 {
-	char *Server, *Database, *Username, *Password;
+	GML::Utils::GString Server, Database, Username, Password;
 	UInt32 Port;
 };
 
@@ -32,7 +32,7 @@ private:
 	UInt32 GetRowCount(char *Statement);
 	bool CheckCursorPos(char *Statement="");
 	bool SetDataType();
-	void NotifyError(char* Msg="");
+	bool NotifyError(char* Msg="");
 	bool StripQ(char* Query, const char* Word);
 	bool FillRow(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr, MYSQL_ROW Row);
 public:
@@ -40,7 +40,6 @@ public:
 	~DB_MySQL();
 	
 	bool OnInit();
-	//bool Init (INotifier &notifier, char* Server, char* Database="", char* Username="", char* Password="", UInt32 Port=3306);
 	bool Connect ();
 	bool Disconnect ();
 	UInt32 Select (char* Statement="*");

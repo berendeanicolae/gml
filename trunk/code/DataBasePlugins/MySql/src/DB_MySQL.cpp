@@ -8,63 +8,35 @@
 
 DB_MySQL::DB_MySQL()
 {
+	ObjectName = "MySQLDatabase";
 	this->conn = NULL;
 	memset(&this->DBConnStr, 0, sizeof(this->DBConnStr));
 	memset(&this->DBResBuff, 0, sizeof(this->DBResBuff));
+
+	LinkPropertyToString("Server", this->DBConnStr.Server, "localhost", "MySQL server address");
+	LinkPropertyToString("Database", this->DBConnStr.Database, "", "Database name");
+	LinkPropertyToString("Username", this->DBConnStr.Username, "", "Username used for connection");
+	LinkPropertyToString("Password", this->DBConnStr.Password, "", "Password used for connection");
+	LinkPropertyToUInt32("Port", this->DBConnStr.Port, 3306, "Port for MySQL server");
 }
 
 DB_MySQL::~DB_MySQL()
 {
 	this->Disconnect();
-	if(this->DBConnStr.Server != NULL)
-		free(this->DBConnStr.Server);
-	if(this->DBConnStr.Database != NULL)
-		free(this->DBConnStr.Database);
-	if(this->DBConnStr.Username != NULL)
-		free(this->DBConnStr.Username);
-	if(this->DBConnStr.Password != NULL)
-		free(this->DBConnStr.Password);
 	memset(&this->DBConnStr, 0, sizeof(this->DBConnStr));
 }
 
-//De mutat in OnInit
-/*bool DB_MySQL::Init (INotifier &notifier, char* Server, char* Database, char* Username, char* Password, UInt32 Port)
-{
-	if(this->conn != NULL)
-		return false;
-
-	this->notifier = &notifier;
-	this->DBConnStr.Port = Port;
-	if((this->DBConnStr.Server = (char*)malloc(strlen(Server)+sizeof(char))) == NULL)
-			return false;
-	if((this->DBConnStr.Database = (char*)malloc(strlen(Database)+sizeof(char))) == NULL)
-			return false;
-	if((this->DBConnStr.Username = (char*)malloc(strlen(Username)+sizeof(char))) == NULL)
-			return false;
-	if((this->DBConnStr.Password = (char*)malloc(strlen(Password)+sizeof(char))) == NULL)
-			return false;
-	strcpy(this->DBConnStr.Server, Server);
-	strcpy(this->DBConnStr.Database, Database);
-	strcpy(this->DBConnStr.Username, Username);
-	strcpy(this->DBConnStr.Password, Password);
-	
-	return true;
-}*/
-
 bool DB_MySQL::OnInit()
 {
-	return false;
+	return true;
 }
 
 bool DB_MySQL::Connect()
 {
 	if((this->conn = mysql_init(NULL)) == NULL)
-	{
-		this->NotifyError();
-		return false;
-	}
+		return this->NotifyError();
 
-	if (!mysql_real_connect(this->conn, 
+	if(!mysql_real_connect(this->conn, 
 		                    this->DBConnStr.Server, 
 							this->DBConnStr.Username, 
 							this->DBConnStr.Password, 
@@ -72,9 +44,8 @@ bool DB_MySQL::Connect()
 							this->DBConnStr.Port, 
 							NULL, 0)) 
 	{
-		this->NotifyError();
 		this->Disconnect();
-		return false;
+		return this->NotifyError();
 	}
 	return true;
 }
@@ -137,16 +108,14 @@ bool DB_MySQL::CheckCursorPos(char *Statement)
 	char QueryStr[1024];
 
 	if(this->conn == NULL)
-	{
-		this->NotifyError("Database connection not active. Please connect to continue");
-		return false;
-	}
+		return this->NotifyError("Database connection not active. Please connect to continue");
 
 	if((Statement != NULL) && (Statement != ""))
 	{
 		if(this->DBResBuff.QueryStr != NULL)
 			free(this->DBResBuff.QueryStr);
-		this->DBResBuff.QueryStr = (char*)malloc(strlen(Statement)+sizeof(char)); //FIXME check for errors
+		if((this->DBResBuff.QueryStr = (char*)malloc(strlen(Statement)+sizeof(char))) == NULL)
+			return this->NotifyError("Could not malloc for res query");
 		strcpy_s(this->DBResBuff.QueryStr, sizeof(QueryStr), Statement);
 		this->StripQ(this->DBResBuff.QueryStr, "select");
 	}
@@ -232,20 +201,14 @@ bool DB_MySQL::SetDataType()
 		this->DBResBuff.ColumnNames = new char*[this->DBResBuff.field_num];
 		this->DBResBuff.ColumnTypes = new UInt32[this->DBResBuff.field_num];
 		if((this->DBResBuff.ColumnNames == NULL) || (this->DBResBuff.ColumnTypes == NULL))
-		{
-			this->NotifyError("Could not alloc memory for column data");
-			return false;
-		}
+			return this->NotifyError("Could not alloc memory for column data");
 	}
 
 	fields = mysql_fetch_fields(this->DBResBuff.res);
 	for(UInt32 i = 0; i < this->DBResBuff.field_num; i++)
 	{
 		if((this->DBResBuff.ColumnNames[i] = (char*)malloc(fields[i].name_length * sizeof(char) + 1)) == NULL)
-		{
-			this->NotifyError("Could not malloc memory for column names");
-			return false;
-		}
+			return this->NotifyError("Could not malloc memory for column names");
 		strcpy_s(this->DBResBuff.ColumnNames[i], (fields[i].name_length * sizeof(char) + 1), fields[i].name);
 		switch(fields[i].type)
 		{
@@ -291,10 +254,7 @@ bool DB_MySQL::FillRow(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr, MYSQL_
 		GML::DB::DBRecord dbr;
 		dbr.Type = this->DBResBuff.ColumnTypes[i];
 		if((dbr.Name = (char*)malloc(strlen(this->DBResBuff.ColumnNames[i])+1)) == NULL)
-		{
-			this->NotifyError("Could not malloc for result name");
-			return false;
-		}
+			return this->NotifyError("Could not malloc for result name");
 		strcpy_s(dbr.Name, strlen(this->DBResBuff.ColumnNames[i])+1, this->DBResBuff.ColumnNames[i]);
 		switch(dbr.Type)
 		{
@@ -311,8 +271,7 @@ bool DB_MySQL::FillRow(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr, MYSQL_
 			{
 				if((dbr.AsciiStrVal = (char*)malloc(strlen(Row[i]) + 1)) == NULL)
 				{
-					this->NotifyError("Could not malloc for result value");
-					return false; //FIXME: free already alloc space
+					return this->NotifyError("Could not malloc for result value"); //FIXME: free already alloc space
 				}
 				strcpy_s(dbr.AsciiStrVal, strlen(Row[i])+1, Row[i]);
 			} break;
@@ -365,16 +324,14 @@ bool DB_MySQL::FetchRowNr (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr, UI
 	tmp = strstr(this->DBResBuff.QueryStr, "from");
 	if(tmp == NULL)
 	{
-		this->NotifyError("Invalid query");
-		return false;
+		return this->NotifyError("Invalid query");
 	}
 
 	sprintf_s(Query, sizeof(Query), "select * %s limit %d,1", tmp, RowNr-1);
 	if(mysql_query(this->conn, Query)) 
 	{
 		free(Query);
-		this->NotifyError();
-		return false;
+		return this->NotifyError();
 	}
 
 	Res = mysql_use_result(this->conn);
@@ -472,12 +429,13 @@ bool DB_MySQL::Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBReco
 	return false;
 }
 
-void DB_MySQL::NotifyError(char* Msg)
+bool DB_MySQL::NotifyError(char* Msg)
 {
 	if(Msg == "")
 		this->notifier->NotifyString(0, (char*)mysql_error(this->conn));
 	else
 		this->notifier->NotifyString(0, Msg);
+	return false;
 }
 
 bool DB_MySQL::StripQ(char* Query, const char* Word)
