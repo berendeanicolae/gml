@@ -17,7 +17,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("OneSidePerceptron");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("FeaturesStatistics");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
@@ -38,7 +38,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		"SortBy=F2;"
 		"SortDirection=descendent;"
 		"NotifyResult=false;"
-		"ResultFile=E:\\a.txt;"
+		"ResultFile=E:\\aa.txt;"
 		"MultiplyFactor=1000;"
 		"ColumnWidth=20;"
 		"SaveFeaturesWeight=F2;"
@@ -48,7 +48,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (alg->Init()==false)
 		return 1;
 		
-	alg->Execute("train");
+	alg->Execute("compute");
 	alg->Wait();
 
 	printf("Algorithm done !\n");
