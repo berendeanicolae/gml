@@ -17,11 +17,12 @@ struct VotantList
 public:
 	VotantList();
 	~VotantList();
+	int					FindInsertPoz(double VoteWeigth);
 	bool				Create(UInt32 maxVotes);
 	void				Destroy();
 	bool				Add(PerceptronVector &v,double VoteWeigth);
-	bool				CouldAddVoteWeight(double VoteWeigth);
 };
+
 
 class GenericVotantPerceptron: public GenericPerceptron
 {
