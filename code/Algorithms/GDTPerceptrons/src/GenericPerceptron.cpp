@@ -410,6 +410,7 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *
 	double	error;
 	double	sum;
 
+	ptd->corectelyClasify = 0;
 	if (ptd->Range.End>indexes->Len())
 	{
 		notif->Error("[%s] -> (TRAIN)::Invalid Range (%d..%d) for thread %d with %d records",ObjectName,ptd->Range.Start,ptd->Range.End,ptd->ID,indexes->Len());
@@ -486,6 +487,8 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *
 				if (useB)
 					(*b) += error;
 			}
+		} else {
+			ptd->corectelyClasify ++;
 		}
 		count--;
 		ptrIndex++;

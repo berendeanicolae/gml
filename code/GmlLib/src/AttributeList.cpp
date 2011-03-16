@@ -283,6 +283,65 @@ bool GML::Utils::Attribute::operator> (GML::Utils::Attribute &a)
 {
 	return (bool)(GString::Compare(Name,a.Name)>0);
 }
+bool GML::Utils::Attribute::GetListItem(GML::Utils::GString &str)
+{
+	GML::Utils::GString		temp,line,word;
+	int						poz=0,pw;
+
+	if (Description==NULL)
+		return true;
+	if (str.Set("")==false)
+		return false;
+	if (temp.Set(Description)==false)
+		return false;
+	while (temp.CopyNextLine(&line,&poz))
+	{
+		if ((line.StartsWith("!!LIST:")) && (line.EndsWith("!!")))
+		{
+			if (line.Replace("!!LIST:","")==false)
+				return false;
+			line.Truncate(line.Len()-2);
+			pw = 0;
+			while (line.CopyNext(&word,",",&pw))
+			{
+				if (word.Contains("="))
+					word.Truncate(word.Find("="));
+				if (str.Add(&word)==false)
+					return false;
+				if (str.Add(",")==false)
+					return false;
+			}
+			if (str.EndsWith(","))
+				str.Truncate(str.Len()-1);
+			return true;
+		} 
+	}
+	return true;
+}
+bool GML::Utils::Attribute::GetDescription(GML::Utils::GString &str)
+{
+	GML::Utils::GString		temp,line,word;
+	int						poz=0,pw;
+
+	if (Description==NULL)
+		return true;
+	if (str.Set("")==false)
+		return false;
+	if (temp.Set(Description)==false)
+		return false;
+	while (temp.CopyNextLine(&line,&poz))
+	{
+		if (line.StartsWith("!!")
+			continue;
+		if (str.Add(&line)==false)
+			return false;
+		if (str.Add("\n")==false)
+			return false;
+	}
+	if (str.Strip()==false)
+		return false;
+	return true;
+}
 //--------------------------------------------------------------------------------------
 GML::Utils::AttributeList::AttributeList(void)
 {
