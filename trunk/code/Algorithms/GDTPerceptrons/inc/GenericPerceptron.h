@@ -23,6 +23,7 @@ struct PerceptronThreadData
 	PerceptronVector				Primary;
 	PerceptronVector				Delta;
 	UInt32							ID;
+	UInt32							corectelyClasify;
 	GML::Utils::AlgorithmResult		Res;
 	GML::Utils::Interval			Range;
 	void							*ExtraData;
