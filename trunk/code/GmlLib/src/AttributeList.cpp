@@ -15,14 +15,14 @@ void ClearAttribute(GML::Utils::Attribute *a)
 		delete a->Data;
 	if (a->Name!=NULL)
 		delete a->Name;
-	if (a->Description==NULL)
-		delete a->Description;
+	if (a->MetaData==NULL)
+		delete a->MetaData;
 	MEMSET(a,0,sizeof(GML::Utils::Attribute));
 }
 bool AttributeToStringForm(GML::Utils::Attribute *a,GML::Utils::GString *tmp)
 {
 	tmp->Set("");
-	if ((a->Description!=NULL) && (tmp->AddFormated("[%s]\n",a->Description)==false))
+	if ((a->MetaData!=NULL) && (tmp->AddFormated("[%s]\n",a->MetaData)==false))
 		return false;
 	if (tmp->AddFormated("%s = ",a->Name)==false)
 		return false;
@@ -288,11 +288,11 @@ bool GML::Utils::Attribute::GetListItem(GML::Utils::GString &str)
 	GML::Utils::GString		temp,line,word;
 	int						poz=0,pw;
 
-	if (Description==NULL)
+	if (MetaData==NULL)
 		return true;
 	if (str.Set("")==false)
 		return false;
-	if (temp.Set(Description)==false)
+	if (temp.Set(MetaData)==false)
 		return false;
 	while (temp.CopyNextLine(&line,&poz))
 	{
@@ -323,11 +323,11 @@ bool GML::Utils::Attribute::GetDescription(GML::Utils::GString &str)
 	GML::Utils::GString		temp,line,word;
 	int						poz=0,pw;
 
-	if (Description==NULL)
+	if (MetaData==NULL)
 		return true;
 	if (str.Set("")==false)
 		return false;
-	if (temp.Set(Description)==false)
+	if (temp.Set(MetaData)==false)
 		return false;
 	while (temp.CopyNextLine(&line,&poz))
 	{
@@ -503,12 +503,12 @@ bool GML::Utils::AttributeList::AddAttribute(char* Name,void *Data,unsigned int 
 		if ((a.Name = new char [NameLen+1])==NULL)
 			break;
 		if (Description)
-			if ((a.Description = new char [DescLen+1])==NULL)
+			if ((a.MetaData = new char [DescLen+1])==NULL)
 				break;
 		MEMCOPY(a.Name,Name,NameLen+1);
 		MEMCOPY(a.Data,Data,a.DataSize);
 		if (Description)
-			MEMCOPY(a.Description,Description,DescLen+1);
+			MEMCOPY(a.MetaData,Description,DescLen+1);
 		if (list.PushByRef(a)==false)
 			break;
 		list.Sort(true,AttributeCompare);

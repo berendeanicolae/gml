@@ -1107,7 +1107,7 @@ namespace GML
 		struct  Attribute
 		{
 			char*			Name;
-			char*			Description;
+			char*			MetaData;
 			unsigned char*	Data;
 			unsigned int	DataSize;
 			unsigned int	AttributeType;
@@ -1125,7 +1125,7 @@ namespace GML
 			char*			Name;
 			void*			LocalAddress;
 			unsigned int	AttributeType;
-			char*			Description;
+			char*			MetaData;
 		};
 
 		class  AttributeList
@@ -1189,22 +1189,23 @@ namespace GML
 		protected:
 			char*												ObjectName;
 		protected:
-			bool			LinkPropertyToString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *Description=NULL);
-			bool			LinkPropertyToBool(char *Name,bool &LocalAddr,bool defaultValue,char *Description=NULL);
-			bool			LinkPropertyToDouble(char *Name,double &LocalAddr,double defaultValue,char *Description=NULL);
-			bool			LinkPropertyToUInt32(char *Name,UInt32 &LocalAddr,UInt32 defaultValue,char *Description=NULL);
-			bool			LinkPropertyToInt32(char *Name,Int32 &LocalAddr,Int32 defaultValue,char *Description=NULL);
-			bool			RemoveProperty(char *Name);
+			bool						LinkPropertyToString(char *Name,GML::Utils::GString &LocalAddr,char *defaultValue,char *MetaData=NULL);
+			bool						LinkPropertyToBool(char *Name,bool &LocalAddr,bool defaultValue,char *MetaData=NULL);
+			bool						LinkPropertyToDouble(char *Name,double &LocalAddr,double defaultValue,char *MetaData=NULL);
+			bool						LinkPropertyToUInt32(char *Name,UInt32 &LocalAddr,UInt32 defaultValue,char *MetaData=NULL);
+			bool						LinkPropertyToInt32(char *Name,Int32 &LocalAddr,Int32 defaultValue,char *MetaData=NULL);
+			bool						RemoveProperty(char *Name);
+			bool						SetProperyMetaData(char *Name,char *MetaData);
 			
 		
 		public:
-			bool			SetProperty(GML::Utils::AttributeList &config);
-			bool			SetProperty(char *config);
-			bool			SetPropertyFromFile(char *fileName);
+			bool						SetProperty(GML::Utils::AttributeList &config);
+			bool						SetProperty(char *config);
+			bool						SetPropertyFromFile(char *fileName);
 			
-			bool			GetProperty(GML::Utils::AttributeList &config);
-			bool			SavePropery(char *fileName);
-			char*			GetObjectName();
+			bool						GetProperty(GML::Utils::AttributeList &config);
+			bool						SavePropery(char *fileName);
+			char*						GetObjectName();
 		public:
 			GMLObject();
 		};
