@@ -9,6 +9,23 @@
 int _tmain(int argc, _TCHAR* argv[])
 {
 	GML::Utils::AttributeList	attr;
+	//GML::Utils::Attribute		*a;
+
+	//attr.Load("E:\\aaa.txt");
+	//a = attr.Get("Test");
+	//printf("%s\n------------------------------\n",a->MetaData);
+
+	//a = attr.Get("Value");
+	//printf("%s\n--------------------\n",a->MetaData);
+
+	///*
+
+	//attr.AddString("Test","value","Salut\n!!list:10,20,30!!\nCalculeaza date");
+	//attr.AddBool("Value",true);
+
+	//attr.Save("E:\\aaa.txt");
+	////*/
+	//return 1;
 
 	//attr.AddString("DbName","SimpleTextFileDB");
 	//attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\a.txt");  
@@ -46,10 +63,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		"Command=test;"
 		"MaxIterations=(INT32)20;")==false)
 		return 1;
-	alg->GetProperty(attr);
-	attr.Save("E:\\lucru\\GML\\gml\\prj\\gml\\Release\\template.txt");
-	if (alg->Init()==false)
-		return 1;
+	//alg->GetProperty(attr);
+	//attr.Save("E:\\lucru\\GML\\gml\\prj\\gml\\Release\\template.txt");
+	//if (alg->Init()==false)
+	//	return 1;
 		
 	alg->Execute();
 	alg->Wait();

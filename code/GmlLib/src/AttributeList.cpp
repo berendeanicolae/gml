@@ -596,6 +596,7 @@ bool GML::Utils::AttributeList::FromString(GML::Utils::GString &text)
 	GML::Utils::GString			line,desc,name,value,Buffer;
 	int							index=0,eq_poz,tr;
 	unsigned int				Type,ElementsCount,Size;
+	bool						onDesc=false;
 
 	if (line.Create(2048)==false)
 		return false;
@@ -613,6 +614,24 @@ bool GML::Utils::AttributeList::FromString(GML::Utils::GString &text)
 		if ((line.StartsWith("[")) && (line.EndsWith("]")))
 		{
 			desc.Set(&line.GetText()[1],line.GetSize()-2);
+			continue;
+		}
+		if (onDesc) 
+		{
+			desc.Add("\n");
+			if (line.EndsWith("]"))
+			{
+				desc.Add(line.GetText(),line.Len()-1);
+				onDesc = false;
+			} else {
+				desc.Add(&line);
+			}
+			continue;
+		}
+		if ((line.StartsWith("[")) && (line.EndsWith("]")==false))
+		{
+			desc.Set(&line.GetText()[1],line.GetSize()-1);
+			onDesc = true;
 			continue;
 		}
 		eq_poz = line.Find("=");
