@@ -8,7 +8,7 @@
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	//GML::Utils::AttributeList	attr;
+	GML::Utils::AttributeList	attr;
 
 	//attr.AddString("DbName","SimpleTextFileDB");
 	//attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\a.txt");  
@@ -46,6 +46,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		"Command=test;"
 		"MaxIterations=(INT32)20;")==false)
 		return 1;
+	alg->GetProperty(attr);
+	attr.Save("E:\\lucru\\GML\\gml\\prj\\gml\\Release\\template.txt");
 	if (alg->Init()==false)
 		return 1;
 		
