@@ -39,6 +39,11 @@ public:
 };
 class FeaturesStatistics: public GML::Algorithm::IAlgorithm
 {
+	enum
+	{
+		COMMAND_NONE = 0,
+		COMMAND_COMPUTE
+	};
 	GML::DB::IDataBase							*db;
 	GML::ML::IConnector							*con;
 	GML::Utils::ThreadParalelUnit				*tpu;
@@ -78,7 +83,7 @@ public:
 
 	void							OnRunThreadCommand(FeaturesThreadData &ftd,UInt32 command);
 	bool							Init();
-	void							OnExecute(char *command);
+	void							OnExecute();
 };
 
 

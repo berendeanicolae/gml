@@ -21,7 +21,7 @@ namespace GML
 			bool						LinkPropertyToUInt32(char *Name,UInt32 &LocalAddr,UInt32 defaultValue,char *MetaData=NULL);
 			bool						LinkPropertyToInt32(char *Name,Int32 &LocalAddr,Int32 defaultValue,char *MetaData=NULL);
 			bool						RemoveProperty(char *Name);
-			bool						SetProperyMetaData(char *Name,char *MetaData);
+			bool						SetPropertyMetaData(char *Name,char *MetaData);
 			
 		
 		public:

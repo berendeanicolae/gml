@@ -36,6 +36,11 @@ class GenericPerceptron : public GML::Algorithm::IAlgorithm
 {
 protected:
 	enum {
+		COMMAND_NONE = 0,
+		COMMAND_TRAIN,
+		COMMAND_TEST
+	};
+	enum {
 		INITIAL_WEIGHT_ZERO  = 0,
 		INITIAL_WEIGHT_RANDOM,
 		INITIAL_WEIGHT_FROMFILE
@@ -135,7 +140,7 @@ public:
 	bool					Init();
 	bool					PerformTrain();
 	bool					PerformTest();
-	void					OnExecute(char *command);
+	void					OnExecute();
 };
 
 

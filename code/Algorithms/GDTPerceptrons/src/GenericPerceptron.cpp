@@ -88,6 +88,8 @@ GenericPerceptron::GenericPerceptron()
 
 	batchPerceptron = false;
 
+	SetPropertyMetaData("Command","!!LIST:None=0,Train,Test!!");
+
 	LinkPropertyToString("Name"						,Name					,"Perceptron");
 	LinkPropertyToString("DataBase"					,DataBase				,"");
 	LinkPropertyToString("Connector"				,Conector				,"");
@@ -609,21 +611,23 @@ bool	GenericPerceptron::PerformTest()
 	notif->Notify(100,&FullData.Res,sizeof(FullData.Res));
 	return true;
 }
-void	GenericPerceptron::OnExecute(char *command)
+void	GenericPerceptron::OnExecute()
 {
 	StopAlgorithm = false;
-	if (GML::Utils::GString::Equals(command,"train",true))
+	
+	switch (Command)
 	{
-		PerformTrain();
-		return;
-	}
-	if (GML::Utils::GString::Equals(command,"test",true))
-	{
-		FullData.Res.time.Start();
-		PerformTest();
-		return;
-	}
-	notif->Error("Unkwnown command: %s",command);
+		case COMMAND_NONE:
+			notif->Info("[%s] -> Nothing to do ... ",ObjectName);
+			return;
+		case COMMAND_TRAIN:
+			PerformTrain();
+			return;
+		case COMMAND_TEST:
+			PerformTest();
+			return;
+	};
+	notif->Error("[%s] -> Unkwnown command ID : %d",ObjectName,Command);
 }
 bool    GenericPerceptron::ExecuteParalelCommand(UInt32 command)
 {
