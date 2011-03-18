@@ -19,14 +19,15 @@ namespace GML
 			bool						StopAlgorithm;		
 			GML::Utils::INotifier		*notif;			
 			GML::Utils::Timer			algTimer;
+			UInt32						Command;
 
 		public:			
 			IAlgorithm();
 
 			virtual bool	Init() = 0;
-			virtual void	OnExecute(char* command)=0;
+			virtual void	OnExecute()=0;
 
-			bool			Execute(char *command);
+			bool			Execute(char *command=NULL);
 			bool			Wait();
 			bool			Wait(UInt32 nrMiliseconds);
 		};

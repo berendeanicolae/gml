@@ -146,7 +146,7 @@ bool GML::Utils::GMLObject::LinkPropertyToInt32(char *Name,Int32 &LocalAddr,Int3
 
 	return AttrLinks.PushByRef(link);
 }
-bool GML::Utils::GMLObject::SetProperyMetaData(char *Name,char *MetaData)
+bool GML::Utils::GMLObject::SetPropertyMetaData(char *Name,char *MetaData)
 {
 	GML::Utils::AttributeLink	*link;
 	UInt32						tr;

@@ -140,6 +140,8 @@ FeaturesStatistics::FeaturesStatistics()
 
 	ObjectName = "FeaturesStatistics";
 
+	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
+
 	LinkPropertyToString("DataBase"					,DataBase				,"");
 	LinkPropertyToString("Connector"				,Conector				,"");
 	LinkPropertyToString("Notifier"					,Notifier				,"");
@@ -556,13 +558,18 @@ bool FeaturesStatistics::Compute()
 		SaveToFile();
 	return true;
 }
-void FeaturesStatistics::OnExecute(char *command)
+void FeaturesStatistics::OnExecute()
 {
 	StopAlgorithm = false;
-	if (GML::Utils::GString::Equals(command,"compute",true))
+	
+	switch (Command)
 	{
-		Compute();
-		return;
-	}
-	notif->Error("Unkwnown command: %s",command);
+		case COMMAND_NONE:
+			notif->Info("[%s] -> Nothing to do ... ",ObjectName);
+			return;
+		case COMMAND_COMPUTE:
+			Compute();
+			return;
+	};
+	notif->Error("[%s] -> Unkwnown command ID : %d",ObjectName,Command);
 }

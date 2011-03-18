@@ -17,7 +17,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("FeaturesStatistics");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("BatchPerceptron");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
@@ -43,12 +43,13 @@ int _tmain(int argc, _TCHAR* argv[])
 		"ColumnWidth=20;"
 		"SaveFeaturesWeight=F2;"
 		"FeaturesWeightFile=E:\\a.a;"
+		"Command=test;"
 		"MaxIterations=(INT32)20;")==false)
 		return 1;
 	if (alg->Init()==false)
 		return 1;
 		
-	alg->Execute("compute");
+	alg->Execute();
 	alg->Wait();
 
 	printf("Algorithm done !\n");

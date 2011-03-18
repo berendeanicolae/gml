@@ -1195,7 +1195,7 @@ namespace GML
 			bool						LinkPropertyToUInt32(char *Name,UInt32 &LocalAddr,UInt32 defaultValue,char *MetaData=NULL);
 			bool						LinkPropertyToInt32(char *Name,Int32 &LocalAddr,Int32 defaultValue,char *MetaData=NULL);
 			bool						RemoveProperty(char *Name);
-			bool						SetProperyMetaData(char *Name,char *MetaData);
+			bool						SetPropertyMetaData(char *Name,char *MetaData);
 			
 		
 		public:
@@ -1597,14 +1597,15 @@ namespace GML
 			bool						StopAlgorithm;		
 			GML::Utils::INotifier		*notif;			
 			GML::Utils::Timer			algTimer;
+			UInt32						Command;
 
 		public:			
 			IAlgorithm();
 
 			virtual bool	Init() = 0;
-			virtual void	OnExecute(char* command)=0;
+			virtual void	OnExecute()=0;
 
-			bool			Execute(char *command);
+			bool			Execute(char *command=NULL);
 			bool			Wait();
 			bool			Wait(UInt32 nrMiliseconds);
 		};
