@@ -40,9 +40,9 @@ bool GML::Algorithm::IAlgorithm::Execute(char *command)
 
 	if (notif==NULL)
 		return false;
-	notif->Info("[%s] -> Executing command: %s",ObjectName,command);
 	if (command!=NULL)
 	{
+		notif->Info("[%s] -> Executing command: %s",ObjectName,command);
 		if (attrCommand.AddString("Command",command)==false)
 		{
 			notif->Error("[%s] -> Unable to set command : %s !",ObjectName,command);
