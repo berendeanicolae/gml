@@ -64,6 +64,16 @@ bool PerceptronVector::Create(PerceptronVector &pv)
 
 	return true;
 }
+bool PerceptronVector::Copy(PerceptronVector &pv)
+{
+	if (Count!=pv.Count)
+		if (Create(pv.Count))
+			return false;
+	(*Bias) = (*pv.Bias);
+	memcpy(Weight,pv.Weight,sizeof(double)*pv.Count);
+
+	return true;
+}
 //====================================================================================================
 PerceptronThreadData::PerceptronThreadData()
 {

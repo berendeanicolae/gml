@@ -14,6 +14,7 @@ public:
 
 	bool	Create(UInt32 count);
 	bool	Create(PerceptronVector &pv);
+	bool	Copy(PerceptronVector &pv);
 	void	Destroy();
 	void	Add(PerceptronVector &pv);
 };
