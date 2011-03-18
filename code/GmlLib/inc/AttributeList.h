@@ -14,7 +14,7 @@ namespace GML
 		struct EXPORT Attribute
 		{
 			char*			Name;
-			char*			Description;
+			char*			MetaData;
 			unsigned char*	Data;
 			unsigned int	DataSize;
 			unsigned int	AttributeType;
@@ -32,7 +32,7 @@ namespace GML
 			char*			Name;
 			void*			LocalAddress;
 			unsigned int	AttributeType;
-			char*			Description;
+			char*			MetaData;
 		};
 
 		class EXPORT AttributeList

@@ -20,11 +20,11 @@ bool AttributeToListIndex(GML::Utils::Attribute *attr,GML::Utils::AttributeLink	
 	int						poz,p_eq;
 	TYPE_INT64				cValue;
 
-	if (GML::Utils::GString::StartsWith(link->Description,"!!LIST:",true)==false)
+	if (GML::Utils::GString::StartsWith(link->MetaData,"!!LIST:",true)==false)
 		return false;
-	if ((poz=GML::Utils::GString::Find(&link->Description[7],"!!"))==-1)
+	if ((poz=GML::Utils::GString::Find(&link->MetaData[7],"!!"))==-1)
 		return false;
-	if (list.Set(&link->Description[7],poz)==false)
+	if (list.Set(&link->MetaData[7],poz)==false)
 		return false;
 	poz = 0;
 	cValue = 0;
@@ -53,11 +53,11 @@ bool ListIndexToAttribute(GML::Utils::AttributeLink	*link,Int64 intValue,GML::Ut
 	int						poz,p_eq;
 	TYPE_INT64				cValue;
 
-	if (GML::Utils::GString::StartsWith(link->Description,"!!LIST:",true)==false)
+	if (GML::Utils::GString::StartsWith(link->MetaData,"!!LIST:",true)==false)
 		return false;
-	if ((poz=GML::Utils::GString::Find(&link->Description[7],"!!"))==-1)
+	if ((poz=GML::Utils::GString::Find(&link->MetaData[7],"!!"))==-1)
 		return false;
-	if (list.Set(&link->Description[7],poz)==false)
+	if (list.Set(&link->MetaData[7],poz)==false)
 		return false;
 	poz = 0;
 	cValue = 0;
@@ -91,7 +91,7 @@ bool GML::Utils::GMLObject::LinkPropertyToString(char *Name,GML::Utils::GString 
 
 	if (LocalAddr.Set(defaultValue)==false)
 		return false;
-	link.Description = Description;
+	link.MetaData = Description;
 	link.Name = Name;
 	link.AttributeType = GML::Utils::AttributeList::STRING;
 	link.LocalAddress = &LocalAddr;
@@ -103,7 +103,7 @@ bool GML::Utils::GMLObject::LinkPropertyToBool(char *Name,bool &LocalAddr,bool d
 	GML::Utils::AttributeLink	link;
 
 	LocalAddr = defaultValue;
-	link.Description = Description;
+	link.MetaData = Description;
 	link.Name = Name;
 	link.AttributeType = GML::Utils::AttributeList::BOOLEAN;
 	link.LocalAddress = &LocalAddr;
@@ -115,7 +115,7 @@ bool GML::Utils::GMLObject::LinkPropertyToDouble(char *Name,double &LocalAddr,do
 	GML::Utils::AttributeLink	link;
 
 	LocalAddr = defaultValue;
-	link.Description = Description;
+	link.MetaData = Description;
 	link.Name = Name;
 	link.AttributeType = GML::Utils::AttributeList::DOUBLE;
 	link.LocalAddress = &LocalAddr;
@@ -127,7 +127,7 @@ bool GML::Utils::GMLObject::LinkPropertyToUInt32(char *Name,UInt32 &LocalAddr,UI
 	GML::Utils::AttributeLink	link;
 
 	LocalAddr = defaultValue;
-	link.Description = Description;
+	link.MetaData = Description;
 	link.Name = Name;
 	link.AttributeType = GML::Utils::AttributeList::UINT32;
 	link.LocalAddress = &LocalAddr;
@@ -139,12 +139,28 @@ bool GML::Utils::GMLObject::LinkPropertyToInt32(char *Name,Int32 &LocalAddr,Int3
 	GML::Utils::AttributeLink	link;
 
 	LocalAddr = defaultValue;
-	link.Description = Description;
+	link.MetaData = Description;
 	link.Name = Name;
 	link.AttributeType = GML::Utils::AttributeList::INT32;
 	link.LocalAddress = &LocalAddr;
 
 	return AttrLinks.PushByRef(link);
+}
+bool GML::Utils::GMLObject::SetProperyMetaData(char *Name,char *MetaData)
+{
+	GML::Utils::AttributeLink	*link;
+	UInt32						tr;
+
+	for (tr=0;tr<AttrLinks.Len();tr++)
+		if ((link=(GML::Utils::AttributeLink *)AttrLinks.GetPtrToObject(tr))!=NULL)
+		{
+			if (GML::Utils::GString::Equals(link->Name,Name,true))
+			{
+				link->MetaData = MetaData;
+				return true;
+			}
+		}
+	return true;
 }
 bool GML::Utils::GMLObject::RemoveProperty(char *Name)
 {
@@ -268,7 +284,7 @@ bool GML::Utils::GMLObject::GetProperty(GML::Utils::AttributeList &config)
 		switch (link->AttributeType)
 		{
 			case GML::Utils::AttributeList::STRING:
-				if (config.AddString(link->Name,(*(GML::Utils::GString *)link->LocalAddress).GetText(),link->Description)==false)
+				if (config.AddString(link->Name,(*(GML::Utils::GString *)link->LocalAddress).GetText(),link->MetaData)==false)
 				{
 					DEBUGMSG("Error adding : %s ",link->Name);
 					return false;
@@ -277,21 +293,21 @@ bool GML::Utils::GMLObject::GetProperty(GML::Utils::AttributeList &config)
 			case GML::Utils::AttributeList::DOUBLE:
 				if (ListIndexToAttribute(link,(Int64)(*(double *)link->LocalAddress),&listValue))
 				{
-					if (config.AddString(link->Name,listValue.GetText(),link->Description)==false)
+					if (config.AddString(link->Name,listValue.GetText(),link->MetaData)==false)
 					{
 						DEBUGMSG("Error adding : %s ",link->Name);
 						return false;
 					}
 					break;
 				}
-				if (config.AddDouble(link->Name,(*(double *)link->LocalAddress),link->Description)==false)
+				if (config.AddDouble(link->Name,(*(double *)link->LocalAddress),link->MetaData)==false)
 				{
 					DEBUGMSG("Error adding : %s ",link->Name);
 					return false;
 				}
 				break;
 			case GML::Utils::AttributeList::BOOLEAN:
-				if (config.AddBool(link->Name,(*(bool *)link->LocalAddress),link->Description)==false)
+				if (config.AddBool(link->Name,(*(bool *)link->LocalAddress),link->MetaData)==false)
 				{
 					DEBUGMSG("Error adding : %s ",link->Name);
 					return false;
@@ -300,14 +316,14 @@ bool GML::Utils::GMLObject::GetProperty(GML::Utils::AttributeList &config)
 			case GML::Utils::AttributeList::UINT32:
 				if (ListIndexToAttribute(link,(Int64)(*(UInt32 *)link->LocalAddress),&listValue))
 				{
-					if (config.AddString(link->Name,listValue.GetText(),link->Description)==false)
+					if (config.AddString(link->Name,listValue.GetText(),link->MetaData)==false)
 					{
 						DEBUGMSG("Error adding : %s ",link->Name);
 						return false;
 					}
 					break;
 				}
-				if (config.AddUInt32(link->Name,(*(UInt32 *)link->LocalAddress),link->Description)==false)
+				if (config.AddUInt32(link->Name,(*(UInt32 *)link->LocalAddress),link->MetaData)==false)
 				{
 					DEBUGMSG("Error adding : %s ",link->Name);
 					return false;
@@ -316,14 +332,14 @@ bool GML::Utils::GMLObject::GetProperty(GML::Utils::AttributeList &config)
 			case GML::Utils::AttributeList::INT32:
 				if (ListIndexToAttribute(link,(Int64)(*(Int32 *)link->LocalAddress),&listValue))
 				{
-					if (config.AddString(link->Name,listValue.GetText(),link->Description)==false)
+					if (config.AddString(link->Name,listValue.GetText(),link->MetaData)==false)
 					{
 						DEBUGMSG("Error adding : %s ",link->Name);
 						return false;
 					}
 					break;
 				}
-				if (config.AddInt32(link->Name,(*(Int32 *)link->LocalAddress),link->Description)==false)
+				if (config.AddInt32(link->Name,(*(Int32 *)link->LocalAddress),link->MetaData)==false)
 				{
 					DEBUGMSG("Error adding : %s ",link->Name);
 					return false;
