@@ -74,9 +74,10 @@ bool VotantList::Add(PerceptronVector &v,double VoteWeigth)
 
 
 
-	Order[index]=el;
+	Order[index]=el;	
 	Votes[el].VoteWeigth = VoteWeigth;
-	Votes[el].Vector = v;
+	
+	return Votes[el].Vector.Copy(v);
 	
 	//printf("Order:");
 	//for (int tr=0;tr<Count;tr++)

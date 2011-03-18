@@ -1115,6 +1115,9 @@ namespace GML
 
 			bool operator < (Attribute &a1);
 			bool operator > (Attribute &a1);
+
+			bool			GetListItem(GML::Utils::GString &str);
+			bool			GetDescription(GML::Utils::GString &str);
 		};
 
 		struct  AttributeLink

@@ -331,7 +331,7 @@ bool GML::Utils::Attribute::GetDescription(GML::Utils::GString &str)
 		return false;
 	while (temp.CopyNextLine(&line,&poz))
 	{
-		if (line.StartsWith("!!")
+		if (line.StartsWith("!!"))
 			continue;
 		if (str.Add(&line)==false)
 			return false;
