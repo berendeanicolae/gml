@@ -105,7 +105,7 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToUInt32("MaxIterations"			,maxIterations			,10);
 	LinkPropertyToString("WeightFileName"			,WeightFileName			,"");
 	LinkPropertyToUInt32("InitialWeight"			,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,FromFile!!");
-	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1);
+	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1,"");
 	LinkPropertyToUInt32("AdjustWeightMode"			,adjustWeightMode		,ADJUST_WEIGHT_LEARNING_RATE,"!!LIST:UseLearningRate=0,UseWeight,UseLeastMeanSquare,UseSplitLearningRate,UseSplitLeastMeanSquare,UseFeaturesWeight!!");
 	LinkPropertyToString("FeaturesWeightFile"		,FeaturesWeightFile		,"");
 }
