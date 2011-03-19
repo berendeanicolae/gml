@@ -491,11 +491,11 @@ bool    GenericPerceptron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *
 			
 			if (adjustWeightMode==ADJUST_WEIGHT_USE_FEAT_WEIGHT)
 			{
-				GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(ptd->Record.Features,w,nrFeatures,error,featWeight);
+				GML::ML::VectorOp::AdjustPerceptronWeights(ptd->Record.Features,w,nrFeatures,error,featWeight);
 				if (useB)
 					(*b) += error;
 			} else {
-				GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(ptd->Record.Features,w,nrFeatures,error);
+				GML::ML::VectorOp::AdjustPerceptronWeights(ptd->Record.Features,w,nrFeatures,error);
 				if (useB)
 					(*b) += error;
 			}
