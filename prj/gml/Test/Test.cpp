@@ -40,7 +40,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (alg->SetProperty(
 		"Name=Test;"
 		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"
-		"Connector=MapConnector{MapMethod=UseAnd}=>BitConnector{Table=RecordTable};"
+		"Connector=BitConnector{Table=RecordTable};"
 		"Notifier=ConsoleNotifier{useColors=True};"
 		"LearningRate=0.01;"
 		"AdjustWeightMode=UseLearningRate;"

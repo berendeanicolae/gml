@@ -58,9 +58,20 @@ void GML::ML::VectorOp::AdjustPerceptronWeights(double *features,double *weights
 {
 	while (elements>0)
 	{
-		(*features) += ((*weights)*error);
+		(*weights) += ((*features)*error);
 		features++;
 		weights++;
+		elements--;
+	}
+}
+void GML::ML::VectorOp::AdjustPerceptronWeights(double *features,double *weights,UInt32 elements,double error,double *featuresWeight)
+{
+	while (elements>0)
+	{
+		(*weights) += error*(*featuresWeight)*(*features);
+		features++;
+		weights++;
+		featuresWeight++;
 		elements--;
 	}
 }

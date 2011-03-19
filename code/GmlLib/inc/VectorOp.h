@@ -18,6 +18,7 @@ namespace GML
 			static void		AdjustTwoStatePerceptronWeights(double *features,double *weights,UInt32 elements,double error);
 			static void		AdjustTwoStatePerceptronWeights(double *features,double *weights,UInt32 elements,double error,double *featuresWeight);			
 			static void		AdjustPerceptronWeights(double *features,double *weights,UInt32 elements,double error);
+			static void		AdjustPerceptronWeights(double *features,double *weights,UInt32 elements,double error,double *featuresWeight);
 			static double	PointToPlaneDistance(double *plane,double *point,UInt32 elements,double planeBias);
 			static double	PointToPlaneDistanceSquared(double *plane,double *point,UInt32 elements,double planeBias);
 			static double	PointToPlaneDistanceSigned(double *plane,double *point,UInt32 elements,double planeBias);	
