@@ -40,14 +40,14 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (alg->SetProperty(
 		"Name=Test;"
 		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"
-		"Connector=BitConnector{Table=RecordTable};"
+		"Connector=MapConnector{MapMethod=UseAnd}=>BitConnector{Table=RecordTable};"
 		"Notifier=ConsoleNotifier{useColors=True};"
-		"LearningRate=1;"
+		"LearningRate=0.01;"
 		"AdjustWeightMode=UseLearningRate;"
 		"InitialWeight=zeros;"
 		"useBias=true;"
-		"minimAcc=101.0;"
-		"SaveData=AfterEachIteration;"
+		"minimAcc=100.0;"
+		"SaveData=None;"
 		"SaveBest=BestACC;"
 		"ThreadsCount=2;"
 		"MaxError=0;"
@@ -60,13 +60,13 @@ int _tmain(int argc, _TCHAR* argv[])
 		"ColumnWidth=20;"
 		"SaveFeaturesWeight=F2;"
 		"FeaturesWeightFile=E:\\a.a;"
-		"Command=test;"
+		"Command=train;"
 		"MaxIterations=(INT32)20;")==false)
 		return 1;
 	//alg->GetProperty(attr);
 	//attr.Save("E:\\lucru\\GML\\gml\\prj\\gml\\Release\\template.txt");
-	//if (alg->Init()==false)
-	//	return 1;
+	if (alg->Init()==false)
+		return 1;
 		
 	alg->Execute();
 	alg->Wait();
