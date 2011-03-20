@@ -1267,6 +1267,10 @@ namespace GML
 			static double	PointToPlaneDistanceSquared(double *plane,double *point,UInt32 elements,double planeBias);
 			static double	PointToPlaneDistanceSigned(double *plane,double *point,UInt32 elements,double planeBias);	
 			static double	PointToPlaneDistanceSquaredSigned(double *plane,double *point,UInt32 elements,double planeBias);			
+			static double	PointToPointDistanceSquared(double *p1,double *p2,UInt32 elements);
+			static double	PointToPointDistance(double *p1,double *p2,UInt32 elements);
+			static double	PointToPointDistanceSquared(double *p1,double *p2,double *pWeight,UInt32 elements);
+			static double	PointToPointDistance(double *p1,double *p2,double *pWeight,UInt32 elements);
 			
 		};
 	}
