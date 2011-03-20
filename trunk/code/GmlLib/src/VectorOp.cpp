@@ -23,15 +23,15 @@ double	GML::ML::VectorOp::ComputeVectorsSum(double *v1,double *v2,UInt32 element
 	}
 	return sum;
 }
-bool GML::ML::VectorOp::IsPerceptronTrained(double *v1,double *v2,UInt32 elements,double label)
+bool    GML::ML::VectorOp::IsPerceptronTrained(double *v1,double *v2,UInt32 elements,double label)
 {
 	return ((label*ComputeVectorsSum(v1,v2,elements))>0);
 }
-bool GML::ML::VectorOp::IsPerceptronTrained(double *v1,double *v2,UInt32 elements,double b,double label)
+bool	GML::ML::VectorOp::IsPerceptronTrained(double *v1,double *v2,UInt32 elements,double b,double label)
 {	
 	return (bool)((label*(ComputeVectorsSum(v1,v2,elements)+b))>0.0);
 }
-void GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(double *features,double *weights,UInt32 elements,double error)
+void	GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(double *features,double *weights,UInt32 elements,double error)
 {
 	while (elements>0)
 	{
@@ -42,7 +42,7 @@ void GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(double *features,double 
 		elements--;
 	}
 }
-void GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(double *features,double *weights,UInt32 elements,double error,double *featuresWeight)
+void	GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(double *features,double *weights,UInt32 elements,double error,double *featuresWeight)
 {
 	while (elements>0)
 	{
@@ -54,7 +54,7 @@ void GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(double *features,double 
 		elements--;
 	}
 }
-void GML::ML::VectorOp::AdjustPerceptronWeights(double *features,double *weights,UInt32 elements,double error)
+void	GML::ML::VectorOp::AdjustPerceptronWeights(double *features,double *weights,UInt32 elements,double error)
 {
 	while (elements>0)
 	{
@@ -64,7 +64,7 @@ void GML::ML::VectorOp::AdjustPerceptronWeights(double *features,double *weights
 		elements--;
 	}
 }
-void GML::ML::VectorOp::AdjustPerceptronWeights(double *features,double *weights,UInt32 elements,double error,double *featuresWeight)
+void	GML::ML::VectorOp::AdjustPerceptronWeights(double *features,double *weights,UInt32 elements,double error,double *featuresWeight)
 {
 	while (elements>0)
 	{
@@ -157,4 +157,30 @@ double  GML::ML::VectorOp::PointToPointDistanceSquared(double *p1,double *p2,dou
 double  GML::ML::VectorOp::PointToPointDistance(double *p1,double *p2,double *pWeight,UInt32 elements)
 {
 	return sqrt(PointToPointDistanceSquared(p1,p2,pWeight,elements));
+}
+double  GML::ML::VectorOp::Average(double *v,UInt32 elements)
+{
+	double sum = 0;
+	double count = elements;
+	while (elements>0)
+	{
+		sum+=(*v);
+		v++;
+		elements--;
+	}
+	return sum / count;
+}
+double  GML::ML::VectorOp::StandardDeviation(double *v,UInt32 elements)
+{
+	double av = Average(v,elements);
+	double sum = 0;
+	double count = elements;
+
+	while (elements>0)
+	{
+		sum+=((*v)-av) * ((*v)-av);
+		v++;
+		elements--;
+	}
+	return sqrt(sum / count);
 }
