@@ -1247,6 +1247,8 @@ namespace GML
 #define __VECTOR__OP__
 
 
+#define Mean	Average
+
 namespace GML
 {
 	namespace ML
@@ -1271,6 +1273,8 @@ namespace GML
 			static double	PointToPointDistance(double *p1,double *p2,UInt32 elements);
 			static double	PointToPointDistanceSquared(double *p1,double *p2,double *pWeight,UInt32 elements);
 			static double	PointToPointDistance(double *p1,double *p2,double *pWeight,UInt32 elements);
+			static double	Average(double *v,UInt32 elements);
+			static double	StandardDeviation(double *v,UInt32 elements);
 			
 		};
 	}
