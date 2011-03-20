@@ -4,7 +4,7 @@ MapConnector::MapConnector()
 {
 	ObjectName = "MapConnector";
 
-	LinkPropertyToUInt32("MapMethod",mapMethod,UseAND,	"!!LIST:UseAND=0,UseOR,UseXOR,UseAnd+Or!!\n"
+	LinkPropertyToUInt32("MapMethod",mapMethod,UseAND,	"!!LIST:UseAND=0,UseOR,UseXOR,UseAnd+Or,UseMultiply,UseAddition!!\n"
 														"Selects the method to be used for mapping\n"
 														"* UseAND -> feat(1..n) will become feat`(1..m) where\n"														
 														"\n"
@@ -25,6 +25,8 @@ bool	MapConnector::OnInit()
 		case UseAND:
 		case UseXOR:
 		case UseOR:
+		case UseMultiply:
+		case UseAddition:
 			featuresCount = (conector->GetFeatureCount() * (conector->GetFeatureCount()+1))>>1;
 			break;
 		case UseAnd_Or:
@@ -98,6 +100,16 @@ bool	MapConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index)
 					pMap++;
 					(*pMap) = (double)((UInt32)(*p1) | (UInt32)(*p2));
 				}
+			break;
+		case UseMultiply:
+			for (tr=0,p1=record.Parent->Features;tr<pCount;tr++,p1++)
+				for (gr=tr,p2=p1;gr<pCount;gr++,p2++,pMap++)
+					(*pMap) = (*p1) * (*p2);
+			break;
+		case UseAddition:
+			for (tr=0,p1=record.Parent->Features;tr<pCount;tr++,p1++)
+				for (gr=tr,p2=p1;gr<pCount;gr++,p2++,pMap++)
+					(*pMap) = (*p1) + (*p2);
 			break;
 		default:
 			notifier->Error("[%s] -> Unknown method ID = %d",ObjectName,mapMethod);
