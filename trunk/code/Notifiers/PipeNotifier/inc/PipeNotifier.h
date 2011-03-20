@@ -1,15 +1,16 @@
-#ifndef __CONSOLE__NOTIFYER__
-#define __CONSOLE__NOTIFYER__
+#ifndef __PIPE__NOTIFYER__
+#define __PIPE__NOTIFYER__
 
 #include "gmllib.h"
 
-class ConsoleNotifier: public GML::Utils::INotifier
+class PipeNotifier: public GML::Utils::INotifier
 {
-	GML::Utils::GString		tempStr;
-	bool					useColors;
-	void					SetColor(unsigned char fore,unsigned char back);
+	GML::Utils::GString		Client;
+	PROCESS_INFORMATION		pi;
+	HANDLE					hPipe;
+	
 public:
-	ConsoleNotifier();
+	PipeNotifier();
 	bool	OnInit();
 	bool	Uninit();
 	bool	Notify(UInt32 messageID,void *Data,UInt32 DataSize);
