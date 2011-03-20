@@ -37,14 +37,18 @@ bool PipeNotifier::OnInit()
 	// creez pipe-ul
 	while (true)
 	{
-		if (str.SetFormated("\\\\.\\pipe\\GML_PIPE_%08X",pi.dwProcessId)==false)
+		if (str.SetFormated("\\\\.\\pipe\\gml_%08X",pi.dwProcessId)==false)
 			break;
-		if ((hPipe = CreateNamedPipe(str.GetText(),PIPE_ACCESS_DUPLEX,PIPE_TYPE_MESSAGE|PIPE_READMODE_MESSAGE|PIPE_WAIT,1,2048,2048,0,NULL))==INVALID_HANDLE_VALUE)
+		if ((hPipe = CreateNamedPipe(str.GetText(),PIPE_ACCESS_DUPLEX,PIPE_TYPE_BYTE|PIPE_READMODE_BYTE|PIPE_WAIT,PIPE_UNLIMITED_INSTANCES,2048,2048,0,NULL))==INVALID_HANDLE_VALUE)
 			break;
 		// dau drumul la process
 		ResumeThread(pi.hThread);
 		if (!ConnectNamedPipe(hPipe, NULL))
+		{
+			DWORD error = GetLastError();
+			DEBUGMSG("[%s] -> GetLastError : %d \n",ObjectName,error);
 			break;
+		}
 
 		return true;
 	}
@@ -69,15 +73,27 @@ bool PipeNotifier::Uninit()
 }
 bool PipeNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 {
-	DWORD	nrWrite;
+	DWORD			nrWrite;
+	unsigned char	temp[2048];
+
 	if (hPipe!=INVALID_HANDLE_VALUE)
 	{
-		if ((WriteFile(hPipe,&messageID,sizeof(UInt32),&nrWrite,NULL)==FALSE) || (nrWrite!=sizeof(UInt32)))
+		memcpy(&temp[8],Data,DataSize);
+		*(UInt32 *)&temp[0] = DataSize+8;
+		*(UInt32 *)&temp[4] = messageID;
+		if ((WriteFile(hPipe,temp,DataSize+8,&nrWrite,NULL)==FALSE) || (nrWrite!=DataSize+8))
 			return false;
-		if ((WriteFile(hPipe,&DataSize,sizeof(UInt32),&nrWrite,NULL)==FALSE) || (nrWrite!=sizeof(UInt32)))
-			return false;
-		if ((WriteFile(hPipe,Data,DataSize,&nrWrite,NULL)==FALSE) || (nrWrite!=DataSize))
-			return false;
+		
+
+
+		//DataSize+=sizeof(UInt32)*2;
+		//if ((WriteFile(hPipe,&DataSize,sizeof(UInt32),&nrWrite,NULL)==FALSE) || (nrWrite!=sizeof(UInt32)))
+		//	return false;
+		//if ((WriteFile(hPipe,&messageID,sizeof(UInt32),&nrWrite,NULL)==FALSE) || (nrWrite!=sizeof(UInt32)))
+		//	return false;
+		//if ((WriteFile(hPipe,Data,DataSize,&nrWrite,NULL)==FALSE) || (nrWrite!=DataSize))
+		//	return false;
+		printf("Sending message ID: %d [%d octeti]\n",messageID,DataSize);
 		return true;
 	}
 	
