@@ -121,3 +121,40 @@ double	GML::ML::VectorOp::PointToPlaneDistanceSigned(double *plane,double *point
 		return sqrt(-dist);
 	return sqrt(dist);
 }
+double  GML::ML::VectorOp::PointToPointDistanceSquared(double *p1,double *p2,UInt32 elements)
+{
+	double sum=0.0;;
+	double temp;
+	while (elements>0)
+	{
+		temp = (*p1)-(*p2);
+		sum+= temp*temp;
+		p1++;
+		p2++;
+		elements--;
+	}
+	return sum;
+}
+double  GML::ML::VectorOp::PointToPointDistance(double *p1,double *p2,UInt32 elements)
+{
+	return sqrt(PointToPointDistanceSquared(p1,p2,elements));
+}
+double  GML::ML::VectorOp::PointToPointDistanceSquared(double *p1,double *p2,double *pWeight,UInt32 elements)
+{
+	double sum=0.0;;
+	double temp;
+	while (elements>0)
+	{
+		temp = ((*p1)-(*p2))*(*pWeight);
+		sum+= temp*temp;
+		p1++;
+		p2++;
+		pWeight++;
+		elements--;
+	}
+	return sum;
+}
+double  GML::ML::VectorOp::PointToPointDistance(double *p1,double *p2,double *pWeight,UInt32 elements)
+{
+	return sqrt(PointToPointDistanceSquared(p1,p2,pWeight,elements));
+}
