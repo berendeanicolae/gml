@@ -8,6 +8,8 @@ class MapConnector: public GML::ML::IConnector
 		UseOR,
 		UseXOR,
 		UseAnd_Or,
+		UseMultiply,
+		UseAddition,
 
 	};
 
