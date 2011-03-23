@@ -6,6 +6,8 @@
 class PipeNotifier: public GML::Utils::INotifier
 {
 	GML::Utils::GString		Client;
+	bool					CreateNewConsole;
+
 	PROCESS_INFORMATION		pi;
 	HANDLE					hPipe;
 	
