@@ -321,7 +321,7 @@ bool GML::Utils::Attribute::GetListItem(GML::Utils::GString &str)
 bool GML::Utils::Attribute::GetDescription(GML::Utils::GString &str)
 {
 	GML::Utils::GString		temp,line,word;
-	int						poz=0,pw;
+	int						poz=0;
 
 	if (MetaData==NULL)
 		return true;
