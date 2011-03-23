@@ -81,26 +81,26 @@ bool PipeNotifier::Uninit()
 bool PipeNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 {
 	DWORD			nrWrite;
-	unsigned char	temp[2048];
+	//unsigned char	temp[2048];
 
 	if (hPipe!=INVALID_HANDLE_VALUE)
 	{
-		memcpy(&temp[8],Data,DataSize);
-		*(UInt32 *)&temp[0] = DataSize+8;
-		*(UInt32 *)&temp[4] = messageID;
-		if ((WriteFile(hPipe,temp,DataSize+8,&nrWrite,NULL)==FALSE) || (nrWrite!=DataSize+8))
-			return false;
+		//memcpy(&temp[8],Data,DataSize);
+		//*(UInt32 *)&temp[0] = DataSize+8;
+		//*(UInt32 *)&temp[4] = messageID;
+		//if ((WriteFile(hPipe,temp,DataSize+8,&nrWrite,NULL)==FALSE) || (nrWrite!=DataSize+8))
+		//	return false;
 		
 
 
-		//DataSize+=sizeof(UInt32)*2;
-		//if ((WriteFile(hPipe,&DataSize,sizeof(UInt32),&nrWrite,NULL)==FALSE) || (nrWrite!=sizeof(UInt32)))
-		//	return false;
-		//if ((WriteFile(hPipe,&messageID,sizeof(UInt32),&nrWrite,NULL)==FALSE) || (nrWrite!=sizeof(UInt32)))
-		//	return false;
-		//if ((WriteFile(hPipe,Data,DataSize,&nrWrite,NULL)==FALSE) || (nrWrite!=DataSize))
-		//	return false;
-		printf("Sending message ID: %d [%d octeti]\n",messageID,DataSize);
+		DataSize+=sizeof(UInt32)*2;
+		if ((WriteFile(hPipe,&DataSize,sizeof(UInt32),&nrWrite,NULL)==FALSE) || (nrWrite!=sizeof(UInt32)))
+			return false;
+		if ((WriteFile(hPipe,&messageID,sizeof(UInt32),&nrWrite,NULL)==FALSE) || (nrWrite!=sizeof(UInt32)))
+			return false;
+		if ((WriteFile(hPipe,Data,DataSize,&nrWrite,NULL)==FALSE) || (nrWrite!=DataSize))
+			return false;
+		//printf("Sending message ID: %d [%d octeti]\n",messageID,DataSize);
 		return true;
 	}
 	
