@@ -1104,6 +1104,11 @@ namespace GML
 {
 	namespace Utils
 	{
+		enum AttributeFlags
+		{
+			FL_LIST = 1,
+			FL_FILEPATH = 2,
+		};
 		struct  Attribute
 		{
 			char*			Name;
@@ -1118,6 +1123,7 @@ namespace GML
 
 			bool			GetListItem(GML::Utils::GString &str);
 			bool			GetDescription(GML::Utils::GString &str);
+			UInt32			GetFlags();
 		};
 
 		struct  AttributeLink

@@ -3,6 +3,16 @@
 static unsigned int AttributeSizes[]={1,1,2,4,8,1,2,4,8,4,8,0};
 static char *AttributeTypeName[]={"BOOL","INT8","INT16","INT32","INT64","UINT8","UINT16","UINT32","UINT64","FLOAT","DOUBLE","STRING"};
 
+struct __INTERNAL_ATTRIBUTE_FLAG_LIST
+{
+	char	*Text;
+	UInt32	Flag;
+};
+static __INTERNAL_ATTRIBUTE_FLAG_LIST	__afl[]=
+{
+	{"!!LIST:"					,GML::Utils::AttributeFlags::FL_LIST},
+	{"!!FILEPATH!!"				,GML::Utils::AttributeFlags::FL_FILEPATH},
+};
 
 int  AttributeCompare(GML::Utils::Attribute &a1,GML::Utils::Attribute &a2,void *context)
 {
@@ -341,6 +351,24 @@ bool GML::Utils::Attribute::GetDescription(GML::Utils::GString &str)
 	if (str.Strip()==false)
 		return false;
 	return true;
+}
+UInt32 GML::Utils::Attribute::GetFlags()
+{
+	GML::Utils::GString		temp,line,word;
+	int						poz=0,tr;
+	UInt32					flags=0;
+
+	if (MetaData==NULL)
+		return 0;
+	if (temp.Set(MetaData)==false)
+		return 0;
+	while (temp.CopyNextLine(&line,&poz))
+	{
+		for (tr=0;tr<sizeof(__afl)/sizeof(__INTERNAL_ATTRIBUTE_FLAG_LIST);tr++)
+			if (line.StartsWith(__afl[tr].Text))
+				flags|=__afl[tr].Flag;
+	}
+	return flags;
 }
 //--------------------------------------------------------------------------------------
 GML::Utils::AttributeList::AttributeList(void)
