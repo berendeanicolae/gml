@@ -9,12 +9,14 @@ PipeNotifier::PipeNotifier()
 	hPipe = INVALID_HANDLE_VALUE;
 
 	LinkPropertyToString("Client",Client,"","Specifies the name of the executable that will receive the pipe messages !");
+	LinkPropertyToBool  ("CreateNewConsole",CreateNewConsole,false,"Specify if a new console is needed for the Client application !");
 }
 
 bool PipeNotifier::OnInit()
 {	
     STARTUPINFO				si;
 	GML::Utils::GString		str;
+	DWORD					attr;
     
 	memset(&si,0,sizeof(si));
 	memset(&pi,0,sizeof(pi));
@@ -27,7 +29,12 @@ bool PipeNotifier::OnInit()
 		DEBUGMSG("[%s] -> Client was not specified !",ObjectName);
 		return false;
 	}
-	if (!CreateProcess(Client.GetText(),NULL,NULL,NULL,FALSE,CREATE_SUSPENDED,NULL,NULL,&si,&pi))
+
+	attr = CREATE_SUSPENDED;
+	if (CreateNewConsole)
+		attr |= CREATE_NEW_CONSOLE;
+
+	if (!CreateProcess(Client.GetText(),NULL,NULL,NULL,FALSE,attr,NULL,NULL,&si,&pi))
 	{
 		DEBUGMSG("[%s] -> Unable to run %s !",ObjectName,Client.GetText());
 		memset(&pi,0,sizeof(pi));
