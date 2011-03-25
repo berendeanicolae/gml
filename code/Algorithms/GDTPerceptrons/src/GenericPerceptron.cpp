@@ -104,7 +104,7 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToDouble("MinimSp"					,minimSp				,100.1);
 	LinkPropertyToUInt32("MaxIterations"			,maxIterations			,10);
 	LinkPropertyToString("WeightFileName"			,WeightFileName			,"");
-	LinkPropertyToUInt32("InitialWeight"			,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,FromFile!!");
+	LinkPropertyToUInt32("InitialWeight"			,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,Statistics,Relevant,FromFile!!");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1,"");
 	LinkPropertyToUInt32("AdjustWeightMode"			,adjustWeightMode		,ADJUST_WEIGHT_LEARNING_RATE,"!!LIST:UseLearningRate=0,UseWeight,UseLeastMeanSquare,UseSplitLearningRate,UseSplitLeastMeanSquare,UseFeaturesWeight!!");
 	LinkPropertyToString("FeaturesWeightFile"		,FeaturesWeightFile		,"");
@@ -273,7 +273,8 @@ bool	GenericPerceptron::Load(PerceptronThreadData &ptd,char *fileName)
 }
 bool	GenericPerceptron::InitWeight(PerceptronThreadData &ptd)
 {
-	UInt32	tr;
+	UInt32	tr,recCount,gr;
+	double	rap,v_poz,v_neg,t_rap,label;
 
 	if (ptd.Primary.Weight==NULL)
 		return true;
@@ -287,6 +288,63 @@ bool	GenericPerceptron::InitWeight(PerceptronThreadData &ptd)
 			for (tr=0;tr<ptd.Primary.Count;tr++)
 				ptd.Primary.Weight[tr]=((double)((rand()%201)-100))/100.0;
 			(*ptd.Primary.Bias) = ((double)((rand()%201)-100))/100.0;
+			break;
+		case INITIAL_WEIGHT_STATISTICS:
+			memset(ptd.Primary.Weight,0,sizeof(double)*ptd.Primary.Count);
+			(*ptd.Primary.Bias) = 0.0;
+			notif->Info("[%s] Computing initial weights statisticaly ... ",ObjectName);
+			recCount = con->GetRecordCount();
+			for (tr=0;tr<recCount;tr++)
+			{
+				if (con->GetRecord(ptd.Record,tr)==false)
+				{
+					notif->Error("[%s] Unable to read record #%d ",ObjectName,tr);
+					return false;
+				}
+				for (gr=0;gr<ptd.Record.FeatCount;gr++)
+				{
+					ptd.Primary.Weight[gr]+=learningRate * ptd.Record.Features[gr]*ptd.Record.Label;
+				}
+				(*ptd.Primary.Bias) += learningRate * ptd.Record.Label;
+			}
+			break;
+		case INITIAL_WEIGHT_RELEVANT:
+			memset(ptd.Primary.Weight,0,sizeof(double)*ptd.Primary.Count);
+			(*ptd.Primary.Bias) = 0.0;
+			notif->Info("[%s] Computing initial weights in a relevant way ... ",ObjectName);
+			recCount = con->GetRecordCount();
+			v_poz = v_neg = 0;
+			for (tr=0;tr<recCount;tr++)
+			{
+				if (con->GetRecordLabel(label,tr)==false)
+				{
+					notif->Error("[%s] Unable to read record #%d ",ObjectName,tr);
+					return false;
+				}
+				if (label==1)
+					v_poz++;
+				else
+					v_neg++;
+			}
+			for (tr=0;tr<recCount;tr++)
+			{
+				if (con->GetRecord(ptd.Record,tr)==false)
+				{
+					notif->Error("[%s] Unable to read record #%d ",ObjectName,tr);
+					return false;
+				}
+				for (rap=1,gr=0;gr<ptd.Record.FeatCount;gr++)
+					rap+=ptd.Record.Features[gr];
+				if (ptd.Record.Label==1)
+					t_rap = rap*v_poz;
+				else
+					t_rap = rap*v_neg;
+				for (gr=0;gr<ptd.Record.FeatCount;gr++)
+				{
+					ptd.Primary.Weight[gr]+=(learningRate * ptd.Record.Features[gr]*ptd.Record.Label)/t_rap;
+				}
+				(*ptd.Primary.Bias) += (learningRate * ptd.Record.Label)/t_rap;
+			}
 			break;
 		case INITIAL_WEIGHT_FROMFILE:
 			if (Load(ptd,WeightFileName.GetText())==false)

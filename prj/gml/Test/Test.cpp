@@ -34,17 +34,17 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("KNN");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("BatchPerceptron");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
 		"Name=Test;"
 		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"
 		"Connector=BitConnector{Table=RecordTable};"
-		"Notifier=ConsoleNotifier{UseColor=true};"
+		"Notifier=ConsoleNotifier{UseColors=true};"
 		"LearningRate=0.01;"
 		"AdjustWeightMode=UseLearningRate;"
-		"InitialWeight=zeros;"
+		"InitialWeight=Relevant;"
 		"useBias=true;"
 		"minimAcc=100.0;"
 		"SaveData=None;"
@@ -60,8 +60,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		"ColumnWidth=20;"
 		"SaveFeaturesWeight=F2;"
 		"FeaturesWeightFile=E:\\a.a;"
-		"Command=Test;"
-		"MaxIterations=(INT32)20;")==false)
+		"Command=Train;"
+		"MaxIterations=(INT32)200;")==false)
 		return 1;
 	//alg->GetProperty(attr);
 	//attr.Save("E:\\lucru\\GML\\gml\\prj\\gml\\Release\\template.txt");
