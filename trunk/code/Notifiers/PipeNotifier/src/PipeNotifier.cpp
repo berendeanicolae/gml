@@ -85,15 +85,6 @@ bool PipeNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 
 	if (hPipe!=INVALID_HANDLE_VALUE)
 	{
-		//memcpy(&temp[8],Data,DataSize);
-		//*(UInt32 *)&temp[0] = DataSize+8;
-		//*(UInt32 *)&temp[4] = messageID;
-		//if ((WriteFile(hPipe,temp,DataSize+8,&nrWrite,NULL)==FALSE) || (nrWrite!=DataSize+8))
-		//	return false;
-		
-
-
-		DataSize+=sizeof(UInt32)*2;
 		if ((WriteFile(hPipe,&DataSize,sizeof(UInt32),&nrWrite,NULL)==FALSE) || (nrWrite!=sizeof(UInt32)))
 			return false;
 		if ((WriteFile(hPipe,&messageID,sizeof(UInt32),&nrWrite,NULL)==FALSE) || (nrWrite!=sizeof(UInt32)))
