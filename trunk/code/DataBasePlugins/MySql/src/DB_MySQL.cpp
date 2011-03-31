@@ -431,10 +431,10 @@ bool DB_MySQL::Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBReco
 
 bool DB_MySQL::NotifyError(char* Msg)
 {
-	if(Msg == "")
-		this->notifier->NotifyString(0, (char*)mysql_error(this->conn));
+	if(Msg[0]==0)
+		this->notifier->Error("%s", (char*)mysql_error(this->conn));
 	else
-		this->notifier->NotifyString(0, Msg);
+		this->notifier->Error("%s",Msg);
 	return false;
 }
 
