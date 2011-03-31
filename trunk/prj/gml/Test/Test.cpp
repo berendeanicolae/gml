@@ -5,10 +5,19 @@
 #include "gmllib.h"
 
 
+void TestDB()
+{
+	GML::Utils::INotifier *n = GML::Builder::CreateNotifier("ConsoleNotifier");
+	GML::DB::IDataBase *db =  GML::Builder::CreateDataBase("MySQL",*n);
+
+
+}
 
 int _tmain(int argc, _TCHAR* argv[])
 {
 	GML::Utils::AttributeList	attr;
+
+	TestDB();return 0;
 	//GML::Utils::Attribute		*a;
 
 	//attr.Load("E:\\aaa.txt");
