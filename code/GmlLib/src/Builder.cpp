@@ -77,7 +77,7 @@ GML::Utils::INotifier*		GML::Builder::CreateNotifier(char *pluginName)
 		return NULL;
 
 	// incarc libraria
-	if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
+	if ((hModule = LoadLibraryA(path.GetText()))==NULL)
 		return NULL;
 	// incarc functia Create
 	*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
@@ -120,7 +120,7 @@ GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::
 		return NULL;
 
 	// incarc libraria
-	if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
+	if ((hModule = LoadLibraryA(path.GetText()))==NULL)
 		return NULL;
 	// incarc functia Create
 	*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
@@ -181,7 +181,7 @@ GML::ML::IConnector*			GML::Builder::CreateConnectors(char *conectorsList,GML::U
 		if (AdjustNameWithExtensionAndPath(path,CONNECTOR_EXT,CONNECTOR_FOLDER)==false)
 			return NULL;
 		// incarc libraria
-		if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
+		if ((hModule = LoadLibraryA(path.GetText()))==NULL)
 			return NULL;
 		// incarc functia Create
 		*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
@@ -216,7 +216,7 @@ GML::Algorithm::IAlgorithm*	GML::Builder::CreateAlgorithm(char *algorithmPath)
 		return NULL;
 
 	// incarc libraria
-	if ((hModule = LoadLibraryA(path.GetText()))==INVALID_HANDLE_VALUE)
+	if ((hModule = LoadLibraryA(path.GetText()))==NULL)
 		return NULL;
 	// incarc functia Create
 	*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
