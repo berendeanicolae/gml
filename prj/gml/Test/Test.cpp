@@ -9,7 +9,8 @@ void TestDB()
 {
 	GML::Utils::INotifier *n = GML::Builder::CreateNotifier("ConsoleNotifier");
 	GML::DB::IDataBase *db =  GML::Builder::CreateDataBase("MySQL",*n);
-
+	db->SetProperty("Database=TestDB;Username=root;Password=a");
+	db->Connect();
 
 }
 
@@ -17,7 +18,7 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	GML::Utils::AttributeList	attr;
 
-	TestDB();return 0;
+	//TestDB();return 0;
 	//GML::Utils::Attribute		*a;
 
 	//attr.Load("E:\\aaa.txt");
@@ -53,11 +54,12 @@ int _tmain(int argc, _TCHAR* argv[])
 		"Notifier=ConsoleNotifier{UseColors=true};"
 		"LearningRate=0.01;"
 		"AdjustWeightMode=UseLearningRate;"
-		"InitialWeight=Relevant;"
+		"InitialWeight=FromFile;"
 		"useBias=true;"
 		"minimAcc=100.0;"
 		"SaveData=None;"
 		"SaveBest=BestACC;"
+		"WeightFileName=E:\\lucru\\GML\\gml\\prj\\gml\\Debug\\test.txt;"
 		"ThreadsCount=2;"
 		"MaxError=0;"
 		"MarginType=Negative;"

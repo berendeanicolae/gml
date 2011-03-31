@@ -18,8 +18,8 @@ struct DB_RES_BUFF
 
 struct DB_CONN_STR 
 {
-	GML::Utils::GString Server, Database, Username, Password;
-	UInt32 Port;
+	GML::Utils::GString		Server, Database, Username, Password;
+	UInt32					Port;
 };
 
 class DB_MySQL: public GML::DB::IDataBase

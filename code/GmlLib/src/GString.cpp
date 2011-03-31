@@ -430,6 +430,7 @@ bool GML::Utils::GString::ConvertToInt64(TCHAR *text,TYPE_INT64 *value,unsigned 
 bool GML::Utils::GString::ConvertToDouble(TCHAR *text,double *value,int textSize)
 {
 	TCHAR	temp[128];
+	bool	punct;
 
 	if (value==NULL)
 		return false;
@@ -438,15 +439,28 @@ bool GML::Utils::GString::ConvertToDouble(TCHAR *text,double *value,int textSize
 	(*value) = atof(text);
 	if ((*value)==0.0)
 	{
-		if ((Equals(text,"0")) || (Equals(text,"0.0")))
-			return true;
-		return false;
+		// verific daca valoarea chiar este 0
+		punct = false;
+		while ((*text)!=0)
+		{
+			if (((*text)!='0') && ((*text)!='.'))
+				return false;
+			if ((*text)=='.')
+			{
+				if (punct)
+					return false;
+				punct = true;
+			}
+			text++;
+		}
+		return true;
 	}
 	return true;
 }
 bool GML::Utils::GString::ConvertToFloat(TCHAR *text,float *value,int textSize)
 {
 	TCHAR	temp[128];
+	bool	punct;
 
 	if (value==NULL)
 		return false;
@@ -455,9 +469,21 @@ bool GML::Utils::GString::ConvertToFloat(TCHAR *text,float *value,int textSize)
 	(*value) = (float)atof(text);
 	if ((*value)==0.0)
 	{
-		if ((Equals(text,"0")) || (Equals(text,"0.0")))
-			return true;
-		return false;
+		// verific daca valoarea chiar este 0
+		punct = false;
+		while ((*text)!=0)
+		{
+			if (((*text)!='0') && ((*text)!='.'))
+				return false;
+			if ((*text)=='.')
+			{
+				if (punct)
+					return false;
+				punct = true;
+			}
+		}
+		text++;
+		return true;
 	}
 	return true;
 }
