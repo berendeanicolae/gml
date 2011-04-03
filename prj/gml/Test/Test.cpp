@@ -9,16 +9,16 @@ void TestDB()
 {
 	GML::Utils::INotifier *n = GML::Builder::CreateNotifier("ConsoleNotifier");
 	GML::DB::IDataBase *db =  GML::Builder::CreateDataBase("MySQL",*n);
-	db->SetProperty("Database=TestDB;Username=root;Password=a");
+	db->SetProperty("Server='127.0.0.1';Database=TestDB;Username=root;Password=a");
 	db->Connect();
-
+	int sz = db->Select("Select * from test;");
 }
 
 int _tmain(int argc, _TCHAR* argv[])
 {
 	GML::Utils::AttributeList	attr;
 
-	//TestDB();return 0;
+	TestDB();return 0;
 	//GML::Utils::Attribute		*a;
 
 	//attr.Load("E:\\aaa.txt");

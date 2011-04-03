@@ -36,16 +36,17 @@ bool DB_MySQL::Connect()
 	if((this->conn = mysql_init(NULL)) == NULL)
 		return this->NotifyError();
 
-	if(!mysql_real_connect(this->conn, 
-		                    this->DBConnStr.Server, 
-							this->DBConnStr.Username, 
-							this->DBConnStr.Password, 
-							this->DBConnStr.Database, 
+	if(!mysql_real_connect(	this->conn, 
+							this->DBConnStr.Server.GetText(), 
+							this->DBConnStr.Username.GetText(), 
+							this->DBConnStr.Password.GetText(), 
+							this->DBConnStr.Database.GetText(), 
 							this->DBConnStr.Port, 
 							NULL, 0)) 
 	{
+		this->NotifyError();
 		this->Disconnect();
-		return this->NotifyError();
+		return false;
 	}
 	return true;
 }
@@ -432,9 +433,9 @@ bool DB_MySQL::Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBReco
 bool DB_MySQL::NotifyError(char* Msg)
 {
 	if(Msg[0]==0)
-		this->notifier->Error("%s", (char*)mysql_error(this->conn));
+		this->notifier->Error("[%s] Error: %s", ObjectName, (char*)mysql_error(this->conn));
 	else
-		this->notifier->Error("%s",Msg);
+		this->notifier->Error("[%s] %s",ObjectName,Msg);
 	return false;
 }
 
