@@ -14,6 +14,14 @@ bool	BitConnector::OnInit()
 	UInt8										*cPoz;
 	GML::DB::DBRecord							*rec;
 
+	// daca iau datele din cache
+	if ((database==NULL) && (conector==NULL))
+		return true;
+	if (database==NULL)
+	{
+		notifier->Error("[%s] works with a filedata or a database",ObjectName);
+		return false;
+	}
 	if (database->Connect()==false)
 	{
 		notifier->Error("[%s] -> Could not connect to database",ObjectName);
@@ -76,6 +84,84 @@ bool	BitConnector::OnInit()
 bool	BitConnector::Close()
 {
 	return true;
+}
+bool	BitConnector::Save(char *fileName)
+{
+	GML::Utils::File	f;
+
+	if (f.Create(fileName)==false)
+	{
+		notifier->Error("[%s] Unable to create : %s",ObjectName,fileName);
+		return false;
+	}
+	while (true)
+	{
+		if (f.Write("BitConnectorCache",17)==false)
+			break;
+		if (f.Write(&nrRecords,sizeof(UInt32))==false)
+			break;
+		if (f.Write(&Align8Size,sizeof(UInt32))==false)
+			break;
+		if (f.Write(&columns.nrFeatures,sizeof(UInt32))==false)
+			break;
+		if (f.Write(Data,nrRecords*Align8Size)==false)
+			break;
+		f.Close();
+		return true;
+	}
+	notifier->Error("[%s] Unable to write into %s",ObjectName,fileName);
+	f.Close();
+	DeleteFileA(fileName);
+	return false;
+}
+bool	BitConnector::Load(char *fileName)
+{
+	GML::Utils::File	f;
+	char				temp[18];
+
+	notifier->Info("[%s] Loading %s",ObjectName,fileName);
+	if (f.OpenRead(fileName)==false)
+	{
+		notifier->Error("[%s] Unable to open : %s",ObjectName,fileName);
+		return false;
+	}
+	while (true)
+	{
+		if (f.Read(temp,17)==false)
+			break;
+		if (memcmp(temp,"BitConnectorCache",17)!=0)
+		{
+			notifier->Error("[%s] Invalid file format : %s",ObjectName,fileName);
+			break;
+		}
+		if (f.Read(&nrRecords,sizeof(UInt32))==false)
+			break;
+		if (f.Read(&Align8Size,sizeof(UInt32))==false)
+			break;
+		if (f.Read(&columns.nrFeatures,sizeof(UInt32))==false)
+			break;
+		if (Data!=NULL)
+			delete Data;
+		if ((Data = new UInt8[nrRecords*Align8Size])==NULL)
+		{
+			notifier->Error("[%s] -> Unable to allocate %ud bytes for data indexes !",ObjectName,nrRecords*Align8Size);
+			break;
+		}
+		if (f.Read(Data,nrRecords*Align8Size)==false)
+			break;
+		f.Close();
+		return true;
+	}
+	if (Data)
+		delete Data;
+	Data = NULL;
+	nrRecords = 0;
+	Align8Size = 0;
+	columns.nrFeatures = 0;
+
+	notifier->Error("[%s] Error read data from %s",ObjectName,fileName);
+	f.Close();	
+	return false;
 }
 bool	BitConnector::SetRecordInterval(UInt32 start, UInt32 end)
 {
