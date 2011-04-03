@@ -3,8 +3,10 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\code\DataBasePlugins\MySql\src\DB_MySQL.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="..\..\..\..\code\DataBasePlugins\MySql\src\GDTMySql.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\code\DataBasePlugins\MySql\inc\DB_MySQL.h" />
+    <ClInclude Include="..\..\..\..\code\DataBasePlugins\MySql\inc\GDTMySql.h" />
   </ItemGroup>
 </Project>

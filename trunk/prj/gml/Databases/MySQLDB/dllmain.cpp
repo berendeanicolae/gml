@@ -1,5 +1,5 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
-#include "DB_MySQL.h"
+#include "GDTMySQL.h"
 
-LIB_INTERFACE(DB_MySQL,"HSC",1,"Interface for MySQL database");
+LIB_INTERFACE(GDTMySQL,"HSC",1,"Interface for MySQL database");
 
