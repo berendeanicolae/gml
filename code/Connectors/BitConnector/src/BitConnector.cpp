@@ -119,10 +119,10 @@ bool	BitConnector::Load(char *fileName)
 	GML::Utils::File	f;
 	char				temp[18];
 
-	notifier->Info("[%s] Loading %s",ObjectName,fileName);
+	notifier->Info("[%s] -> Loading %s",ObjectName,fileName);
 	if (f.OpenRead(fileName)==false)
 	{
-		notifier->Error("[%s] Unable to open : %s",ObjectName,fileName);
+		notifier->Error("[%s] -> Unable to open : %s",ObjectName,fileName);
 		return false;
 	}
 	while (true)
@@ -131,7 +131,7 @@ bool	BitConnector::Load(char *fileName)
 			break;
 		if (memcmp(temp,"BitConnectorCache",17)!=0)
 		{
-			notifier->Error("[%s] Invalid file format : %s",ObjectName,fileName);
+			notifier->Error("[%s] -> Invalid file format : %s",ObjectName,fileName);
 			break;
 		}
 		if (f.Read(&nrRecords,sizeof(UInt32))==false)
