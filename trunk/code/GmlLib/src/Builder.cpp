@@ -229,8 +229,7 @@ bool						GML::Builder::GetPluginProperties(char *pluginName,GML::Utils::Attribu
 {
 	GML::Utils::GString		path;
 	HMODULE					hModule;
-	GML::Utils::GMLObject*	(*fnCreate)();
-	GML::Utils::GMLObject*	newObject;
+	bool					(*fnGetInterfaceProperty)(GML::Utils::AttributeList &attr);	
 	char					*ext[4];
 	char					*folders[4];
 	bool					res;
@@ -249,15 +248,10 @@ bool						GML::Builder::GetPluginProperties(char *pluginName,GML::Utils::Attribu
 			continue;
 		if ((hModule = LoadLibraryA(path.GetText()))==NULL)
 			continue;
-		*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
-		if (fnCreate==NULL)
+		*(FARPROC *)&fnGetInterfaceProperty = GetProcAddress(hModule,"GetInterfaceProperty");
+		if (fnGetInterfaceProperty==NULL)
 			continue;
-		if ((newObject=fnCreate())==NULL)
-			continue;
-		// am obtinut un obiect , aflu atributele
-		res = newObject->GetProperty(attr);
-		delete newObject;
-		return res;
+		return fnGetInterfaceProperty(attr);
 	}
 	return false;
 }
