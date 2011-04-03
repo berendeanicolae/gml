@@ -19,10 +19,19 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Python", "Python", "{662119E1-C7A2-4567-859F-E310E228EE46}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "attributelist", "PythonInterface\attributelist\attributelist.vcxproj", "{8E3C1DBE-0454-7A6C-6A75-852BC85889E3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "builder", "PythonInterface\builder\builder.vcxproj", "{83663EBD-8EC7-C33C-E6B1-A052385190A8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ialgorithm", "PythonInterface\ialgorithm\ialgorithm.vcxproj", "{FEF29EBE-29A3-77BA-9965-5CF73C18CCD6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BatchPerceptron", "Algorithms\BatchPerceptron\BatchPerceptron.vcxproj", "{885E1B6D-F1F8-41D6-AE93-2EC44C48077B}"
 	ProjectSection(ProjectDependencies) = postProject
