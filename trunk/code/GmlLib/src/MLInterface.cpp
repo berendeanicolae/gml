@@ -11,6 +11,7 @@ GML::ML::IConnector::IConnector()
 	ClearColumnIndexes();
 	LinkPropertyToString("Table",TableName,"RecordTable","Name of the table from the database that will be used");
 	LinkPropertyToString("SelectQuery",SelectQuery,"*","The query for the select statement");
+	LinkPropertyToString("DataFileName",DataFileName,"","Name of the file that contains data to be loaded");
 }
 void GML::ML::IConnector::ClearColumnIndexes()
 {
@@ -231,4 +232,53 @@ bool GML::ML::IConnector::Init(GML::ML::IConnector &_conector,char *attributeStr
 	if (result==false)
 		notifier->Error("[%s] -> OnInit() returned false",ObjectName);
 	return result;
+}
+bool GML::ML::IConnector::Init(GML::Utils::INotifier &Notifier,char *attributeString)
+{
+	bool result;
+	// daca a fost deja initializat
+	if ((database!=NULL) || (conector!=NULL))
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Conector already initilized !",ObjectName);
+		return false;
+	}
+
+	if ((attributeString!=NULL) && (attributeString[0]!=0))
+	{
+		if (SetProperty(attributeString)==false)
+		{
+			notifier->Error("[%s] -> Invalid format for Conector initializations: %s",ObjectName,attributeString);
+			return false;
+		}
+	}
+
+	notifier = &Notifier;
+	database = NULL;
+	conector = NULL;
+	ClearColumnIndexes();
+
+	if (Load(DataFileName.GetText())==false)
+	{
+		notifier->Error("[%s] Unable to load data from %s",ObjectName,DataFileName.GetText());
+		return true;
+	}
+
+	notifier->Info("[%s] -> OnInit()",ObjectName);
+	result = OnInit();
+	if (result==false)
+		notifier->Error("[%s] -> OnInit() returned false",ObjectName);
+	return result;
+}
+bool GML::ML::IConnector::Save(char *fileName)
+{
+	if (notifier)
+		notifier->Error("[%s] Save function not implemented ",ObjectName);
+	return false;
+}
+bool GML::ML::IConnector::Load(char *fileName)
+{
+	if (notifier)
+		notifier->Error("[%s] Load function not implemented ",ObjectName);
+	return false;
 }

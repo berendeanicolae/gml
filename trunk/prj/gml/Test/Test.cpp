@@ -26,15 +26,15 @@ void TestDB()
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	GML::Utils::AttributeList	attr;
+	//GML::Utils::AttributeList	attr;
 
-	if (GML::Builder::GetPluginProperties("MySQL",attr))
-	{
-		for (int tr=0;tr<attr.GetCount();tr++)
-			printf("%s\n",attr.Get(tr)->Name);
-		return 1;
-	}
-
+	//if (GML::Builder::GetPluginProperties("RosenblattPerceptron",attr))
+	//{
+	//	for (int tr=0;tr<attr.GetCount();tr++)
+	//		printf("%s\n",attr.Get(tr)->Name);
+	//	return 1;
+	//}
+	
 	TestDB();return 0;
 	//GML::Utils::Attribute		*a;
 

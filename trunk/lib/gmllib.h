@@ -1519,6 +1519,7 @@ namespace GML
 			GML::Utils::INotifier		*notifier;			
 			GML::DB::IDataBase			*database;
 			GML::ML::IConnector			*conector;
+			GML::Utils::GString			DataFileName;
 			GML::Utils::GString			TableName;
 			GML::Utils::GString			SelectQuery;
 			TableColumnIndexes			columns;
@@ -1533,6 +1534,9 @@ namespace GML
 			virtual bool				OnInit() = 0;
 			virtual bool				Init(GML::Utils::INotifier &Notifier,GML::DB::IDataBase &Database,char *attributeString=NULL);
 			virtual bool				Init(GML::ML::IConnector &conector,char *attributeString=NULL);
+			virtual bool				Init(GML::Utils::INotifier &Notifier,char *attributeString=NULL);
+			virtual bool				Save(char *fileName);
+			virtual bool				Load(char *fileName);
 
 			/*	 
 			 * Usage: uninit stuff
@@ -1642,6 +1646,7 @@ namespace GML
 		static GML::Utils::INotifier*		CreateNotifier(char *pluginName);	
 		static GML::DB::IDataBase*			CreateDataBase(char *pluginName,GML::Utils::INotifier &notify);
 		static GML::ML::IConnector*			CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database);
+		static GML::ML::IConnector*			CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify);
 		static GML::Algorithm::IAlgorithm*	CreateAlgorithm(char *algorithmLib);	
 		static bool							GetPluginProperties(char *pluginName,GML::Utils::AttributeList &attr);
 	};
