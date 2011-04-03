@@ -35,7 +35,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//	return 1;
 	//}
 	
-	TestDB();return 0;
+	//TestDB();return 0;
 	//GML::Utils::Attribute		*a;
 
 	//attr.Load("E:\\aaa.txt");
@@ -66,12 +66,12 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 1;
 	if (alg->SetProperty(
 		"Name=Test;"
-		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"
-		"Connector=BitConnector{Table=RecordTable};"
+		/*"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"*/
+		"Connector=BitConnector{Table=RecordTable;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};"
 		"Notifier=ConsoleNotifier{UseColors=true};"
 		"LearningRate=0.01;"
 		"AdjustWeightMode=UseLearningRate;"
-		"InitialWeight=FromFile;"
+		"InitialWeight=zeros;"
 		"useBias=true;"
 		"minimAcc=100.0;"
 		"SaveData=None;"
@@ -89,7 +89,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		"SaveFeaturesWeight=F2;"
 		"FeaturesWeightFile=E:\\a.a;"
 		"Command=Train;"
-		"MaxIterations=(INT32)200;")==false)
+		"CacheName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache;"
+		"MaxIterations=(INT32)20;")==false)
 		return 1;
 	//alg->GetProperty(attr);
 	//attr.Save("E:\\lucru\\GML\\gml\\prj\\gml\\Release\\template.txt");
