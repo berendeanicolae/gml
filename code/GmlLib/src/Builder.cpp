@@ -133,12 +133,12 @@ GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::
 		return NULL;
 	return newObject;
 }
-GML::ML::IConnector*		GML::Builder::CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database)
+GML::ML::IConnector*		_CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase *database)
 {
 	GML::Utils::GString		list,path,attributeList;
 	int						poz,a_poz;
 	HMODULE					hModule;
-	GML::ML::IConnector*		(*fnCreate)();
+	GML::ML::IConnector*	(*fnCreate)();
 	GML::ML::IConnector		*con,*last;
 	bool					first;
 
@@ -192,8 +192,14 @@ GML::ML::IConnector*		GML::Builder::CreateConnectors(char *conectorsList,GML::Ut
 		if (first)
 		{
 			last = con;
-			if (last->Init(notify,database,attributeList.GetText())==false)
-				return NULL;
+			if (database==NULL)
+			{
+				if (last->Init(notify,attributeList.GetText())==false)
+					return NULL;
+			} else {
+				if (last->Init(notify,*database,attributeList.GetText())==false)
+					return NULL;
+			}
 		} else {
 			if (con->Init(*last,attributeList.GetText())==false)
 				return NULL;
@@ -203,6 +209,14 @@ GML::ML::IConnector*		GML::Builder::CreateConnectors(char *conectorsList,GML::Ut
 		list.Truncate(poz);
 	}
 	return last;
+}
+GML::ML::IConnector*		GML::Builder::CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database)
+{
+	return _CreateConnectors(conectorsList,notify,&database);
+}
+GML::ML::IConnector*		GML::Builder::CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify)
+{
+	return _CreateConnectors(conectorsList,notify,NULL);
 }
 GML::Algorithm::IAlgorithm*	GML::Builder::CreateAlgorithm(char *algorithmPath)
 {
@@ -232,7 +246,6 @@ bool						GML::Builder::GetPluginProperties(char *pluginName,GML::Utils::Attribu
 	bool					(*fnGetInterfaceProperty)(GML::Utils::AttributeList &attr);	
 	char					*ext[4];
 	char					*folders[4];
-	bool					res;
 
 
 	ext[0]=ALGORITHM_EXT;	folders[0]=ALGORITHM_FOLDER;
