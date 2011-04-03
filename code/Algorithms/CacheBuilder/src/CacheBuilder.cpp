@@ -46,9 +46,9 @@ void CacheBuilder::OnExecute()
 		{
 			if (con->Save(CacheName.GetText())==false)
 			{
-				notif->Error("[%s] Unable to save cache to %s",ObjectName,CacheName.GetText());
+				notif->Error("[%s] -> Unable to save cache to %s",ObjectName,CacheName.GetText());
 			} else {
-				notif->Info("[%s] Cache created (%s)",ObjectName,CacheName.GetText());
+				notif->Info("[%s] -> Cache created (%s)",ObjectName,CacheName.GetText());
 			}
 		}
 	}

@@ -217,20 +217,29 @@ bool FeaturesStatistics::Init()
 	// creez obiectele:
 	if ((notif = GML::Builder::CreateNotifier(Notifier.GetText()))==NULL)
 		return false;
-	if ((db = GML::Builder::CreateDataBase(DataBase.GetText(),*notif))==NULL)
+	if (DataBase.Len()>0)
 	{
-		notif->Error("[%s] -> Unable to create Database (%s)",ObjectName,DataBase.GetText());
-		return false;
-	}
-	if (db->Connect()==false)
-	{
-		notif->Error("[%s] -> Unable to connesct to Database (%s)",ObjectName,DataBase.GetText());
-		return false;
-	}
-	if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif,*db))==NULL)
-	{
-		notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,Conector.GetText());
-		return false;
+		if ((db = GML::Builder::CreateDataBase(DataBase.GetText(),*notif))==NULL)
+		{
+			notif->Error("[%s] -> Unable to create Database (%s)",ObjectName,DataBase.GetText());
+			return false;
+		}
+		if (db->Connect()==false)
+		{
+			notif->Error("[%s] -> Unable to connesct to Database (%s)",ObjectName,DataBase.GetText());
+			return false;
+		}
+		if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif,*db))==NULL)
+		{
+			notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,Conector.GetText());
+			return false;
+		}
+	} else {
+		if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif))==NULL)
+		{
+			notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,Conector.GetText());
+			return false;
+		}
 	}
 	if ((fData = new FeaturesThreadData[threadsCount])==NULL)
 	{

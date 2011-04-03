@@ -150,6 +150,7 @@ bool	BitConnector::Load(char *fileName)
 		if (f.Read(Data,nrRecords*Align8Size)==false)
 			break;
 		f.Close();
+		notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d,RecordsSize=%d",ObjectName,nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
 		return true;
 	}
 	if (Data)
