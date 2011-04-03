@@ -11,6 +11,8 @@ public:
 
 	bool		OnInit();
 	bool		Close();
+	bool		Save(char *fileName);
+	bool		Load(char *fileName);
 	bool		SetRecordInterval(UInt32 start, UInt32 end);
 	bool		CreateMlRecord (GML::ML::MLRecord &record);
 	bool		GetRecord(GML::ML::MLRecord &record,UInt32 index);
