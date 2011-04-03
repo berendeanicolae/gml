@@ -177,18 +177,13 @@ bool   GDTMySQL::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr
 
 	VectPtr.DeleteAll();
 	fieldsCount = mysql_num_fields(result);
-	if (columnNames==NULL)
-	{
-		notifier->Error("[%s] Internal error (missing columnNames)",ObjectName);
-		return false;
-	}
 	row = mysql_fetch_row(result);
 
 	for (int tr=0;tr<fieldsCount;tr++)
 	{
 		if ((field = mysql_fetch_field_direct(result, tr))==NULL)
 			return MySQLError("mysql_fetch_field_direct failed !");
-		rec.Name = columnNames[tr].GetText();
+		rec.Name = field->name;
 		switch (field->type)
 		{
 			case MYSQL_TYPE_DOUBLE:

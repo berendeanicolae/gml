@@ -7,11 +7,21 @@
 
 void TestDB()
 {
+	GML::Utils::GTFVector<GML::DB::DBRecord>		v;
 	GML::Utils::INotifier *n = GML::Builder::CreateNotifier("ConsoleNotifier");
 	GML::DB::IDataBase *db =  GML::Builder::CreateDataBase("MySQL",*n);
 	db->SetProperty("Server='127.0.0.1';Database=TestDB;Username=root;Password=a");
 	db->Connect();
-	int sz = db->Select("Select * from test;");
+	int sz = db->Select("Select * from gdtdb limit 5;");
+	while (db->FetchNextRow(v))
+	{
+		for (int tr=0;tr<v.Len();tr++)
+		{
+			printf("%s->",v[tr].Name);
+		}
+		printf("\n");
+	}
+
 }
 
 int _tmain(int argc, _TCHAR* argv[])

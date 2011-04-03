@@ -133,7 +133,7 @@ GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::
 		return NULL;
 	return newObject;
 }
-GML::ML::IConnector*			GML::Builder::CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database)
+GML::ML::IConnector*		GML::Builder::CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database)
 {
 	GML::Utils::GString		list,path,attributeList;
 	int						poz,a_poz;
@@ -224,5 +224,41 @@ GML::Algorithm::IAlgorithm*	GML::Builder::CreateAlgorithm(char *algorithmPath)
 		return NULL;
 	// am incarcat si totul e ok -> cer o interfata
 	return fnCreate();
+}
+bool						GML::Builder::GetPluginProperties(char *pluginName,GML::Utils::AttributeList &attr)
+{
+	GML::Utils::GString		path;
+	HMODULE					hModule;
+	GML::Utils::GMLObject*	(*fnCreate)();
+	GML::Utils::GMLObject*	newObject;
+	char					*ext[4];
+	char					*folders[4];
+	bool					res;
+
+
+	ext[0]=ALGORITHM_EXT;	folders[0]=ALGORITHM_FOLDER;
+	ext[1]=DATABASE_EXT;	folders[1]=DATABASE_FOLDER;
+	ext[2]=CONNECTOR_EXT;	folders[2]=CONNECTOR_FOLDER;
+	ext[3]=NOTIFYER_EXT;	folders[3]=NOTIFYER_FOLDER;
+
+	for (int tr=0;tr<4;tr++)
+	{
+		if (path.Set(pluginName)==false)
+			continue;
+		if (AdjustNameWithExtensionAndPath(path,ext[tr],folders[tr])==false)
+			continue;
+		if ((hModule = LoadLibraryA(path.GetText()))==NULL)
+			continue;
+		*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
+		if (fnCreate==NULL)
+			continue;
+		if ((newObject=fnCreate())==NULL)
+			continue;
+		// am obtinut un obiect , aflu atributele
+		res = newObject->GetProperty(attr);
+		delete newObject;
+		return res;
+	}
+	return false;
 }
 
