@@ -29,14 +29,17 @@ namespace GML
 			GML::Utils::INotifier		*notifier;			
 			GML::DB::IDataBase			*database;
 			GML::ML::IConnector			*conector;
-			GML::Utils::GString			DataFileName;
-			GML::Utils::GString			TableName;
-			GML::Utils::GString			SelectQuery;
+			GML::Utils::GString			DataFileName;			
+			GML::Utils::GString			Query;
+			GML::Utils::GString			CountQuery;
 			TableColumnIndexes			columns;
+			UInt32						CachedRecords;
 			
 			void						ClearColumnIndexes();
-			bool						UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double *value);
+			bool						UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double &value);
 			bool						UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
+			bool						QueryRecordsCount(char *CountQueryStatement,UInt32 &recordsCount);
+			bool						UpdateColumnInformations(char *QueryStatement);
 			
 		public:	
 			IConnector();
@@ -48,9 +51,7 @@ namespace GML
 			virtual bool				Save(char *fileName);
 			virtual bool				Load(char *fileName);
 
-			/*	 
-			 * Usage: uninit stuff
-			 */
+
 			virtual bool Close()=0;
 	
 			/*

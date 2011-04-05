@@ -74,38 +74,67 @@ bool	SimpleTextFileDB::Disconnect ()
 	FeatNames = NULL;
 	return true;
 }
-UInt32	SimpleTextFileDB::Select (char* Statement)
+bool	SimpleTextFileDB::ExecuteQuery (char* Statement,UInt32 *rowsCount)
 {
-	if ((GML::Utils::GString::Equals(Statement,"*")==false) &&
-		(GML::Utils::GString::Equals(Statement,"select * from RecordTable", true)==false))
+	GML::Utils::GString		tempStr;
+	unsigned int			limit;
+	// daca se cere numarul de inregistrari
+	if (GML::Utils::GString::Find(Statement,"count",true)>=0)
 	{
-		notifier->Error("Only 'Select(*)' is suported !");
-		return 0;
+		modQueryCount = true;
+		if (rowsCount)
+			(*rowsCount) = 1;
+		return true;
 	}
-	/*
-	if (file.SetFilePos(0)==false)
+	if (GML::Utils::GString::EndsWith(Statement,"limit 1",true))
 	{
-		notifier->Error("File::Seek(0) error !!!");
-		return 0;
-	}
-	*/
-	dbPoz = 0;
-	// skipez primele 2 linii
-	for (int tr=0;tr<2;tr++)
-	{
-		//if (file.ReadNextLine(tempStr)==false)
-		if (allDB.CopyNextLine(&tempStr,&dbPoz)==false)
+		limit = 0;
+		if (rowsCount)
+			(*rowsCount) = 1;
+	} else {
+		if (GML::Utils::GString::Find(Statement,"limit",true)>=0)
 		{
-			notifier->Error("File::Error reading a line from %s",fileName.GetText());
-			return 0;
+			tempStr.Set(&Statement[GML::Utils::GString::Find(Statement,"limit",true)+5]);
+			tempStr.Strip();
+			if (tempStr.Contains(","))
+				tempStr.Truncate(tempStr.Find(","));
+			tempStr.Strip();
+			if (tempStr.ConvertToUInt32(&limit)==false)
+			{
+				notifier->Error("[%s] -> Invalid number for limit: (%s) in '%s'",ObjectName,tempStr.GetText(),Statement);
+				return false;
+			}
+		} else { 
+			limit = 0; 
 		}
 	}
-	
-	cIndex = 0;
+	modQueryCount = false;
+	if (limit==0)
+	{
+		dbPoz = 0;
+		// skipez primele 2 linii
+		for (int tr=0;tr<2;tr++)
+		{
+			if (allDB.CopyNextLine(&tempStr,&dbPoz)==false)
+			{
+				notifier->Error("[%s] -> File::Error reading a line from %s",ObjectName,fileName.GetText());
+				return false;
+			}
+		}
+		cIndex = 0;
+	} else {
+		if (cIndex!=limit)
+		{
+			notifier->Error("[%s] -> Invalid position (current = %d , requested = %d) in '%s'",ObjectName,cIndex,limit,Statement);
+			return false;
+		}
+	}
+	if (rowsCount)
+		(*rowsCount) = nrRecords;
 	// totul e ok
-	return nrRecords;
+	return true;
 }
-bool    SimpleTextFileDB::GetColumnInformations(char *columnName,GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
+bool    SimpleTextFileDB::GetColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
 	GML::DB::DBRecord	rec;
 
@@ -138,11 +167,7 @@ bool    SimpleTextFileDB::GetColumnInformations(char *columnName,GML::Utils::GTF
 	}	
 	return true;
 }
-UInt32	SimpleTextFileDB::SqlSelect (char* What, char* Where, char* From)
-{
-	notifier->Error("SqlSelect function not suported !");
-	return 0;
-}
+
 bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
 	GML::DB::DBRecord	rec;
@@ -153,9 +178,23 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &V
 
 	if (VectPtr.DeleteAll()==false)
 	{
-		notifier->Error("Unable to delete all indexes from record vector");
+		notifier->Error("[%s] -> Unable to delete all indexes from record vector",ObjectName);
 		return false;
 	}
+
+	if (modQueryCount)
+	{
+		rec.Type = GML::DB::UINT32VAL;
+		rec.UInt32Val = nrRecords;
+		if (VectPtr.PushByRef(rec)==false)
+		{
+			notifier->Error("[%s] -> Unable to add record count to vector !",ObjectName);
+			return false;
+		}
+		return true;
+	}
+
+
 	// daca nu mai am linii
 	//if (file.ReadNextLine(tempStr)==false)
 	//	return false;
@@ -240,16 +279,7 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &V
 	//*/
 	return true;
 }
-bool	SimpleTextFileDB::FetchRowNr (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr)
-{
-	notifier->Error("FetchRowNr function not suported !");
-	return false;
-}
-bool	SimpleTextFileDB::FreeRow(GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
-{
-	// nu am facut nici o alocare -> deci nu trebuie sa eliberez ceva
-	return true;
-}
+
 bool	SimpleTextFileDB::InsertRow (char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
 {
 	notifier->Error("InsertRow function not suported !");

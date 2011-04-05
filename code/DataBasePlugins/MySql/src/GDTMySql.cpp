@@ -6,8 +6,7 @@ GDTMySQL::GDTMySQL()
 	ObjectName = "MySQL";
 	conn = NULL;
 	result = NULL;
-	columnNames = NULL;
-
+	
 	LinkPropertyToString("Server", Server, "127.0.0.1", "MySQL server address");
 	LinkPropertyToString("Database", Database, "", "Database name");
 	LinkPropertyToString("Username", Username, "", "Username used for connection");
@@ -57,11 +56,7 @@ bool   GDTMySQL::Connect ()
 	}
 	return true;
 }
-UInt32 GDTMySQL::SqlSelect (char* What, char* Where, char* From)
-{
-	notifier->Error("[%s] Not implemented : SqlSelect",ObjectName);
-	return 0;
-}
+
 bool   GDTMySQL::InsertRow (char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
 {
 	notifier->Error("[%s] Not implemented : InsertRow",ObjectName);
@@ -77,27 +72,12 @@ bool   GDTMySQL::Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBRe
 	notifier->Error("[%s] Not implemented : Update",ObjectName);
 	return false;
 }
-bool   GDTMySQL::FetchRowNr (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr, UInt32 RowNr)
+
+bool   GDTMySQL::ExecuteQuery (char* Statement,UInt32 *rowsCount)
 {
-	notifier->Error("[%s] Not implemented : FetchRowNr",ObjectName);
-	return false;
-}
-bool   GDTMySQL::FreeRow(GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
-{	
-	return true;
-}
-UInt32 GDTMySQL::Select (char* Statement)
-{
-	if (columnNames!=NULL)
-	{
-		delete columnNames;
-		columnNames = NULL;
-	}
 	if (conn==NULL)
-	{
-		MySQLError("Missing DB connection");
-		return 0;
-	}
+		return MySQLError("Missing DB connection");
+
 	if (result!=NULL)
 	{
 		 mysql_free_result(result);
@@ -106,17 +86,16 @@ UInt32 GDTMySQL::Select (char* Statement)
 	if (mysql_query(conn,Statement)!=0)
 	{
 		notifier->Error("[%s] Error processing statement : %s",ObjectName,Statement);
-		MySQLError("Error on Select");
-		return 0;
+		return MySQLError("Error on Select");
 	}
 	if ((result = mysql_store_result(conn))==NULL)
-	{
-		MySQLError("Error on StoreResult");
-		return 0;
-	}
-	return (UInt32)mysql_num_rows(result);
+		return MySQLError("Error on StoreResult");
+	if (rowsCount)
+		(*rowsCount) = (UInt32)mysql_num_rows(result);
+
+	return true;
 }
-bool   GDTMySQL::GetColumnInformations(char *tableName,GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
+bool   GDTMySQL::GetColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
 	GML::Utils::GString		tempStr;	
 	MYSQL_FIELD				*field;
@@ -124,30 +103,23 @@ bool   GDTMySQL::GetColumnInformations(char *tableName,GML::Utils::GTFVector<GML
 	GML::DB::DBRecord		rec;
 
 	VectPtr.DeleteAll();
-	if (tempStr.SetFormated("SELECT * from %s LIMIT 1",tableName)==false)
+	if ((result==NULL) || (conn==NULL))
 	{
-		notifier->Error("[%s] Unable to create query ...",ObjectName);
+		notifier->Error("[%s] -> GetColumnInformations should be used after an ExecuteQuery command !");
 		return false;
-	}
-	if (Select(tempStr.GetText())==0)
-		return false;
+	}	
 	fieldsCount = mysql_num_fields(result);
 	if (fieldsCount<=0)
 	{
 		notifier->Error("[%s] Invalid number of columns for %s (%d)",ObjectName,tempStr.GetText(),fieldsCount);
 		return false;		
 	}
-	if ((columnNames = new GML::Utils::GString[fieldsCount])==NULL)
-	{
-		notifier->Error("[%s] Unable to alloc %d columns for %s ",ObjectName,fieldsCount,tempStr.GetText());
-		return false;		
-	}
 	for (int tr=0;tr<fieldsCount;tr++)
 	{
 		if ((field = mysql_fetch_field_direct(result, tr))==NULL)
 			return MySQLError("mysql_fetch_field_direct failed !");
-		columnNames[tr].Set(field->name);
-		rec.Name = columnNames[tr].GetText();
+		
+		rec.Name = field->name;
 		switch (field->type)
 		{
 			case MYSQL_TYPE_DOUBLE:
@@ -176,6 +148,13 @@ bool   GDTMySQL::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr
 	MYSQL_ROW				row;
 
 	VectPtr.DeleteAll();
+
+	if ((result==NULL) || (conn==NULL))
+	{
+		notifier->Error("[%s] -> FetchNextRow should be used after an ExecuteQuery command !");
+		return false;
+	}	
+
 	fieldsCount = mysql_num_fields(result);
 	row = mysql_fetch_row(result);
 
@@ -190,7 +169,15 @@ bool   GDTMySQL::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr
 				rec.Type = GML::DB::DOUBLEVAL;
 				if (GML::Utils::GString::ConvertToDouble(row[tr],&rec.DoubleVal)==false)
 				{
-					notifier->Error("[%s] Invalid conversion to double (%s) on column %s",ObjectName,row[tr],field->name);
+					notifier->Error("[%s] -> Invalid conversion to double (%s) on column %s",ObjectName,row[tr],field->name);
+					return false;
+				}
+				break;
+			case MYSQL_TYPE_LONGLONG:
+				rec.Type = GML::DB::UINT64VAL;
+				if (GML::Utils::GString::ConvertToUInt64(row[tr],&rec.UInt64Val)==false)
+				{
+					notifier->Error("[%s] -> Invalid conversion to UInt64 (%s) on column %s",ObjectName,row[tr],field->name);
 					return false;
 				}
 				break;
@@ -202,12 +189,12 @@ bool   GDTMySQL::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr
 					rec.BoolVal = false;
 				break;
 			default:
-				notifier->Error("[%s] Unknwon column type (%d) for column %s",ObjectName,field->type,field->name);
+				notifier->Error("[%s] -> Unknwon column type (%d) for column %s",ObjectName,field->type,field->name);
 				return false;
 		}
 		if (VectPtr.PushByRef(rec)==false)
 		{
-			notifier->Error("[%s] Internal error (VectPtr.PushByRef)",ObjectName);
+			notifier->Error("[%s] -> Internal error (VectPtr.PushByRef)",ObjectName);
 			return false;
 		}
 	}

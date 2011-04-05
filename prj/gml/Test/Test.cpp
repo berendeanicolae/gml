@@ -12,7 +12,7 @@ void TestDB()
 	GML::DB::IDataBase *db =  GML::Builder::CreateDataBase("MySQL",*n);
 	db->SetProperty("Server='127.0.0.1';Database=TestDB;Username=root;Password=a");
 	db->Connect();
-	int sz = db->Select("Select * from gdtdb limit 5;");
+	db->ExecuteQuery("Select * from gdtdb limit 5;");
 	while (db->FetchNextRow(v))
 	{
 		for (int tr=0;tr<v.Len();tr++)
@@ -54,6 +54,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	////*/
 	//return 1;
 
+
+
 	//attr.AddString("DbName","SimpleTextFileDB");
 	//attr.AddString("DbConnString","FileName=E:\\lucru\\GML\\gml\\bin\\a.txt");  
 	//attr.AddString("Conector","BitConnector{Table=RecordTable}");
@@ -66,8 +68,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 1;
 	if (alg->SetProperty(
 		"Name=Test;"
-		/*"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"*/
-		"Connector=BitConnector{Table=RecordTable;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};"
+		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"//*/
+		/*"DataBase=MySQL{Server='127.0.0.1';Database=TestDB;Username=root;Password=a};" //*/
+		/*"Connector=BitConnector{Table=RecordTable;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};"*/
+		"Connector=BitConnector{Query=SELECT * FROM gdtdb;CountQuery = SELECT COUNT(*) from gdtdb};"
 		"Notifier=ConsoleNotifier{UseColors=true};"
 		"LearningRate=0.01;"
 		"AdjustWeightMode=UseLearningRate;"

@@ -9,9 +9,11 @@ GML::ML::IConnector::IConnector()
 	ObjectName = "IConnector";
 	columns.indexFeature = NULL;
 	ClearColumnIndexes();
-	LinkPropertyToString("Table",TableName,"RecordTable","Name of the table from the database that will be used");
-	LinkPropertyToString("SelectQuery",SelectQuery,"*","The query for the select statement");
+	
+	LinkPropertyToString("Query",Query,"SELECT * FROM RecordTable","The query for the select statement");
+	LinkPropertyToString("CountQuery",CountQuery,"SELECT COUNT(*) FROM RecordTable","The query for counting the elements in the record set");
 	LinkPropertyToString("DataFileName",DataFileName,"","Name of the file that contains data to be loaded");
+	LinkPropertyToUInt32("CachedRecords",CachedRecords,10000,"Number of records to be cached during one SQL query.");
 }
 void GML::ML::IConnector::ClearColumnIndexes()
 {
@@ -105,7 +107,7 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 		}
 		if (GML::Utils::GString::StartsWith(rec->Name,"Feat_",true))
 		{
-			if (GML::Utils::GString::ConvertToUInt32(&rec->Name[5],&value)==false)
+			if (GML::Utils::GString::ConvertToUInt32(&rec->Name[5],&value,10)==false)
 			{
 				notifier->Error("[%s] -> Invalid numeric format on column: %s",ObjectName,rec->Name);
 				return false;
@@ -130,7 +132,7 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 
 	return true;
 }
-bool GML::ML::IConnector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double *value)
+bool GML::ML::IConnector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double &value)
 {
 	GML::DB::DBRecord	*rec;
 
@@ -142,19 +144,22 @@ bool GML::ML::IConnector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRec
 	switch (rec->Type)
 	{
 		case GML::DB::DOUBLEVAL:
-			(*value) = rec->DoubleVal;
+			value = rec->DoubleVal;
 			break;
 		case GML::DB::INT8VAL:
-			(*value) = (double)rec->Int8Val;
+			value = (double)rec->Int8Val;
 			break;
 		case GML::DB::INT16VAL:
-			(*value) = (double)rec->Int16Val;
+			value = (double)rec->Int16Val;
 			break;
 		case GML::DB::INT32VAL:
-			(*value) = (double)rec->Int32Val;
+			value = (double)rec->Int32Val;
 			break;
 		case GML::DB::BOOLVAL:
-			(*value) = (double)rec->BoolVal;
+			if (rec->BoolVal)
+				value = 1.0;
+			else
+				value = -1.0;
 			break;
 		default:
 			notifier->Error("[%s] -> Unable to convert column from index %d to double !",ObjectName,index);
@@ -162,9 +167,96 @@ bool GML::ML::IConnector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRec
 	}
 	return true;
 }
+bool GML::ML::IConnector::UpdateColumnInformations(char *QueryStatement)
+{
+	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
+
+	if (QueryStatement==NULL)
+	{
+		notifier->Error("[%s] CountQueryStatement = NULL. Missing query.",ObjectName);
+		return false;
+	}
+	if (database==NULL)
+	{
+		notifier->Error("[%s] QueryRecordsCount failed. Missing database",ObjectName);
+		return false;
+	}
+	if (database->ExecuteQuery(QueryStatement)==false)
+	{
+		notifier->Error("[%s] database->ExecuteQuery(%s) failed",ObjectName,QueryStatement);
+		return false;
+	}
+	if (database->GetColumnInformations(VectPtr)==false)
+	{
+		notifier->Error("[%s] -> Error reading column informations for query [%s]",ObjectName,QueryStatement);
+		return false;
+	}
+	if (UpdateColumnInformations(VectPtr)==false)
+		return false;
+	return true;
+}
+bool GML::ML::IConnector::QueryRecordsCount(char *CountQueryStatement,UInt32 &recordsCount)
+{
+	UInt32										resRows;
+	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
+	GML::DB::DBRecord							*rec;
+
+	recordsCount = 0;
+	if (CountQueryStatement==NULL)
+	{
+		notifier->Error("[%s] CountQueryStatement = NULL. Missing query.",ObjectName);
+		return false;
+	}
+	if (database==NULL)
+	{
+		notifier->Error("[%s] QueryRecordsCount failed. Missing database",ObjectName);
+		return false;
+	}
+	if (database->ExecuteQuery(CountQueryStatement,&resRows)==false)
+	{
+		notifier->Error("[%s] database->ExecuteQuery(%s) failed",ObjectName,CountQueryStatement);
+		return false;
+	}
+	if (resRows!=1)
+	{
+		notifier->Error("[%s] database->ExecuteQuery(%s) returns %d rows (it should have returned one row)",ObjectName,CountQueryStatement,resRows);
+		return false;
+	}
+	if (database->FetchNextRow(VectPtr)==false)
+	{
+		notifier->Error("[%s] database->FetchNextRow for query (%s) failed.",ObjectName,CountQueryStatement);
+		return false;
+	}
+	if (VectPtr.Len()!=1)
+	{
+		notifier->Error("[%s] database->FetchNextRow for query (%s) should have returrned one value.",ObjectName,CountQueryStatement);
+		return false;
+	}
+	if ((rec = VectPtr.GetPtrToObject(0))==NULL)
+	{
+		notifier->Error("[%s] Internal error 'VectPtr.GetPtrToObject(0)'",ObjectName);
+		return false;
+	}
+	switch (rec->Type)
+	{
+		case GML::DB::INT32VAL:
+			recordsCount = (UInt32)rec->Int32Val;
+			break;
+		case GML::DB::UINT32VAL:
+			recordsCount = (UInt32)rec->UInt32Val;
+			break;
+		case GML::DB::UINT64VAL:
+			recordsCount = (UInt32)rec->UInt64Val;
+			break;
+		default:
+			notifier->Error("[%s] '%s' returnes an invalid type (non-numeric - %d )",ObjectName,CountQueryStatement,rec->Type);
+			return false;
+	}
+	return true;
+}
 bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBase &_database,char *attributeString)
 {	
-	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
+
 	bool										result;
 
 	// daca a fost deja initializat
@@ -187,14 +279,6 @@ bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBa
 	notifier = &_notifier;
 	database = &_database;
 	conector = NULL;
-
-	if (database->GetColumnInformations(TableName.GetText(),VectPtr)==false)
-	{
-		notifier->Error("[%s] -> Error reading column informations from DBTable: [%s]",ObjectName,TableName.GetText());
-		return false;
-	}
-	if (UpdateColumnInformations(VectPtr)==false)
-		return false;
 
 	notifier->Info("[%s] -> OnInit()",ObjectName);
 	result = OnInit();
