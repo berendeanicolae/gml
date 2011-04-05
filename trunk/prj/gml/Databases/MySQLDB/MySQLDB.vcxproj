@@ -84,12 +84,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\code\DataBasePlugins\MySql\src\DB_MySQL.cpp" />
     <ClCompile Include="..\..\..\..\code\DataBasePlugins\MySql\src\GDTMySql.cpp" />
     <ClCompile Include="dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\code\DataBasePlugins\MySql\inc\DB_MySQL.h" />
     <ClInclude Include="..\..\..\..\code\DataBasePlugins\MySql\inc\GDTMySql.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
