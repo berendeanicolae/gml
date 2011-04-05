@@ -1,5 +1,3 @@
-#ifndef __SPLIT_CONNECTOR_H
-
 #include "gmllib.h"
 
 using namespace GML;
@@ -20,28 +18,31 @@ protected:
 	};
 
 private:
-	UInt32 RecordCount, FeatureCount, TotalRecordCount;
-	UInt32	*RecordIndexCache;
+	UInt32					FeatureCount,RecordCount;
+	GML::Utils::Indexes		Indexes;
 
 	//properties
-	UInt32 SplitMode;
-	UInt32 Start, Stop;
+	UInt32					SplitMode;
+	UInt32					Start,End;
+	UInt32					attrStart, attrEnd;
 
+	bool					CreateIndexList();
+	bool					AddIndexes();
+	
 public:
-	virtual UInt32 GetRecordCount();
-	virtual bool GetRecordLabel( double &label,UInt32 index );
-	virtual UInt32 GetFeatureCount();	
-	virtual bool GetRecord( MLRecord &record,UInt32 index );
-	virtual bool CreateMlRecord( MLRecord &record );
-	virtual bool SetRecordInterval( UInt32 start, UInt32 end );
-	virtual bool OnInit();
-	virtual bool FreeMLRecord( MLRecord &record );
-	virtual bool Close();
-	virtual UInt32 GetTotalRecordCount();	
-	bool OnInitPercentage();
-	bool OnInitRange();
 	SplitConnector();
 	~SplitConnector();
+
+	UInt32					GetRecordCount();
+	bool					GetRecordLabel( double &label,UInt32 index );
+	UInt32					GetFeatureCount();	
+	bool					GetRecord( MLRecord &record,UInt32 index );
+	bool					CreateMlRecord( MLRecord &record );
+	bool					SetRecordInterval( UInt32 start, UInt32 end );
+	bool					OnInit();
+	bool					FreeMLRecord( MLRecord &record );
+	bool					Close();
+	UInt32					GetTotalRecordCount();	
+	bool					OnInitPercentage();
 };
 
-#endif
