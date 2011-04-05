@@ -13,6 +13,8 @@ bool	BitConnector::OnInit()
 	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
 	UInt8										*cPoz;
 	GML::DB::DBRecord							*rec;
+	GML::Utils::GString							tempStr;
+	double										cValue;
 
 	// daca iau datele din cache
 	if ((database==NULL) && (conector==NULL))
@@ -27,7 +29,11 @@ bool	BitConnector::OnInit()
 		notifier->Error("[%s] -> Could not connect to database",ObjectName);
 		return false;
 	}
-	nrRecords = database->Select("*");
+	tempStr.SetFormated("%s LIMIT 1",Query.GetText());
+	if (UpdateColumnInformations(tempStr.GetText())==false)
+		return false;
+	if (QueryRecordsCount(CountQuery.GetText(),nrRecords)==false)
+		return false;
 	if (nrRecords==0) 
 	{
 		notifier->Error("[%s] -> I received 0 records from the database",ObjectName);
@@ -50,6 +56,20 @@ bool	BitConnector::OnInit()
 
 	for (tr=0;tr<nrRecords;tr++)
 	{
+		// cache
+		if ((tr % CachedRecords)==0)
+		{
+			if (tr+CachedRecords<nrRecords)
+				tempStr.SetFormated("%s LIMIT %d,%d",Query.GetText(),tr,CachedRecords);
+			else
+				tempStr.SetFormated("%s LIMIT %d,%d",Query.GetText(),tr,nrRecords-tr);
+			//notifier->Info("%s",tempStr.GetText());
+			if (database->ExecuteQuery(tempStr.GetText())==false)
+			{
+				notifier->Error("[%s] -> Unable to Execute query : %s !",ObjectName,tempStr.GetText());
+				return false;
+			}
+		}
 		if (database->FetchNextRow(VectPtr)==false)
 		{
 			notifier->Error("[%s] -> Error reading #%d record !",ObjectName,tr);
@@ -58,21 +78,15 @@ bool	BitConnector::OnInit()
 		// pentru fiecare record pun valorile
 		for (gr=0;gr<columns.nrFeatures;gr++)
 		{
-			if ((rec=VectPtr.GetPtrToObject(columns.indexFeature[gr]))==NULL)
-			{
-				notifier->Error("[%s] -> Unable to read record #%d",ObjectName,gr);
+			if (UpdateDoubleValue(VectPtr,columns.indexFeature[gr],cValue)==false)
 				return false;
-			}
-			if (rec->DoubleVal==1.0)
+			if (cValue==1.0)
 				cPoz[gr/8] |= (1<<(gr%8));
 		}
 		// pun si label-ul
-		if ((rec=VectPtr.GetPtrToObject(columns.indexLabel))==NULL)
-		{
-			notifier->Error("[%s] -> Unable to read record #%d",ObjectName,columns.indexLabel);
+		if (UpdateDoubleValue(VectPtr,columns.indexLabel,cValue)==false)
 			return false;
-		}
-		if (rec->DoubleVal==1.0)
+		if (cValue==1.0)
 			cPoz[columns.nrFeatures/8] |= (1<<(columns.nrFeatures%8));
 		// trecem la urmatorul record
 		cPoz+=Align8Size;
