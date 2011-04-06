@@ -16,38 +16,25 @@ using namespace GML::Utils;
 class FullCacheConnector: public IConnector
 {
 private:
-	UInt32	IntervalStart, IntervalEnd;
-	UInt32	RecordCount, FeatureCount;
+	UInt32		nrRecords, FeatureCount;
+	double		*Records;
+	double		*Labels;
 		
-	double  * FeatureCache;
-	double  * LabelStorage;
-
-	BOOL	Initialized;							 
-	
 
 public:
 	FullCacheConnector();
 	~FullCacheConnector();
 
-	virtual UInt32 GetRecordCount();
-
-	virtual UInt32 GetFeatureCount();
-
-	virtual bool GetRecord(MLRecord &record,UInt32 index );
-
-	virtual bool CreateMlRecord( MLRecord &record );
-
-	virtual bool SetRecordInterval( UInt32 start, UInt32 end );
-
-	virtual bool OnInit();
-
-	virtual bool FreeMLRecord( MLRecord &record );
-
-	virtual bool Close();
-
-	virtual UInt32 GetTotalRecordCount();
-
-	virtual bool GetRecordLabel(double &label,UInt32 index);
+	UInt32		GetRecordCount();
+	UInt32		GetFeatureCount();
+	bool		GetRecord(MLRecord &record,UInt32 index );
+	bool		CreateMlRecord( MLRecord &record );
+	bool		SetRecordInterval( UInt32 start, UInt32 end );
+	bool		OnInit();
+	bool		FreeMLRecord( MLRecord &record );
+	bool		Close();
+	UInt32		GetTotalRecordCount();
+	bool		GetRecordLabel(double &label,UInt32 index);
 
 };
 
