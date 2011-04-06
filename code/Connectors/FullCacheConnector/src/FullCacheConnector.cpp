@@ -235,11 +235,17 @@ bool   FullCacheConnector::Load(char *fileName)
 			notifier->Error("[%s] -> Unable to allocate %ud bytes for data indexes !",ObjectName,nrRecords*columns.nrFeatures*sizeof(double));
 			break;
 		}
+		if ((Labels = new double[nrRecords*sizeof(double)])==NULL)
+		{
+			notifier->Error("[%s] -> Unable to allocate %ud bytes for labels !",ObjectName,nrRecords*sizeof(double));
+			break;
+		}
 		if (f.Read(Records,nrRecords*columns.nrFeatures*sizeof(double))==false)
 			break;
 		if (f.Read(Labels,nrRecords*sizeof(double))==false)
 			break;
 		f.Close();
+		FeatureCount = columns.nrFeatures;
 		notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d",ObjectName,nrRecords,columns.nrFeatures,(nrRecords+1)*columns.nrFeatures*sizeof(double));
 		return true;
 	}
@@ -250,9 +256,9 @@ bool   FullCacheConnector::Load(char *fileName)
 	Records = NULL;
 	Labels = NULL;
 	nrRecords = 0;
-	columns.nrFeatures = 0;
+	columns.nrFeatures = FeatureCount = 0;
 
-	notifier->Error("[%s] Error read data from %s",ObjectName,fileName);
+	notifier->Error("[%s] -> Error reading data from %s",ObjectName,fileName);
 	f.Close();	
 	return false;
 }
