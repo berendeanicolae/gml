@@ -20,6 +20,8 @@ namespace GML
 		public:
 			Vector(void);
 			~Vector(void);
+
+			void			operator =(Vector& v);
 	
 			bool			Create(unsigned int alocElements=32,unsigned int ElemSize=sizeof(void *)); 
 			void			Free();

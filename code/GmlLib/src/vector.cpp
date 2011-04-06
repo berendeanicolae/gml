@@ -22,6 +22,16 @@ GML::Utils::Vector::Vector(void)
 	Data=NULL;
 }
 
+void  GML::Utils::Vector::operator=(Vector& v)
+{
+	NrElemente = v.NrElemente;
+	ElementSize = v.ElementSize;
+	this->Data = new unsigned char [v.AlocatedElements*ElementSize];
+	AlocatedElements=v.AlocatedElements;
+	memcpy(Data,v.Data,AlocatedElements * ElementSize);
+	
+}
+
 GML::Utils::Vector::~Vector(void)
 {
 	Free();
