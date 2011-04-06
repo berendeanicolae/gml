@@ -3,9 +3,6 @@
 
 #include "gmllib.h"
 
-#define _CRT_SECURE_NO_DEPRECATE 
-#define _CRT_SECURE_NO_WARNINGS
-
 using namespace GML;
 using namespace GML::DB;
 using namespace GML::ML;
