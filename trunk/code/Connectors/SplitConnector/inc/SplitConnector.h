@@ -16,6 +16,7 @@ protected:
 		Percentage=0,
 		Range,
 		UniformPercentage,
+		CustomPercentage,
 	};
 
 private:
@@ -26,10 +27,13 @@ private:
 	UInt32					SplitMode;
 	UInt32					Start,End;
 	UInt32					attrStart, attrEnd;
+	UInt32					pozitiveProcStart,pozitiveProcEnd;
+	UInt32					negativeProcStart,negativeProcEnd;
 
 	bool					CreateIndexList();
 	bool					AddIndexes();
-	bool					CreateUniformPercentageIndex();
+	bool					CheckProcentInterval(UInt32	pStart,UInt32 pEnd);
+	bool					CreateUniformPercentageIndex(UInt32 pozStart,UInt32 pozEnd,UInt32 negStart,UInt32 negEnd);
 	
 public:
 	SplitConnector();

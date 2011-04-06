@@ -7,9 +7,13 @@ SplitConnector::SplitConnector()
 	attrStart = attrEnd = 0;
 	Start = End = 0;
 
-	LinkPropertyToUInt32("SplitMode", SplitMode, Percentage, "!!LIST:Percentage=0,Range,UniformPercentage!!");
-	LinkPropertyToUInt32("Start", attrStart, 0, "The start percentage/item to split from\n this can mean Percentage Start or Numeric Start\n zero indexed");
-	LinkPropertyToUInt32("End", attrEnd, 100, "The end percentage/item to split from\n this can mean Percentage End or Numeric End\nzero indexed, the actual index End is not included");
+	LinkPropertyToUInt32("SplitMode",		SplitMode, Percentage,	"!!LIST:Percentage=0,Range,UniformPercentage,CustomPercentage!!");
+	LinkPropertyToUInt32("Start",			attrStart, 0,			"The start percentage/item to split from\n this can mean Percentage Start or Numeric Start\n zero indexed");
+	LinkPropertyToUInt32("End",				attrEnd, 100,			"The end percentage/item to split from\n this can mean Percentage End or Numeric End\nzero indexed, the actual index End is not included");
+	LinkPropertyToUInt32("PozitiveStart",	pozitiveProcStart,0,	"The start procent for pozitive Class (works only for SplitMode = CustomPercentage)");
+	LinkPropertyToUInt32("PozitiveEnd",		pozitiveProcEnd,100,	"The end procent for pozitive Class (works only for SplitMode = CustomPercentage)");
+	LinkPropertyToUInt32("NegativeStart",	negativeProcStart,0,	"The start procent for negative Class (works only for SplitMode = CustomPercentage)");
+	LinkPropertyToUInt32("NegativeEnd",		negativeProcEnd,100,	"The end procent for negative Class (works only for SplitMode = CustomPercentage)");
 }
 SplitConnector::~SplitConnector()
 {
@@ -63,7 +67,21 @@ bool   SplitConnector::AddIndexes()
 	}
 	return true;
 }
-bool   SplitConnector::CreateUniformPercentageIndex()
+bool   SplitConnector::CheckProcentInterval(UInt32	pStart,UInt32 pEnd)
+{
+	if (pStart>100)
+	{
+		notifier->Error("[%s] -> Invalid procent value %d ",ObjectName,pStart);
+		return false;
+	}
+	if (pEnd>100)
+	{
+		notifier->Error("[%s] -> Invalid procent value %d ",ObjectName,pEnd);
+		return false;
+	}
+	return true;
+}
+bool   SplitConnector::CreateUniformPercentageIndex(UInt32 pozStart,UInt32 pozEnd,UInt32 negStart,UInt32 negEnd)
 {
 	UInt32		countByClass[2]={0,0};
 	UInt32		_start[2];
@@ -76,6 +94,11 @@ bool   SplitConnector::CreateUniformPercentageIndex()
 	// numaram cate sunt
 
 	Indexes.Destroy();
+	
+	if (CheckProcentInterval(pozStart,pozEnd)==false)
+		return false;
+	if (CheckProcentInterval(negStart,negEnd)==false)
+		return false;
 
 	rCount = conector->GetRecordCount();
 	for (tr=0;tr<rCount;tr++)
@@ -91,11 +114,17 @@ bool   SplitConnector::CreateUniformPercentageIndex()
 			countByClass[0]++;
 	}
 
-	notifier->Info("[%s] -> Pozitive = %d, Negative = %d",ObjectName,countByClass[0],countByClass[1]);
+	notifier->Info("[%s] -> Pozitive = %d, Negative = %d",ObjectName,countByClass[1],countByClass[0]);
 	for (tr=0;tr<2;tr++)
 	{
-		_start[tr]=(countByClass[tr]*attrStart)/100;
-		_end[tr]=(countByClass[tr]*attrEnd)/100;
+		if (tr==0)
+		{
+			_start[tr]=(countByClass[tr]*negStart)/100;
+			_end[tr]=(countByClass[tr]*negEnd)/100;
+		} else {
+			_start[tr]=(countByClass[tr]*pozStart)/100;
+			_end[tr]=(countByClass[tr]*pozEnd)/100;
+		}
 		if (_start[tr]<_end[tr])
 			_count[tr] = _end[tr]-_start[tr];
 		else
@@ -109,7 +138,7 @@ bool   SplitConnector::CreateUniformPercentageIndex()
 		notifier->Error("[%s] -> To few elements (0 elements)",ObjectName);
 		return false;
 	}
-	notifier->Info("[%s] -> Allocing %d records (%d%% to %d%%)",ObjectName,_count[0]+_count[1],attrStart,attrEnd);
+	notifier->Info("[%s] -> Allocing %d records (Poz:%d%% to %d%%) and (Neg:%d%% to %d%%)",ObjectName,_count[0]+_count[1],pozStart,pozEnd,negStart,negEnd);
 	if (Indexes.Create(_count[0]+_count[1])==false)	
 	{
 		notifier->Error("[%s] -> Unable to alloc %d indexes ",ObjectName,_count[0]+_count[1]);
@@ -151,7 +180,7 @@ bool   SplitConnector::CreateUniformPercentageIndex()
 			_added[ID]++;
 		}
 	}
-	notifier->Info("[%s] -> Added: Pozitive = %d, Negative = %d",ObjectName,_added[0],_added[1]);
+	notifier->Info("[%s] -> Added: Pozitive = %d, Negative = %d",ObjectName,_added[1],_added[0]);
 	return true;
 }
 UInt32 SplitConnector::GetRecordCount() 
@@ -204,11 +233,8 @@ bool   SplitConnector::OnInit()
 	switch (SplitMode)
 	{
 		case Percentage:
-			if ((attrStart>100) || (attrEnd>100))
-			{
-				notifier->Error("[%s] -> Procents have to be in interval [0..100]",ObjectName);
+			if (CheckProcentInterval(attrStart,attrEnd)==false)
 				return false;
-			}
 			Start = (conector->GetRecordCount()*attrStart)/100;
 			End = (conector->GetRecordCount()*attrEnd)/100;
 			if (CreateIndexList()==false)
@@ -217,12 +243,11 @@ bool   SplitConnector::OnInit()
 				return false;
 			break;
 		case UniformPercentage:
-			if ((attrStart>100) || (attrEnd>100))
-			{
-				notifier->Error("[%s] -> Procents have to be in interval [0..100]",ObjectName);
+			if (CreateUniformPercentageIndex(attrStart,attrEnd,attrStart,attrEnd)==false)
 				return false;
-			}
-			if (CreateUniformPercentageIndex()==false)
+			break;
+		case CustomPercentage:
+			if (CreateUniformPercentageIndex(pozitiveProcStart,pozitiveProcEnd,negativeProcStart,negativeProcEnd)==false)
 				return false;
 			break;
 		case Range:
