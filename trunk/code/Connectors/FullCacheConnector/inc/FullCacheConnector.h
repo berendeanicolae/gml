@@ -2,7 +2,6 @@
 #define _FULL_CACHE_CONNECTOR_H
 
 #include "gmllib.h"
-#include <stdio.h>
 
 #define _CRT_SECURE_NO_DEPRECATE 
 #define _CRT_SECURE_NO_WARNINGS
@@ -35,6 +34,9 @@ public:
 	bool		Close();
 	UInt32		GetTotalRecordCount();
 	bool		GetRecordLabel(double &label,UInt32 index);
+
+	bool		Save(char *fileName);
+	bool		Load(char *fileName);
 
 };
 
