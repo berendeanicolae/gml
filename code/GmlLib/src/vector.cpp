@@ -24,12 +24,19 @@ GML::Utils::Vector::Vector(void)
 
 void  GML::Utils::Vector::operator=(Vector& v)
 {
-	NrElemente = v.NrElemente;
-	ElementSize = v.ElementSize;
-	this->Data = new unsigned char [v.AlocatedElements*ElementSize];
-	AlocatedElements=v.AlocatedElements;
-	memcpy(Data,v.Data,AlocatedElements * ElementSize);
-	
+	Free(); // sa nu avem leak-uri :P
+	if (v.NrElemente>0)
+	{
+		NrElemente = v.NrElemente;
+		ElementSize = v.ElementSize;
+		AlocatedElements=v.AlocatedElements;
+		if ((this->Data = new unsigned char [v.AlocatedElements*ElementSize])==NULL)
+		{
+			Free();
+		} else {		
+			memcpy(Data,v.Data,AlocatedElements * ElementSize);
+		}
+	}
 }
 
 GML::Utils::Vector::~Vector(void)
