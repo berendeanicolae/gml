@@ -59,6 +59,8 @@ namespace GML{
 				}
 				//if failure in constructing the vector
 				this->max_lines = 0;
+				this->max_colls = 0;
+				this->nr_lines = 0;
 				this->nr_colls = 0;
 				return false;
 			}
@@ -78,15 +80,7 @@ namespace GML{
 				}
 				return ((T*)v.GetVector())[line*this->max_colls + coll]
 			}
-			/*
-			bool AddElement(unsigned int line,unsigned int coll, T elem){
-				if(line >= this->nr_lines || coll >= this->nr_colls){
-					return false;
-				}
-				((T*)v.GetVector())[line*this->max_colls + coll] += element;
-				return true;
-			}
-			*/
+		
 			unsigned int GetNrColl(){
 				return this->nr_colls;
 			}
