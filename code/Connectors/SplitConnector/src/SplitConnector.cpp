@@ -109,7 +109,7 @@ bool   SplitConnector::CreateUniformPercentageIndex()
 		notifier->Error("[%s] -> To few elements (0 elements)",ObjectName);
 		return false;
 	}
-	notifier->Info("[%s] Allocing %d records ",ObjectName,_count[0]+_count[1]);
+	notifier->Info("[%s] -> Allocing %d records (%d%% to %d%%)",ObjectName,_count[0]+_count[1],attrStart,attrEnd);
 	if (Indexes.Create(_count[0]+_count[1])==false)	
 	{
 		notifier->Error("[%s] -> Unable to alloc %d indexes ",ObjectName,_count[0]+_count[1]);
@@ -199,7 +199,7 @@ bool   SplitConnector::OnInit()
 		return false;
 	}
 
-	notifier->Info("[%s] -> Loading data",ObjectName);
+	notifier->Info("[%s] -> Loading data (Start = %d,End = %d)",ObjectName,attrStart,attrEnd);
 
 	switch (SplitMode)
 	{
