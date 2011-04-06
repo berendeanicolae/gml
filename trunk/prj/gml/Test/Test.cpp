@@ -70,8 +70,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		"Name=Test;"
 		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"//*/
 		/*"DataBase=MySQL{Server='127.0.0.1';Database=TestDB;Username=root;Password=a};" //*/
-		/*"Connector=BitConnector{Table=RecordTable;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};"*/
-		"Connector=BitConnector{Query=SELECT * FROM gdtdb;CountQuery = SELECT COUNT(*) from gdtdb};"
+		"Connector=SplitConnector{SplitMode=UniformPercentage;Start=0;End=60;}=>BitConnector{Table=RecordTable;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
+		/*"Connector=BitConnector{Query=SELECT * FROM gdtdb;CountQuery = SELECT COUNT(*) from gdtdb};" //*/
 		"Notifier=ConsoleNotifier{UseColors=true};"
 		"LearningRate=0.01;"
 		"AdjustWeightMode=UseLearningRate;"
