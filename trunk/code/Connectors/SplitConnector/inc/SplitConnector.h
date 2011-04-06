@@ -15,6 +15,7 @@ protected:
 	{
 		Percentage=0,
 		Range,
+		UniformPercentage,
 	};
 
 private:
@@ -28,6 +29,7 @@ private:
 
 	bool					CreateIndexList();
 	bool					AddIndexes();
+	bool					CreateUniformPercentageIndex();
 	
 public:
 	SplitConnector();
