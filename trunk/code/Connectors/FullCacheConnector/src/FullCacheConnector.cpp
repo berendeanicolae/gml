@@ -111,8 +111,6 @@ bool FullCacheConnector::OnInit()
 				return false;
 			if (cValue==1.0)
 				cPoz[gr] = 1.0;
-			else
-				cPoz[gr] = -1.0;
 		}
 		// pun si label-ul
 		if (UpdateDoubleValue(VectPtr,columns.indexLabel,cValue)==false)
