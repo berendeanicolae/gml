@@ -71,7 +71,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"//*/
 		/*"DataBase=MySQL{Server='127.0.0.1';Database=TestDB;Username=root;Password=a};" //*/
 		/*"Connector=SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=20;}=>BitConnector{Table=RecordTable;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
-		"Connector=FullCacheConnector{Query=SELECT * FROM gdtdb;CountQuery = SELECT COUNT(*) from gdtdb};" //*/
+		"Connector=FullCacheConnector{Query=SELECT * FROM gdtdb;CountQuery = SELECT COUNT(*) from gdtdb;};" //*/
 		"Notifier=ConsoleNotifier{UseColors=true};"
 		"LearningRate=0.01;"
 		"AdjustWeightMode=UseLearningRate;"
@@ -81,7 +81,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		"SaveData=None;"
 		"SaveBest=BestACC;"
 		"WeightFileName=E:\\lucru\\GML\\gml\\prj\\gml\\Debug\\test.txt;"
-		"ThreadsCount=2;"
+		"ThreadsCount=1;"
 		"MaxError=0;"
 		"MarginType=Negative;"
 		"SortBy=F2;"
