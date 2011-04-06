@@ -7,9 +7,9 @@ SplitConnector::SplitConnector()
 	attrStart = attrEnd = 0;
 	Start = End = 0;
 
-	LinkPropertyToUInt32("SplitMode", SplitMode, Percentage, "!!LIST:Percentage=0,Range!!");
+	LinkPropertyToUInt32("SplitMode", SplitMode, Percentage, "!!LIST:Percentage=0,Range,UniformPercentage!!");
 	LinkPropertyToUInt32("Start", attrStart, 0, "The start percentage/item to split from\n this can mean Percentage Start or Numeric Start\n zero indexed");
-	LinkPropertyToUInt32("End", attrEnd, 1000, "The end percentage/item to split from\n this can mean Percentage Stop or Numeric Stop\nzero indexed, the actual index Stop is not included");
+	LinkPropertyToUInt32("End", attrEnd, 100, "The end percentage/item to split from\n this can mean Percentage End or Numeric End\nzero indexed, the actual index End is not included");
 }
 SplitConnector::~SplitConnector()
 {
@@ -49,7 +49,7 @@ bool   SplitConnector::AddIndexes()
 	UInt32	recCount = conector->GetRecordCount();
 	
 	if (cPoz==recCount)
-		cPoz==0;
+		cPoz=0;
 	while (cPoz!=End)
 	{
 		if (Indexes.Push(cPoz)==false)
@@ -59,8 +59,99 @@ bool   SplitConnector::AddIndexes()
 		}
 		cPoz++;
 		if (cPoz==recCount)
-			cPoz==0;
+			cPoz=0;
 	}
+	return true;
+}
+bool   SplitConnector::CreateUniformPercentageIndex()
+{
+	UInt32		countByClass[2]={0,0};
+	UInt32		_start[2];
+	UInt32		_end[2];
+	UInt32		_count[2];
+	UInt32		_added[2];
+	UInt32		tr,rCount,ID;
+	double		label;
+	bool		add;
+	// numaram cate sunt
+
+	Indexes.Destroy();
+
+	rCount = conector->GetRecordCount();
+	for (tr=0;tr<rCount;tr++)
+	{
+		if (conector->GetRecordLabel(label,tr)==false)
+		{
+			notifier->Error("[%s] -> Unable to read label for ",ObjectName);
+			return false;
+		}
+		if (label==1)
+			countByClass[1]++;
+		else
+			countByClass[0]++;
+	}
+
+	notifier->Info("[%s] -> Pozitive = %d, Negative = %d",ObjectName,countByClass[0],countByClass[1]);
+	for (tr=0;tr<2;tr++)
+	{
+		_start[tr]=(countByClass[tr]*attrStart)/100;
+		_end[tr]=(countByClass[tr]*attrEnd)/100;
+		if (_start[tr]<_end[tr])
+			_count[tr] = _end[tr]-_start[tr];
+		else
+		if (_start[tr]>_end[tr])
+			_count[tr] = (countByClass[tr]-_start[tr])+_end[tr];
+		else
+			_count[tr]=0;
+	}
+	if ((_count[0]+_count[1])==0)
+	{
+		notifier->Error("[%s] -> To few elements (0 elements)",ObjectName);
+		return false;
+	}
+	notifier->Info("[%s] Allocing %d records ",ObjectName,_count[0]+_count[1]);
+	if (Indexes.Create(_count[0]+_count[1])==false)	
+	{
+		notifier->Error("[%s] -> Unable to alloc %d indexes ",ObjectName,_count[0]+_count[1]);
+		return false;
+	}
+	// adaug si elementele
+	_count[0]=_count[1]=0;
+	_added[0]=_added[1]=0;
+	for (tr=0;tr<rCount;tr++)
+	{
+		if (conector->GetRecordLabel(label,tr)==false)
+		{
+			notifier->Error("[%s] -> Unable to read label for ",ObjectName);
+			return false;
+		}
+		if (label==1)
+			ID = 1;
+		else
+			ID = 0;
+		add = false;
+		if (_start[ID]<_end[ID])
+		{
+			if ((_count[ID]>=_start[ID]) && (_count[ID]<_end[ID]))
+				add = true;
+		}
+		if (_start[ID]>_end[ID])
+		{
+			if ((_count[ID]>=_start[ID]) || (_count[ID]<_end[ID]))
+				add = true;
+		}
+		_count[ID]++;
+		if (add)
+		{
+			if (Indexes.Push(tr)==false)
+			{
+				notifier->Error("[%s] -> Unable to add index #%d ",ObjectName,tr);
+				return false;
+			}
+			_added[ID]++;
+		}
+	}
+	notifier->Info("[%s] -> Added: Pozitive = %d, Negative = %d",ObjectName,_added[0],_added[1]);
 	return true;
 }
 UInt32 SplitConnector::GetRecordCount() 
@@ -104,18 +195,18 @@ bool   SplitConnector::OnInit()
 {
 	if (this->conector == NULL)
 	{
-		notifier->Error("[%s] SplitConnector is an intermediate connector, please provide a lower level connector",ObjectName);
+		notifier->Error("[%s] -> SplitConnector is an intermediate connector, please provide a lower level connector",ObjectName);
 		return false;
 	}
 
-	notifier->Info("SplitConnector loading data");
+	notifier->Info("[%s] -> Loading data",ObjectName);
 
 	switch (SplitMode)
 	{
 		case Percentage:
 			if ((attrStart>100) || (attrEnd>100))
 			{
-				notifier->Error("[%s] Procents have to be in interval [0..100]",ObjectName);
+				notifier->Error("[%s] -> Procents have to be in interval [0..100]",ObjectName);
 				return false;
 			}
 			Start = (conector->GetRecordCount()*attrStart)/100;
@@ -123,6 +214,15 @@ bool   SplitConnector::OnInit()
 			if (CreateIndexList()==false)
 				return false;
 			if (AddIndexes()==false)
+				return false;
+			break;
+		case UniformPercentage:
+			if ((attrStart>100) || (attrEnd>100))
+			{
+				notifier->Error("[%s] -> Procents have to be in interval [0..100]",ObjectName);
+				return false;
+			}
+			if (CreateUniformPercentageIndex()==false)
 				return false;
 			break;
 		case Range:
@@ -134,12 +234,12 @@ bool   SplitConnector::OnInit()
 				return false;
 			break;
 		default:
-			notifier->Error("[%s] Invalid Splitting Mode (%d)",ObjectName,SplitMode);
+			notifier->Error("[%s] -> Invalid Splitting Mode (%d)",ObjectName,SplitMode);
 			return false;
 	}
 	RecordCount = Indexes.Len();
 	FeatureCount = conector->GetFeatureCount();
-	notifier->Info("[%s] -> Total records = %d , Total Features = %d ",ObjectName,RecordCount,FeatureCount);
+	notifier->Info("[%s] -> Done. Total records = %d , Total Features = %d ",ObjectName,RecordCount,FeatureCount);
 	return true;
 }
 bool   SplitConnector::FreeMLRecord( MLRecord &record )
