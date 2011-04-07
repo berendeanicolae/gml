@@ -194,6 +194,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClInclude Include="..\..\..\Code\GmlLib\inc\GString.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\GTVector.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\IDataBase.h" />
+    <ClInclude Include="..\..\..\code\GmlLib\inc\Matrix.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\md5.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\MLInterface.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\MLRecord.h" />
