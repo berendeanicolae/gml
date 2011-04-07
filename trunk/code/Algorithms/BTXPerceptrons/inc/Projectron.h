@@ -1,7 +1,9 @@
+#ifndef __PROJECTRON_H__
+#define __PROJECTRON_H__
 
-#include "gmllib.h"
+#include "GenericPerceptron.h"
 
-class Projectron: public GML::Algorithm::IAlgorithm
+class Projectron: public GenericPerceptron
 {
 	enum
 	{
@@ -9,31 +11,20 @@ class Projectron: public GML::Algorithm::IAlgorithm
 		SIGMOYD_KER
 	};
 
-	enum
-	{
-		COMMAND_NONE = 0,
-		COMMAND_TRAIN,
-		COMMAND_TEST
-	};
+	//The hilbert Space
+	GML::Utils::Vector		Space;
+	//K matrix (sort of a Gram matrix)
+	GML::Utils::Matrix<double>	K;
+	UInt32 kernelFunction;
 
-	//Hilbert Space
-	GML::Utils::Indexes		St;
-	//K matrix
-	GML::Utils::Matrix		K;
-	GML::DB::IDataBase		*db;
-	GML::ML::IConnector		*con;
+public:
+	bool	Train(PerceptronThreadData *ptd,GML::Utils::Indexes *recordIndexes,bool clearDelta,bool addDeltaToPrimary);
+	bool	PerformTrainIteration();
+	bool	PerformTestIteration();
+	bool	OnInit();
 
-	GML::Utils::GString		strDB;
-	GML::Utils::GString		strConector;
-	GML::Utils::GString		strNotificator;
-
-	UInt32					kernelFunction;
-
-	
 public:
 	Projectron();
-	bool					PerformTrain();
-	bool					PerformTest();
-	bool					Init();
-	void					OnExecute();
 };
+
+#endif
