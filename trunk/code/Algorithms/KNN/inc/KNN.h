@@ -1,4 +1,3 @@
-
 #include "gmllib.h"
 
 struct KNN_INFO
