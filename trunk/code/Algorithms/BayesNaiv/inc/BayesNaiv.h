@@ -13,6 +13,11 @@ class BayesNaiv: public GML::Algorithm::IAlgorithm
 
 	GML::DB::IDataBase		*db;
 	GML::ML::IConnector		*con;
+	UInt32					procIgnoreFeature;
+	UInt32					penaltyForInfFile;
+	double					procToSetInfected;
+	bool					classicMul;
+	GML::Utils::GString		pathToProbsFile;		
 
 	GML::Utils::GString		strDB;
 	GML::Utils::GString		strConector;
@@ -24,7 +29,8 @@ public:
 	bool	Init();
 
 	bool	PerformTrain();
-	bool	PerformTest();
+	bool	PerformTestClassicMul();
+	bool	PerformTestNewMul();
 
 	void	OnExecute();
 };
