@@ -68,7 +68,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PROJECTRON_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\..\lib;$(SolutionDir)..\..\Code\Algorithms\BTXPerceptrons\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\lib;$(SolutionDir)..\..\Code\Algorithms\GDTPerceptrons\inc;$(SolutionDir)..\..\Code\Algorithms\BTXPerceptrons\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -80,9 +80,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\code\Algorithms\BTXPerceptrons\inc\Projectron.h" />
+    <ClInclude Include="..\..\..\..\code\Algorithms\GDTPerceptrons\inc\GenericPerceptron.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\code\Algorithms\BTXPerceptrons\src\Projectron.cpp" />
+    <ClCompile Include="..\..\..\..\code\Algorithms\GDTPerceptrons\src\GenericPerceptron.cpp" />
     <ClCompile Include="dllmain.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
