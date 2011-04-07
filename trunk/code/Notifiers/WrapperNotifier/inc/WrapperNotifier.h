@@ -1,18 +1,20 @@
-#ifndef __PIPE__NOTIFYER__
-#define __PIPE__NOTIFYER__
+#ifndef __WRAPPER__NOTIFYER__
+#define __WRAPPER__NOTIFYER__
 
 #include "gmllib.h"
 
-class PipeNotifier: public GML::Utils::INotifier
+class WrapperNotifier: public GML::Utils::INotifier
 {
-	GML::Utils::GString		Client;
-	bool					CreateNewConsole;
+	GML::Utils::GString		PluginPath;	
 
-	PROCESS_INFORMATION		pi;
-	HANDLE					hPipe;
+	HMODULE					hModule;
+	void*					Context;
+	void*					(*fnInit)();
+	bool					(*fnNotify)(void* Context,UInt32 messageID,void *Data,UInt32 DataSize);
+	bool					(*fnUninit)(void* Context);
 	
 public:
-	PipeNotifier();
+	WrapperNotifier();
 	bool	OnInit();
 	bool	Uninit();
 	bool	Notify(UInt32 messageID,void *Data,UInt32 DataSize);
