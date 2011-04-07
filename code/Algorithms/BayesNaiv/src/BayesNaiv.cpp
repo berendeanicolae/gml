@@ -7,6 +7,11 @@ BayesNaiv::BayesNaiv()
 	LinkPropertyToString("Connector",strConector,"","Conectorul la care sa se conecteze");
 	LinkPropertyToString("Notifier",strNotificator,"","Notificatorul la care sa se conecteze");
 	LinkPropertyToString("DataBase",strDB,"","Baza de date la care sa se conecteze");	
+	LinkPropertyToUInt32("ProcIgnoreFeature",procIgnoreFeature,25,"A procent from where a flag is ignored");
+	LinkPropertyToUInt32("PenaltyForInfFiles",penaltyForInfFile,100,"A procent to penalize the probability for infected files");
+	LinkPropertyToDouble("ProcToSetVerdictInfected",procToSetInfected,0.999,"MinProbability to set the verdict=infected");
+	LinkPropertyToBool("ClassicMul", classicMul, true, "Use normal multiplication method for probabilities");	
+	LinkPropertyToString("ProbsFilePath", pathToProbsFile, "", "Path to the file to save the probabilities in");
 	
 	SetPropertyMetaData("Command","!!LIST:None=0,Train,Test!!");
 }
@@ -52,38 +57,39 @@ unsigned int first4Decimals(double value)
 	else return 1;
 }
 
+unsigned int getNrOfDigits(unsigned int value)
+{
+	unsigned int nrC = 0;
+
+	while(value)
+	{
+		value = value/10;
+		nrC++;
+	}
+
+	return nrC;
+}
+
 unsigned int mulPlusTrunc(unsigned int a, unsigned int b, unsigned int &exponent)
 {
-	unsigned int	prod;
-	unsigned int	cat;
+	unsigned int	prod, cat, nrC;	
 
 	prod = a*b;
 	cat = prod/1000000;
+	nrC = 0;
 	
-	if(cat>9999)
-	{
-		exponent+=5;
-		return prod/100000;
-	}else if(cat > 999)
-	{
-		exponent+=4;
-		return prod/10000;
-	}else if (cat > 99)
-	{
-		exponent+=3;
-		return prod/1000;
-	}else if (cat > 9)
-	{
-		exponent+=2;
-		return prod/100;
-	} else if (cat >0){		
-		exponent++;		
-		return prod/10;	
-	} else return prod;
+	
+	if(cat)
+		nrC = getNrOfDigits(cat);
+	exponent += nrC;
 
+	while(nrC--)
+		prod = prod/10;
+
+	return prod;	
 }
 
-bool BayesNaiv::PerformTest()
+bool BayesNaiv::PerformTestClassicMul()
 {
 	GML::Utils::AttributeList	a;
 
@@ -98,11 +104,16 @@ bool BayesNaiv::PerformTest()
 	if(!(con->CreateMlRecord(currentRecord)))
 		return false;	
 
+	if(pathToProbsFile.Equals(""))
+	{
+		notif->Error("[%s] Invalid path for file to load probabilities from", ObjectName);
+		return false;
+	}
+
 	pFeatCondInf = new double[con->GetFeatureCount()];
 	pFeatCondClean = new double[con->GetFeatureCount()];
 
-	a.Load("F:\\GMLib\\BayesNaivDB\\prob.txt");
-
+	a.Load(pathToProbsFile);
 	a.UpdateDouble("Pinf", pFileInf,true, 0.5);
 	a.UpdateDouble("Pclean", pFileClean,true, 0.5);
 	a.Update("pFeatCondClean", &pFeatCondClean[0], con->GetFeatureCount()*sizeof(double));
@@ -114,20 +125,80 @@ bool BayesNaiv::PerformTest()
 	for(i=0; i<con->GetRecordCount(); i++)
 	{
 		if(!(con->GetRecord(currentRecord, i)))
-			continue;		
-		//double pInf		= pFileInf*0.2;
-		//double pInf		= pFileInf;			
-		//double pClean	= pFileClean;		
-		//double pInf		= 0.0;
-		//double pClean	= 1.7;
+		{
+			notif->Info("[%s] -> error getting record #%d",ObjectName,i);
+			return false;
+		}			
+		double pInf		= pFileInf*penaltyForInfFile;
+		double pClean	= pFileClean;							
 
+		clasif = -1;
+
+		for(j=0; j<currentRecord.FeatCount; j++)
+			if((unsigned int)currentRecord.Features[j])
+			{								
+				pInf *= pFeatCondInf[j];
+				pClean *= pFeatCondClean[j];
+			}
+
+		if(pInf>pClean)
+			if((double)pInf/(pInf+pClean) > procToSetInfected)
+				clasif = 1;		
 		
-		unsigned int pInf = first4Decimals(pFileInf*0.5);
+		result.Update(currentRecord.Label==1,clasif==currentRecord.Label);	
+	}
+
+	result.Compute();
+	notif->Notify(100,&result,sizeof(result));	
+
+	return true;
+}
+
+bool BayesNaiv::PerformTestNewMul()
+{
+	GML::Utils::AttributeList	a;
+
+	double						*pFeatCondInf;
+	double						*pFeatCondClean;
+	double						pFileInf, pFileClean;
+	unsigned int				i, j;
+	int							clasif;
+	GML::Utils::AlgorithmResult	result;
+	GML::ML::MLRecord			currentRecord;
+
+	if(!(con->CreateMlRecord(currentRecord)))
+		return false;	
+
+	if(pathToProbsFile.Equals(""))
+	{
+		notif->Error("[%s] Invalid path for file to load probabilities from", ObjectName);
+		return false;
+	}
+
+	pFeatCondInf = new double[con->GetFeatureCount()];
+	pFeatCondClean = new double[con->GetFeatureCount()];
+
+	a.Load(pathToProbsFile);
+	a.UpdateDouble("Pinf", pFileInf,true, 0.5);
+	a.UpdateDouble("Pclean", pFileClean,true, 0.5);
+	a.Update("pFeatCondClean", &pFeatCondClean[0], con->GetFeatureCount()*sizeof(double));
+	a.Update("pFeatCondInf", &pFeatCondInf[0], con->GetFeatureCount()*sizeof(double));	
+
+	result.Clear();	
+
+	for(i=0; i<con->GetRecordCount(); i++)
+	{
+		if(!(con->GetRecord(currentRecord, i)))
+		{
+			notif->Info("[%s] -> error getting record #%d",ObjectName,i);
+			return false;
+		}				
+		
+		unsigned int pInf = first4Decimals((pFileInf*penaltyForInfFile)/100);
 		unsigned int expPInf = 0;
 		unsigned int pClean = first4Decimals(pFileClean);
 		unsigned int expPClean = 0;
 		
-
 		clasif = -1;
 
 		for(j=0; j<currentRecord.FeatCount; j++)
@@ -135,11 +206,9 @@ bool BayesNaiv::PerformTest()
 			{	
 				if(first4Decimals(pFeatCondInf[j]) == 0 && first4Decimals(pFeatCondClean[j]) == 0)
 					continue;
+
 				pInf = mulPlusTrunc(pInf, first4Decimals(pFeatCondInf[j]), expPInf);
-				pClean = mulPlusTrunc(pClean, first4Decimals(pFeatCondClean[j]), expPClean);				
-				
-				//pInf *= pFeatCondInf[j];
-				//pClean *= pFeatCondClean[j];
+				pClean = mulPlusTrunc(pClean, first4Decimals(pFeatCondClean[j]), expPClean);						
 			}
 
 		if(expPClean>expPInf)
@@ -153,7 +222,7 @@ bool BayesNaiv::PerformTest()
 		}		
 		
 		if(pInf>pClean)
-			if((double)pInf/(pInf+pClean) > 0.999)
+			if((double)pInf/(pInf+pClean) > procToSetInfected)
 				clasif = 1;		
 		
 		result.Update(currentRecord.Label==1,clasif==currentRecord.Label);	
@@ -170,7 +239,7 @@ bool BayesNaiv::PerformTrain()
 	unsigned int		*vcInf;
 	unsigned int		*vcClean;
 	unsigned int		totalInf, totalClean;
-	unsigned int		nInf, nClean, nTotal;
+	unsigned int		nTotal;
 	unsigned int		i,j;
 	double				*pFeatCondInf;
 	double				*pFeatCondClean;
@@ -181,6 +250,18 @@ bool BayesNaiv::PerformTrain()
 	pFeatCondInf = new double[con->GetFeatureCount()];
 	pFeatCondClean = new double[con->GetFeatureCount()];
 
+	if (procIgnoreFeature>100)
+	{
+		notif->Error("[%s] Inavlid procent value (%d) ",ObjectName,procIgnoreFeature);
+		return false;
+	}
+
+	if(pathToProbsFile.Equals(""))
+	{
+		notif->Error("[%s] Invalid path for file to save probabilities in", ObjectName);
+		return false;
+	}
+
 	if(!(con->CreateMlRecord(currentRecord)))
 		return false;
 
@@ -190,52 +271,44 @@ bool BayesNaiv::PerformTrain()
 		pFeatCondInf[i] = pFeatCondClean[i] = 1.0;
 	}
 	totalInf = totalClean = 0;	
-	nInf = nClean = nTotal = 0;
-
-	notif->Info("[BTM] Start Working...");
+	nTotal = 0;
 
 	for(i=0; i<con->GetRecordCount(); i++)
 	{
 		if(!(con->GetRecord(currentRecord, i)))
-			notif->Info("[BTM] error getting record");
+		{
+			notif->Info("[%s] -> error getting record #%d",ObjectName,i);
+			return false;
+		}
 		
 		if(currentRecord.Label == -1)	//clean
 		{
 			totalClean++;			
 
 			for(j=0; j<currentRecord.FeatCount; j++)			
-				if((unsigned int)(currentRecord.Features[j]))	vcClean[j]++;							
+				if((unsigned int)(currentRecord.Features[j]))	
+					vcClean[j]++;							
 		}
 		else if(currentRecord.Label == 1){		//infected
 			totalInf++;
 			
 			for(j=0; j<currentRecord.FeatCount; j++)
-				if((unsigned int)(currentRecord.Features[j]))	vcInf[j]++;							
+				if((unsigned int)(currentRecord.Features[j]))	
+					vcInf[j]++;							
 		}
-	}
-
-	notif->Info("[BTM] VC computed...");
+	}	
 
 	for(i=0; i<con->GetFeatureCount(); i++)
-	{
-		//if(vcClean[i]>3)				nClean++; 		
-		//if(vcInf[i]>3)					nInf++;		
-		//if(vcClean[i]>3 || vcInf[i]>3)	nTotal++;
-
-		if(vcClean[i])				nClean++; 		
-		if(vcInf[i])				nInf++;		
-		if(vcClean[i] || vcInf[i])	nTotal++;		
+	{		
+		if(vcClean[i] || vcInf[i])	
+			nTotal++;		
 	}
-
-
-
-	notif->Info("[BTM] nTotal:%d  # nClean:%d # nInf: %d # totalClean:%d # totalInf:%d", nTotal, nClean, nInf, totalClean, totalInf);
-
+	UInt32	flagValueToIgnore = (con->GetRecordCount()*procIgnoreFeature)/100;
 	for(i=0; i<con->GetFeatureCount(); i++)
 	{
 		if(vcClean[i] || vcInf[i])		
 		{			
-			if(vcClean[i] + vcInf[i] < con->GetRecordCount()/4 )
+			if(vcClean[i] + vcInf[i] <  flagValueToIgnore)
 			{
 				pFeatCondClean[i] = (vcClean[i] + 1.0)/(totalClean + nTotal);
 				pFeatCondInf[i] = (vcInf[i] + 1.0)/(totalInf + nTotal);				
@@ -244,10 +317,12 @@ bool BayesNaiv::PerformTrain()
 	}
 
 	GML::Utils::AttributeList	a;
-	a.AddDouble("Pinf", (double)totalInf/con->GetRecordCount(), "asdfsaa");
-	a.AddDouble("Pclean", (double)totalClean/con->GetRecordCount(), "asdfsaa");
-	a.AddAttribute("pFeatCondClean",&pFeatCondClean[0],GML::Utils::AttributeList::DOUBLE,con->GetFeatureCount(),"kjf");
-	a.AddAttribute("pFeatCondInf",&pFeatCondInf[0],GML::Utils::AttributeList::DOUBLE,con->GetFeatureCount(),"kjfddd");
+
+	a.AddDouble("Pinf", (double)totalInf/con->GetRecordCount(), "Prob for infected file");
+	a.AddDouble("Pclean", (double)totalClean/con->GetRecordCount(), "Prob for clean files");
+	a.AddAttribute("pFeatCondClean",&pFeatCondClean[0],GML::Utils::AttributeList::DOUBLE,con->GetFeatureCount(),"Conditional probabilities for clean files");
+	a.AddAttribute("pFeatCondInf",&pFeatCondInf[0],GML::Utils::AttributeList::DOUBLE,con->GetFeatureCount(),"Conditional probabilities for infected files");
+
 	a.Save("F:\\GMLib\\BayesNaivDB\\prob.txt");	
 
 	return true;
@@ -258,17 +333,20 @@ void BayesNaiv::OnExecute()
 	switch (Command)
 	{
 		case COMMAND_NONE:
-			notif->Info("[BTM] [%s] -> Nothing to do ... ",ObjectName);
+			notif->Info("[%s] -> Nothing to do ... ",ObjectName);
 			return;
 		case COMMAND_TRAIN:
-			notif->Info("[BTM] Command = Train");
+			notif->Info("[%s] -> Training",ObjectName);
 			PerformTrain();
 			return;
 		case COMMAND_TEST:
-			notif->Info("[BTM] Command = Test");
-			PerformTest();
+			notif->Info("[%s] -> Testing",ObjectName);
+			if(classicMul)
+				PerformTestClassicMul();
+			else
+				PerformTestNewMul();
 			return;
 	};
-	notif->Error("[BTM] [%s] -> Unkwnown command ID : %d",ObjectName,Command);
+	notif->Error("[%s] -> Unkwnown command ID : %d",ObjectName,Command);
 	
 }
