@@ -18,10 +18,13 @@ class Projectron: public GenericPerceptron
 	UInt32 kernelFunction;
 
 public:
+	bool	Train(PerceptronThreadData *ptd,bool clearDelta,bool addDeltaToPrimary);
 	bool	Train(PerceptronThreadData *ptd,GML::Utils::Indexes *recordIndexes,bool clearDelta,bool addDeltaToPrimary);
 	bool	PerformTrainIteration();
 	bool	PerformTestIteration();
 	bool	OnInit();
+
+	UInt32 CountActiveFeatures(double *feat,UInt32 nrElements);
 
 public:
 	Projectron();

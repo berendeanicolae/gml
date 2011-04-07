@@ -1,7 +1,8 @@
 #include "Projectron.h"
 
-UInt32 CountActiveFeatures(double *feat,UInt32 nrElements)
-	{
+
+UInt32 Projectron::CountActiveFeatures(double *feat,UInt32 nrElements)
+{
 		UInt32	sum = 0;
 		while (nrElements>0)
 		{
@@ -11,7 +12,7 @@ UInt32 CountActiveFeatures(double *feat,UInt32 nrElements)
 			nrElements--;
 		}
 		return sum;
-	}
+}
 
 Projectron::Projectron()
 {
@@ -26,6 +27,8 @@ bool Projectron::OnInit(){
 }
 
 bool Projectron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *indexes,bool clearDelta,bool addDeltaToPrimary){
+	//to be implemented!
+	
 	UInt32	*ptrIndex = indexes->GetList();
 	UInt32	count,act_featCount;
 	UInt32	nrFeatures = con->GetFeatureCount();
@@ -122,13 +125,14 @@ bool Projectron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *indexes,bo
 	return true;
 }
 
+
+
 bool Projectron::PerformTrainIteration()
 {
-	return GenericPerceptron::Train(&FullData,false,false);
+	return Train(&FullData,&RecordIndexes,false,false);
 }
 
 bool Projectron::PerformTestIteration()
 {
 	return Test(&FullData);
 }
-
