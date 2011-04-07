@@ -122,7 +122,7 @@ bool BayesNaiv::PerformTest()
 		//double pClean	= 1.7;
 
 		
-		unsigned int pInf = first4Decimals(pFileInf*0.2);
+		unsigned int pInf = first4Decimals(pFileInf*0.5);
 		unsigned int expPInf = 0;
 		unsigned int pClean = first4Decimals(pFileClean);
 		unsigned int expPClean = 0;
