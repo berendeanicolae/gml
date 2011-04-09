@@ -22,7 +22,7 @@ def AddFromFolderByExt(zip,foldername,extlist,arcfoldername):
 				AddFileToZip(zip,os.path.join(r,name),os.path.join(arcfoldername,r[len(foldername):],name))		
 def find_revision():
 	try:
-		os.system("svn info >svn_info.txt")
+		os.system("svn info -r HEAD >svn_info.txt")
 	except:
 		print("Unable to find curent revision...")
 		return ""
