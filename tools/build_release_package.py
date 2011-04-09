@@ -20,9 +20,27 @@ def AddFromFolderByExt(zip,foldername,extlist,arcfoldername):
 			myext = name.lower().rsplit(".",1)[1]
 			if myext in extlist:
 				AddFileToZip(zip,os.path.join(r,name),os.path.join(arcfoldername,r[len(foldername):],name))		
+def find_revision():
+	try:
+		os.system("svn info >svn_info.txt")
+	except:
+		print("Unable to find curent revision...")
+		return ""
+	try:
+		for line in open("svn_info.txt","r"):
+			if line.startswith("Revision:"):
+				return "r"+line.split(":",1)[1].strip()
+	except:
+		print("Unable to load curent revision...")
+		return ""
 def main():
-	z = zipfile.ZipFile("GML-Package.zip","w",zipfile.ZIP_DEFLATED)
-	base_folder = "../prj/gml/Release"
+	rev = find_revision()
+	if len(rev)==0:
+		rev = "UNK"
+	zname = "GML-Package-"+rev+".zip"
+	print ("Building: "+zname) 	
+	z = zipfile.ZipFile(zname,"w",zipfile.ZIP_DEFLATED)
+	base_folder = "../prj/gml/Release"	
 	#plugin
 	AddFromFolderByExt(z,os.path.join(base_folder,"Algorithms"),["alg"],"Algorithms")
 	AddFromFolderByExt(z,os.path.join(base_folder,"Notifiers"),["ntf"],"Notifiers")
@@ -36,5 +54,10 @@ def main():
 	AddFileToZip(z,"../lib/gmllib.lib","SDK/gmllib.lib")
 	AddFileToZip(z,"../lib/gmllib.h","SDK/gmllib.h")
 	z.close()
+	#curat alte chestii
+	try:
+		os.unlink("svn_info.txt")
+	except:
+		pass
 	
 main()
