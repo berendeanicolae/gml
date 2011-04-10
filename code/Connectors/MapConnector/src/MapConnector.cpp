@@ -117,6 +117,16 @@ bool	MapConnector::GetRecordLabel(double &Label,UInt32 index)
 {
 	return conector->GetRecordLabel(Label,index);
 }
+bool	MapConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
+{
+	if (index >= conector->GetRecordCount())
+	{
+		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,conector->GetRecordCount()-1);
+		return false;
+	}
+
+	return conector->GetRecordHash(recHash,index);
+}
 bool	MapConnector::FreeMLRecord(GML::ML::MLRecord &record)
 {
 	if (record.Features!=NULL)

@@ -210,6 +210,16 @@ bool   SplitConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMas
 
 	return conector->GetRecord(record,(UInt32)Indexes.Get(index));
 }
+bool   SplitConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
+{
+	if (index >= RecordCount)
+	{
+		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,RecordCount-1);
+		return false;
+	}
+
+	return conector->GetRecordHash(recHash,(UInt32)Indexes.Get(index));
+}
 bool   SplitConnector::CreateMlRecord( MLRecord &record )
 {
 	if (this->conector)
