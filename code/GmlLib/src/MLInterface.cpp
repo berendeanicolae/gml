@@ -366,3 +366,45 @@ bool GML::ML::IConnector::Load(char *fileName)
 		notifier->Error("[%s] Load function not implemented ",ObjectName);
 	return false;
 }
+bool GML::ML::IConnector::OnInitConnectionToDataBase()
+{
+	if (notifier)
+		notifier->Error("[%s] Connection to DataBase is not suported !",ObjectName);
+	return false;
+}
+bool GML::ML::IConnector::OnInitConnectionToConnector()
+{
+	if (notifier)
+		notifier->Error("[%s] Connection to another connector is not suported !",ObjectName);
+	return false;
+}
+bool GML::ML::IConnector::OnInitConnectionToCache()
+{
+	if (notifier==NULL)
+	{
+		DEBUGMSG("[%s] Notifier should be set first before executing this function !",ObjectName);
+		return false;
+	}
+	if (DataFileName.Len()!=NULL)
+	{
+		notifier->Error("[%s] Property 'DataFileName' was not set !",ObjectName);
+		return false;
+	}
+	return Load(DataFileName.GetText());
+}
+bool GML::ML::IConnector::OnInit()
+{
+	if (notifier==NULL)
+	{
+		DEBUGMSG("[%s] Notifier should be set first before executing this function !",ObjectName);
+		return false;
+	}
+	// daca exista o baza de date , incerc conectarea la ea
+	if (database!=NULL)
+		return OnInitConnectionToDataBase();
+	// daca exista un connector ma conectez la el
+	if (conector!=NULL)
+		return OnInitConnectionToConnector();
+	// altfel incerc si cu cache-ul
+	return OnInitConnectionToCache();
+}
