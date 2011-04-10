@@ -7,23 +7,14 @@ BitConnector::BitConnector()
 	ObjectName = "BitConnector";
 }
 
-bool	BitConnector::OnInit()
+bool	BitConnector::OnInitConnectionToDataBase()
 {
 	UInt32										tr,gr;
 	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
 	UInt8										*cPoz;
-	GML::DB::DBRecord							*rec;
 	GML::Utils::GString							tempStr;
 	double										cValue;
 
-	// daca iau datele din cache
-	if ((database==NULL) && (conector==NULL))
-		return true;
-	if (database==NULL)
-	{
-		notifier->Error("[%s] works with a filedata or a database",ObjectName);
-		return false;
-	}
 	if (database->Connect()==false)
 	{
 		notifier->Error("[%s] -> Could not connect to database",ObjectName);
@@ -94,7 +85,9 @@ bool	BitConnector::OnInit()
 	// all ok , am incarcat datele
 	notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d,RecordsSize=%d",ObjectName,nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
 	return true;
+
 }
+
 bool	BitConnector::Close()
 {
 	return true;
