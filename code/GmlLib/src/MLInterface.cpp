@@ -27,7 +27,7 @@ void GML::ML::IConnector::ClearColumnIndexes()
 }
 bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
-	UInt32				tr,value,cPoz;
+	UInt32				tr,cPoz;
 	GML::DB::DBRecord	*rec;
 
 

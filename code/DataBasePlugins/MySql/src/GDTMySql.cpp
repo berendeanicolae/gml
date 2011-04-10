@@ -128,6 +128,12 @@ bool   GDTMySQL::GetColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> 
 			case MYSQL_TYPE_BIT:
 				rec.Type = GML::DB::BOOLVAL;
 				break;
+			case MYSQL_TYPE_LONGLONG:
+				rec.Type = GML::DB::UINT64VAL;
+				break;
+			case MYSQL_TYPE_STRING:
+				rec.Type = GML::DB::ASCIISTTVAL;
+				break;
 			default:
 				notifier->Error("[%s] Unknwon column type (%d) for column %s",ObjectName,field->type,field->name);
 				return false;
@@ -188,8 +194,12 @@ bool   GDTMySQL::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr
 				else
 					rec.BoolVal = false;
 				break;
+			case MYSQL_TYPE_STRING:
+				rec.Type = GML::DB::ASCIISTTVAL;
+				rec.AsciiStrVal = row[tr];
+				break;
 			default:
-				notifier->Error("[%s] -> Unknwon column type (%d) for column %s",ObjectName,field->type,field->name);
+				notifier->Error("[%s] -> Unknwon column type (%d) for column '%s'",ObjectName,field->type,field->name);
 				return false;
 		}
 		if (VectPtr.PushByRef(rec)==false)
