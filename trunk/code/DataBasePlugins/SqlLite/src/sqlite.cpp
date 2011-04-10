@@ -24,7 +24,7 @@ bool TextToInt(char* str, struct GML::DB::RecordHash& hash)
 		int v2 = HexToDec(str[i+1]);
 		if (v1==-1 || v2==-1) return false;
 		int val = v1*16+v2;
-		hash.Value[i/2] = val;
+		hash.Hash.bValue[i/2] = val;
 	}
 	return true;
 }

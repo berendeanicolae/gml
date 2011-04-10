@@ -14,6 +14,7 @@ GML::ML::IConnector::IConnector()
 	LinkPropertyToString("CountQuery",CountQuery,"SELECT COUNT(*) FROM RecordTable","The query for counting the elements in the record set");
 	LinkPropertyToString("DataFileName",DataFileName,"","Name of the file that contains data to be loaded");
 	LinkPropertyToUInt32("CachedRecords",CachedRecords,10000,"Number of records to be cached during one SQL query.");
+	LinkPropertyToBool  ("StoreRecordHash",StoreRecordHash,false,"Specify if the connector should store records hash or not");
 }
 void GML::ML::IConnector::ClearColumnIndexes()
 {
@@ -137,6 +138,33 @@ bool GML::ML::IConnector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRec
 				value = 1.0;
 			else
 				value = -1.0;
+			break;
+		default:
+			notifier->Error("[%s] -> Unable to convert column from index %d to double !",ObjectName,index);
+			return false;
+	}
+	return true;
+}
+bool GML::ML::IConnector::UpdateHashValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,GML::DB::RecordHash &recHash)
+{
+	GML::DB::DBRecord	*rec;
+
+	if ((rec = VectPtr.GetPtrToObject(index))==NULL)
+	{
+		notifier->Error("[%s] -> Unable to read record with index #%d",ObjectName,index);
+		return false;
+	}
+	switch (rec->Type)
+	{
+		case GML::DB::ASCIISTTVAL:
+			if (recHash.CreateFromText(rec->AsciiStrVal)==false)
+			{
+				notifier->Error("[%s] -> Unable to convert '%s' to a valid hash !",ObjectName,rec->AsciiStrVal);
+				return false;
+			}
+			break;
+		case GML::DB::HASHVAL:
+			recHash.Copy(rec->Hash);
 			break;
 		default:
 			notifier->Error("[%s] -> Unable to convert column from index %d to double !",ObjectName,index);

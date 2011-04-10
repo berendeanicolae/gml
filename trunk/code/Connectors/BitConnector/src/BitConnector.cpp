@@ -7,6 +7,30 @@ BitConnector::BitConnector()
 	ObjectName = "BitConnector";
 }
 
+bool	BitConnector::AllocMemory()
+{
+	// aloca data :D
+	if (((columns.nrFeatures+1)%8)==0)
+		Align8Size = (columns.nrFeatures+1)/8;
+	else
+		Align8Size = ((columns.nrFeatures+1)/8)+1;
+
+	if ((Data = new UInt8[nrRecords*Align8Size])==NULL)
+	{
+		notifier->Error("[%s] -> Unable to allocate %ud bytes for data !",ObjectName,nrRecords*Align8Size);
+		return false;
+	}
+	memset(Data,0,nrRecords*Align8Size);
+	if (StoreRecordHash)
+	{
+		if (Hashes.Create(nrRecords)==false)
+		{
+			notifier->Error("[%s] -> Unable to allocate %ud bytes for hashes !",ObjectName,nrRecords*sizeof(GML::DB::RecordHash));
+			return false;
+		}
+	}
+	return true;
+}
 bool	BitConnector::OnInitConnectionToConnector()
 {
 	UInt32										tr,gr;	
@@ -25,18 +49,9 @@ bool	BitConnector::OnInitConnectionToConnector()
 		notifier->Error("[%s] -> Unable to crea MLRecord ",ObjectName);
 		return false;
 	}
-
-	if (((columns.nrFeatures+1)%8)==0)
-		Align8Size = (columns.nrFeatures+1)/8;
-	else
-		Align8Size = ((columns.nrFeatures+1)/8)+1;
-
-	if ((Data = new UInt8[nrRecords*Align8Size])==NULL)
-	{
-		notifier->Error("[%s] -> Unable to allocate %ud bytes for data indexes !",ObjectName,nrRecords*Align8Size);
+	if (AllocMemory()==false)
 		return false;
-	}
-	memset(Data,0,nrRecords*Align8Size);
+
 	// sunt exact la inceput
 	cPoz = Data;
 
@@ -86,18 +101,8 @@ bool	BitConnector::OnInitConnectionToDataBase()
 		notifier->Error("[%s] -> I received 0 records from the database",ObjectName);
 		return false;
 	}
-	// aloca data :D
-	if (((columns.nrFeatures+1)%8)==0)
-		Align8Size = (columns.nrFeatures+1)/8;
-	else
-		Align8Size = ((columns.nrFeatures+1)/8)+1;
-
-	if ((Data = new UInt8[nrRecords*Align8Size])==NULL)
-	{
-		notifier->Error("[%s] -> Unable to allocate %ud bytes for data indexes !",ObjectName,nrRecords*Align8Size);
+	if (AllocMemory()==false)
 		return false;
-	}
-	memset(Data,0,nrRecords*Align8Size);
 	// sunt exact la inceput
 	cPoz = Data;
 
@@ -146,6 +151,9 @@ bool	BitConnector::OnInitConnectionToDataBase()
 
 bool	BitConnector::Close()
 {
+	if (Data!=NULL)
+		delete Data;
+	Data = NULL;
 	return true;
 }
 bool	BitConnector::Save(char *fileName)

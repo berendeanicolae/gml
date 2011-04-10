@@ -36,9 +36,11 @@ namespace GML
 			GML::Utils::GString			CountQuery;
 			TableColumnIndexes			columns;
 			UInt32						CachedRecords;
+			bool						StoreRecordHash;
 			
 			void						ClearColumnIndexes();
 			bool						UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double &value);
+			bool						UpdateHashValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,GML::DB::RecordHash &recHash);
 			bool						UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
 			bool						QueryRecordsCount(char *CountQueryStatement,UInt32 &recordsCount);
 			bool						UpdateColumnInformations(char *QueryStatement);

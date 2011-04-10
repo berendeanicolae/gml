@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Compat.h"
+#include "GString.h"
 
 namespace GML
 {
@@ -27,7 +28,17 @@ namespace GML
 		};
 		struct EXPORT RecordHash
 		{
-			UInt8		Value[16];
+		public:
+			union
+			{
+				UInt8		bValue[16];
+				UInt32		dwValue[4];
+			} Hash;
+		public:
+			bool	CreateFromText(char *text);
+			bool	ToString(GML::Utils::GString &str);
+			void	Copy(RecordHash &rHash);
+			void	Reset();
 		};
 		struct EXPORT DBRecord 
 		{
