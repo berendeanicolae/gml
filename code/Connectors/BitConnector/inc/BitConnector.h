@@ -6,10 +6,12 @@ class BitConnector: public GML::ML::IConnector
 	UInt8	*Data;
 	UInt32	Align8Size;
 
+
+	bool		OnInitConnectionToDataBase();
 public:
 	BitConnector();
 
-	bool		OnInit();
+	
 	bool		Close();
 	bool		Save(char *fileName);
 	bool		Load(char *fileName);

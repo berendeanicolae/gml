@@ -254,9 +254,8 @@ bool GML::ML::IConnector::QueryRecordsCount(char *CountQueryStatement,UInt32 &re
 	}
 	return true;
 }
-bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBase &_database,char *attributeString)
-{	
-
+bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBase *_database,GML::ML::IConnector *_connector,char *attributeString)
+{
 	bool										result;
 
 	// daca a fost deja initializat
@@ -277,82 +276,27 @@ bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBa
 	}
 
 	notifier = &_notifier;
-	database = &_database;
-	conector = NULL;
+	database = _database;
+	conector = _connector;
+	ClearColumnIndexes();
 
 	notifier->Info("[%s] -> OnInit()",ObjectName);
 	result = OnInit();
 	if (result==false)
 		notifier->Error("[%s] -> OnInit() returned false",ObjectName);
 	return result;
+}
+bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBase &_database,char *attributeString)
+{	
+	return Init(_notifier,&_database,NULL,attributeString);
 }
 bool GML::ML::IConnector::Init(GML::ML::IConnector &_conector,char *attributeString)
 {
-	bool result;
-	// daca a fost deja initializat
-	if ((database!=NULL) || (conector!=NULL))
-	{
-		if (notifier)
-			notifier->Error("[%s] -> Conector already initilized !",ObjectName);
-		return false;
-	}
-
-	if ((attributeString!=NULL) && (attributeString[0]!=0))
-	{
-		if (SetProperty(attributeString)==false)
-		{
-			notifier->Error("[%s] -> Invalid format for Conector initializations: %s",ObjectName,attributeString);
-			return false;
-		}
-	}
-
-	conector = &_conector;
-	notifier = conector->notifier;
-	database = NULL;
-	ClearColumnIndexes();
-
-	notifier->Info("[%s] -> OnInit()",ObjectName);
-	result = OnInit();
-	if (result==false)
-		notifier->Error("[%s] -> OnInit() returned false",ObjectName);
-	return result;
+	return Init(*conector->notifier,NULL,&_conector,attributeString);
 }
-bool GML::ML::IConnector::Init(GML::Utils::INotifier &Notifier,char *attributeString)
+bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,char *attributeString)
 {
-	bool result;
-	// daca a fost deja initializat
-	if ((database!=NULL) || (conector!=NULL))
-	{
-		if (notifier)
-			notifier->Error("[%s] -> Conector already initilized !",ObjectName);
-		return false;
-	}
-
-	if ((attributeString!=NULL) && (attributeString[0]!=0))
-	{
-		if (SetProperty(attributeString)==false)
-		{
-			notifier->Error("[%s] -> Invalid format for Conector initializations: %s",ObjectName,attributeString);
-			return false;
-		}
-	}
-
-	notifier = &Notifier;
-	database = NULL;
-	conector = NULL;
-	ClearColumnIndexes();
-
-	if (Load(DataFileName.GetText())==false)
-	{
-		notifier->Error("[%s] Unable to load data from %s",ObjectName,DataFileName.GetText());
-		return true;
-	}
-
-	notifier->Info("[%s] -> OnInit()",ObjectName);
-	result = OnInit();
-	if (result==false)
-		notifier->Error("[%s] -> OnInit() returned false",ObjectName);
-	return result;
+	return Init(_notifier,NULL,NULL,attributeString);
 }
 bool GML::ML::IConnector::Save(char *fileName)
 {

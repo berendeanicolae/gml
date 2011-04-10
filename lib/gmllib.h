@@ -1678,6 +1678,8 @@ namespace GML
 		};
 		class  IConnector : public GML::Utils::GMLObject
 		{
+		private:
+			bool						Init(GML::Utils::INotifier &Notifier,GML::DB::IDataBase *Database,GML::ML::IConnector *connecor,char *attributeString);
 		protected:
 			GML::Utils::INotifier		*notifier;			
 			GML::DB::IDataBase			*database;
