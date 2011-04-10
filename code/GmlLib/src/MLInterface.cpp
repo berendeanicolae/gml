@@ -292,7 +292,7 @@ bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBa
 }
 bool GML::ML::IConnector::Init(GML::ML::IConnector &_conector,char *attributeString)
 {
-	return Init(*conector->notifier,NULL,&_conector,attributeString);
+	return Init(*(_conector.notifier),NULL,&_conector,attributeString);
 }
 bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,char *attributeString)
 {
