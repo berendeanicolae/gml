@@ -60,7 +60,7 @@ bool	SimpleTextFileDB::Connect ()
 		return false;
 	for (UInt32 tr = 0;tr<nrFeatures;tr++)
 	{
-		if (FeatNames[tr].SetFormated("Feat_%d",tr)==false)
+		if (FeatNames[tr].SetFormated("Ft_%d",tr)==false)
 			return false;
 	}
 	notifier->Info("Data Base loaded : %d records , %d features ",nrRecords,nrFeatures);
