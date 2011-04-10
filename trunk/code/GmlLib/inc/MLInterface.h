@@ -40,11 +40,16 @@ namespace GML
 			bool						UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
 			bool						QueryRecordsCount(char *CountQueryStatement,UInt32 &recordsCount);
 			bool						UpdateColumnInformations(char *QueryStatement);
+
+
+			virtual bool				OnInit();
+			virtual bool				OnInitConnectionToDataBase();
+			virtual bool				OnInitConnectionToConnector();
+			virtual bool				OnInitConnectionToCache();
 			
 		public:	
 			IConnector();
 
-			virtual bool				OnInit() = 0;
 			virtual bool				Init(GML::Utils::INotifier &Notifier,GML::DB::IDataBase &Database,char *attributeString=NULL);
 			virtual bool				Init(GML::ML::IConnector &conector,char *attributeString=NULL);
 			virtual bool				Init(GML::Utils::INotifier &Notifier,char *attributeString=NULL);
