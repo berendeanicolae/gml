@@ -8,6 +8,7 @@ class BitConnector: public GML::ML::IConnector
 
 
 	bool		OnInitConnectionToDataBase();
+	bool		OnInitConnectionToConnector();
 public:
 	BitConnector();
 

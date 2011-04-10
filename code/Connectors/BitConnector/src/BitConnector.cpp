@@ -7,6 +7,62 @@ BitConnector::BitConnector()
 	ObjectName = "BitConnector";
 }
 
+bool	BitConnector::OnInitConnectionToConnector()
+{
+	UInt32										tr,gr;	
+	UInt8										*cPoz;
+	GML::ML::MLRecord							cRec;
+
+	columns.nrFeatures = conector->GetFeatureCount();
+	nrRecords = conector->GetRecordCount();
+	if (nrRecords==0) 
+	{
+		notifier->Error("[%s] -> I received 0 records from the parent connector",ObjectName);
+		return false;
+	}
+	if (conector->CreateMlRecord(cRec)==false)
+	{
+		notifier->Error("[%s] -> Unable to crea MLRecord ",ObjectName);
+		return false;
+	}
+
+	if (((columns.nrFeatures+1)%8)==0)
+		Align8Size = (columns.nrFeatures+1)/8;
+	else
+		Align8Size = ((columns.nrFeatures+1)/8)+1;
+
+	if ((Data = new UInt8[nrRecords*Align8Size])==NULL)
+	{
+		notifier->Error("[%s] -> Unable to allocate %ud bytes for data indexes !",ObjectName,nrRecords*Align8Size);
+		return false;
+	}
+	memset(Data,0,nrRecords*Align8Size);
+	// sunt exact la inceput
+	cPoz = Data;
+
+	for (tr=0;tr<nrRecords;tr++)
+	{
+		if (conector->GetRecord(cRec,tr)==false)		
+		{
+			notifier->Error("[%s] -> Error reading #%d record from parent connector!",ObjectName,tr);
+			return false;
+		}
+		// pentru fiecare record pun valorile
+		for (gr=0;gr<columns.nrFeatures;gr++)
+			if (cRec.Features[gr]==1.0)
+				cPoz[gr/8] |= (1<<(gr%8));
+		// pun si label-ul
+		if (cRec.Label==1.0)
+			cPoz[columns.nrFeatures/8] |= (1<<(columns.nrFeatures%8));
+		// trecem la urmatorul record
+		cPoz+=Align8Size;
+	}	
+	// all ok , am incarcat datele
+	notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d,RecordsSize=%d",ObjectName,nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
+	conector->FreeMLRecord(cRec);
+	return true;
+
+}
 bool	BitConnector::OnInitConnectionToDataBase()
 {
 	UInt32										tr,gr;
