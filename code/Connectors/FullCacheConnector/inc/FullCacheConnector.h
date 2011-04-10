@@ -17,6 +17,7 @@ private:
 	double		*Labels;
 		
 
+	bool		OnInitConnectionToDataBase();
 public:
 	FullCacheConnector();
 	~FullCacheConnector();
@@ -26,7 +27,6 @@ public:
 	bool		GetRecord(MLRecord &record,UInt32 index );
 	bool		CreateMlRecord( MLRecord &record );
 	bool		SetRecordInterval( UInt32 start, UInt32 end );
-	bool		OnInit();
 	bool		FreeMLRecord( MLRecord &record );
 	bool		Close();
 	UInt32		GetTotalRecordCount();
