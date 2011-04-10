@@ -86,6 +86,8 @@ namespace GML
 
 			virtual bool GetRecordLabel(double &label,UInt32 index)=0;
 
+			virtual bool GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index);
+
 			/*
 			 * Usage: Free a MLRecord structure
 			 * Params:
