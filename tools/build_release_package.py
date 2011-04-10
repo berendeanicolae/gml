@@ -40,7 +40,8 @@ def main():
 	zname = "GML-Package-"+rev+".zip"
 	print ("Building: "+zname) 	
 	z = zipfile.ZipFile(zname,"w",zipfile.ZIP_DEFLATED)
-	base_folder = "../prj/gml/Release"	
+	base_folder = "../prj/gml/Release"
+	ia_base_folder = "../prj/GMLFramework/Release"	
 	#plugin
 	AddFromFolderByExt(z,os.path.join(base_folder,"Algorithms"),["alg"],"Algorithms")
 	AddFromFolderByExt(z,os.path.join(base_folder,"Notifiers"),["ntf"],"Notifiers")
@@ -53,6 +54,13 @@ def main():
 	#SDK
 	AddFileToZip(z,"../lib/gmllib.lib","SDK/gmllib.lib")
 	AddFileToZip(z,"../lib/gmllib.h","SDK/gmllib.h")
+	#graphics
+	#lib & exe
+	AddFileToZip(z,os.path.join(ia_base_folder,"gmllib.dll"),"gmllib.dll")
+	AddFileToZip(z,os.path.join(ia_base_folder,"libmysql.dll"),"libmysql.dll")
+	AddFileToZip(z,os.path.join(ia_base_folder,"gml.exe"),"gml.exe")	
+	
+	
 	z.close()
 	#curat alte chestii
 	try:

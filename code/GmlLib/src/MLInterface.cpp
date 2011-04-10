@@ -329,3 +329,9 @@ bool GML::ML::IConnector::OnInit()
 	// altfel incerc si cu cache-ul
 	return OnInitConnectionToCache();
 }
+bool GML::ML::IConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
+{
+	if (notifier)
+		notifier->Error("[%s] GetRecordHash not implemented !",ObjectName);
+	return false;
+}
