@@ -86,6 +86,8 @@ bool	BitConnector::OnInitConnectionToConnector()
 	}	
 	// all ok , am incarcat datele
 	notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d,RecordsSize=%d",ObjectName,nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
+	if (StoreRecordHash)
+		notifier->Info("[%s] -> Hash Memory Size = %d",ObjectName,nrRecords*sizeof(GML::DB::RecordHash));
 	conector->FreeMLRecord(cRec);
 	return true;
 
@@ -185,6 +187,7 @@ bool	BitConnector::Close()
 bool	BitConnector::Save(char *fileName)
 {
 	GML::Utils::File	f;
+	UInt32				flags;
 
 	if (f.Create(fileName)==false)
 	{
@@ -193,7 +196,12 @@ bool	BitConnector::Save(char *fileName)
 	}
 	while (true)
 	{
-		if (f.Write("BitConnectorCache",17)==false)
+		flags = 0;
+		if (StoreRecordHash)
+			flags |= GML::ML::RECORD_STORE_HASH;
+
+
+		if (f.Write("BitConnectorCacheV2",19)==false)
 			break;
 		if (f.Write(&nrRecords,sizeof(UInt32))==false)
 			break;
@@ -201,8 +209,14 @@ bool	BitConnector::Save(char *fileName)
 			break;
 		if (f.Write(&columns.nrFeatures,sizeof(UInt32))==false)
 			break;
+		if (f.Write(&flags,sizeof(UInt32))==false)
+			break;
+
 		if (f.Write(Data,nrRecords*Align8Size)==false)
 			break;
+		if (StoreRecordHash)
+			if (f.Write(Hashes.GetPtrToObject(0),nrRecords*sizeof(GML::ML::MLRecord))==false)
+				break;
 		f.Close();
 		return true;
 	}
@@ -214,7 +228,8 @@ bool	BitConnector::Save(char *fileName)
 bool	BitConnector::Load(char *fileName)
 {
 	GML::Utils::File	f;
-	char				temp[18];
+	char				temp[20];
+	UInt32				flags;
 
 	notifier->Info("[%s] -> Loading %s",ObjectName,fileName);
 	if (f.OpenRead(fileName)==false)
@@ -224,9 +239,9 @@ bool	BitConnector::Load(char *fileName)
 	}
 	while (true)
 	{
-		if (f.Read(temp,17)==false)
+		if (f.Read(temp,19)==false)
 			break;
-		if (memcmp(temp,"BitConnectorCache",17)!=0)
+		if (memcmp(temp,"BitConnectorCacheV2",19)!=0)
 		{
 			notifier->Error("[%s] -> Invalid file format : %s",ObjectName,fileName);
 			break;
@@ -237,6 +252,8 @@ bool	BitConnector::Load(char *fileName)
 			break;
 		if (f.Read(&columns.nrFeatures,sizeof(UInt32))==false)
 			break;
+		if (f.Read(&flags,sizeof(UInt32))==false)
+			break;
 		if (Data!=NULL)
 			delete Data;
 		if ((Data = new UInt8[nrRecords*Align8Size])==NULL)
@@ -246,6 +263,15 @@ bool	BitConnector::Load(char *fileName)
 		}
 		if (f.Read(Data,nrRecords*Align8Size)==false)
 			break;
+		if ((StoreRecordHash) && (flags & GML::ML::RECORD_STORE_HASH))
+		{
+			if (Hashes.Create(nrRecords)==false)
+				break;
+			if (f.Read(Hashes.GetPtrToObject(0),nrRead * sizeof(GML::ML::MLRecord))==false)
+				break;
+			if (f.Resize(neRecords)==false)
+				break;
+		}
 		f.Close();
 		notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d,RecordsSize=%d",ObjectName,nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
 		return true;

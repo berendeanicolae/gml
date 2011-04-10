@@ -72,7 +72,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		"DataBase=MySQL{Server='127.0.0.1';Database=TestDB;Username=root;Password=a};" //*/
 		/*"Connector=SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=20;}=>BitConnector{Table=RecordTable;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
 		/*"Connector=BitConnector=>SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=20;}=>BitConnector{DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
-		"Connector=BitConnector{Query=SELECT * FROM MAL;CountQuery = SELECT COUNT(*) from MAL;StoreRecordHash=False};" //*/
+		"Connector=BitConnector{StoreRecordHash=True}=>SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=80;}=>BitConnector{Query=SELECT * FROM MAL;CountQuery = SELECT COUNT(*) from MAL;StoreRecordHash=True};" //*/
 		"Notifier=ConsoleNotifier{UseColors=true};"
 		"LearningRate=0.01;"
 		"AdjustWeightMode=UseLearningRate;"

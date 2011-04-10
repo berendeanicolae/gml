@@ -907,6 +907,7 @@ namespace GML
 	
 			//------ Info --------------------------------------------------------------------------
 			bool						Exists();
+			bool						Resize(UInt32 newSize);
 			UInt32						GetCount();
 			UInt32						Len();
 		};		
@@ -987,7 +988,10 @@ namespace GML
 		{
 			return elements.GetSize();
 		}
-
+		template <class TemplateObject> bool  GTFVector<TemplateObject>::Resize(UInt32 newSize)
+		{
+			return elements.Resize(newSize);
+		}
 	}
 }
 
