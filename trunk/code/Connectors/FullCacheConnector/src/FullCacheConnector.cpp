@@ -30,7 +30,7 @@ UInt32 FullCacheConnector::GetFeatureCount()
 {
 	return FeatureCount;		
 }
-bool   FullCacheConnector::GetRecord( MLRecord &record,UInt32 index )
+bool   FullCacheConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMask )
 {
 	if (index >= nrRecords) 
 	{
