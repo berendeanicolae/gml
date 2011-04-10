@@ -5,17 +5,15 @@
 #include "MLRecord.h"
 #include "IDataBase.h"
 
-#define RECORDS_TABLE_NAME			"RecordTable"
-#define FEATURES_COL_PREFIX			"Feat"
-#define HASH_COL_NAME				"Hash"
-#define LABEL_COL_NAME				"Label"
-
-#define MAX_SQL_QUERY_SIZE			2048
 
 namespace GML
 {
 	namespace ML
 	{
+		enum RecordMask
+		{
+			RECORD_STORE_HASH = 1,
+		};
 		struct TableColumnIndexes
 		{
 			UInt32		nrFeatures;
@@ -84,7 +82,7 @@ namespace GML
 			 *	- OUTPUT MLRecord &record: the record to be fetched
 			 *	- INPUT  UInt32 index: the record index
 			 */
-			virtual bool GetRecord(MLRecord &record,UInt32 index)=0;
+			virtual bool GetRecord(MLRecord &record,UInt32 index,UInt32 recordMask=0)=0;
 
 			virtual bool GetRecordLabel(double &label,UInt32 index)=0;
 

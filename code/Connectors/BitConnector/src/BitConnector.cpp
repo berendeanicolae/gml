@@ -33,7 +33,7 @@ bool	BitConnector::AllocMemory()
 }
 bool	BitConnector::OnInitConnectionToConnector()
 {
-	UInt32										tr,gr;	
+	UInt32										tr,gr,recMask;	
 	UInt8										*cPoz;
 	GML::ML::MLRecord							cRec;
 
@@ -54,10 +54,13 @@ bool	BitConnector::OnInitConnectionToConnector()
 
 	// sunt exact la inceput
 	cPoz = Data;
+	recMask = 0;
+	if (StoreRecordHash)
+		recMask |= GML::ML::RecordMask::RECORD_STORE_HASH;
 
 	for (tr=0;tr<nrRecords;tr++)
 	{
-		if (conector->GetRecord(cRec,tr)==false)		
+		if (conector->GetRecord(cRec,tr,recMask)==false)		
 		{
 			notifier->Error("[%s] -> Error reading #%d record from parent connector!",ObjectName,tr);
 			return false;
@@ -69,6 +72,15 @@ bool	BitConnector::OnInitConnectionToConnector()
 		// pun si label-ul
 		if (cRec.Label==1.0)
 			cPoz[columns.nrFeatures/8] |= (1<<(columns.nrFeatures%8));
+		// adaug si Hash-ul
+		if (StoreRecordHash)
+		{
+			if (Hashes.PushByRef(cRec.Hash)==false)
+			{
+				notifier->Error("[%s] -> Unable to save Hash with id %d",ObjectName,tr);
+				return false;
+			}
+		}
 		// trecem la urmatorul record
 		cPoz+=Align8Size;
 	}	
@@ -84,6 +96,7 @@ bool	BitConnector::OnInitConnectionToDataBase()
 	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
 	UInt8										*cPoz;
 	GML::Utils::GString							tempStr;
+	GML::DB::RecordHash							cHash;
 	double										cValue;
 
 	if (database->Connect()==false)
@@ -140,11 +153,24 @@ bool	BitConnector::OnInitConnectionToDataBase()
 			return false;
 		if (cValue==1.0)
 			cPoz[columns.nrFeatures/8] |= (1<<(columns.nrFeatures%8));
+		// adaug si Hash-ul
+		if (StoreRecordHash)
+		{
+			if (UpdateHashValue(VectPtr,columns.indexHash,cHash)==false)
+				return false;
+			if (Hashes.PushByRef(cHash)==false)
+			{
+				notifier->Error("[%s] -> Unable to save Hash with id %d",ObjectName,tr);
+				return false;
+			}
+		}
 		// trecem la urmatorul record
 		cPoz+=Align8Size;
 	}	
 	// all ok , am incarcat datele
 	notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d,RecordsSize=%d",ObjectName,nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
+	if (StoreRecordHash)
+		notifier->Info("[%s] -> Hash Memory Size = %d",ObjectName,nrRecords*sizeof(GML::DB::RecordHash));
 	return true;
 
 }
@@ -244,7 +270,7 @@ bool	BitConnector::CreateMlRecord (GML::ML::MLRecord &record)
 	record.FeatCount = columns.nrFeatures;	
 	return ((record.Features = new double[columns.nrFeatures])!=NULL);
 }
-bool	BitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index)
+bool	BitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask)
 {
 	UInt8	*cPoz = &Data[index*Align8Size];
 	UInt32	tr;
@@ -265,6 +291,11 @@ bool	BitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index)
 	else
 		record.Label = -1.0;
 
+	if (recordMask & GML::ML::RecordMask::RECORD_STORE_HASH)
+	{
+		record.Hash.Copy(*Hashes.GetPtrToObject(index));
+	}
+
 	return true;
 }
 bool	BitConnector::GetRecordLabel(double &Label,UInt32 index)
@@ -280,6 +311,16 @@ bool	BitConnector::GetRecordLabel(double &Label,UInt32 index)
 	else
 		Label = -1.0;
 
+	return true;
+}
+bool	BitConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
+{
+	if (index>=nrRecords)
+		return false;
+	if (StoreRecordHash)
+		recHash.Copy(*Hashes.GetPtrToObject(index));
+	else
+		recHash.Reset();
 	return true;
 }
 bool	BitConnector::FreeMLRecord(GML::ML::MLRecord &record)
