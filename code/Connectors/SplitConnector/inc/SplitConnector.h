@@ -35,6 +35,7 @@ private:
 	bool					CheckProcentInterval(UInt32	pStart,UInt32 pEnd);
 	bool					CreateUniformPercentageIndex(UInt32 pozStart,UInt32 pozEnd,UInt32 negStart,UInt32 negEnd);
 	
+	bool					OnInitConnectionToConnector();
 public:
 	SplitConnector();
 	~SplitConnector();
@@ -45,7 +46,6 @@ public:
 	bool					GetRecord( MLRecord &record,UInt32 index );
 	bool					CreateMlRecord( MLRecord &record );
 	bool					SetRecordInterval( UInt32 start, UInt32 end );
-	bool					OnInit();
 	bool					FreeMLRecord( MLRecord &record );
 	bool					Close();
 	UInt32					GetTotalRecordCount();	
