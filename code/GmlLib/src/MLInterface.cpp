@@ -52,7 +52,8 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 			}
 			columns.indexLabel = tr;
 		}
-		if (GML::Utils::GString::Equals(rec->Name,"Hash",true))
+		if ((GML::Utils::GString::Equals(rec->Name,"Hash",true))  ||
+			(GML::Utils::GString::Equals(rec->Name,"md5f",true)))
 		{
 			// verific ca tipul sa fie unul ok
 			if ((rec->Type!=GML::DB::HASHVAL) && 
@@ -63,7 +64,7 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 			}
 			columns.indexHash = tr;
 		}
-		if (GML::Utils::GString::StartsWith(rec->Name,"Feat_",true))
+		if (GML::Utils::GString::StartsWith(rec->Name,"Ft_",true))
 		{
 			// verific ca tipul sa fie unul ok
 			if ((rec->Type!=GML::DB::DOUBLEVAL) && 
@@ -101,7 +102,7 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 			notifier->Error("[%s] -> Unable to read record #%d",ObjectName,tr);
 			return false;
 		}
-		if (GML::Utils::GString::StartsWith(rec->Name,"Feat_",true))
+		if (GML::Utils::GString::StartsWith(rec->Name,"Ft_",true))
 		{
 			columns.indexFeature[cPoz] = tr;
 			cPoz++;
