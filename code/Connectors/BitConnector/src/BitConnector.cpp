@@ -267,9 +267,9 @@ bool	BitConnector::Load(char *fileName)
 		{
 			if (Hashes.Create(nrRecords)==false)
 				break;
-			if (f.Read(Hashes.GetPtrToObject(0),nrRead * sizeof(GML::ML::MLRecord))==false)
+			if (f.Read(Hashes.GetPtrToObject(0),nrRecords * sizeof(GML::ML::MLRecord))==false)
 				break;
-			if (f.Resize(neRecords)==false)
+			if (Hashes.Resize(nrRecords)==false)
 				break;
 		}
 		f.Close();
