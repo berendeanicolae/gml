@@ -52,22 +52,14 @@ bool   FullCacheConnector::SetRecordInterval( UInt32 start, UInt32 end )
 {
 	return false;
 }
-bool   FullCacheConnector::OnInit()
+bool   FullCacheConnector::OnInitConnectionToDataBase()
 {
 	UInt32										tr,gr;
 	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
 	double										*cPoz;
 	GML::Utils::GString							tempStr;
 	double										cValue;
-
-	// daca iau datele din cache
-	if ((database==NULL) && (conector==NULL))
-		return true;
-	if (database==NULL)
-	{
-		notifier->Error("[%s] works with a filedata or a database",ObjectName);
-		return false;
-	}
+	
 	if (database->Connect()==false)
 	{
 		notifier->Error("[%s] -> Could not connect to database",ObjectName);
