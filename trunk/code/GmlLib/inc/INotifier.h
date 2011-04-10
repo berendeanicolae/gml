@@ -15,6 +15,10 @@ namespace GML
 			enum {
 				NOTIFY_ERROR = 0,
 				NOTIFY_INFO,
+				NOTIFY_GLOBAL_PROC_TEXT,
+				NOTIFY_LOCAL_PROC_TEXT,
+				NOTIFY_GLOBAL_PROC,
+				NOTIFY_LOCAL_PROC
 			};
 			bool			Init(char *attributeString);
 
