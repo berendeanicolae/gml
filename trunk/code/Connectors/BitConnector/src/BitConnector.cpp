@@ -75,6 +75,9 @@ bool	BitConnector::OnInitConnectionToConnector()
 		// adaug si Hash-ul
 		if (StoreRecordHash)
 		{
+			//GML::Utils::GString	tmp;
+			//cRec.Hash.ToString(tmp);
+			//notifier->Info(" %s ",tmp.GetText());
 			if (Hashes.PushByRef(cRec.Hash)==false)
 			{
 				notifier->Error("[%s] -> Unable to save Hash with id %d",ObjectName,tr);
@@ -215,7 +218,7 @@ bool	BitConnector::Save(char *fileName)
 		if (f.Write(Data,nrRecords*Align8Size)==false)
 			break;
 		if (StoreRecordHash)
-			if (f.Write(Hashes.GetPtrToObject(0),nrRecords*sizeof(GML::ML::MLRecord))==false)
+			if (f.Write(Hashes.GetPtrToObject(0),Hashes.Len()*sizeof(GML::DB::RecordHash))==false)
 				break;
 		f.Close();
 		return true;
@@ -267,13 +270,15 @@ bool	BitConnector::Load(char *fileName)
 		{
 			if (Hashes.Create(nrRecords)==false)
 				break;
-			if (f.Read(Hashes.GetPtrToObject(0),nrRecords * sizeof(GML::ML::MLRecord))==false)
+			if (f.Read(Hashes.GetVector(),nrRecords * sizeof(GML::DB::RecordHash))==false)
 				break;
 			if (Hashes.Resize(nrRecords)==false)
 				break;
 		}
 		f.Close();
 		notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d,RecordsSize=%d",ObjectName,nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
+		if (StoreRecordHash)
+			notifier->Info("[%s] -> Hash Memory Size = %d",ObjectName,Hashes.Len()*sizeof(GML::DB::RecordHash));
 		return true;
 	}
 	if (Data)
@@ -283,7 +288,7 @@ bool	BitConnector::Load(char *fileName)
 	Align8Size = 0;
 	columns.nrFeatures = 0;
 
-	notifier->Error("[%s] Error read data from %s",ObjectName,fileName);
+	notifier->Error("[%s] -> Error read data from %s",ObjectName,fileName);
 	f.Close();	
 	return false;
 }
@@ -317,7 +322,7 @@ bool	BitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recor
 	else
 		record.Label = -1.0;
 
-	if (recordMask & GML::ML::RecordMask::RECORD_STORE_HASH)
+	if (recordMask & GML::ML::RECORD_STORE_HASH)
 	{
 		record.Hash.Copy(*Hashes.GetPtrToObject(index));
 	}

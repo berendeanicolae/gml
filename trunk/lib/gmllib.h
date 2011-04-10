@@ -899,6 +899,7 @@ namespace GML
 			//------ Get -----------------------------------------------------------------------------
 			TemplateObject&				operator [] (UInt32 poz);
 			TemplateObject*				GetPtrToObject(UInt32 poz);
+			TemplateObject*				GetVector();						
 			bool						Pop(TemplateObject &Element);
 
 			//------ Delete --------------------------------------------------------------------------
@@ -958,6 +959,10 @@ namespace GML
 		template <class TemplateObject> TemplateObject*	GTFVector<TemplateObject>::GetPtrToObject(UInt32 poz)
 		{
 			return (TemplateObject *)elements.Get(poz);
+		}
+		template <class TemplateObject> TemplateObject*	GTFVector<TemplateObject>::GetVector()
+		{
+			return (TemplateObject *)elements.GetVector();
 		}
 		template <class TemplateObject> bool GTFVector<TemplateObject>::Pop(TemplateObject &Element)
 		{

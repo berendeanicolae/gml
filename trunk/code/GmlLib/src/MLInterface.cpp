@@ -335,7 +335,7 @@ bool GML::ML::IConnector::OnInitConnectionToCache()
 		DEBUGMSG("[%s] Notifier should be set first before executing this function !",ObjectName);
 		return false;
 	}
-	if (DataFileName.Len()!=NULL)
+	if (DataFileName.Len()==0)
 	{
 		notifier->Error("[%s] Property 'DataFileName' was not set !",ObjectName);
 		return false;

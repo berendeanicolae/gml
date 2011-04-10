@@ -62,12 +62,14 @@ bool	MapConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recor
 	UInt32		tr,gr,pCount;
 	double		*p1,*p2,*pMap;
 
-	if (conector->GetRecord(*record.Parent,index)==false)
+	if (conector->GetRecord(*record.Parent,index,recordMask)==false)
 		return false;
 	pCount = conector->GetFeatureCount();
 	record.Weight = record.Parent->Weight;
 	record.Label = record.Parent->Label;
 	record.FeatCount = featuresCount;
+	if (recordMask & GML::ML::RECORD_STORE_HASH)
+		record.Hash.Copy(record.Parent->Hash);
 
 	pMap = record.Features;
 	switch (mapMethod)
