@@ -26,7 +26,7 @@ void GML::ML::IConnector::ClearColumnIndexes()
 }
 bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
-	UInt32				tr,value;
+	UInt32				tr,value,cPoz;
 	GML::DB::DBRecord	*rec;
 
 
@@ -92,13 +92,8 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 		notifier->Error("[%s] -> Unable to alloc %d features indexes ",ObjectName,columns.nrFeatures);
 		return false;
 	}
-	// pun o valoare default
-	for (tr=0;tr<columns.nrFeatures;tr++)
-	{
-		columns.indexFeature[tr] = -1;
-	}
 	// setez si indexii
-	for (tr=0;tr<VectPtr.Len();tr++)
+	for (cPoz=0,tr=0;tr<VectPtr.Len();tr++)
 	{
 		if ((rec=VectPtr.GetPtrToObject(tr))==NULL)
 		{
@@ -107,26 +102,8 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 		}
 		if (GML::Utils::GString::StartsWith(rec->Name,"Feat_",true))
 		{
-			if (GML::Utils::GString::ConvertToUInt32(&rec->Name[5],&value,10)==false)
-			{
-				notifier->Error("[%s] -> Invalid numeric format on column: %s",ObjectName,rec->Name);
-				return false;
-			}
-			if (value>=columns.nrFeatures)
-			{
-				notifier->Error("[%s] -> Out of the bounds feature ([0..%d)) -> %s",ObjectName,columns.nrFeatures,rec->Name);
-				return false;
-			}
-			columns.indexFeature[value] = tr;
-		}
-	}
-	// verific sa fi fost setati toti featureii
-	for (tr=0;tr<columns.nrFeatures;tr++)
-	{
-		if (columns.indexFeature[tr]==-1)
-		{
-			notifier->Error("[%s] -> Feature #d is not present !",ObjectName,tr);
-			return false;
+			columns.indexFeature[cPoz] = tr;
+			cPoz++;
 		}
 	}
 
