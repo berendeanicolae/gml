@@ -57,7 +57,7 @@ bool	MapConnector::CreateMlRecord (GML::ML::MLRecord &record)
 	record.FeatCount = featuresCount;
 	return ((record.Features = new double[featuresCount])!=NULL);
 }
-bool	MapConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index)
+bool	MapConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask)
 {
 	UInt32		tr,gr,pCount;
 	double		*p1,*p2,*pMap;

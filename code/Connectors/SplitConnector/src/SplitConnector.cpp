@@ -200,7 +200,7 @@ UInt32 SplitConnector::GetFeatureCount()
 {
 	return FeatureCount;
 }
-bool   SplitConnector::GetRecord( MLRecord &record,UInt32 index ) 
+bool   SplitConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMask ) 
 {
 	if (index >= RecordCount)
 	{
