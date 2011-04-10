@@ -16,10 +16,11 @@ class MapConnector: public GML::ML::IConnector
 	UInt32	mapMethod;
 	UInt32	featuresCount;	
 
+	bool		OnInitConnectionToConnector();
+
 public:
 	MapConnector();
 
-	bool		OnInit();
 	bool		Close();
 	bool		SetRecordInterval(UInt32 start, UInt32 end);
 	bool		CreateMlRecord (GML::ML::MLRecord &record);

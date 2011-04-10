@@ -220,14 +220,8 @@ bool   SplitConnector::SetRecordInterval( UInt32 start, UInt32 end )
 {
 	return false;
 }
-bool   SplitConnector::OnInit() 
+bool   SplitConnector::OnInitConnectionToConnector() 
 {
-	if (this->conector == NULL)
-	{
-		notifier->Error("[%s] -> SplitConnector is an intermediate connector, please provide a lower level connector",ObjectName);
-		return false;
-	}
-
 	notifier->Info("[%s] -> Loading data (Start = %d,End = %d)",ObjectName,attrStart,attrEnd);
 
 	switch (SplitMode)

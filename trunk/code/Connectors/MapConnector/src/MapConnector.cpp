@@ -11,14 +11,9 @@ MapConnector::MapConnector()
 														);
 }
 
-bool	MapConnector::OnInit()
+bool	MapConnector::OnInitConnectionToConnector()
 {
 	featuresCount = 0;
-	if (conector==NULL)
-	{
-		notifier->Error("[%s] -> Link connector not set",ObjectName);
-		return false;
-	}
 	// calculez cate feature-uri o sa am in functie de metoda
 	switch (mapMethod)
 	{
