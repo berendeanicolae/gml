@@ -208,7 +208,7 @@ bool   SplitConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMas
 		return false;
 	}
 
-	return conector->GetRecord(record,(UInt32)Indexes.Get(index));
+	return conector->GetRecord(record,(UInt32)Indexes.Get(index),recordMask);
 }
 bool   SplitConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 {
