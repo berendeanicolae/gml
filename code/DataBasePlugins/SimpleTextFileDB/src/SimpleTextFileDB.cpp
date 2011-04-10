@@ -213,7 +213,8 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &V
 	// adaug si un hash
 	rec.Name = "Hash";
 	rec.Type = GML::DB::HASHVAL;
-	memset(rec.Hash.Value,0,sizeof(rec.Hash));
+	rec.Hash.Reset();
+	
 	if (VectPtr.PushByRef(rec)==false)
 	{
 		notifier->Error("Unable to add HASH to vector !");

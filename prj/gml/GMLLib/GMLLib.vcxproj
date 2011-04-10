@@ -207,6 +207,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClCompile Include="..\..\..\Code\GmlLib\src\AlgorithmResult.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\AttributeList.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\Builder.cpp" />
+    <ClCompile Include="..\..\..\code\GmlLib\src\DBRecord.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\dllmain.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\File.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\GMLObject.cpp" />
