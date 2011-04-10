@@ -28,6 +28,7 @@ bool GML::DB::RecordHash::CreateFromText(char *text)
 			p++;
 		}
 		poz++;
+		text++;
 	}
 	return (bool)(((*text)==0) && (poz==32));
 }
