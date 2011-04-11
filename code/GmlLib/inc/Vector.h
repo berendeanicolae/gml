@@ -35,6 +35,7 @@ namespace GML
 
 			bool			Push(void *Element);
 			bool			Insert(void *Element,unsigned int index);
+			bool			Insert(void *Element,_BinarySearchCompFunction cmpFunc,bool ascendent);
 			bool			CopyElement(unsigned int index,void *addr);
 			bool			Delete(unsigned int index);
 			bool			DeleteAll();
