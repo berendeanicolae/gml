@@ -323,7 +323,7 @@ bool BayesNaiv::PerformTrain()
 	a.AddAttribute("pFeatCondClean",&pFeatCondClean[0],GML::Utils::AttributeList::DOUBLE,con->GetFeatureCount(),"Conditional probabilities for clean files");
 	a.AddAttribute("pFeatCondInf",&pFeatCondInf[0],GML::Utils::AttributeList::DOUBLE,con->GetFeatureCount(),"Conditional probabilities for infected files");
 
-	a.Save("F:\\GMLib\\BayesNaivDB\\prob.txt");	
+	a.Save(pathToProbsFile);	
 
 	return true;
 }
