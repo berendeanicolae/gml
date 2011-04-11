@@ -151,4 +151,5 @@ UInt32	MapConnector::GetRecordCount()
 UInt32	MapConnector::GetTotalRecordCount()
 {
 	return conector->GetTotalRecordCount();
+
 }
