@@ -107,6 +107,12 @@ bool GML::Utils::Vector::Insert(void *Element,unsigned int index)
 	NrElemente++;
 	return true;
 }
+bool GML::Utils::Vector::Insert(void *Element,_BinarySearchCompFunction cmpFunc,bool ascendent)
+{
+	unsigned int index = 0;
+	// gasesti indexul in functie de cmpFunc si ascendent
+	return Insert(Element,index);
+}
 bool GML::Utils::Vector::CopyElement(unsigned int index,void *addr)
 {
 	if ((index>NrElemente) || (addr==NULL)) 
