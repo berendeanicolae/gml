@@ -24,6 +24,7 @@ public:
 	bool		FreeMLRecord(GML::ML::MLRecord &record);
 	bool		GetRecordLabel(double &label,UInt32 index);
 	bool		GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index);
+	bool		GetFeatureName(GML::Utils::GString &str,UInt32 index);
 	UInt32		GetFeatureCount();
 	UInt32		GetRecordCount();
 	UInt32		GetTotalRecordCount();
