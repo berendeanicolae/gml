@@ -14,6 +14,33 @@ int  _Do_BinarySearch(unsigned char *Data,int ElementSize,void *Element,_BinaryS
 	} while ((lo<=hi) && (hi>=0));
 	return -1;
 }
+int  _Get_InsertSort_Locus(unsigned char *Data,int ElementSize,void *Element,_BinarySearchCompFunction compFunction,int lo,int hi,bool ascending)
+{
+	int mij;
+	int res;
+	if(ascending == false){//redundant code for fater execution
+		do
+		{
+			mij=(lo+hi)/2;
+			if ((res=-compFunction(Element,&Data[mij*ElementSize]))==0) return mij;
+			if (res<0) hi=mij-1;
+			if (res>0) lo=mij+1;
+		} while ((lo<=hi) && (hi>=0));
+	}
+	else{
+		do
+		{
+			mij=(lo+hi)/2;
+			if ((res=compFunction(Element,&Data[mij*ElementSize]))==0) return mij;
+			if (res<0) hi=mij-1;
+			if (res>0) lo=mij+1;
+		} while ((lo<=hi) && (hi>=0));
+	}
+	
+
+	if( res<0 ) return lo;
+	else return hi+1;
+}
 
 //===================================================================================================================
 GML::Utils::Vector::Vector(void)
@@ -107,11 +134,15 @@ bool GML::Utils::Vector::Insert(void *Element,unsigned int index)
 	NrElemente++;
 	return true;
 }
-bool GML::Utils::Vector::Insert(void *Element,_BinarySearchCompFunction cmpFunc,bool ascendent)
+bool GML::Utils::Vector::Insert(void *Element,_BinarySearchCompFunction compFunc,bool ascendent)
 {
 	unsigned int index = 0;
+
 	// gasesti indexul in functie de cmpFunc si ascendent
-	return Insert(Element,index);
+	if(NrElemente == 0){
+		return Insert(Element,0);
+	}
+	return Insert(Element,_Get_InsertSort_Locus(Data,ElementSize,Element,compFunc,0,NrElemente-1,ascendent));
 }
 bool GML::Utils::Vector::CopyElement(unsigned int index,void *addr)
 {
