@@ -375,3 +375,12 @@ UInt32	BitConnector::GetTotalRecordCount()
 {
 	return nrRecords;
 }
+bool	BitConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
+{
+	if (database!=NULL)
+		return IConnector::GetFeatureName(str,index);
+	if (conector!=NULL)
+		return conector->GetFeatureName(str,index);
+	notifier->Error("[%s] -> Unable to read feature name for cache data",ObjectName);
+	return false;
+}

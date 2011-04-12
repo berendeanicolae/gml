@@ -220,6 +220,10 @@ bool   SplitConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 
 	return conector->GetRecordHash(recHash,(UInt32)Indexes.Get(index));
 }
+bool   SplitConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
+{
+	return conector->GetFeatureName(str,index);
+}
 bool   SplitConnector::CreateMlRecord( MLRecord &record )
 {
 	if (this->conector)

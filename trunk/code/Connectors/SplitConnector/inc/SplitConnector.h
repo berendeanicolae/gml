@@ -51,5 +51,6 @@ public:
 	bool					Close();
 	UInt32					GetTotalRecordCount();	
 	bool					OnInitPercentage();
+	bool					GetFeatureName(GML::Utils::GString &str,UInt32 index);
 };
 
