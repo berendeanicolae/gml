@@ -4,6 +4,8 @@
 #include "Compat.h"
 #include "Vector.h"
 
+typedef int					(*_BinarySearchCompFunction)(void *element1,void *element2);
+
 namespace GML
 {
 	namespace Utils
@@ -22,10 +24,12 @@ namespace GML
 			bool						Push(TemplateObject Element);
 			bool						PushFront(TemplateObject Element);
 			bool						Insert(TemplateObject Element,UInt32 index);
+			bool						Insert(TemplateObject Element,int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2),bool ascendent=true);
 
 			bool						PushByRef(TemplateObject &Element);
 			bool						PushFrontByRef(TemplateObject &Element);
 			bool						InsertByRef(TemplateObject &Element,UInt32 index);
+			bool						InsertByRef(TemplateObject &Element,int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2),bool ascendent=true);
 
 			//------ Get -----------------------------------------------------------------------------
 			TemplateObject&				operator [] (UInt32 poz);
@@ -79,9 +83,17 @@ namespace GML
 		{
 			return elements.Insert(&Element,pos);
 		}
+		template <class TemplateObject> bool GTFVector<TemplateObject>::Insert(TemplateObject Element,int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2),bool ascendent)
+		{
+			return elements.Insert(&Element,(_BinarySearchCompFunction)_CmpFunc,ascendent);
+		}
 		template <class TemplateObject> bool GTFVector<TemplateObject>::InsertByRef(TemplateObject &Element,UInt32 pos)
 		{
 			return elements.Insert(&Element,pos);
+		}
+		template <class TemplateObject> bool GTFVector<TemplateObject>::InsertByRef(TemplateObject &Element,int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2),bool ascendent)
+		{
+			return elements.Insert(&Element,(_BinarySearchCompFunction)_CmpFunc,ascendent);
 		}
 		template <class TemplateObject> TemplateObject& GTFVector<TemplateObject>::operator [] (UInt32 poz)
 		{
