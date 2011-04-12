@@ -327,14 +327,15 @@ bool FeaturesStatistics::CreateHeaders(GML::Utils::GString &str)
 		{
 			if (tmp.Set("FeatName")==false)
 				return false;
+			while (tmp.Len()<featureColumnWidth)
+				if (tmp.AddChar(' ')==false)
+					return false;
+			tmp.Truncate(featureColumnWidth);
 		} else {
-			if (tmp.Set("ID")==false)
+			if (tmp.Set("ID   ")==false)
 				return false;
 		}
-		while (tmp.Len()<featureColumnWidth)
-			if (tmp.AddChar(' ')==false)
-				return false;
-		tmp.Truncate(featureColumnWidth);
+
 		if (str.SetFormated("%s|Pozitive|Negative|",tmp.GetText())==false)
 			return false;
 	}
