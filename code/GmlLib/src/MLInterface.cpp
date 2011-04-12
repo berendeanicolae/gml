@@ -8,6 +8,7 @@ GML::ML::IConnector::IConnector()
 	conector = NULL;	
 	ObjectName = "IConnector";
 	columns.indexFeature = NULL;
+	columns.featName = NULL;
 	ClearColumnIndexes();
 	
 	LinkPropertyToString("Query",Query,"SELECT * FROM RecordTable","The query for the select statement");
@@ -20,7 +21,10 @@ void GML::ML::IConnector::ClearColumnIndexes()
 {
 	if (columns.indexFeature!=NULL)
 		delete columns.indexFeature;
+	if (columns.featName!=NULL)
+		delete columns.featName;
 	columns.indexFeature = NULL;
+	columns.featName = NULL;
 	columns.nrFeatures = 0;
 	columns.indexLabel = -1;
 	columns.indexHash = -1;
@@ -94,6 +98,11 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 		notifier->Error("[%s] -> Unable to alloc %d features indexes ",ObjectName,columns.nrFeatures);
 		return false;
 	}
+	if ((columns.featName = new GML::Utils::GString[columns.nrFeatures])==NULL)
+	{
+		notifier->Error("[%s] -> Unable to alloc %d features names",ObjectName,columns.nrFeatures);
+		return false;
+	}
 	// setez si indexii
 	for (cPoz=0,tr=0;tr<VectPtr.Len();tr++)
 	{
@@ -105,7 +114,12 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 		if (GML::Utils::GString::StartsWith(rec->Name,"Ft_",true))
 		{
 			columns.indexFeature[cPoz] = tr;
-			cPoz++;
+			if (columns.featName[cPoz].Set(rec->Name)==false)
+			{
+				notifier->Error("[%s] -> Unable to save name for feature #%d (%s)",ObjectName,tr,rec->Name);
+				return false;
+			}
+			cPoz++;			
 		}
 	}
 
@@ -363,4 +377,25 @@ bool GML::ML::IConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 inde
 	if (notifier)
 		notifier->Error("[%s] GetRecordHash not implemented !",ObjectName);
 	return false;
+}
+bool GML::ML::IConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
+{
+	char *name = "";
+	if (index>=GetFeatureCount())
+	{
+		notifier->Error("[%s] -> Invalid index (%d) for feature name. Should be within [0..%d]",ObjectName,index,GetFeatureCount()-1);
+		return false;
+	}
+	if (columns.featName!=NULL)
+	{
+		name = columns.featName[index].GetText();
+		if (name==NULL)
+			name = "";
+	}
+	if (str.Set(name)==false)
+	{
+		notifier->Error("[%s] -> Unable to set feature name : %s",ObjectName,name);
+		return false;
+	}
+	return true;
 }
