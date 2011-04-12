@@ -129,6 +129,11 @@ bool	MapConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 
 	return conector->GetRecordHash(recHash,index);
 }
+bool	MapConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
+{
+	notifier->Error("[%s] -> GetFeatureName is not suported !",ObjectName);
+	return false;
+}
 bool	MapConnector::FreeMLRecord(GML::ML::MLRecord &record)
 {
 	if (record.Features!=NULL)
