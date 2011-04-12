@@ -147,8 +147,10 @@ FeaturesStatistics::FeaturesStatistics()
 	LinkPropertyToString("Notifier"					,Notifier				,"");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1);
 	LinkPropertyToUInt32("ColumnWidth"				,columnWidth			,12,"Sets the column width (0 for no aligniation)");
+	LinkPropertyToUInt32("FeatureColumnWidth"		,featureColumnWidth		,20,"Sets the feature name column width (0 for no aligniation)");
 	LinkPropertyToString("ResultFile"				,ResultFile				,"","Name of the file to save the result table or none if no save is requared");
 	LinkPropertyToBool  ("NotifyResult"				,notifyResults			,true);
+	LinkPropertyToBool  ("ShowFeatureName"			,showFeatureName		,true,"Shows feature name in the result list");
 	LinkPropertyToDouble("MultiplyFactor"			,multiplyFactor			,1.0);
 	
 
@@ -310,12 +312,30 @@ bool FeaturesStatistics::CreateHeaders(GML::Utils::GString &str)
 	UInt32				tr;
 	GML::Utils::GString	tmp;
 
-	if (columnWidth==0)
+	if (featureColumnWidth==0)
 	{
-		if (str.Set("#|Pozitive|Negative|")==false)
-			return false;
+		if (showFeatureName)
+		{
+			if (str.Set("FeatName|Pozitive|Negative|")==false)
+				return false;
+		} else {
+			if (str.Set("#|Pozitive|Negative|")==false)
+				return false;
+		}
 	} else {
-		if (str.Set("    #|Pozitive|Negative|")==false)
+		if (showFeatureName)
+		{
+			if (tmp.Set("FeatName")==false)
+				return false;
+		} else {
+			if (tmp.Set("ID")==false)
+				return false;
+		}
+		while (tmp.Len()<featureColumnWidth)
+			if (tmp.AddChar(' ')==false)
+				return false;
+		tmp.Truncate(featureColumnWidth);
+		if (str.SetFormated("%s|Pozitive|Negative|",tmp.GetText())==false)
 			return false;
 	}
 
@@ -342,12 +362,32 @@ bool FeaturesStatistics::CreateRecordInfo(FeaturesInformations &finf,GML::Utils:
 	UInt32				tr;
 	GML::Utils::GString	tmp;
 
-	if (columnWidth==0)
+	if (featureColumnWidth==0)
 	{
-		if (str.SetFormated("%d|%d|%d|",finf.Index,(UInt32)finf.countPozitive,(UInt32)finf.countNegative)==false)
+		if (showFeatureName)
+		{
+			if (con->GetFeatureName(tmp,finf.Index)==false)
+				return false;
+		} else {
+			if (tmp.SetFormated("%d",finf.Index)==false)
+				return false;
+		}
+		if (str.SetFormated("%s|%d|%d|",tmp.GetText(),(UInt32)finf.countPozitive,(UInt32)finf.countNegative)==false)
 			return false;
 	} else {
-		if (str.SetFormated("%5d|%8d|%8d|",finf.Index,(UInt32)finf.countPozitive,(UInt32)finf.countNegative)==false)
+		if (showFeatureName)
+		{
+			if (con->GetFeatureName(tmp,finf.Index)==false)
+				return false;
+			while (tmp.Len()<featureColumnWidth)
+				if (tmp.AddChar(' ')==false)
+					return false;
+			tmp.Truncate(featureColumnWidth);
+		} else {
+			if (tmp.SetFormated("%5d",finf.Index)==false)
+				return false;
+		}
+		if (str.SetFormated("%s|%8d|%8d|",tmp.GetText(),(UInt32)finf.countPozitive,(UInt32)finf.countNegative)==false)
 			return false;
 	}
 	for (tr=0;tr<StatsData.Len();tr++)

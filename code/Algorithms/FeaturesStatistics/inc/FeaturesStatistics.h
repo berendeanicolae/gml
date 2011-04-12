@@ -63,10 +63,12 @@ private:
 
 	UInt32							threadsCount;
 	UInt32							columnWidth;
+	UInt32							featureColumnWidth;
 	UInt32							sortBy;
 	UInt32							saveFeatureWeightFile;
 	UInt32							sortDirection;
 	bool							notifyResults;
+	bool							showFeatureName;
 	double							multiplyFactor;
 
 	bool							AddNewStatFunction(char *name,double (*_fnCompute) ( FeaturesInformations *info));
