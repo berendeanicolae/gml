@@ -74,7 +74,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		/*"Connector=BitConnector=>SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=20;}=>BitConnector{DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
 		"Connector=BitConnector{StoreRecordHash=False}=>SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=100;NegativeStart=0;NegativeEnd=100;}=>BitConnector{Query=SELECT * FROM MAL;CountQuery = SELECT COUNT(*) from MAL;StoreRecordHash=True};" //*/
 		/*"Connector=BitConnector{StoreRecordHash=True;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache.1};" //*/
-		"Notifier=ConsoleNotifier{UseColors=True;FileName=E:\\lucru\\GML\\gml\\prj\\gml\\Release\\a.t;FlushAfterEachWrite=False;TimeFormat=DateTime;};"
+		"Notifier=FileNotifier{UseColors=True;FileName=E:\\lucru\\GML\\gml\\prj\\gml\\Release\\a.t;FlushAfterEachWrite=False;TimeFormat=DateTime;};"
 		"LearningRate=0.01;"
 		"AdjustWeightMode=UseLearningRate;"
 		"InitialWeight=zeros;"
