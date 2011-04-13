@@ -59,8 +59,8 @@ def main():
 	AddFileToZip(z,os.path.join(ia_base_folder,"gmllib.dll"),"gmllib.dll")
 	AddFileToZip(z,os.path.join(ia_base_folder,"libmysql.dll"),"libmysql.dll")
 	AddFileToZip(z,os.path.join(ia_base_folder,"gml.exe"),"gml.exe")	
-	
-	
+	#gmlpy
+	AddFileToZip(z,"gmlpy.py","gmlpy.py")		
 	z.close()
 	#curat alte chestii
 	try:
