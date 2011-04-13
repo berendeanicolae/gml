@@ -24,6 +24,7 @@ bool FileNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 	char							*text = (char *)Data;
 	GML::Utils::AlgorithmResult		*res;
 	SYSTEMTIME						tm;
+	double							*p = (double *)Data;
 
 	switch (showNotificationTime)
 	{
@@ -46,6 +47,23 @@ bool FileNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 			break;
 		case GML::Utils::INotifier::NOTIFY_INFO:
 			tmp.AddFormated("[INFOS] %s\n",text);
+			break;
+		case GML::Utils::INotifier::NOTIFY_START_PROCENT:
+			tmp.AddFormated("[PROC ] %s [",text);
+			lastProcValue = 0;
+			break;
+		case GML::Utils::INotifier::NOTIFY_END_PROCENT:
+			tmp.Set("] \n");
+			break;
+		case GML::Utils::INotifier::NOTIFY_PROCENT:
+			if ((*p)>=lastProcValue)
+			{
+				tmp.Set(".");
+				lastProcValue+=0.1;
+			} else {
+				// nu e nevoie sa mai scriu ceva
+				return true;
+			}
 			break;
 		case 100:
 			res = (GML::Utils::AlgorithmResult *)Data;	

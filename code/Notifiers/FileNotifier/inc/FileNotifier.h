@@ -15,7 +15,7 @@ class FileNotifier: public GML::Utils::INotifier
 	GML::Utils::GString		fileName;
 	bool					flushAfterEachWrite;
 	UInt32					showNotificationTime;
-
+	double					lastProcValue;
 	GML::Utils::File		file;
 public:
 	FileNotifier();
