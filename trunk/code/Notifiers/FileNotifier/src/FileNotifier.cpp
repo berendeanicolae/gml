@@ -1,62 +1,44 @@
 #include "stdio.h"
-#include "ConsoleNotifier.h"
+#include "FileNotifier.h"
 
-ConsoleNotifier::ConsoleNotifier()
+FileNotifier::FileNotifier()
 {
-	ObjectName = "ConsoleNotifier";
-	LinkPropertyToBool("UseColors",useColors,false,"Specifies if colors should be used when showing mesages");
+	ObjectName = "FileNotifier";
+	LinkPropertyToBool  ("FlushAfterEachWrite",flushAfterEachWrite,false,"Is set , the data will be flush to file after each notification message. Notifications will be slower !");
+	LinkPropertyToString("FileName",fileName,"","Name of the file where the notifications will be written ");
 }
-void ConsoleNotifier::SetColor(unsigned char Fore, unsigned char Back)
-{
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),(Fore & 15)+(Back & 15)*16);
-}
-bool ConsoleNotifier::OnInit()
+
+bool FileNotifier::OnInit()
 {	
-	tempStr.Create();
+	return file.Create(fileName.GetText(),true);
+}
+bool FileNotifier::Uninit()
+{
+	file.Close();
 	return true;
 }
-bool ConsoleNotifier::Uninit()
+bool FileNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 {
-	return true;
-}
-bool ConsoleNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
-{
-	char *text = (char *)Data;
-	SetColor(7,0);
-	printf("%4d => ",messageID);
-	// pentru AlgResult
-	if (messageID==100)
+	GML::Utils::GString				tmp,tempStr;
+	char							*text = (char *)Data;
+	GML::Utils::AlgorithmResult		*res;
+	switch (messageID)
 	{
-		if (useColors)
-			SetColor(14,0);
-		GML::Utils::AlgorithmResult	*res = (GML::Utils::AlgorithmResult *)Data;	
-		printf("%4d|TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|%s\n",(res->Iteration+1),(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc,res->time.GetPeriodAsString(tempStr));
-		SetColor(7,0);
-		return true;
-	}
-	if (useColors)
-	{
-		switch (messageID)
-		{
-			case GML::Utils::INotifier::NOTIFY_ERROR:
-				SetColor(12,0);
-				break;
-			case GML::Utils::INotifier::NOTIFY_INFO:
-				SetColor(11,0);
-				break;
-		};
-	}
-	if ((Data!=NULL) && (DataSize>0))
-	{
-		for (UInt32 tr =0;tr<DataSize;tr++)
-		{
-			if ((text[tr]>=' ') && (text[tr]<=128))
-				printf("%c",text[tr]);
-			else
-				printf("{\\x%02X}",(unsigned char)text[tr]);
-		}
-	}
-	printf("\n");
-	SetColor(7,0);
+		case GML::Utils::INotifier::NOTIFY_ERROR:
+			tmp.SetFormated("[ERROR] %s\n",text);
+			break;
+		case GML::Utils::INotifier::NOTIFY_INFO:
+			tmp.SetFormated("[INFOS] %s\n",text);
+			break;
+		case 100:
+			res = (GML::Utils::AlgorithmResult *)Data;	
+			tmp.SetFormated("[ RES ] %4d|TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|%s\n",(res->Iteration+1),(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc,res->time.GetPeriodAsString(tempStr));
+			break;
+	};
+	if (file.Write(tmp.GetText(),tmp.Len())==false)
+		return false;
+	if (flushAfterEachWrite)
+		file.Flush();
+
 	return true;
 }

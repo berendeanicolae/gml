@@ -137,6 +137,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Distances", "Algorithms\Distances\Distances.vcxproj", "{E9C9BF92-1ACC-4F4C-A2C1-53DB44281245}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileNotifier", "Notifiers\FileNotifier\FileNotifier.vcxproj", "{F7B17EB0-FECA-49E6-A90C-AFC057FE5E8E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
