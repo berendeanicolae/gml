@@ -11,7 +11,51 @@ def __GetVarType(var):
 def __GenerateRandomFileName():
 	name = "GML_TEMPLATE_"+str(hex(os.getpid()))+"_"+str(hex(int(time.time())))+"_"+str(hex(int(random.random()*100000000)))+".ini"
 	return name.replace("0x","")
-	
+
+
+def __DictToString(dictionar):
+	s = ""
+	obj_name = ""
+	for k in dictionar:
+		if __GetVarType(k) != 'str':
+			print("[Error] Key should be a string value "+str(k))
+			return None
+		if k.lower()=="type":
+			obj_name=str(dictionar[k])
+			continue
+		s += (k+"=")
+		v = dictionar[k]
+		tip = __GetVarType(v)
+		if tip == 'str':
+			s+=(v+";")
+		elif tip == 'int':
+			s+=(str(v)+";")
+		elif tip == 'float':
+			s+=(str(v)+";")
+		elif tip == 'bool':
+			s+=(str(v)+";")
+		else:
+			print("[Error] Unknwon type for "+k+" => "+tip)
+			return None
+	if len(obj_name)==0:
+		print("[Error] Missing 'type' property for "+str(dictionar))
+		return NULL
+	return obj_name+"{"+s+"}"
+def __ListToString(lista):
+	s = ""
+	for item in lista:
+		if __GetVarType(item) != 'dict':
+			print("[Error] List should contains only dictionaries "+str(lista))
+			return None
+		r = __DictToString(item)
+		if r==None:
+			return None
+		s += r+"=>"
+	if len(s)<2:
+		print("[Error] Invalid list: "+str(lista)+" => "+s)
+		return None
+	s = s[:-2]
+	return s	
 def __CreateTemplateFile(dictionar,fname):
 	s = ""
 	alg = False
@@ -35,6 +79,16 @@ def __CreateTemplateFile(dictionar,fname):
 			s+=(str(v)+"\n")
 		elif tip == 'bool':
 			s+=(str(v)+"\n")
+		elif tip == 'dict':
+			r = __DictToString(v)
+			if r==None:
+				return False
+			s+="\""+r+"\"\n"
+		elif tip == 'list':
+			r = __ListToString(v)
+			if r==None:
+				return False
+			s+="\""+r+"\"\n"
 		else:
 			print("[Error] Unknwon type for "+k+" => "+tip)
 			return False
