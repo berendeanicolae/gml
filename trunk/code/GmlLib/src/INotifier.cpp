@@ -110,6 +110,53 @@ bool GML::Utils::INotifier::Info(char *format,...)
 		return false;
 	}
 }
+bool GML::Utils::INotifier::StartProcent(char *format,...)
+{
+    va_list		args;
+    int			len;
+	char		stack[TEMP_STACK_BUFFER_SIZE];
+	char		*temp;
+	bool		result;
+
+    va_start( args, format );
+	if ((len = _vscprintf( format, args ))<0)
+		return false;
+	
+	if (len+1<TEMP_STACK_BUFFER_SIZE)
+	{
+		if ((len = vsprintf_s( stack, len+1, format, args ))<0)
+			return false;
+		stack[len]=0;
+		return Notify(GML::Utils::INotifier::NOTIFY_START_PROCENT,stack,(unsigned int)len);
+	} else {
+		if ((temp = new char[len+1])==NULL)
+			return false;
+
+		while (true)
+		{
+			if ((len = vsprintf_s( temp, len+1, format, args ))<0)
+				break;
+			temp[len]=0;
+			result = Notify(GML::Utils::INotifier::NOTIFY_START_PROCENT,stack,(unsigned int)len);
+			delete temp;
+			return result;
+		}
+		delete temp;
+		return false;
+	}
+}
+bool GML::Utils::INotifier::EndProcent()
+{
+	return Notify(NOTIFY_END_PROCENT,"",0);
+}
+bool GML::Utils::INotifier::SetProcent(double procValue)
+{
+	return Notify(NOTIFY_PROCENT,&procValue,sizeof(double));
+}
+bool GML::Utils::INotifier::SetProcent(double procValue,double maxValue)
+{
+	return SetProcent(procValue/maxValue);
+}
 bool GML::Utils::INotifier::Init(char *attributeString)
 {
 	if ((attributeString!=NULL) && (attributeString[0]!=0))

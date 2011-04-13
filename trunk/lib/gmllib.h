@@ -1488,10 +1488,9 @@ namespace GML
 			enum {
 				NOTIFY_ERROR = 0,
 				NOTIFY_INFO,
-				NOTIFY_GLOBAL_PROC_TEXT,
-				NOTIFY_LOCAL_PROC_TEXT,
-				NOTIFY_GLOBAL_PROC,
-				NOTIFY_LOCAL_PROC
+				NOTIFY_START_PROCENT,
+				NOTIFY_END_PROCENT,
+				NOTIFY_PROCENT,				
 			};
 			bool			Init(char *attributeString);
 
@@ -1502,6 +1501,10 @@ namespace GML
 			bool			NotifyString(UInt32 messageID,char* format,...);
 			bool			Info(char *format,...);
 			bool			Error(char *format,...);
+			bool			StartProcent(char *format,...);
+			bool			SetProcent(double procValue);
+			bool			SetProcent(double procValue,double maxValue);
+			bool			EndProcent();
 		};
 	}
 }
