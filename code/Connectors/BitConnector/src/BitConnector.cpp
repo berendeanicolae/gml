@@ -58,8 +58,13 @@ bool	BitConnector::OnInitConnectionToConnector()
 	if (StoreRecordHash)
 		recMask |= GML::ML::RecordMask::RECORD_STORE_HASH;
 
+	notifier->StartProcent("[%s] -> Loading Data : ",ObjectName);
+
 	for (tr=0;tr<nrRecords;tr++)
 	{
+		if ((tr % 1000)==0)
+			notifier->SetProcent((double)tr,(double)nrRecords);
+		
 		if (conector->GetRecord(cRec,tr,recMask)==false)		
 		{
 			notifier->Error("[%s] -> Error reading #%d record from parent connector!",ObjectName,tr);
@@ -87,6 +92,7 @@ bool	BitConnector::OnInitConnectionToConnector()
 		// trecem la urmatorul record
 		cPoz+=Align8Size;
 	}	
+	notifier->EndProcent();
 	// all ok , am incarcat datele
 	notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d,RecordsSize=%d",ObjectName,nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
 	if (StoreRecordHash)
@@ -124,6 +130,8 @@ bool	BitConnector::OnInitConnectionToDataBase()
 	// sunt exact la inceput
 	cPoz = Data;
 
+	notifier->StartProcent("[%s] -> Loading DataBase : ",ObjectName);
+
 	for (tr=0;tr<nrRecords;tr++)
 	{
 		// cache
@@ -139,6 +147,7 @@ bool	BitConnector::OnInitConnectionToDataBase()
 				notifier->Error("[%s] -> Unable to Execute query : %s !",ObjectName,tempStr.GetText());
 				return false;
 			}
+			notifier->SetProcent((double)tr,(double)nrRecords);
 		}
 		if (database->FetchNextRow(VectPtr)==false)
 		{
@@ -172,6 +181,7 @@ bool	BitConnector::OnInitConnectionToDataBase()
 		// trecem la urmatorul record
 		cPoz+=Align8Size;
 	}	
+	notifier->EndProcent();
 	// all ok , am incarcat datele
 	notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d,RecordsSize=%d",ObjectName,nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
 	if (StoreRecordHash)
