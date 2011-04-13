@@ -4,6 +4,7 @@ list_headers = [
 	"GTVector.h",
 	"Vector.h",
 	"Matrix.h",
+	"FixMatrix.h",
 	"GTFVector.h",
 	"Indexes.h",	
 	"md5.h",
