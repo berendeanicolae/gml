@@ -1,15 +1,16 @@
-#ifndef __CONSOLE__NOTIFYER__
-#define __CONSOLE__NOTIFYER__
+#ifndef __FILE__NOTIFYER__
+#define __FILE__NOTIFYER__
 
 #include "gmllib.h"
 
-class ConsoleNotifier: public GML::Utils::INotifier
+class FileNotifier: public GML::Utils::INotifier
 {
-	GML::Utils::GString		tempStr;
-	bool					useColors;
-	void					SetColor(unsigned char fore,unsigned char back);
+	GML::Utils::GString		fileName;
+	bool					flushAfterEachWrite;
+
+	GML::Utils::File		file;
 public:
-	ConsoleNotifier();
+	FileNotifier();
 	bool	OnInit();
 	bool	Uninit();
 	bool	Notify(UInt32 messageID,void *Data,UInt32 DataSize);

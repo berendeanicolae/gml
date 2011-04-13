@@ -13,27 +13,36 @@ GML::Utils::File::~File(void)
 {
 	Close();
 }
-bool GML::Utils::File::Create(char *name)
+bool GML::Utils::File::Create(char *name,bool share)
 {
 	Close();
 #ifdef OS_WINDOWS
-	return (bool)((hFile = CreateFileA(name,GENERIC_WRITE|GENERIC_READ,0,NULL,CREATE_ALWAYS,0,NULL))!=INVALID_HANDLE_VALUE);
+	DWORD	shareFlags = 0;
+	if (share)
+		shareFlags = FILE_SHARE_READ;
+	return (bool)((hFile = CreateFileA(name,GENERIC_WRITE|GENERIC_READ,share,NULL,CREATE_ALWAYS,0,NULL))!=INVALID_HANDLE_VALUE);
 #endif
 	return false;
 }
-bool GML::Utils::File::OpenRead(char *name)
+bool GML::Utils::File::OpenRead(char *name,bool share)
 {
 	Close();
 #ifdef OS_WINDOWS
-	return (bool)((hFile = CreateFileA(name,GENERIC_READ,0,NULL,OPEN_EXISTING,0,NULL))!=INVALID_HANDLE_VALUE);
+	DWORD	shareFlags = 0;
+	if (share)
+		shareFlags = FILE_SHARE_READ;
+	return (bool)((hFile = CreateFileA(name,GENERIC_READ,share,NULL,OPEN_EXISTING,0,NULL))!=INVALID_HANDLE_VALUE);
 #endif
 	return false;
 }
-bool GML::Utils::File::OpenReadWrite(char *name,bool append)
+bool GML::Utils::File::OpenReadWrite(char *name,bool append,bool share)
 {
 	Close();
 #ifdef OS_WINDOWS
-	return (bool)((hFile = CreateFileA(name,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,0,NULL))!=INVALID_HANDLE_VALUE);
+	DWORD	shareFlags = 0;
+	if (share)
+		shareFlags = FILE_SHARE_READ;
+	return (bool)((hFile = CreateFileA(name,GENERIC_READ|GENERIC_WRITE,share,NULL,OPEN_EXISTING,0,NULL))!=INVALID_HANDLE_VALUE);
 #endif
 	return false;
 }
@@ -153,4 +162,12 @@ bool GML::Utils::File::ReadNextLine(GString &line,bool skipEmpyLines)
 		break;
 	}
 	return true;
+}
+bool GML::Utils::File::Flush()
+{
+#ifdef OS_WINDOWS
+	if (hFile==INVALID_HANDLE_VALUE) 
+		return false;
+	return (bool)FlushFileBuffers(hFile);
+#endif
 }
