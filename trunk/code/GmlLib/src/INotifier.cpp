@@ -147,6 +147,8 @@ bool GML::Utils::INotifier::StartProcent(char *format,...)
 }
 bool GML::Utils::INotifier::EndProcent()
 {
+	double proc = 1;
+	Notify(NOTIFY_PROCENT,&proc,sizeof(double));
 	return Notify(NOTIFY_END_PROCENT,"",0);
 }
 bool GML::Utils::INotifier::SetProcent(double procValue)
@@ -166,6 +168,3 @@ bool GML::Utils::INotifier::Init(char *attributeString)
 	}
 	return OnInit();
 }
-
-
-
