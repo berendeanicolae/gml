@@ -8,6 +8,37 @@ int  Error(char *message)
 	printf("[ERROR] : %s\n",message);
 	return -1;
 }
+void SaveToClipboard(char *text)
+{
+	int		tr,start=0,end;
+	HANDLE	hMem;
+
+	for (end=0;text[end]!=0;end++);
+	end--;
+
+	hMem=GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE,end-start+2);
+	if (hMem!=NULL)
+	{
+		if (OpenClipboard(NULL))
+		{
+			EmptyClipboard();
+			CloseClipboard();
+		}
+		char *temp=(char *)GlobalLock(hMem);
+		if (temp!=NULL)
+		{
+				for (tr=start;tr<=end;tr++) temp[tr-start]=text[tr];
+				temp[tr-start]=0;
+		}
+		GlobalUnlock(hMem);
+		if (OpenClipboard(NULL) && (temp!=NULL))
+		{
+				HANDLE h=SetClipboardData(CF_TEXT,temp);
+				DWORD res=GetLastError();
+				CloseClipboard();
+		}
+	}
+}
 bool FindGMLLibPath(GML::Utils::GString &gmlLib)
 {
 	HMODULE					hModule;
@@ -159,6 +190,73 @@ int  Template(char *objectName,char *templateName)
 	f.Close();
 	return 0;
 }
+int  PyTemplate(char *objectName)
+{
+	GML::Utils::AttributeList	attr;
+	GML::Utils::Attribute		*a;
+	GML::Utils::GString			tmp,result,desc;
+	GML::Utils::File			f;
+	
+	if (GML::Builder::GetPluginProperties(objectName,attr)==false)
+	{
+		printf("[ERROR] There is no algorithm, notifier, database or conector with the name : %s\n",objectName);
+		return 1;
+	}
+	result.SetFormated("{\n\t\"AlgorithmName\":\"%s\",\n",objectName);
+	for (UInt32 tr=0;tr<attr.GetCount();tr++)
+	{
+		if ((a=attr.Get(tr))==NULL)
+			continue;
+		result.AddFormated("\t\"%s\":",a->Name);
+		switch (a->AttributeType)
+		{
+			case GML::Utils::AttributeList::BOOLEAN:
+				if (*(bool *)a->Data)
+					result.Add("True");
+				else
+					result.Add("False");
+				break;
+			case GML::Utils::AttributeList::UINT8:
+				result.AddFormated("%u",*(UInt8 *)a->Data);
+				break;
+			case GML::Utils::AttributeList::UINT16:
+				result.AddFormated("%u",*(UInt16 *)a->Data);
+				break;
+			case GML::Utils::AttributeList::UINT32:
+				result.AddFormated("%u",*(UInt32 *)a->Data);
+				break;
+			case GML::Utils::AttributeList::INT8:
+				result.AddFormated("%d",*(Int8 *)a->Data);
+				break;
+			case GML::Utils::AttributeList::INT16:
+				result.AddFormated("%d",*(Int16 *)a->Data);
+				break;
+			case GML::Utils::AttributeList::INT32:
+				result.AddFormated("%d",*(Int32 *)a->Data);
+				break;
+			case GML::Utils::AttributeList::FLOAT:
+				result.AddFormated("%.3f",*(float *)a->Data);
+				break;
+			case GML::Utils::AttributeList::DOUBLE:
+				result.AddFormated("%.3lf",*(double *)a->Data);
+				break;
+			case GML::Utils::AttributeList::STRING:
+				result.AddFormated("\"%s\"",(char *)a->Data);
+				break;
+			default:
+				result.AddFormated("\"<?Type=%d>\"",a->AttributeType);
+				break;
+		};
+		if ((tr+1)==attr.GetCount())
+			result.Add("\n");
+		else
+			result.Add(",\n");
+	}
+	result.Add("}\n");
+	printf("%s\n",result.GetText());	
+	SaveToClipboard(result.GetText());
+	return 0;
+}
 int  Info(char *objectName)
 {
 	GML::Utils::AttributeList	attr;
@@ -264,6 +362,7 @@ int  ShowHelp()
 	printf("       run <template_file>       -> executes a template file\n");
 	printf("       info <object_name>        -> shows informations about a specific Algorithm,Conector,DataBase or Notifier\n");
 	printf("       template <object> <file>  -> creates a template for a specifiy object\n");
+	printf("       pytemplate <object>       -> creates a python template for a specify object\n");
 	printf("       algorithms                -> shows a list of existing algorithms\n");
 	printf("       connectors                -> shows a list of existing connectors\n");
 	printf("       notifiers                 -> shows a list of existing notifiers\n");
@@ -296,6 +395,13 @@ int  main(int argc, char* argv[])
 		if (argc!=4)
 			return Error("template command requare two parameters (a name for a an Algorithm, Conector, DataBase or Notifier and a file name)");
 		return Template(argv[2],argv[3]);
+	}
+	// pytemplate
+	if (GML::Utils::GString::Equals(argv[1],"pytemplate",true))
+	{
+		if (argc!=3)
+			return Error("pytemplate command requares one parameter (a name for a an Algorithm, Conector, DataBase or Notifier)");
+		return PyTemplate(argv[2]);
 	}
 	// algorithms
 	if (GML::Utils::GString::Equals(argv[1],"algorithms",true))
