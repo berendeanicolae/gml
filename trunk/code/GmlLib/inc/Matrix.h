@@ -134,11 +134,11 @@ namespace GML{
 				unsigned int c2 = matrixRight.nr_colls;
 				m.Create(r1,c2);
 				T *v1 = (T*)this->v.GetVector(), *v2 = (T*)matrixRight.v.GetVector(), *v = (T*)m.v.GetVector();
-				for(unsigned int i=0;i<r1;i++){
-					for(unsigned int j=0; j<c2; j++){
-						v[i * this->max_colls + j] = 0;
-						for(unsigned int k=0; k<r1; k++){
-							v[i*this->max_colls+j] += (v1[i*this->max_colls + k] * v2[k*this->max_colls + j]);
+				for(unsigned int i=0;i<this->nr_lines;i++){
+					for(unsigned int j=0; j<matrixRight.nr_colls; j++){
+						v[i * m.max_colls + j] = 0;
+						for(unsigned int k=0; k<this->nr_colls; k++){
+							v[i*m.max_colls+j] += (v1[i*this->max_colls + k] * v2[k*matrixRight->max_colls + j]);
 						}
 					}
 				}
