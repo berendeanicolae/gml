@@ -5,8 +5,16 @@
 
 class FileNotifier: public GML::Utils::INotifier
 {
+	enum
+	{
+		SHOW_TIME_NONE = 0,
+		SHOW_TIME_DATETIME,
+		SHOW_TIME_MILISECONDS
+	};
+
 	GML::Utils::GString		fileName;
 	bool					flushAfterEachWrite;
+	UInt32					showNotificationTime;
 
 	GML::Utils::File		file;
 public:
