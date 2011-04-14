@@ -7,6 +7,7 @@ class ConsoleNotifier: public GML::Utils::INotifier
 {
 	COORD					savedCursorCoord;
 	GML::Utils::GString		tempStr;
+	GML::Utils::Timer		timer;
 	bool					useColors;
 	void					SetColor(unsigned char fore,unsigned char back);
 	void					SaveCursorCoord();
