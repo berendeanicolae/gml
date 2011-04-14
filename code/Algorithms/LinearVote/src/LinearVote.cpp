@@ -109,7 +109,19 @@ bool LinearVote::LoadVotes()
 		notif->Error("[%s] -> Unable to allocate %d vectors !",ObjectName,count);
 		return false;
 	}
-
+	poz = 0;
+	count = 0;
+	while (WeightFiles.CopyNext(&tmp,";",&poz))
+	{
+		tmp.Strip();
+		if (tmp.Len()>0)
+		{
+			if (Create(pVectors[count],tmp.GetText())==false)
+				return false;			
+			count++;
+		}
+	}
+	notif->Info("[%s] -> Total vectors: %d",ObjectName,count);
 	return true;
 }
 bool LinearVote::Init()
@@ -140,6 +152,8 @@ bool LinearVote::Init()
 			return false;
 		}
 	}
+	if (LoadVotes()==false)
+		return false;
 	return true;
 }
 void LinearVote::OnExecute()
