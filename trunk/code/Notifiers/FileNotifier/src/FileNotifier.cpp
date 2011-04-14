@@ -8,7 +8,6 @@ FileNotifier::FileNotifier()
 	LinkPropertyToString("FileName",fileName,"","Name of the file where the notifications will be written ");
 	LinkPropertyToUInt32("TimeFormat",showNotificationTime,SHOW_TIME_NONE,"!!LIST:None=0,DateTime,Miliseconds!!\nSpecify how time will be written");
 }
-
 bool FileNotifier::OnInit()
 {	
 	return file.Create(fileName.GetText(),true);
