@@ -3,10 +3,21 @@
 
 #include "gmllib.h"
 
+void SetColor(unsigned char Fore, unsigned char Back)
+{
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),(Fore & 15)+(Back & 15)*16);
+}
 int  Error(char *message)
 {
+	SetColor(12,0);
 	printf("[ERROR] : %s\n",message);
+	SetColor(7,0);
 	return -1;
+}
+void Print(char *text,int Fore,int back)
+{
+	SetColor(Fore,back);
+	printf("%s",text);
 }
 void SaveToClipboard(char *text)
 {
@@ -326,6 +337,86 @@ int  Info(char *objectName)
 	printf("---------------------------------------------------------------------------------\n");
 	return 0;
 }
+int  Desc(char *objectName,char *prop)
+{
+	GML::Utils::AttributeList	attr;
+	GML::Utils::Attribute		*a;
+	GML::Utils::GString			list;
+
+	if (GML::Builder::GetPluginProperties(objectName,attr)==false)
+	{
+		printf("[ERROR] There is no algorithm, notifier, database or conector with the name : %s\n",objectName);
+		return 1;
+	}
+	a = attr.Get(prop);
+	if (a==NULL)
+	{
+		printf("[ERROR] Object '%s' does not have property '%s'\n",objectName,prop);
+		return 1;
+	}
+	Print("Object     = ",7,0);SetColor(14,0);printf("%s\n",objectName);
+	Print("Property   = ",7,0);SetColor(14,0);printf("%s\n",a->Name);
+	Print("Type       = ",7,0);
+	switch (a->AttributeType)
+	{
+			case GML::Utils::AttributeList::BOOLEAN:
+				Print("Boolean\n",11,0);
+				break;
+			case GML::Utils::AttributeList::UINT8:
+				Print("UInt8\n",11,0);
+				break;
+			case GML::Utils::AttributeList::UINT16:
+				Print("UInt16\n",11,0);
+				break;
+			case GML::Utils::AttributeList::UINT32:
+				Print("UInt32\n",11,0);
+				break;
+			case GML::Utils::AttributeList::INT8:
+				Print("Int8\n",11,0);
+				break;
+			case GML::Utils::AttributeList::INT16:
+				Print("Int16\n",11,0);
+				break;
+			case GML::Utils::AttributeList::INT32:
+				Print("Int32\n",11,0);
+				break;
+			case GML::Utils::AttributeList::FLOAT:
+				Print("Float\n",11,0);
+				break;
+			case GML::Utils::AttributeList::DOUBLE:
+				Print("Double\n",11,0);
+				break;
+			case GML::Utils::AttributeList::STRING:
+				Print("String\n",11,0);
+				break;
+			default:
+				SetColor(12,0);printf("Unknown type = %d\n",a->AttributeType);
+				break;
+	}
+	Print("List       = ",7,0);
+	if ((a->GetFlags() & GML::Utils::FL_LIST)!=0)
+	{
+		
+		if (a->GetListItem(list))
+		{
+			SetColor(14,0);	
+			printf("one of [%s]\n",list.GetText());
+		} else {
+			Print("None\n",12,0);
+		}
+	} else {
+		Print("None\n",12,0);
+	}
+	Print("Desciption = ",7,0);
+	if ((a->GetDescription(list)) && (list.Len()>0))
+	{
+		Print(list.GetText(),15,0);
+	} else {
+		Print("None",12,0);
+	}
+
+	return 0;
+}
 int  ShowObjects(char *folder,char *ext)
 {
 	HANDLE					hFind;
@@ -355,19 +446,21 @@ int  ShowObjects(char *folder,char *ext)
 }
 int  ShowHelp()
 {
-	printf("GML.EXE , Copyright @2011 , Gavrilut Dragos & co\n");
-	printf("Build on %s (%s)\n",__DATE__,__TIME__);
-	printf("Usage: gml.exe command <parameters>\n");
-	printf("Where: command is one of the following\n");
-	printf("       run <template_file>       -> executes a template file\n");
-	printf("       info <object_name>        -> shows informations about a specific Algorithm,Conector,DataBase or Notifier\n");
-	printf("       template <object> <file>  -> creates a template for a specifiy object\n");
-	printf("       pytemplate <object>       -> creates a python template for a specify object\n");
-	printf("       algorithms                -> shows a list of existing algorithms\n");
-	printf("       connectors                -> shows a list of existing connectors\n");
-	printf("       notifiers                 -> shows a list of existing notifiers\n");
-	printf("       databases                 -> shows a list of existing databases\n");
+	Print("GML.EXE , Copyright @2011 , Gavrilut Dragos & co\n",15,0);	
+	SetColor(14,0);printf("Build on %s (%s)\n",__DATE__,__TIME__);
+	Print("Usage: ",6,0);Print("gml.exe command <parameters>\n",7,0);
+	Print("Where: ",6,0);Print("command is one of the following\n",7,0);
+	Print("       run ",10,0);Print("<template_file>           ",11,0);Print("-> executes a template file\n",12,0);
+	Print("       info ",10,0);Print("<object_name>            ",11,0);Print("-> shows informations about a specific Algorithm,Conector,DataBase or Notifier\n",12,0);	
+	Print("       desc ",10,0);Print("<object_name> <property> ",11,0);Print("-> shows description for a specify propery from an Algorithm,Conector,DataBase or Notifier\n",12,0);	
+	Print("       template ",10,0);Print("<object> <file>      ",11,0);Print("-> creates a template for a specifiy object\n",12,0);	
+	Print("       pytemplate ",10,0);Print("<object>           ",11,0);Print("-> creates and copies to clipboard a template for a specifiy object\n",12,0);	
+	Print("       algorithms ",10,0);Print("                   ",11,0);Print("-> shows a list of existing algorithms\n",12,0);
+	Print("       connectors ",10,0);Print("                   ",11,0);Print("-> shows a list of existing connectors\n",12,0);
+	Print("       notifiers ",10,0);Print("                    ",11,0);Print("-> shows a list of existing notifiers\n",12,0);
+	Print("       databases ",10,0);Print("                    ",11,0);Print("-> shows a list of existing databases\n",12,0);
 
+	SetColor(7,0);
 	printf("\n");
 	return 0;
 }
@@ -388,6 +481,13 @@ int  main(int argc, char* argv[])
 		if (argc!=3)
 			return Error("info command requare a parameter (a name for a an Algorithm, Conector, DataBase or Notifier)");
 		return Info(argv[2]);
+	}
+	// desc
+	if (GML::Utils::GString::Equals(argv[1],"desc",true))
+	{
+		if (argc!=4)
+			return Error("desc command requare two parameters (a name for a an Algorithm, Conector, DataBase or Notifier and a property)");
+		return Desc(argv[2],argv[3]);
 	}
 	// template
 	if (GML::Utils::GString::Equals(argv[1],"template",true))
