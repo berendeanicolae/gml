@@ -8,6 +8,30 @@ PerceptronVector::PerceptronVector()
 	Count = 0;
 	Vote = 0;
 }
+PerceptronVector::PerceptronVector(PerceptronVector &ref)
+{
+	Weight = NULL;
+	Bias = 0;
+	Count = 0;
+	Vote = 0;
+
+	if (Create(ref.Count))
+	{
+		Bias = ref.Bias;
+		memcpy(Weight,ref.Weight,sizeof(double)*ref.Count);
+		Count = ref.Count;
+		Vote = ref.Vote;
+		FileName.Set(&ref.FileName);
+	}	
+}
+bool PerceptronVector::operator > (PerceptronVector &r)
+{
+	return (bool)(Vote>r.Vote);
+}
+bool PerceptronVector::operator < (PerceptronVector &r)
+{
+	return (bool)(Vote<r.Vote);
+}
 PerceptronVector::~PerceptronVector()
 {
 	Destroy();
@@ -40,14 +64,13 @@ LinearVote::LinearVote()
 {
 	ObjectName = "LinearVote";
 
-	pVectors = NULL;
-
 	SetPropertyMetaData("Command","!!LIST:None=0,CreateCache!!");
 	LinkPropertyToString("DataBase"					,DataBase				,"");
 	LinkPropertyToString("Connector"				,Conector				,"");
 	LinkPropertyToString("Notifier"					,Notifier				,"");
 	LinkPropertyToString("WeightFileList"			,WeightFiles			,"","A list of weight files to be loaded separated by a comma.");
 	LinkPropertyToString("VotePropertyName"			,VotePropertyName		,"Vote","The name of the property that contains the vote. It has to be a numeric property.");
+	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1,"");
 }
 bool LinearVote::Create(PerceptronVector &pv,char *fileName)
 {
@@ -127,7 +150,9 @@ bool LinearVote::LoadVotes()
 {
 	GML::Utils::GString		tmp;
 	int						poz,count;
+	PerceptronVector		pv;
 
+	pVectors.DeleteAll();
 	if (WeightFiles.Len()==0)
 	{
 		notif->Error("[%s] -> You need to set up 'WeightFiles' property with a list of files !",ObjectName);
@@ -148,24 +173,23 @@ bool LinearVote::LoadVotes()
 		return false;
 	}
 
-	if ((pVectors = new PerceptronVector[count])==NULL)
-	{
-		notif->Error("[%s] -> Unable to allocate %d vectors !",ObjectName,count);
-		return false;
-	}
 	poz = 0;
-	count = 0;
 	while (WeightFiles.CopyNext(&tmp,";",&poz))
 	{
 		tmp.Strip();
 		if (tmp.Len()>0)
 		{
-			if (Create(pVectors[count],tmp.GetText())==false)
-				return false;			
-			count++;
+			if (Create(pv,tmp.GetText())==false)
+				return false;	
+			if (pVectors.PushByRef(pv)==false)
+			{
+				notif->Error("[%s] -> Unable to add Vector to list !",ObjectName);
+				return false;
+			}
+			
 		}
 	}
-	notif->Info("[%s] -> Total vectors: %d",ObjectName,count);
+	notif->Info("[%s] -> Total vectors: %d",ObjectName,pVectors.Len());
 	return true;
 }
 bool LinearVote::Init()

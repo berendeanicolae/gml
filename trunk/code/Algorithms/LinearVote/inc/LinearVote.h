@@ -13,7 +13,11 @@ public:
 	GML::Utils::GString	FileName;
 public:
 	PerceptronVector();
+	PerceptronVector(PerceptronVector &r);
 	~PerceptronVector();
+
+	bool operator > (PerceptronVector &r);
+	bool operator < (PerceptronVector &r);
 
 	void	Destroy();
 	bool	Create(UInt32 count);
@@ -21,15 +25,16 @@ public:
 
 class LinearVote: public GML::Algorithm::IAlgorithm
 {	
-	GML::Utils::GString		Conector;
-	GML::Utils::GString		DataBase;
-	GML::Utils::GString		Notifier;
-	GML::Utils::GString		WeightFiles;
-	GML::Utils::GString		VotePropertyName;
-	GML::DB::IDataBase		*db;
-	GML::ML::IConnector		*con;
+	GML::Utils::GString							Conector;
+	GML::Utils::GString							DataBase;
+	GML::Utils::GString							Notifier;
+	GML::Utils::GString							WeightFiles;
+	GML::Utils::GString							VotePropertyName;
+	GML::DB::IDataBase							*db;
+	GML::ML::IConnector							*con;
+	UInt32										threadsCount;
 
-	PerceptronVector		*pVectors;
+	GML::Utils::GTVector<PerceptronVector>		pVectors;
 
 
 	bool					Create(PerceptronVector &pv,char *fileName);
