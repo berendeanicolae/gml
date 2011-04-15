@@ -70,7 +70,7 @@ LinearVote::LinearVote()
 {
 	ObjectName = "LinearVote";
 
-	SetPropertyMetaData("Command","!!LIST:None=0,CreateCache!!");
+	SetPropertyMetaData("Command","!!LIST:Test=0!!");
 	LinkPropertyToString("DataBase"					,DataBase				,"");
 	LinkPropertyToString("Connector"				,Conector				,"");
 	LinkPropertyToString("Notifier"					,Notifier				,"");
@@ -196,10 +196,29 @@ bool LinearVote::LoadVotes()
 		}
 	}
 	notif->Info("[%s] -> Total vectors: %d",ObjectName,pVectors.Len());
+
+	// creez si indexii
+	if (indexes.Create(pVectors.Len())==false)
+	{
+		notif->Error("[%s] -> Unable to create indexes lists !",ObjectName);
+		return false;
+	}
+	for (UInt32 tr=0;tr<pVectors.Len();tr++)
+		if (indexes.Push(tr)==false)
+		{
+			notif->Error("[%s] -> Unable to add index #%d to list !",ObjectName,tr);
+			return false;
+		}
 	return true;
 }
 void LinearVote::OnRunThreadCommand(ThreadData &td,UInt32 command)
 {
+	switch (command)
+	{
+		case PARALLEL_CMD_TEST:
+			PerformTest(td);
+			break;
+	}
 }
 bool LinearVote::Init()
 {
@@ -272,13 +291,80 @@ bool LinearVote::Init()
 	}
 	return true;
 }
+bool LinearVote::ExecuteParalelCommand(UInt32 command)
+{
+	UInt32	tr;
+
+	// executie
+	for (tr=0;tr<threadsCount;tr++)
+		if (tpu[tr].Execute(command)==false)
+		{
+			notif->Error("[%s] -> Error on runnig thread #%d",ObjectName,tr);
+			return false;
+		}
+	// asteptare
+	for (tr=0;tr<threadsCount;tr++)
+		if (tpu[tr].WaitToFinish()==false)
+		{
+			notif->Error("[%s] -> WaitToFinish failed on thread #%d",ObjectName,tr);
+			return false;
+		}
+	// all ok
+	return true;
+}
+bool LinearVote::PerformTest(ThreadData &td)
+{
+	UInt32				index,tr,nrFeatures,nrVectors;
+	PerceptronVector	*pv;
+	double				scorPozitive,scorNegative,result;
+	double				*scor;
+	
+
+	index = td.Range.Start;
+	td.Res.Clear();
+	nrFeatures = con->GetFeatureCount();
+	nrVectors = indexes.Len();
+
+	while (index<td.Range.End)
+	{
+		if (con->GetRecord(td.Record,index)==false)
+		{
+			notif->Error("[%s] -> Unable to read record %d",ObjectName,tr);
+			return false;
+		}
+		for (tr=0;tr<nrVectors;tr++)
+		{
+			pv = pVectors.GetPtrToObject(tr);
+			if ((GML::ML::VectorOp::ComputeVectorsSum(td.Record.Features,pv->Weight,nrFeatures)+pv->Bias)>0)
+				scor = &scorPozitive;				
+			else
+				scor = &scorNegative;
+			(*scor)+=pv->Vote;
+		}
+		if (scorPozitive>scorNegative)
+			result = 1;
+		else
+			result = -1;
+		td.Res.Update(td.Record.Label==1,(bool)((result * td.Record.Label)>0));	
+		index++;
+	}
+}
+void LinearVote::DoTest()
+{
+	GML::Utils::AlgorithmResult		res;
+	UInt32							tr;
+
+	res.Clear();
+	ExecuteParalelCommand(PARALLEL_CMD_TEST);
+	for (tr=0;tr<threadsCount;tr++)
+		res.Add(&ptData[tr].Res);
+	res.Compute();
+	notif->Notify(100,&res,sizeof(res));
+}
 void LinearVote::OnExecute()
 {
-	if (Command==1)	//CreateCache
+	if (Command==0)	//CreateCache
 	{
-		if (con!=NULL)
-		{
-
-		}
+		DoTest();
 	}
 }

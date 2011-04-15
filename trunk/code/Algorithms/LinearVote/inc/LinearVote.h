@@ -30,6 +30,10 @@ struct ThreadData
 };
 class LinearVote: public GML::Algorithm::IAlgorithm
 {	
+	enum {
+		PARALLEL_CMD_TEST = 0,
+	};
+
 	GML::Utils::GString							Conector;
 	GML::Utils::GString							DataBase;
 	GML::Utils::GString							Notifier;
@@ -43,11 +47,17 @@ public:
 	GML::Utils::GTVector<PerceptronVector>		pVectors;
 	ThreadData									*ptData;
 	GML::Utils::ThreadParalelUnit				*tpu;
+	GML::Utils::Indexes							indexes;
 
+protected:
 	bool					Create(PerceptronVector &pv,char *fileName);
 	bool					LoadVotes();
+	bool					PerformTest(ThreadData &td);
+	void					DoTest();
+	bool					ExecuteParalelCommand(UInt32 command);
 public:
 	LinearVote();
+	
 	void					OnRunThreadCommand(ThreadData &td,UInt32 command);
 	bool					Init();
 	void					OnExecute();
