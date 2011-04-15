@@ -65,7 +65,6 @@ bool PerceptronVector::Create(UInt32 count)
 	return true;
 }
 //================================================================================
-
 LinearVote::LinearVote()
 {
 	ObjectName = "LinearVote";
@@ -77,6 +76,7 @@ LinearVote::LinearVote()
 	LinkPropertyToString("WeightFileList"			,WeightFiles			,"","A list of weight files to be loaded separated by a comma.");
 	LinkPropertyToString("VotePropertyName"			,VotePropertyName		,"Vote","The name of the property that contains the vote. It has to be a numeric property.");
 	LinkPropertyToUInt32("VotesLoadingMethod"		,VotesLoadingMethod		,0,"!!LIST:FromList=0,FromPath!!");
+	LinkPropertyToUInt32("VoteComputeMethod"		,VoteComputeMethod		,VOTE_COMPUTE_ADDITION,"!!LIST:Add=0,Multiply,Count!!");
 	LinkPropertyToString("WeightPath"				,WeightPath				,"*.txt","The path where the weigh files are");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1,"");
 }
@@ -185,6 +185,7 @@ bool LinearVote::LoadVotesFromWeightPath()
 		}
 	} while (FindNextFile(hFile,&dt));
 	FindClose(hFile);
+	return true;
 }
 bool LinearVote::LoadVotesFromList()
 {
@@ -241,6 +242,21 @@ void LinearVote::OnRunThreadCommand(ThreadData &td,UInt32 command)
 			break;
 	}
 }
+bool LinearVote::CheckValidVotes()
+{
+	for (UInt32 tr=0;tr<indexes.Len();tr++)
+	{
+		PerceptronVector *pv = pVectors.GetPtrToObject(indexes.Get(tr));
+		if (pv==NULL)
+			continue;
+		if ((pv->Vote==0) && (VoteComputeMethod == VOTE_COMPUTE_MULTIPLY))
+		{
+			notif->Error("[%s] -> Invalid Vote value (0.0) for Multiply method on %s",ObjectName,pv->FileName.GetText());
+			return false;
+		}
+	}
+	return true;
+}
 bool LinearVote::Init()
 {
 	UInt32	tr;
@@ -281,7 +297,6 @@ bool LinearVote::Init()
 			return false;
 	}
 	notif->Info("[%s] -> Total vectors: %d",ObjectName,pVectors.Len());
-
 	// creez si indexii
 	if (indexes.Create(pVectors.Len())==false)
 	{
@@ -294,7 +309,8 @@ bool LinearVote::Init()
 			notif->Error("[%s] -> Unable to add index #%d to list !",ObjectName,tr);
 			return false;
 		}
-
+	if (CheckValidVotes()==false)
+		return false;
 
 	if (threadsCount<1)
 		threadsCount = 1;
@@ -367,7 +383,8 @@ bool LinearVote::PerformTest(ThreadData &td)
 	td.Res.Clear();
 	nrFeatures = con->GetFeatureCount();
 	nrVectors = indexes.Len();
-	
+	scorPozitive = scorNegative = 0;
+
 	while (index<td.Range.End)
 	{
 		if (con->GetRecord(td.Record,index)==false)
@@ -375,7 +392,16 @@ bool LinearVote::PerformTest(ThreadData &td)
 			notif->Error("[%s] -> Unable to read record %d",ObjectName,tr);
 			return false;
 		}
-		scorPozitive = scorNegative = 0;
+		switch (VoteComputeMethod)
+		{
+			case VOTE_COMPUTE_ADDITION:
+			case VOTE_COMPUTE_COUNT:
+				scorPozitive = scorNegative = 0;
+				break;
+			case VOTE_COMPUTE_MULTIPLY:
+				scorPozitive = scorNegative = 1;
+				break;
+		};		
 		for (tr=0;tr<nrVectors;tr++)
 		{
 			pv = pVectors.GetPtrToObject(tr);
@@ -383,7 +409,20 @@ bool LinearVote::PerformTest(ThreadData &td)
 				scor = &scorPozitive;				
 			else
 				scor = &scorNegative;
-			(*scor)+=pv->Vote;
+			
+			// ajustez votul
+			switch (VoteComputeMethod)
+			{
+				case VOTE_COMPUTE_ADDITION:
+					(*scor)+=pv->Vote;
+					break;
+				case VOTE_COMPUTE_COUNT:
+					(*scor)+=1;
+					break;
+				case VOTE_COMPUTE_MULTIPLY:
+					(*scor)*=pv->Vote;
+					break;
+			};
 		}
 		if (scorPozitive>scorNegative)
 			result = 1;
