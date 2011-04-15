@@ -25,6 +25,7 @@ class LinearVote: public GML::Algorithm::IAlgorithm
 	GML::Utils::GString		DataBase;
 	GML::Utils::GString		Notifier;
 	GML::Utils::GString		WeightFiles;
+	GML::Utils::GString		VotePropertyName;
 	GML::DB::IDataBase		*db;
 	GML::ML::IConnector		*con;
 

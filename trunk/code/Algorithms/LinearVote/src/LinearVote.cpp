@@ -46,11 +46,13 @@ LinearVote::LinearVote()
 	LinkPropertyToString("DataBase"					,DataBase				,"");
 	LinkPropertyToString("Connector"				,Conector				,"");
 	LinkPropertyToString("Notifier"					,Notifier				,"");
-	LinkPropertyToString("WeightFiles"				,WeightFiles			,"","A list of weight files to be loaded separated by a comma.");
+	LinkPropertyToString("WeightFileList"			,WeightFiles			,"","A list of weight files to be loaded separated by a comma.");
+	LinkPropertyToString("VotePropertyName"			,VotePropertyName		,"Vote","The name of the property that contains the vote. It has to be a numeric property.");
 }
 bool LinearVote::Create(PerceptronVector &pv,char *fileName)
 {
 	GML::Utils::AttributeList	attr;
+	GML::Utils::Attribute		*a;
 
 	if (pv.Create(con->GetFeatureCount())==false)
 	{
@@ -76,6 +78,48 @@ bool LinearVote::Create(PerceptronVector &pv,char *fileName)
 	{
 		notif->Error("[%s] -> Unable to set FileName property for PeceptronVector",ObjectName);
 		return false;
+	}
+	// vote
+	if ((a = attr.Get(VotePropertyName.GetText()))==NULL)
+	{
+		notif->Error("[%s] -> Missing '%s' property in %s",ObjectName,VotePropertyName.GetText(),fileName);
+		return false;
+	}
+	switch (a->AttributeType)
+	{
+		case GML::Utils::AttributeList::DOUBLE:
+			pv.Vote = (double)(*(double *)a->Data);
+			break;
+		case GML::Utils::AttributeList::FLOAT:
+			pv.Vote = (double)(*(float *)a->Data);
+			break;
+		case GML::Utils::AttributeList::UINT8:
+			pv.Vote = (double)(*(UInt8 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::INT8:
+			pv.Vote = (double)(*(Int8 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::UINT16:
+			pv.Vote = (double)(*(UInt16 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::INT16:
+			pv.Vote = (double)(*(Int16 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::UINT32:
+			pv.Vote = (double)(*(UInt32 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::INT32:
+			pv.Vote = (double)(*(Int32 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::UINT64:
+			pv.Vote = (double)(*(UInt64 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::INT64:
+			pv.Vote = (double)(*(Int64 *)a->Data);
+			break;
+		default:
+			notif->Error("[%s] -> Property '%s' should be a numeric type (in %s)",ObjectName,VotePropertyName.GetText(),fileName);
+			return false;
 	}
 	return true;
 }
