@@ -27,6 +27,7 @@ struct ThreadData
 	GML::ML::MLRecord				Record;
 	GML::Utils::AlgorithmResult		Res;
 	GML::Utils::Interval			Range;
+	UInt32							eqVotes;
 };
 class LinearVote: public GML::Algorithm::IAlgorithm
 {	
@@ -43,6 +44,10 @@ class LinearVote: public GML::Algorithm::IAlgorithm
 		VOTE_COMPUTE_MULTIPLY,
 		VOTE_COMPUTE_COUNT,
 	};
+	enum {
+		VOTE_POZITIVE = 0,
+		VOTE_NEGATIVE,
+	};
 
 	GML::Utils::GString							Conector;
 	GML::Utils::GString							DataBase;
@@ -55,6 +60,7 @@ class LinearVote: public GML::Algorithm::IAlgorithm
 	UInt32										threadsCount;
 	UInt32										VotesLoadingMethod;
 	UInt32										VoteComputeMethod;
+	UInt32										VoteOnEqual;
 
 public:
 	GML::Utils::GTVector<PerceptronVector>		pVectors;

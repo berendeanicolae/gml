@@ -77,6 +77,7 @@ LinearVote::LinearVote()
 	LinkPropertyToString("VotePropertyName"			,VotePropertyName		,"Vote","The name of the property that contains the vote. It has to be a numeric property.");
 	LinkPropertyToUInt32("VotesLoadingMethod"		,VotesLoadingMethod		,0,"!!LIST:FromList=0,FromPath!!");
 	LinkPropertyToUInt32("VoteComputeMethod"		,VoteComputeMethod		,VOTE_COMPUTE_ADDITION,"!!LIST:Add=0,Multiply,Count!!");
+	LinkPropertyToUInt32("OnEqualVotes"				,VoteOnEqual			,VOTE_NEGATIVE,"!!LIST:VoteNegative=0,VotePositive!!\nSets the vote that will be considered in case of equal votes");
 	LinkPropertyToString("WeightPath"				,WeightPath				,"*.txt","The path where the weigh files are");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1,"");
 }
@@ -381,6 +382,7 @@ bool LinearVote::PerformTest(ThreadData &td)
 
 	index = td.Range.Start;
 	td.Res.Clear();
+	td.eqVotes = 0;
 	nrFeatures = con->GetFeatureCount();
 	nrVectors = indexes.Len();
 	scorPozitive = scorNegative = 0;
@@ -424,9 +426,17 @@ bool LinearVote::PerformTest(ThreadData &td)
 					break;
 			};
 		}
+		if (scorPozitive==scorNegative)
+		{
+			td.eqVotes++;
+			if (VoteOnEqual==VOTE_POZITIVE)
+				scorNegative++;
+			else
+				scorPozitive++;
+		}
 		if (scorPozitive>scorNegative)
 			result = 1;
-		else
+		else 
 			result = -1;
 		td.Res.Update(td.Record.Label==1,(bool)((result * td.Record.Label)>0));	
 		index++;
@@ -437,15 +447,19 @@ bool LinearVote::PerformTest(ThreadData &td)
 void LinearVote::DoTest()
 {
 	GML::Utils::AlgorithmResult		res;
-	UInt32							tr;
+	UInt32							tr,eqVotes;
 
 	res.Clear();
 	res.time.Start();
 	ExecuteParalelCommand(PARALLEL_CMD_TEST);
-	for (tr=0;tr<threadsCount;tr++)
+	for (tr=0,eqVotes=0;tr<threadsCount;tr++)
+	{
 		res.Add(&ptData[tr].Res);
+		eqVotes+=ptData[tr].eqVotes;
+	}
 	res.Compute();
 	res.time.Stop();
+	notif->Info("[%s] -> Equal votes : %d",ObjectName,eqVotes);
 	notif->Notify(100,&res,sizeof(res));
 }
 void LinearVote::OnExecute()
