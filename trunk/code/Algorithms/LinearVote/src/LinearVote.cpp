@@ -1,6 +1,12 @@
 #include "LinearVote.h"
 
+void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
+{
+	LinearVote *lv = (LinearVote *)context;
+	lv->OnRunThreadCommand(lv->ptData[paralel->GetID()],paralel->GetCodeID());
+}
 
+//================================================================================
 PerceptronVector::PerceptronVector()
 {
 	Weight = NULL;
@@ -192,8 +198,14 @@ bool LinearVote::LoadVotes()
 	notif->Info("[%s] -> Total vectors: %d",ObjectName,pVectors.Len());
 	return true;
 }
+void LinearVote::OnRunThreadCommand(ThreadData &td,UInt32 command)
+{
+}
 bool LinearVote::Init()
 {
+	UInt32	tr;
+	UInt32	splitValue,start;
+
 	if ((notif = GML::Builder::CreateNotifier(Notifier.GetText()))==NULL)
 		return false;
 	if (DataBase.Len()!=0)
@@ -222,6 +234,42 @@ bool LinearVote::Init()
 	}
 	if (LoadVotes()==false)
 		return false;
+	if (threadsCount<1)
+		threadsCount = 1;
+
+	if ((ptData = new ThreadData[threadsCount])==NULL)
+	{
+		notif->Error("[%s] -> Unable to allocate ThreadData[%d]",ObjectName,threadsCount);
+		return false;
+	}
+
+	splitValue = (con->GetRecordCount()/threadsCount);
+	start = 0;
+	for (tr=0;tr<threadsCount;tr++)
+	{
+		if (con->CreateMlRecord(ptData[tr].Record)==false)
+		{
+			notif->Error("[%s] -> Unable to create ThreadData[%d].Record",ObjectName,tr);
+			return false;
+		}
+		if ((start+splitValue)>con->GetRecordCount())
+			splitValue = con->GetRecordCount()-start;
+		ptData[tr].Range.Set(start,start+splitValue);
+		start+=splitValue;
+	}
+	if ((tpu = new GML::Utils::ThreadParalelUnit[threadsCount])==NULL)
+	{
+		notif->Error("[%s] -> Unable to create %d threads ",ObjectName,threadsCount);
+		return false;
+	}
+	for (tr=0;tr<threadsCount;tr++)
+	{
+		if (tpu[tr].Init(tr,this,ThreadRedirectFunction)==false)
+		{
+			notif->Error("[%s] -> Unable to start thread #%d",ObjectName,tr);
+			return false;
+		}
+	}
 	return true;
 }
 void LinearVote::OnExecute()

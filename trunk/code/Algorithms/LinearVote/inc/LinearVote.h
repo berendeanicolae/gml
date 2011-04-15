@@ -22,7 +22,12 @@ public:
 	void	Destroy();
 	bool	Create(UInt32 count);
 };
-
+struct ThreadData
+{
+	GML::ML::MLRecord				Record;
+	GML::Utils::AlgorithmResult		Res;
+	GML::Utils::Interval			Range;
+};
 class LinearVote: public GML::Algorithm::IAlgorithm
 {	
 	GML::Utils::GString							Conector;
@@ -34,14 +39,16 @@ class LinearVote: public GML::Algorithm::IAlgorithm
 	GML::ML::IConnector							*con;
 	UInt32										threadsCount;
 
+public:
 	GML::Utils::GTVector<PerceptronVector>		pVectors;
-
+	ThreadData									*ptData;
+	GML::Utils::ThreadParalelUnit				*tpu;
 
 	bool					Create(PerceptronVector &pv,char *fileName);
 	bool					LoadVotes();
 public:
 	LinearVote();
-
+	void					OnRunThreadCommand(ThreadData &td,UInt32 command);
 	bool					Init();
 	void					OnExecute();
 };
