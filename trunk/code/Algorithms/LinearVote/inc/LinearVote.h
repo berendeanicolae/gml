@@ -34,14 +34,21 @@ class LinearVote: public GML::Algorithm::IAlgorithm
 		PARALLEL_CMD_TEST = 0,
 	};
 
+	enum {
+		LOAD_VOTES_FROMLIST = 0,
+		LOAD_VOTES_FROMWEIGHTPATH,
+	};
+
 	GML::Utils::GString							Conector;
 	GML::Utils::GString							DataBase;
 	GML::Utils::GString							Notifier;
 	GML::Utils::GString							WeightFiles;
+	GML::Utils::GString							WeightPath;
 	GML::Utils::GString							VotePropertyName;
 	GML::DB::IDataBase							*db;
 	GML::ML::IConnector							*con;
 	UInt32										threadsCount;
+	UInt32										VotesLoadingMethod;
 
 public:
 	GML::Utils::GTVector<PerceptronVector>		pVectors;
@@ -51,7 +58,8 @@ public:
 
 protected:
 	bool					Create(PerceptronVector &pv,char *fileName);
-	bool					LoadVotes();
+	bool					LoadVotesFromWeightPath();
+	bool					LoadVotesFromList();
 	bool					PerformTest(ThreadData &td);
 	void					DoTest();
 	bool					ExecuteParalelCommand(UInt32 command);

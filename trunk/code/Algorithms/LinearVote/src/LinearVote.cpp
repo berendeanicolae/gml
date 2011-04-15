@@ -70,12 +70,14 @@ LinearVote::LinearVote()
 {
 	ObjectName = "LinearVote";
 
-	SetPropertyMetaData("Command","!!LIST:Test=0!!");
+	SetPropertyMetaData("Command","!!LIST:None=0,Test!!");
 	LinkPropertyToString("DataBase"					,DataBase				,"");
 	LinkPropertyToString("Connector"				,Conector				,"");
 	LinkPropertyToString("Notifier"					,Notifier				,"");
 	LinkPropertyToString("WeightFileList"			,WeightFiles			,"","A list of weight files to be loaded separated by a comma.");
 	LinkPropertyToString("VotePropertyName"			,VotePropertyName		,"Vote","The name of the property that contains the vote. It has to be a numeric property.");
+	LinkPropertyToUInt32("VotesLoadingMethod"		,VotesLoadingMethod		,0,"!!LIST:FromList=0,FromPath!!");
+	LinkPropertyToString("WeightPath"				,WeightPath				,"*.txt","The path where the weigh files are");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1,"");
 }
 bool LinearVote::Create(PerceptronVector &pv,char *fileName)
@@ -152,7 +154,39 @@ bool LinearVote::Create(PerceptronVector &pv,char *fileName)
 	}
 	return true;
 }
-bool LinearVote::LoadVotes()
+bool LinearVote::LoadVotesFromWeightPath()
+{
+	HANDLE					hFile;
+	WIN32_FIND_DATA			dt;
+	GML::Utils::GString		tmp;
+	PerceptronVector		pv;
+
+	pVectors.DeleteAll();
+	if ((hFile=FindFirstFileA(WeightPath.GetText(),&dt))==INVALID_HANDLE_VALUE)
+	{
+		notif->Error("[%s] -> Invalid path : %s !",ObjectName,WeightPath.GetText());
+		return false;
+	}
+	do
+	{
+		// daca e fisier , il incarc
+		if ((dt.dwFileAttributes & 16)==0)
+		{
+			WeightPath.CopyPathName(&tmp);
+			tmp.PathJoinName(dt.cFileName);
+			notif->Info("[%s] -> Loading : %s",ObjectName,tmp.GetText());
+			if (Create(pv,tmp.GetText())==false)
+				return false;	
+			if (pVectors.PushByRef(pv)==false)
+			{
+				notif->Error("[%s] -> Unable to add Vector to list !",ObjectName);
+				return false;
+			}
+		}
+	} while (FindNextFile(hFile,&dt));
+	FindClose(hFile);
+}
+bool LinearVote::LoadVotesFromList()
 {
 	GML::Utils::GString		tmp;
 	int						poz,count;
@@ -170,7 +204,7 @@ bool LinearVote::LoadVotes()
 	while (WeightFiles.CopyNext(&tmp,";",&poz))
 	{
 		tmp.Strip();
-		if (tmp.Len()>0)
+		if (tmp.GetText()[0]!=0)
 			count++;
 	}
 	if (count==0)
@@ -181,34 +215,21 @@ bool LinearVote::LoadVotes()
 
 	poz = 0;
 	while (WeightFiles.CopyNext(&tmp,";",&poz))
-	{
+	{	
 		tmp.Strip();
-		if (tmp.Len()>0)
+		if (tmp.GetText()[0]!=0)
 		{
+			notif->Info("[%s] -> Loading : %s",ObjectName,tmp.GetText());
 			if (Create(pv,tmp.GetText())==false)
 				return false;	
 			if (pVectors.PushByRef(pv)==false)
 			{
 				notif->Error("[%s] -> Unable to add Vector to list !",ObjectName);
 				return false;
-			}
-			
+			}			
 		}
 	}
-	notif->Info("[%s] -> Total vectors: %d",ObjectName,pVectors.Len());
 
-	// creez si indexii
-	if (indexes.Create(pVectors.Len())==false)
-	{
-		notif->Error("[%s] -> Unable to create indexes lists !",ObjectName);
-		return false;
-	}
-	for (UInt32 tr=0;tr<pVectors.Len();tr++)
-		if (indexes.Push(tr)==false)
-		{
-			notif->Error("[%s] -> Unable to add index #%d to list !",ObjectName,tr);
-			return false;
-		}
 	return true;
 }
 void LinearVote::OnRunThreadCommand(ThreadData &td,UInt32 command)
@@ -251,8 +272,30 @@ bool LinearVote::Init()
 			return false;
 		}
 	}
-	if (LoadVotes()==false)
+	if (VotesLoadingMethod==LOAD_VOTES_FROMLIST)
+	{
+		if (LoadVotesFromList()==false)
+			return false;
+	} else {
+		if (LoadVotesFromWeightPath()==false)
+			return false;
+	}
+	notif->Info("[%s] -> Total vectors: %d",ObjectName,pVectors.Len());
+
+	// creez si indexii
+	if (indexes.Create(pVectors.Len())==false)
+	{
+		notif->Error("[%s] -> Unable to create indexes lists !",ObjectName);
 		return false;
+	}
+	for (UInt32 tr=0;tr<pVectors.Len();tr++)
+		if (indexes.Push(tr)==false)
+		{
+			notif->Error("[%s] -> Unable to add index #%d to list !",ObjectName,tr);
+			return false;
+		}
+
+
 	if (threadsCount<1)
 		threadsCount = 1;
 
@@ -324,7 +367,7 @@ bool LinearVote::PerformTest(ThreadData &td)
 	td.Res.Clear();
 	nrFeatures = con->GetFeatureCount();
 	nrVectors = indexes.Len();
-
+	
 	while (index<td.Range.End)
 	{
 		if (con->GetRecord(td.Record,index)==false)
@@ -332,6 +375,7 @@ bool LinearVote::PerformTest(ThreadData &td)
 			notif->Error("[%s] -> Unable to read record %d",ObjectName,tr);
 			return false;
 		}
+		scorPozitive = scorNegative = 0;
 		for (tr=0;tr<nrVectors;tr++)
 		{
 			pv = pVectors.GetPtrToObject(tr);
@@ -348,6 +392,8 @@ bool LinearVote::PerformTest(ThreadData &td)
 		td.Res.Update(td.Record.Label==1,(bool)((result * td.Record.Label)>0));	
 		index++;
 	}
+
+	return true;
 }
 void LinearVote::DoTest()
 {
@@ -355,16 +401,20 @@ void LinearVote::DoTest()
 	UInt32							tr;
 
 	res.Clear();
+	res.time.Start();
 	ExecuteParalelCommand(PARALLEL_CMD_TEST);
 	for (tr=0;tr<threadsCount;tr++)
 		res.Add(&ptData[tr].Res);
 	res.Compute();
+	res.time.Stop();
 	notif->Notify(100,&res,sizeof(res));
 }
 void LinearVote::OnExecute()
 {
-	if (Command==0)	//CreateCache
+	if (Command==1)	//CreateCache
 	{
 		DoTest();
+		return;
 	}
+	notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);
 }

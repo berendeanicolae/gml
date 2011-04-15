@@ -217,7 +217,7 @@ bool	GenericPerceptron::Save(PerceptronThreadData &ptd,char *fileName)
 	GML::Utils::AttributeList	tempAttr;
 
 	tempAttr.Clear();
-	if (tempAttr.AddDouble("b",*ptd.Primary.Bias,"b value form line equation Sum(xi*wi)+b")==false)
+	if (tempAttr.AddDouble("Bias",*ptd.Primary.Bias,"b value form line equation Sum(xi*wi)+b")==false)
 	{
 		notif->Error("Unable to populate AttributeList for saving ...");
 		return false;
@@ -259,7 +259,7 @@ bool	GenericPerceptron::Load(PerceptronThreadData &ptd,char *fileName)
 		notif->Error("Unable to load : %s",fileName);
 		return false;
 	}
-	if (tempAttr.UpdateDouble("b",*ptd.Primary.Bias,true)==false)
+	if (tempAttr.UpdateDouble("Bias",*ptd.Primary.Bias,true)==false)
 	{
 		notif->Error("Unable to update 'b' value from %s",fileName);
 		return false;
