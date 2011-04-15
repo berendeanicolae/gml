@@ -38,6 +38,11 @@ class LinearVote: public GML::Algorithm::IAlgorithm
 		LOAD_VOTES_FROMLIST = 0,
 		LOAD_VOTES_FROMWEIGHTPATH,
 	};
+	enum {
+		VOTE_COMPUTE_ADDITION = 0,
+		VOTE_COMPUTE_MULTIPLY,
+		VOTE_COMPUTE_COUNT,
+	};
 
 	GML::Utils::GString							Conector;
 	GML::Utils::GString							DataBase;
@@ -49,6 +54,7 @@ class LinearVote: public GML::Algorithm::IAlgorithm
 	GML::ML::IConnector							*con;
 	UInt32										threadsCount;
 	UInt32										VotesLoadingMethod;
+	UInt32										VoteComputeMethod;
 
 public:
 	GML::Utils::GTVector<PerceptronVector>		pVectors;
@@ -62,6 +68,7 @@ protected:
 	bool					LoadVotesFromList();
 	bool					PerformTest(ThreadData &td);
 	void					DoTest();
+	bool					CheckValidVotes();
 	bool					ExecuteParalelCommand(UInt32 command);
 public:
 	LinearVote();
