@@ -63,7 +63,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("LinearVote");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("CacheBuilder");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
@@ -98,8 +98,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		"ColumnWidth=20;"
 		"SaveFeaturesWeight=F2;"
 		"FeaturesWeightFile=E:\\a.a;"
-		"Command=Test;"
-		"CacheName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache;"
+		"Command=CreateCache;"
+		"CacheName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache.test;"
 		"MaxIterations=(INT32)40;")==false)
 		return 1;
 	//alg->GetProperty(attr);
