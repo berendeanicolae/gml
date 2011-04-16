@@ -63,7 +63,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("BatchPerceptron");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("LinearVote");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
@@ -87,7 +87,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		"FeatureColumnWidth=5;"		
 		"SaveBest=None;"
 		"WeightFileName=E:\\lucru\\GML\\gml\\prj\\gml\\Debug\\test.txt;"
-		"ThreadsCount=1;"
+		"ThreadsCount=2;"
 		"MaxError=0;"
 		"MarginType=Negative;"
 		"SortBy=F2;"
@@ -98,7 +98,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		"ColumnWidth=20;"
 		"SaveFeaturesWeight=F2;"
 		"FeaturesWeightFile=E:\\a.a;"
-		"Command=Train;"
+		"Command=Test;"
 		"CacheName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache;"
 		"MaxIterations=(INT32)40;")==false)
 		return 1;
