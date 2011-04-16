@@ -3,15 +3,9 @@
 
 #include "gmllib.h"
 
-class CacheBuilder: public GML::Algorithm::IAlgorithm
+class CacheBuilder: public GML::Algorithm::IMLAlgorithm
 {
 	GML::Utils::GString		CacheName;
-	GML::Utils::GString		Conector;
-	GML::Utils::GString		DataBase;
-	GML::Utils::GString		Notifier;
-	GML::DB::IDataBase		*db;
-	GML::ML::IConnector		*con;
-
 public:
 	CacheBuilder();
 
