@@ -41,7 +41,7 @@ def __DictToString(dictionar):
 		print("[Error] Missing 'type' property for "+str(dictionar))
 		return NULL
 	return obj_name+"{"+s+"}"
-def __ListToString(lista):
+def __ListOfDictToString(lista):
 	s = ""
 	for item in lista:
 		if __GetVarType(item) != 'dict':
@@ -56,6 +56,33 @@ def __ListToString(lista):
 		return None
 	s = s[:-2]
 	return s	
+def __ListOfStringsToString(lista):
+	s = ""
+	for item in lista:
+		if __GetVarType(item) != 'str':
+			print("[Error] List should contains only strings "+str(lista))
+			return None
+		s += item+";"
+	if len(s)==0:
+		print("[Error] Invalid list: "+str(lista)+" => "+s)
+		return None
+	s = s[:-1]
+	return s	
+	
+def __ListToString(lista):
+	count_dict = 0
+	count_str = 0
+	for item in lista:
+		if __GetVarType(item) == 'dict':
+			count_dict += 1
+		if __GetVarType(item) == 'str':
+			count_str += 1
+	if count_dict==len(lista):
+		return __ListOfDictToString(lista)
+	if count_str==len(lista):
+		return __ListOfStringsToString(lista)
+	print("[Error] Lists should contain dict elements or string elements only")
+	return None	
 def __CreateTemplateFile(dictionar,fname):
 	s = ""
 	alg = False
