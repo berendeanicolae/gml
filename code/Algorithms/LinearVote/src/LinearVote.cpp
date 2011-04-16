@@ -224,12 +224,12 @@ bool LinearVote::LoadVotesFromList()
 
 	return true;
 }
-void LinearVote::OnRunThreadCommand(UInt32 threadID,UInt32 command)
+void LinearVote::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 command)
 {
 	switch (command)
 	{
 		case PARALLEL_CMD_TEST:
-			PerformTest(ptData[threadID]);
+			PerformTest(thData);
 			break;
 	}
 }
@@ -248,14 +248,21 @@ bool LinearVote::CheckValidVotes()
 	}
 	return true;
 }
+bool LinearVote::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
+{
+	if ((thData.Context = new LinearVoteThreadData())==NULL)
+		return false;
+
+	((LinearVoteThreadData *)thData.Context)->eqVotes = 0;
+	return true;
+}
 bool LinearVote::Init()
 {
-	UInt32	tr;
-	UInt32	splitValue,start;
-
 	if (InitConnections()==false)
 		return false;
 	if (InitThreads()==false)
+		return false;
+	if (SplitMLThreadDataRange(con->GetRecordCount())==false)
 		return false;
 
 	if (VotesLoadingMethod==LOAD_VOTES_FROMLIST)
@@ -282,40 +289,22 @@ bool LinearVote::Init()
 	if (CheckValidVotes()==false)
 		return false;
 
-	if ((ptData = new ThreadData[threadsCount])==NULL)
-	{
-		notif->Error("[%s] -> Unable to allocate ThreadData[%d]",ObjectName,threadsCount);
-		return false;
-	}
 
-	splitValue = (con->GetRecordCount()/threadsCount);
-	start = 0;
-	for (tr=0;tr<threadsCount;tr++)
-	{
-		if (con->CreateMlRecord(ptData[tr].Record)==false)
-		{
-			notif->Error("[%s] -> Unable to create ThreadData[%d].Record",ObjectName,tr);
-			return false;
-		}
-		if ((start+splitValue)>con->GetRecordCount())
-			splitValue = con->GetRecordCount()-start;
-		ptData[tr].Range.Set(start,start+splitValue);
-		start+=splitValue;
-	}
 
 	return true;
 }
-bool LinearVote::PerformTest(ThreadData &td)
+bool LinearVote::PerformTest(GML::Algorithm::MLThreadData &td)
 {
-	UInt32				index,tr,nrFeatures,nrVectors;
-	PerceptronVector	*pv;
-	double				scorPozitive,scorNegative,result;
-	double				*scor;
+	UInt32					index,tr,nrFeatures,nrVectors;
+	PerceptronVector		*pv;
+	LinearVoteThreadData	*ltd;
+	double					scorPozitive,scorNegative,result;
+	double					*scor;
 	
-
+	ltd = (LinearVoteThreadData *)td.Context;
 	index = td.Range.Start;
 	td.Res.Clear();
-	td.eqVotes = 0;
+	ltd->eqVotes = 0;
 	nrFeatures = con->GetFeatureCount();
 	nrVectors = indexes.Len();
 	scorPozitive = scorNegative = 0;
@@ -361,7 +350,7 @@ bool LinearVote::PerformTest(ThreadData &td)
 		}
 		if (scorPozitive==scorNegative)
 		{
-			td.eqVotes++;
+			ltd->eqVotes++;
 			if (VoteOnEqual==VOTE_POZITIVE)
 				scorNegative++;
 			else
@@ -387,13 +376,13 @@ void LinearVote::DoTest()
 	ExecuteParalelCommand(PARALLEL_CMD_TEST);
 	for (tr=0,eqVotes=0;tr<threadsCount;tr++)
 	{
-		res.Add(&ptData[tr].Res);
-		eqVotes+=ptData[tr].eqVotes;
+		res.Add(&ThData[tr].Res);
+		eqVotes+=((LinearVoteThreadData *)ThData[tr].Context)->eqVotes;
 	}
 	res.Compute();
 	res.time.Stop();
 	notif->Info("[%s] -> Equal votes : %d",ObjectName,eqVotes);
-	notif->Notify(100,&res,sizeof(res));
+	notif->Result(res);
 }
 void LinearVote::OnExecute()
 {

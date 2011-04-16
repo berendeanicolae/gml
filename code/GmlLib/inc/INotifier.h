@@ -3,6 +3,7 @@
 #include "compat.h"
 #include "GMLObject.h"
 #include "AttributeList.h"
+#include "AlgorithmResult.h"
 
 namespace GML
 {
@@ -17,7 +18,8 @@ namespace GML
 				NOTIFY_INFO,
 				NOTIFY_START_PROCENT,
 				NOTIFY_END_PROCENT,
-				NOTIFY_PROCENT,				
+				NOTIFY_PROCENT,		
+				NOTIFY_RESULT = 100,
 			};
 			bool			Init(char *attributeString);
 
@@ -32,6 +34,7 @@ namespace GML
 			bool			SetProcent(double procValue);
 			bool			SetProcent(double procValue,double maxValue);
 			bool			EndProcent();
+			bool			Result(GML::Utils::AlgorithmResult &ar);
 		};
 	}
 }

@@ -3,7 +3,7 @@
 void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
 {
 	GML::Algorithm::IMLAlgorithm *alg = (GML::Algorithm::IMLAlgorithm *)context;
-	alg->OnRunThreadCommand(paralel->GetID(),paralel->GetCodeID());
+	alg->OnRunThreadCommand(alg->ThData[paralel->GetID()],paralel->GetCodeID());
 }
 //=======================================================================================
 GML::Algorithm::IMLAlgorithm::IMLAlgorithm()
@@ -93,22 +93,35 @@ bool GML::Algorithm::IMLAlgorithm::InitThreads()
 			notif->Error("[%s] -> Unable to create MLThreadData[%d].Record",ObjectName,tr);
 			return false;
 		}
+		ThData[tr].ThreadID = tr; 
 		ThData[tr].Res.Clear();
 		ThData[tr].Res.time.Start();
 		ThData[tr].Range.Set(0,0);
+		ThData[tr].Context = NULL;
+		if (OnInitThreadData(ThData[tr])==false)
+		{
+			notif->Error("[%s] -> Unable to create MLThreadData.Context ",ObjectName);
+			return false;
+		}
 	}
+	// totul e ok 
+	if (OnInitThreads()==false)
+	{
+		notif->Error("[%s] -> OnInitThreads failed !",ObjectName);
+		return false;
+	}
+	notif->Info("[%s] -> Computation Threads created: %d",ObjectName,threadsCount);
 	return true;
 }
 bool GML::Algorithm::IMLAlgorithm::ExecuteParalelCommand(UInt32 command)
 {
 	UInt32	tr;
 
-	if (tpu==NULL)
+	if ((tpu==NULL) || (threadsCount<1))
 	{
 		notif->Error("[%s] -> Thread data was not initilized (Did you call InitThreads method ?)",ObjectName);
 		return false;
 	}
-
 	// executie
 	for (tr=0;tr<threadsCount;tr++)
 		if (tpu[tr].Execute(command)==false)
@@ -126,6 +139,36 @@ bool GML::Algorithm::IMLAlgorithm::ExecuteParalelCommand(UInt32 command)
 	// all ok
 	return true;
 }
-void GML::Algorithm::IMLAlgorithm::OnRunThreadCommand(UInt32 threadID,UInt32 threadCommand)
+void GML::Algorithm::IMLAlgorithm::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand)
 {
+}
+bool GML::Algorithm::IMLAlgorithm::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
+{
+	return true;
+}
+bool GML::Algorithm::IMLAlgorithm::OnInitThreads()
+{
+	return true;
+}
+bool GML::Algorithm::IMLAlgorithm::SplitMLThreadDataRange(UInt32 maxCount)
+{
+	UInt32	tr,splitValue,start;
+
+	if ((threadsCount<1) || (ThData==NULL))
+	{
+		notif->Error("[%s] -> Unable to split data to range. Have you run InitThreads !",ObjectName);
+		return false;
+	}
+
+	splitValue = (maxCount/threadsCount);
+	start = 0;
+	for (tr=0;tr<threadsCount;tr++)
+	{
+		if ((start+splitValue)>maxCount)
+			splitValue = maxCount-start;
+		ThData[tr].Range.Set(start,start+splitValue);
+		start+=splitValue;
+	}
+
+	return true;
 }

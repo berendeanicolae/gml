@@ -168,3 +168,7 @@ bool GML::Utils::INotifier::Init(char *attributeString)
 	}
 	return OnInit();
 }
+bool GML::Utils::INotifier::Result(GML::Utils::AlgorithmResult &ar)
+{
+	return Notify(NOTIFY_RESULT,&ar,sizeof(ar));
+}
