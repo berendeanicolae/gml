@@ -7,11 +7,19 @@
 #include "MLInterface.h"
 #include "Builder.h"
 #include "ThreadParalelUnit.h"
+#include "AlgorithmResult.h"
+#include "Indexes.h"
 
 namespace GML
 {
 	namespace Algorithm
 	{
+		struct EXPORT MLThreadData
+		{
+			GML::ML::MLRecord				Record;
+			GML::Utils::AlgorithmResult		Res;
+			GML::Utils::Interval			Range;
+		};
 		class EXPORT IMLAlgorithm: public GML::Algorithm::IAlgorithm
 		{
 		protected:
@@ -25,6 +33,7 @@ namespace GML
 
 			// local variables
 			GML::Utils::ThreadParalelUnit	*tpu;
+			MLThreadData					*ThData;
 
 			bool							InitConnections();
 			bool							InitThreads();
