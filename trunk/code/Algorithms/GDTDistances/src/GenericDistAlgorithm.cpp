@@ -1,23 +1,12 @@
 #include "GenericDistAlgorithm.h"
 
-void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
-{
-	GenericDistAlgorithm *gp = (GenericDistAlgorithm *)context;
-	gp->OnRunThreadCommand(gp->ptData[paralel->GetID()],paralel->GetCodeID());
-}
 //==============================================================================
 GenericDistAlgorithm::GenericDistAlgorithm()
 {
 	ObjectName = "GenericDistance";
 
-	db = NULL;
-	con = NULL;
-
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
 
-	LinkPropertyToString("DataBase"					,DataBase				,"");
-	LinkPropertyToString("Connector"				,Conector				,"");
-	LinkPropertyToString("Notifier"					,Notifier				,"");
 	LinkPropertyToString("HashFileName"				,HashFileName			,"Name of the file with the record hash list result.");
 	LinkPropertyToUInt32("HashStoreMethod"			,HashStoreMethod		,0,"!!LIST:SaveAsTextFile=0,SaveAsBinaryFile!!");
 
@@ -79,38 +68,12 @@ bool	GenericDistAlgorithm::CreatePozitiveAndNegativeIndexes()
 }
 bool	GenericDistAlgorithm::Init()
 {
-	UInt32		tr;
-
-	// creez obiectele:
-	if ((notif = GML::Builder::CreateNotifier(Notifier.GetText()))==NULL)
+	if (InitConnections()==false)
 		return false;
-	if (DataBase.Len()>0)
-	{
-		if ((db = GML::Builder::CreateDataBase(DataBase.GetText(),*notif))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Database (%s)",ObjectName,DataBase.GetText());
-			return false;
-		}
-		if (db->Connect()==false)
-		{
-			notif->Error("[%s] -> Unable to connesct to Database (%s)",ObjectName,DataBase.GetText());
-			return false;
-		}
-		if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif,*db))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,Conector.GetText());
-			return false;
-		}
-	} else {
-		if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,Conector.GetText());
-			return false;
-		}
-	}
-	if (threadsCount<1)
-		threadsCount = 1;
-	
+	if (InitThreads()==false)
+		return false;
+
+
 	if (RecordsStatus.Create(con->GetRecordCount())==false)
 	{
 		notif->Error("[%s] -> Unable to create RecordsStatus vector (for %d records)",ObjectName,con->GetRecordCount());
@@ -125,65 +88,20 @@ bool	GenericDistAlgorithm::Init()
 	// setare totul pe 0
 	memset(RecordsStatus.GetVector(),0,sizeof(UInt8) * RecordsStatus.Len());
 
-	if ((ptData = new ThreadData[threadsCount])==NULL)
-	{
-		notif->Error("[%s] -> Unable to allocate ThreadData[%d]",ObjectName,threadsCount);
-		return false;
-	}
-	for (tr=0;tr<threadsCount;tr++)
-	{
-		ptData[tr].ID = tr;
-		if (con->CreateMlRecord(ptData[tr].Rec1)==false)
-		{
-			notif->Error("[%s] -> Unable to create ThreadData[%d].Rec1",ObjectName,tr);
-			return false;
-		}
-		if (con->CreateMlRecord(ptData[tr].Rec2)==false)
-		{
-			notif->Error("[%s] -> Unable to create ThreadData[%d].Rec2",ObjectName,tr);
-			return false;
-		}
-	}
-		
-	if ((tpu = new GML::Utils::ThreadParalelUnit[threadsCount])==NULL)
-	{
-		notif->Error("[%s] -> Unable to create %d threads ",ObjectName,threadsCount);
-		return false;
-	}
-	for (tr=0;tr<threadsCount;tr++)
-	{
-		if (tpu[tr].Init(tr,this,ThreadRedirectFunction)==false)
-		{
-			notif->Error("[%s] -> Unable to start thread #%d",ObjectName,tr);
-			return false;
-		}
-	}
-
 	return OnInit();
-}
-bool    GenericDistAlgorithm::ExecuteParalelCommand(UInt32 command)
-{
-	UInt32	tr;
-
-	// executie
-	for (tr=0;tr<threadsCount;tr++)
-		if (tpu[tr].Execute(command)==false)
-		{
-			notif->Error("[%s] -> Error on runnig thread #%d",ObjectName,tr);
-			return false;
-		}
-	// asteptare
-	for (tr=0;tr<threadsCount;tr++)
-		if (tpu[tr].WaitToFinish()==false)
-		{
-			notif->Error("[%s] -> WaitToFinish failed on thread #%d",ObjectName,tr);
-			return false;
-		}
-	// all ok
-	return true;
 }
 bool	GenericDistAlgorithm::OnInit()
 {
+	return true;
+}
+bool	GenericDistAlgorithm::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
+{
+	DistThreadData *d = new DistThreadData();
+	if (d==NULL)
+		return false;
+	if (con->CreateMlRecord(d->SetRec)==false)
+		return false;
+	thData.Context = d;
 	return true;
 }
 void	GenericDistAlgorithm::OnExecute()
