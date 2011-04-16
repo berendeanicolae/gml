@@ -7,6 +7,7 @@ FileNotifier::FileNotifier()
 	LinkPropertyToBool  ("FlushAfterEachWrite",flushAfterEachWrite,false,"Is set , the data will be flush to file after each notification message. Notifications will be slower !");
 	LinkPropertyToString("FileName",fileName,"","Name of the file where the notifications will be written ");
 	LinkPropertyToUInt32("TimeFormat",showNotificationTime,SHOW_TIME_NONE,"!!LIST:None=0,DateTime,Miliseconds!!\nSpecify how time will be written");
+	LinkPropertyToBool  ("ParsableFormat",parsableFormat,false,"Specify if the file format should be parsable ('|' separated columns)");
 }
 bool FileNotifier::OnInit()
 {	
@@ -28,31 +29,49 @@ bool FileNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 	switch (showNotificationTime)
 	{
 		case SHOW_TIME_NONE:
-			tmp.Set("");
+			if (parsableFormat)
+				tmp.Set("|");
+			else
+				tmp.Set("");
 			break;
 		case SHOW_TIME_DATETIME:
 			GetSystemTime(&tm);
-			tmp.SetFormated("%04d.%02d.%02d  %02d:%02d:%02d.%03d ",tm.wYear,tm.wMonth,tm.wDay,tm.wHour,tm.wMinute,tm.wSecond,tm.wMilliseconds);
+			if (parsableFormat)
+				tmp.SetFormated("%04d.%02d.%02d  %02d:%02d:%02d.%03d|",tm.wYear,tm.wMonth,tm.wDay,tm.wHour,tm.wMinute,tm.wSecond,tm.wMilliseconds);
+			else
+				tmp.SetFormated("%04d.%02d.%02d  %02d:%02d:%02d.%03d ",tm.wYear,tm.wMonth,tm.wDay,tm.wHour,tm.wMinute,tm.wSecond,tm.wMilliseconds);
 			break;
 		case SHOW_TIME_MILISECONDS:
-			tmp.SetFormated("%10u ",GetTickCount());
+			if (parsableFormat)
+				tmp.SetFormated("%10u|",GetTickCount());
+			else
+				tmp.SetFormated("%10u ",GetTickCount());
 			break;
 	}
 
 	switch (messageID)
 	{
 		case GML::Utils::INotifier::NOTIFY_ERROR:
-			tmp.AddFormated("[ERROR] %s\n",text);
+			if (parsableFormat)
+				tmp.AddFormated("ERROR|%s\n",text);
+			else
+				tmp.AddFormated("[ERROR] %s\n",text);
 			break;
 		case GML::Utils::INotifier::NOTIFY_INFO:
-			tmp.AddFormated("[INFOS] %s\n",text);
+			if (parsableFormat)
+				tmp.AddFormated("INFO|%s\n",text);
+			else
+				tmp.AddFormated("[INFOS] %s\n",text);
 			break;
 		case GML::Utils::INotifier::NOTIFY_START_PROCENT:
-			tmp.AddFormated("[PROC ] %s [",text);
+			if (parsableFormat)
+				tmp.AddFormated("PROCENT|%s|[",text);
+			else
+				tmp.AddFormated("[PROC ] %s [",text);
 			lastProcValue = 0;
 			break;
 		case GML::Utils::INotifier::NOTIFY_END_PROCENT:
-			tmp.Set("] \n");
+			tmp.Set("]\n");
 			break;
 		case GML::Utils::INotifier::NOTIFY_PROCENT:
 			if ((*p)>=lastProcValue)
@@ -66,7 +85,17 @@ bool FileNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 			break;
 		case 100:
 			res = (GML::Utils::AlgorithmResult *)Data;	
-			tmp.AddFormated("[ RES ] %4d|TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|%s\n",(res->Iteration+1),(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc,res->time.GetPeriodAsString(tempStr));
+			if (parsableFormat)
+			{
+				if (res->Iteration==0)
+				{
+					tempStr.Set(&tmp);
+					tmp.AddFormated("RESULT_HEADER|ITERATION|TP|TN|FN|FP|Se|Sp|Acc|Time\n%s",tempStr.GetText());					
+				}
+				tmp.AddFormated("RESULTS|%d|%d|%d|%d|%d|%lf|%lf|%lf|%s\n",(res->Iteration+1),(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc,res->time.GetPeriodAsString(tempStr));
+			} else {
+				tmp.AddFormated("[ RES ] %4d|TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|%s\n",(res->Iteration+1),(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc,res->time.GetPeriodAsString(tempStr));
+			}
 			break;
 	};
 	if (file.Write(tmp.GetText(),tmp.Len())==false)

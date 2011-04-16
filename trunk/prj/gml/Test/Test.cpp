@@ -63,7 +63,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("LinearVote");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("BatchPerceptron");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
@@ -74,7 +74,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		/*"Connector=BitConnector=>SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=20;}=>BitConnector{DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
 		"Connector=BitConnector{StoreRecordHash=False}=>SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=100;NegativeStart=0;NegativeEnd=100;}=>BitConnector{Query=SELECT * FROM MAL;CountQuery = SELECT COUNT(*) from MAL;StoreRecordHash=True};" //*/
 		/*"Connector=BitConnector{StoreRecordHash=True;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache.1};" //*/
-		"Notifier=ConsoleNotifier{UseColors=True;FileName=E:\\lucru\\GML\\gml\\prj\\gml\\Release\\a.t;FlushAfterEachWrite=False;TimeFormat=DateTime;};"
+		"Notifier=FileNotifier{UseColors=True;FileName=E:\\lucru\\GML\\gml\\prj\\gml\\Release\\a.t;FlushAfterEachWrite=False;TimeFormat=DateTime;ParsableFormat=True};"
 		"VotePropertyName=acc;"
 		"WeightFileList=E:\\a\\Test_it_7.txt;"
 		"LearningRate=0.01;"
@@ -98,7 +98,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		"ColumnWidth=20;"
 		"SaveFeaturesWeight=F2;"
 		"FeaturesWeightFile=E:\\a.a;"
-		"Command=Test;"
+		"Command=Train;"
 		"CacheName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache;"
 		"MaxIterations=(INT32)40;")==false)
 		return 1;
