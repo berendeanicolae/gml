@@ -1943,6 +1943,12 @@ namespace GML
 {
 	namespace Algorithm
 	{
+		struct  MLThreadData
+		{
+			GML::ML::MLRecord				Record;
+			GML::Utils::AlgorithmResult		Res;
+			GML::Utils::Interval			Range;
+		};
 		class  IMLAlgorithm: public GML::Algorithm::IAlgorithm
 		{
 		protected:
@@ -1956,6 +1962,7 @@ namespace GML
 
 			// local variables
 			GML::Utils::ThreadParalelUnit	*tpu;
+			MLThreadData					*ThData;
 
 			bool							InitConnections();
 			bool							InitThreads();

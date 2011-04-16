@@ -14,6 +14,7 @@ GML::Algorithm::IMLAlgorithm::IMLAlgorithm()
 	con = NULL;
 	notif = NULL;
 	tpu = NULL;
+	ThData = NULL;
 
 	LinkPropertyToString("DataBase"					,DataBase				,"DataBase connection string");
 	LinkPropertyToString("Connector"				,Conector				,"Connector connection string");
@@ -55,9 +56,24 @@ bool GML::Algorithm::IMLAlgorithm::InitThreads()
 {
 	UInt32	tr;
 
+	if (notif==NULL)
+	{
+		DEBUGMSG("[%s] -> Connection to a notifier is not set ...",ObjectName);
+		return false;
+	}
+	if (con==NULL)
+	{
+		notif->Error("[%s] -> You need to attached a valid notifier first !",ObjectName);
+		return false;
+	}
 	if (threadsCount<1)
 	{
 		notif->Error("[%s] -> Invalid number of threads (%d). Should be at least one thread.",threadsCount);
+		return false;
+	}
+	if ((ThData = new GML::Algorithm::MLThreadData[threadsCount])==NULL)
+	{
+		notif->Error("[%s] -> Unable to create %d MLThreadData Objects",threadsCount,threadsCount);
 		return false;
 	}
 	if ((tpu = new GML::Utils::ThreadParalelUnit[threadsCount])==NULL)
@@ -72,6 +88,14 @@ bool GML::Algorithm::IMLAlgorithm::InitThreads()
 			notif->Error("[%s] -> Unable to start thread #%d",ObjectName,tr);
 			return false;
 		}
+		if (con->CreateMlRecord(ThData[tr].Record)==false)
+		{
+			notif->Error("[%s] -> Unable to create MLThreadData[%d].Record",ObjectName,tr);
+			return false;
+		}
+		ThData[tr].Res.Clear();
+		ThData[tr].Res.time.Start();
+		ThData[tr].Range.Set(0,0);
 	}
 	return true;
 }
