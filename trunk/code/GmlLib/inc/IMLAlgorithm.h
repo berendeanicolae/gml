@@ -16,12 +16,17 @@ namespace GML
 	{
 		struct EXPORT MLThreadData
 		{
+			UInt32							ThreadID;
 			GML::ML::MLRecord				Record;
 			GML::Utils::AlgorithmResult		Res;
 			GML::Utils::Interval			Range;
+			void*							Context;
 		};
 		class EXPORT IMLAlgorithm: public GML::Algorithm::IAlgorithm
 		{
+		public:
+			MLThreadData					*ThData;
+
 		protected:
 			// properties
 			UInt32							threadsCount;
@@ -33,15 +38,20 @@ namespace GML
 
 			// local variables
 			GML::Utils::ThreadParalelUnit	*tpu;
-			MLThreadData					*ThData;
+			
 
 			bool							InitConnections();
 			bool							InitThreads();
 			bool							ExecuteParalelCommand(UInt32 command);
+			bool							SplitMLThreadDataRange(UInt32 maxCount);
+
+			virtual bool					OnInitThreadData(GML::Algorithm::MLThreadData &thData);
+			virtual bool					OnInitThreads();
 
 		public:
 			IMLAlgorithm();	
-			virtual void					OnRunThreadCommand(UInt32 threadID,UInt32 threadCommand);
+			virtual void					OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
+
 		};
 	}
 }
