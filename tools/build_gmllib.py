@@ -23,7 +23,8 @@ list_headers = [
 	"IDataBase.h",
 	"MLInterface.h",
 	"IAlgorithm.h",	
-	"Builder.h",		
+	"Builder.h",
+	"IMLAlgorithm.h",		
 ]
 
 c_path = sys.argv[1]
