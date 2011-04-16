@@ -1,11 +1,5 @@
 #include "LinearVote.h"
 
-void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
-{
-	LinearVote *lv = (LinearVote *)context;
-	lv->OnRunThreadCommand(lv->ptData[paralel->GetID()],paralel->GetCodeID());
-}
-
 //================================================================================
 PerceptronVector::PerceptronVector()
 {
@@ -70,16 +64,12 @@ LinearVote::LinearVote()
 	ObjectName = "LinearVote";
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Test!!");
-	LinkPropertyToString("DataBase"					,DataBase				,"");
-	LinkPropertyToString("Connector"				,Conector				,"");
-	LinkPropertyToString("Notifier"					,Notifier				,"");
 	LinkPropertyToString("WeightFileList"			,WeightFiles			,"","A list of weight files to be loaded separated by a comma.");
 	LinkPropertyToString("VotePropertyName"			,VotePropertyName		,"Vote","The name of the property that contains the vote. It has to be a numeric property.");
 	LinkPropertyToUInt32("VotesLoadingMethod"		,VotesLoadingMethod		,0,"!!LIST:FromList=0,FromPath!!");
 	LinkPropertyToUInt32("VoteComputeMethod"		,VoteComputeMethod		,VOTE_COMPUTE_ADDITION,"!!LIST:Add=0,Multiply,Count!!");
 	LinkPropertyToUInt32("OnEqualVotes"				,VoteOnEqual			,VOTE_NEGATIVE,"!!LIST:VoteNegative=0,VotePositive!!\nSets the vote that will be considered in case of equal votes");
 	LinkPropertyToString("WeightPath"				,WeightPath				,"*.txt","The path where the weigh files are");
-	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1,"");
 }
 bool LinearVote::Create(PerceptronVector &pv,char *fileName)
 {
@@ -234,12 +224,12 @@ bool LinearVote::LoadVotesFromList()
 
 	return true;
 }
-void LinearVote::OnRunThreadCommand(ThreadData &td,UInt32 command)
+void LinearVote::OnRunThreadCommand(UInt32 threadID,UInt32 command)
 {
 	switch (command)
 	{
 		case PARALLEL_CMD_TEST:
-			PerformTest(td);
+			PerformTest(ptData[threadID]);
 			break;
 	}
 }
@@ -263,32 +253,11 @@ bool LinearVote::Init()
 	UInt32	tr;
 	UInt32	splitValue,start;
 
-	if ((notif = GML::Builder::CreateNotifier(Notifier.GetText()))==NULL)
+	if (InitConnections()==false)
 		return false;
-	if (DataBase.Len()!=0)
-	{
-		if ((db = GML::Builder::CreateDataBase(DataBase.GetText(),*notif))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Database (%s)",ObjectName,DataBase.GetText());
-			return false;
-		}
-		if (db->Connect()==false)
-		{
-			notif->Error("[%s] -> Unable to connesct to Database (%s)",ObjectName,DataBase.GetText());
-			return false;
-		}
-		if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif,*db))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,Conector.GetText());
-			return false;
-		}
-	} else {
-		if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,Conector.GetText());
-			return false;
-		}
-	}
+	if (InitThreads()==false)
+		return false;
+
 	if (VotesLoadingMethod==LOAD_VOTES_FROMLIST)
 	{
 		if (LoadVotesFromList()==false)
@@ -313,9 +282,6 @@ bool LinearVote::Init()
 	if (CheckValidVotes()==false)
 		return false;
 
-	if (threadsCount<1)
-		threadsCount = 1;
-
 	if ((ptData = new ThreadData[threadsCount])==NULL)
 	{
 		notif->Error("[%s] -> Unable to allocate ThreadData[%d]",ObjectName,threadsCount);
@@ -336,40 +302,7 @@ bool LinearVote::Init()
 		ptData[tr].Range.Set(start,start+splitValue);
 		start+=splitValue;
 	}
-	if ((tpu = new GML::Utils::ThreadParalelUnit[threadsCount])==NULL)
-	{
-		notif->Error("[%s] -> Unable to create %d threads ",ObjectName,threadsCount);
-		return false;
-	}
-	for (tr=0;tr<threadsCount;tr++)
-	{
-		if (tpu[tr].Init(tr,this,ThreadRedirectFunction)==false)
-		{
-			notif->Error("[%s] -> Unable to start thread #%d",ObjectName,tr);
-			return false;
-		}
-	}
-	return true;
-}
-bool LinearVote::ExecuteParalelCommand(UInt32 command)
-{
-	UInt32	tr;
 
-	// executie
-	for (tr=0;tr<threadsCount;tr++)
-		if (tpu[tr].Execute(command)==false)
-		{
-			notif->Error("[%s] -> Error on runnig thread #%d",ObjectName,tr);
-			return false;
-		}
-	// asteptare
-	for (tr=0;tr<threadsCount;tr++)
-		if (tpu[tr].WaitToFinish()==false)
-		{
-			notif->Error("[%s] -> WaitToFinish failed on thread #%d",ObjectName,tr);
-			return false;
-		}
-	// all ok
 	return true;
 }
 bool LinearVote::PerformTest(ThreadData &td)

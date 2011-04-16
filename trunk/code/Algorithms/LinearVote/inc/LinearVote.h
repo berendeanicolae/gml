@@ -29,7 +29,7 @@ struct ThreadData
 	GML::Utils::Interval			Range;
 	UInt32							eqVotes;
 };
-class LinearVote: public GML::Algorithm::IAlgorithm
+class LinearVote: public GML::Algorithm::IMLAlgorithm
 {	
 	enum {
 		PARALLEL_CMD_TEST = 0,
@@ -49,15 +49,9 @@ class LinearVote: public GML::Algorithm::IAlgorithm
 		VOTE_NEGATIVE,
 	};
 
-	GML::Utils::GString							Conector;
-	GML::Utils::GString							DataBase;
-	GML::Utils::GString							Notifier;
 	GML::Utils::GString							WeightFiles;
 	GML::Utils::GString							WeightPath;
 	GML::Utils::GString							VotePropertyName;
-	GML::DB::IDataBase							*db;
-	GML::ML::IConnector							*con;
-	UInt32										threadsCount;
 	UInt32										VotesLoadingMethod;
 	UInt32										VoteComputeMethod;
 	UInt32										VoteOnEqual;
@@ -75,11 +69,10 @@ protected:
 	bool					PerformTest(ThreadData &td);
 	void					DoTest();
 	bool					CheckValidVotes();
-	bool					ExecuteParalelCommand(UInt32 command);
 public:
 	LinearVote();
 	
-	void					OnRunThreadCommand(ThreadData &td,UInt32 command);
+	void					OnRunThreadCommand(UInt32 threadID,UInt32 threadCommand);
 	bool					Init();
 	void					OnExecute();
 };
