@@ -4,9 +4,6 @@ BayesNaiv::BayesNaiv()
 {
 	ObjectName = "BayesNaiv";
 
-	LinkPropertyToString("Connector",strConector,"","Conectorul la care sa se conecteze");
-	LinkPropertyToString("Notifier",strNotificator,"","Notificatorul la care sa se conecteze");
-	LinkPropertyToString("DataBase",strDB,"","Baza de date la care sa se conecteze");	
 	LinkPropertyToUInt32("ProcIgnoreFeature",procIgnoreFeature,25,"A procent from where a flag is ignored");
 	LinkPropertyToUInt32("PenaltyForInfFiles",penaltyForInfFile,100,"A procent to penalize the probability for infected files");
 	LinkPropertyToDouble("ProcToSetVerdictInfected",procToSetInfected,0.999,"MinProbability to set the verdict=infected");
@@ -18,33 +15,7 @@ BayesNaiv::BayesNaiv()
 
 bool BayesNaiv::Init()
 {
-	if ((notif = GML::Builder::CreateNotifier(strNotificator.GetText()))==NULL)
-		return false;
-	if (strDB.Len()==0)
-	{
-		if ((con = GML::Builder::CreateConnectors(strConector.GetText(),*notif))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,strConector.GetText());
-			return false;
-		}
-	} else {
-		if ((db = GML::Builder::CreateDataBase(strDB.GetText(),*notif))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Database (%s)",ObjectName,strDB.GetText());
-			return false;
-		}
-		if (db->Connect()==false)
-		{
-			notif->Error("[%s] -> Unable to connesct to Database (%s)",ObjectName,strDB.GetText());
-			return false;
-		}
-		if ((con = GML::Builder::CreateConnectors(strConector.GetText(),*notif,*db))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,strConector.GetText());
-			return false;
-		}
-	}
-	return true;
+	return InitConnections();
 }
 
 unsigned int first4Decimals(double value)
@@ -120,6 +91,7 @@ bool BayesNaiv::PerformTestClassicMul()
 	a.Update("pFeatCondInf", &pFeatCondInf[0], con->GetFeatureCount()*sizeof(double));	
 
 	result.Clear();
+	result.time.Start();
 	a.Clear();
 
 	for(i=0; i<con->GetRecordCount(); i++)
@@ -149,7 +121,9 @@ bool BayesNaiv::PerformTestClassicMul()
 	}
 
 	result.Compute();
-	notif->Notify(100,&result,sizeof(result));	
+	result.time.Stop();
+	notif->Result(result);
+	
 
 	return true;
 }
