@@ -16,9 +16,9 @@ GML::Algorithm::IMLAlgorithm::IMLAlgorithm()
 	tpu = NULL;
 	ThData = NULL;
 
-	LinkPropertyToString("DataBase"					,DataBase				,"DataBase connection string");
-	LinkPropertyToString("Connector"				,Conector				,"Connector connection string");
-	LinkPropertyToString("Notifier"					,Notifier				,"Notifier plugin");
+	LinkPropertyToString("DataBase"					,DataBase				,"","DataBase connection string");
+	LinkPropertyToString("Connector"				,Conector				,"","Connector connection string");
+	LinkPropertyToString("Notifier"					,Notifier				,"","Notifier plugin");
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1,"Number of threads to be used for parallel computations.");
 }
 
