@@ -1054,6 +1054,7 @@ namespace GML
 
 			//------ Soft & Find --------------------------------------------------------------------------
 			void						Sort(int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2),bool ascendent=true);
+			int							BinarySearch(TemplateObject &element,int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2));
 
 			//------ Info --------------------------------------------------------------------------
 			bool						Exists();
@@ -1157,6 +1158,10 @@ namespace GML
 		template <class TemplateObject> void  GTFVector<TemplateObject>::Sort(int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2),bool ascendent)
 		{
 			elements.Sort((_BinarySearchCompFunction)_CmpFunc,ascendent);
+		}
+		template <class TemplateObject> int	 GTFVector<TemplateObject>::BinarySearch(TemplateObject &element,int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2))
+		{
+			return elements.BinarySearch(&element,(_BinarySearchCompFunction)_CmpFunc);
 		}
 	}
 }
