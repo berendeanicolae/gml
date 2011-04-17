@@ -11,29 +11,21 @@ using namespace GML::Utils;
 class HashFilterConnector : public IConnector
 {
 protected:
-	enum 
-	{
-		Percentage=0,
-		Range,
-		UniformPercentage,
-		CustomPercentage,
-	};
+
 
 private:
-	UInt32					FeatureCount,RecordCount;
-	GML::Utils::Indexes		Indexes;
+	UInt32										FeatureCount,RecordCount;
+	GML::Utils::GTFVector<GML::DB::RecordHash>	HashList;
+	GML::Utils::Indexes							Indexes;
 
 	//properties
-	UInt32					SplitMode;
-	UInt32					Start,End;
-	UInt32					attrStart, attrEnd;
-	UInt32					pozitiveProcStart,pozitiveProcEnd;
-	UInt32					negativeProcStart,negativeProcEnd;
+	UInt32										HashFileType;
+	UInt32										FilterMethod;
+	GML::Utils::GString							HashFileName;
 
-	bool					CreateIndexList();
-	bool					AddIndexes();
-	bool					CheckProcentInterval(UInt32	pStart,UInt32 pEnd);
-	bool					CreateUniformPercentageIndex(UInt32 pozStart,UInt32 pozEnd,UInt32 negStart,UInt32 negEnd);
+
+	bool										LoadBinaryHashFile();
+
 	
 	bool					OnInitConnectionToConnector();
 public:
