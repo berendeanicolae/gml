@@ -16,8 +16,8 @@ namespace GML
 	namespace Algorithm
 	{
 		enum {
-			SAVE_HASHES_AS_TEXT = 0,
-			SAVE_HASHES_AS_BINARY
+			HASH_FILE_TEXT = 0,
+			HASH_FILE_BINARY		
 		};
 		struct EXPORT MLThreadData
 		{
@@ -35,7 +35,7 @@ namespace GML
 		protected:
 			// properties
 			UInt32							threadsCount;
-			UInt32							HashStoreMethod;
+			UInt32							HashFileType;
 			GML::Utils::GString				Conector;
 			GML::Utils::GString				DataBase;
 			GML::Utils::GString				Notifier;

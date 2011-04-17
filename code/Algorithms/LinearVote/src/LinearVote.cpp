@@ -438,7 +438,7 @@ void LinearVote::DoTest()
 	notif->Info("[%s] -> Equal votes : %d",ObjectName,eqVotes);
 	notif->Result(res);
 	if (HashSelectMethod!=HASH_SELECT_NONE)
-		SaveHashResult(HashFileName.GetText(),HashStoreMethod,RecordsStatus);
+		SaveHashResult(HashFileName.GetText(),HashFileType,RecordsStatus);
 }
 void LinearVote::OnExecute()
 {

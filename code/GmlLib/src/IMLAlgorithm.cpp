@@ -25,7 +25,7 @@ GML::Algorithm::IMLAlgorithm::IMLAlgorithm()
 void GML::Algorithm::IMLAlgorithm::AddHashSavePropery()
 {
 	LinkPropertyToString("HashFileName"				,HashFileName			,"","Name of the file with the record hash list result.");
-	LinkPropertyToUInt32("HashStoreMethod"			,HashStoreMethod		,0,"!!LIST:Text=0,Binary!!");
+	LinkPropertyToUInt32("HashFileType"				,HashFileType			,0,"!!LIST:Text=0,Binary!!");
 }
 bool GML::Algorithm::IMLAlgorithm::InitConnections()
 {
@@ -188,10 +188,10 @@ bool GML::Algorithm::IMLAlgorithm::SaveHashResult(char *fname,UInt32 method,GML:
 
 	switch (method)
 	{
-		case SAVE_HASHES_AS_TEXT:
+		case HASH_FILE_TEXT:
 			recSize = 32+1;
 			break;
-		case SAVE_HASHES_AS_BINARY:
+		case HASH_FILE_BINARY:
 			recSize = 16;
 			break;
 		default:
@@ -223,7 +223,7 @@ bool GML::Algorithm::IMLAlgorithm::SaveHashResult(char *fname,UInt32 method,GML:
 			break;
 		}
 		// pentru binary method , scriu cateva date
-		if (method==SAVE_HASHES_AS_BINARY)
+		if (method==HASH_FILE_BINARY)
 		{
 			if (f.Write("HASHLIST",8)==false)
 				break;
@@ -242,12 +242,12 @@ bool GML::Algorithm::IMLAlgorithm::SaveHashResult(char *fname,UInt32 method,GML:
 				}
 				switch (method)
 				{
-					case SAVE_HASHES_AS_TEXT:
+					case HASH_FILE_TEXT:
 						rHash.ToString(temp);
 						temp.Add("\n");
 						p = (UInt8 *)temp.GetText();
 						break;
-					case SAVE_HASHES_AS_BINARY:
+					case HASH_FILE_BINARY:
 						recSize = 16;
 						p = (UInt8 *)&rHash.Hash.bValue[0];
 						break;
