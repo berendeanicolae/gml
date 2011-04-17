@@ -7,8 +7,7 @@ GenericDistAlgorithm::GenericDistAlgorithm()
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
 
-	LinkPropertyToString("HashFileName"				,HashFileName			,"Name of the file with the record hash list result.");
-	LinkPropertyToUInt32("HashStoreMethod"			,HashStoreMethod		,0,"!!LIST:SaveAsTextFile=0,SaveAsBinaryFile!!");
+
 
 }
 bool	GenericDistAlgorithm::CreatePozitiveAndNegativeIndexes()
@@ -72,21 +71,13 @@ bool	GenericDistAlgorithm::Init()
 		return false;
 	if (InitThreads()==false)
 		return false;
-
-
 	if (RecordsStatus.Create(con->GetRecordCount())==false)
 	{
-		notif->Error("[%s] -> Unable to create RecordsStatus vector (for %d records)",ObjectName,con->GetRecordCount());
+		notif->Error("[%s] -> Unable to create BitSet for %d records ",ObjectName,con->GetRecordCount());
 		return false;
 	}
-	// resetare
-	if (RecordsStatus.Resize(con->GetRecordCount())==false)
-	{
-		notif->Error("[%s] -> Unable to alloc RecordsStatus vector (for %d records)",ObjectName,con->GetRecordCount());
-		return false;
-	}
-	// setare totul pe 0
-	memset(RecordsStatus.GetVector(),0,sizeof(UInt8) * RecordsStatus.Len());
+
+
 
 	return OnInit();
 }
@@ -118,106 +109,4 @@ void	GenericDistAlgorithm::OnExecute()
 			return;
 	};
 	notif->Error("[%s] -> Unkwnown command ID : %d",ObjectName,Command);
-}
-bool	GenericDistAlgorithm::SaveHashResult()
-{
-	GML::Utils::File		f;
-	GML::Utils::Vector		Cache;
-	UInt32					recSize,tr,count;
-	UInt8					*status,*p;
-	GML::DB::RecordHash		rHash;
-	GML::Utils::GString		temp;
-
-	switch (HashStoreMethod)
-	{
-		case SAVE_HASHES_AS_TEXT:
-			recSize = 32+2;
-			break;
-		case SAVE_HASHES_AS_BINARY:
-			recSize = 16;
-			break;
-		default:
-			notif->Error("[%s] -> Unknown HashStoreMethod = %d",ObjectName,HashStoreMethod);
-			return false;
-	};
-	status = RecordsStatus.GetVector();
-	for (tr=0,count=0;tr<RecordsStatus.Len();tr++,status++)
-	{
-		if ((*status)!=0)
-			count++;
-	}
-	if (HashFileName.Len()==0)
-	{
-		notif->Error("[%s] -> You need to set 'HashFileName' property with the name of the file where you want to save your results",ObjectName);
-		return false;
-	}
-	if (f.Create(HashFileName.GetText())==false)
-	{
-		notif->Error("[%s] -> Unable to create %s",ObjectName,HashFileName.GetText());
-		return false;
-	}
-	status = RecordsStatus.GetVector();
-	while (true)
-	{
-		if (Cache.Create(SAVE_CACHE_SIZE,recSize)==false)
-		{
-			notif->Error("[%s] -> Unable to allocate %d bytes for caching ...",ObjectName,recSize * SAVE_CACHE_SIZE);
-			break;
-		}
-		// pentru binary method , scriu cateva date
-		if (HashStoreMethod==SAVE_HASHES_AS_BINARY)
-		{
-			if (f.Write("HASHLIST",8)==false)
-				break;
-			if (f.Write(&count,sizeof(UInt32))==false)
-				break;
-		}
-		for (tr=0;tr<RecordsStatus.Len();tr++,status++)
-		{
-			if ((*status)!=0)
-			{
-				// scriu datele
-				if (con->GetRecordHash(rHash,tr)==false)
-				{
-					notif->Error("[%s] -> Unable to read hash for record #%d",ObjectName,tr);
-					break;
-				}
-				switch (HashStoreMethod)
-				{
-					case SAVE_HASHES_AS_TEXT:
-						rHash.ToString(temp);
-						p = (UInt8 *)temp.GetText();
-						break;
-					case SAVE_HASHES_AS_BINARY:
-						recSize = 16;
-						p = (UInt8 *)&rHash.Hash.bValue[0];
-						break;
-				};
-				if (Cache.GetSize()>=SAVE_CACHE_SIZE)
-				{
-					if (f.Write(Cache.GetVector(),Cache.GetSize()*recSize)==false)
-						break;
-					if (Cache.Resize(0)==false)
-						break;
-				}
-				if (Cache.Push(p)==false)
-					break;
-			}
-		}
-		// daca nu am ajuns la final , am o eroare
-		if (tr!=RecordsStatus.Len())
-			break;
-		if (Cache.GetSize()>=0)
-		{
-			if (f.Write(Cache.GetVector(),Cache.GetSize()*recSize)==false)
-				break;
-		}
-		f.Close();
-		notif->Info("[%s] Hashes saved ok in %s (%d hashesh)",ObjectName,HashFileName.GetText(),count);
-		return true;
-	}
-	f.Close();
-	DeleteFileA(HashFileName.GetText());
-	notif->Error("[%s] -> Unable to write hashes to %s",ObjectName,HashFileName.GetText());
-	return false;
 }
