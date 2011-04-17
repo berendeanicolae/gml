@@ -208,7 +208,12 @@ bool GML::Utils::GMLObject::SetProperty(GML::Utils::AttributeList &config)
 					DEBUGMSG("Invalid Attribute type (expecting string) for %s ",link->Name);
 					return false;
 				}
-				if (((GML::Utils::GString *)link->LocalAddress)->Set((char *)attr->Data,attr->DataSize)==false)
+				if ((attr->Data==NULL) || (attr->DataSize<1))
+				{
+					DEBUGMSG("Invalid Data or DataSize value for %s ",link->Name);
+					return false;
+				}
+				if (((GML::Utils::GString *)link->LocalAddress)->Set((char *)attr->Data,attr->DataSize-1)==false)
 				{
 					DEBUGMSG("Error copying string for %s ",link->Name);
 					return false;
