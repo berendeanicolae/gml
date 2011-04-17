@@ -1,5 +1,10 @@
 #include "HashFilterConnector.h"
 
+int HashCompareFunction(GML::DB::RecordHash &h1,GML::DB::RecordHash &h2)
+{
+	return memcmp(&h1,&h2,sizeof(GML::DB::RecordHash));
+}
+//========================================================
 HashFilterConnector::HashFilterConnector()
 {
 	FeatureCount = RecordCount = 0;
@@ -110,6 +115,10 @@ bool   HashFilterConnector::SetRecordInterval( UInt32 start, UInt32 end )
 }
 bool   HashFilterConnector::OnInitConnectionToConnector() 
 {
+	UInt32					tr,conCount;
+	GML::DB::RecordHash		recHash;
+	bool					isInList;
+
 	notifier->Info("[%s] -> Loading hash list from %s",ObjectName,HashFileName.GetText());
 	switch (HashFileType)
 	{
@@ -121,8 +130,39 @@ bool   HashFilterConnector::OnInitConnectionToConnector()
 			notifier->Error("[%s] -> Unknwon hash file type : %d",ObjectName,HashFileType);
 			return false;
 	};
+	if (Indexes.Create(conector->GetRecordCount())==false)
+	{
+		notifier->Error("[%s] -> Unable to allocate %d indexes ",ObjectName,conector->GetRecordCount());
+		return false;
+	}
+
 	// sortare
-	// HashList.
+	notifier->Info("[%s] -> Sorting ... ");
+	HashList.Sort(HashCompareFunction);
+	// bag in list
+	notifier->StartProcent("[%s] -> Filtering ",ObjectName);
+	conCount = conector->GetRecordCount();
+	for (tr=0;tr<conCount;tr++)
+	{
+		if (conector->GetRecordHash(recHash,tr)==false)
+		{
+			notifier->Error("[%s] -> Unable to read hash for record #d ",ObjectName,tr);
+			return false;
+		}
+		isInList = (bool)(HashList.BinarySearch(recHash,HashCompareFunction)>=0);
+		if ((FilterMethod==FILTER_REMOVE_HASH) && (isInList))
+			continue;
+		if ((FilterMethod==FILTER_KEEP_HASH) && (!isInList))
+			continue;
+		if (Indexes.Push(tr)==false)
+		{
+			notifier->Error("[%s] -> Unable to add record #d to index list",ObjectName,tr);
+			return false;
+		}
+		if ((tr % 1000)==0)
+			notifier->SetProcent(tr,conCount);
+	}
+	notifier->EndProcent();
 
 
 	RecordCount = Indexes.Len();

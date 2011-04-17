@@ -12,7 +12,10 @@ class HashFilterConnector : public IConnector
 {
 protected:
 
-
+	enum {
+		FILTER_REMOVE_HASH = 0,
+		FILTER_KEEP_HASH
+	};
 private:
 	UInt32										FeatureCount,RecordCount;
 	GML::Utils::GTFVector<GML::DB::RecordHash>	HashList;
@@ -24,7 +27,7 @@ private:
 	GML::Utils::GString							HashFileName;
 
 
-	bool										LoadBinaryHashFile();
+	bool					LoadBinaryHashFile();
 
 	
 	bool					OnInitConnectionToConnector();
