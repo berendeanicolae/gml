@@ -120,8 +120,9 @@ bool   HashFilterConnector::OnInitConnectionToConnector()
 		default:
 			notifier->Error("[%s] -> Unknwon hash file type : %d",ObjectName,HashFileType);
 			return false;
-	}
-
+	};
+	// sortare
+	// HashList.
 
 
 	RecordCount = Indexes.Len();

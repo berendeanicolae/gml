@@ -29,8 +29,29 @@ void PrintBitSet(GML::Utils::BitSet &bs)
 		printf("%d,",bs.Get(tr));
 	printf(" => %d\n",bs.CountElements(true));
 }
+int my_fnc(UInt32 &e1,UInt32 &e2)
+{
+	if (e1>e2)
+		return 1;
+	if (e1<e2)
+		return -1;
+	return 0;
+}
 int _tmain(int argc, _TCHAR* argv[])
 {
+	GML::Utils::GTFVector<UInt32> v;
+	v.Create(30);
+	v.Push(100);
+	v.Push(50);
+	v.Push(1000);
+	v.Push(5);
+	v.Push(2);
+	v.Sort(my_fnc);
+	for (int tr=0;tr<v.Len();tr++)
+		printf("%d,",v[tr]);
+	printf("\n");
+	return 1;
+
 	//GML::Utils::AttributeList	attr;
 
 	//if (GML::Builder::GetPluginProperties("RosenblattPerceptron",attr))

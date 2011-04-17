@@ -40,7 +40,10 @@ namespace GML
 			//------ Delete --------------------------------------------------------------------------
 			bool						Delete(UInt32 index);
 			bool						DeleteAll();
-	
+
+			//------ Soft & Find --------------------------------------------------------------------------
+			void						Sort(int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2),bool ascendent=true);
+
 			//------ Info --------------------------------------------------------------------------
 			bool						Exists();
 			bool						Resize(UInt32 newSize);
@@ -139,6 +142,10 @@ namespace GML
 		template <class TemplateObject> bool  GTFVector<TemplateObject>::Resize(UInt32 newSize)
 		{
 			return elements.Resize(newSize);
+		}
+		template <class TemplateObject> void  GTFVector<TemplateObject>::Sort(int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2),bool ascendent)
+		{
+			elements.Sort((_BinarySearchCompFunction)_CmpFunc,ascendent);
 		}
 	}
 }

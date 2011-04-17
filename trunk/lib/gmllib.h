@@ -628,7 +628,9 @@ namespace GML
 			unsigned int	GetElementSize() { return ElementSize; }
 			void*			GetVector() { return Data; }
 			void*			Get(unsigned int index);
+
 			int				BinarySearch(void *Element,_BinarySearchCompFunction cmpFunc);
+			void			Sort(_BinarySearchCompFunction cmpFunc,bool ascendet);
 
 			bool			Push(void *Element);
 			bool			Insert(void *Element,unsigned int index);
@@ -637,7 +639,7 @@ namespace GML
 			bool			Delete(unsigned int index);
 			bool			DeleteAll();
 			bool			Resize(unsigned int newSize);
-	
+			
 		};
 	}
 }
@@ -1049,7 +1051,10 @@ namespace GML
 			//------ Delete --------------------------------------------------------------------------
 			bool						Delete(UInt32 index);
 			bool						DeleteAll();
-	
+
+			//------ Soft & Find --------------------------------------------------------------------------
+			void						Sort(int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2),bool ascendent=true);
+
 			//------ Info --------------------------------------------------------------------------
 			bool						Exists();
 			bool						Resize(UInt32 newSize);
@@ -1148,6 +1153,10 @@ namespace GML
 		template <class TemplateObject> bool  GTFVector<TemplateObject>::Resize(UInt32 newSize)
 		{
 			return elements.Resize(newSize);
+		}
+		template <class TemplateObject> void  GTFVector<TemplateObject>::Sort(int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2),bool ascendent)
+		{
+			elements.Sort((_BinarySearchCompFunction)_CmpFunc,ascendent);
 		}
 	}
 }

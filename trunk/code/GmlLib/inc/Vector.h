@@ -31,7 +31,9 @@ namespace GML
 			unsigned int	GetElementSize() { return ElementSize; }
 			void*			GetVector() { return Data; }
 			void*			Get(unsigned int index);
+
 			int				BinarySearch(void *Element,_BinarySearchCompFunction cmpFunc);
+			void			Sort(_BinarySearchCompFunction cmpFunc,bool ascendet);
 
 			bool			Push(void *Element);
 			bool			Insert(void *Element,unsigned int index);
@@ -40,7 +42,7 @@ namespace GML
 			bool			Delete(unsigned int index);
 			bool			DeleteAll();
 			bool			Resize(unsigned int newSize);
-	
+			
 		};
 	}
 }
