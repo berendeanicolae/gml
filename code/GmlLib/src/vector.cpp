@@ -172,6 +172,7 @@ bool GML::Utils::Vector::Delete(unsigned int index)
 }
 bool GML::Utils::Vector::Resize(unsigned int newSize)
 {
+	// NU TREBUIE SCHIMBAT COMPORTAMENTUL -> E UTIL CAND INCARC DIN FISIER DIRECT IN BUFFER
 	if (Data==NULL) 
 		return false;
 	if ((newSize>AlocatedElements) && (Grow(newSize)==false))
