@@ -272,7 +272,7 @@ bool GML::Algorithm::IMLAlgorithm::SaveHashResult(char *fname,UInt32 method,GML:
 				break;
 		}
 		f.Close();
-		notif->Info("[%s] Hashes saved ok in %s (%d hashesh)",ObjectName,fname,count);
+		notif->Info("[%s] -> Hashes saved ok in %s (%d hashesh)",ObjectName,fname,count);
 		return true;
 	}
 	f.Close();

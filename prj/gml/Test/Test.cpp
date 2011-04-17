@@ -68,36 +68,24 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Utils::BitSet	b;
-	b.Create(20);
-	PrintBitSet(b);
-	b.Set(15,true);
-	b.Set(3,true);
-	PrintBitSet(b);
-	b.ReverseAll();
-	PrintBitSet(b);
-	b.Reverse(15);
-	PrintBitSet(b);
-	b.SetAll(true);
-	PrintBitSet(b);
-	b.SetAll(false);
-	PrintBitSet(b);
-
-	return 1;
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("CacheBuilder");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("LinearVote");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
 		"Name=Test;"
-		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"//*/
-		/*"DataBase=MySQL{Server='127.0.0.1';Database=TestDB;Username=root;Password=a};" //*/
+		/*"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"//*/
+		"DataBase=MySQL{Server='127.0.0.1';Database=TestDB;Username=root;Password=a};" //*/
+		"Connector=BitConnector{Query=SELECT * FROM MAL;CountQuery = SELECT COUNT(*) from MAL;StoreRecordHash=True};" //*/
 		/*"Connector=SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=20;}=>BitConnector{Table=RecordTable;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
 		/*"Connector=BitConnector=>SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=20;}=>BitConnector{DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
-		"Connector=BitConnector{StoreRecordHash=False}=>SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=100;NegativeStart=0;NegativeEnd=100;}=>BitConnector{Query=SELECT * FROM MAL;CountQuery = SELECT COUNT(*) from MAL;StoreRecordHash=True};" //*/
+		/*"Connector=BitConnector{StoreRecordHash=False}=>SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=100;NegativeStart=0;NegativeEnd=100;}=>BitConnector{Query=SELECT * FROM MAL;CountQuery = SELECT COUNT(*) from MAL;StoreRecordHash=True};" //*/
 		/*"Connector=BitConnector{StoreRecordHash=True;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache.1};" //*/
 		"Notifier=ConsoleNotifier{UseColors=True;FileName=E:\\lucru\\GML\\gml\\prj\\gml\\Release\\a.t;FlushAfterEachWrite=False;TimeFormat=DateTime;ParsableFormat=True};"
 		"VotePropertyName=acc;"
-		"WeightFileList=E:\\a\\Test_it_7.txt;"
+		"WeightFileList=E:\\a\\a.txt;"
+		"HashFileName=E:\\lucru\\GML\\gml\\bin\\hash.txt;"
+		"HashStoreMethod=Text;"
+		"HashSelectMethod=NegativeCorectelyClasify;"
 		"LearningRate=0.01;"
 		"AdjustWeightMode=UseLearningRate;"
 		"InitialWeight=zeros;"
@@ -119,7 +107,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		"ColumnWidth=20;"
 		"SaveFeaturesWeight=F2;"
 		"FeaturesWeightFile=E:\\a.a;"
-		"Command=CreateCache;"
+		"Command=Test;"
 		"CacheName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache.test;"
 		"MaxIterations=(INT32)40;")==false)
 		return 1;
