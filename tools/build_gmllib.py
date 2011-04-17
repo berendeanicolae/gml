@@ -3,6 +3,7 @@ import sys,os
 list_headers = [	
 	"GTVector.h",
 	"Vector.h",
+	"BitSet.h",
 	"Matrix.h",
 	"FixMatrix.h",
 	"GTFVector.h",
