@@ -70,6 +70,10 @@ LinearVote::LinearVote()
 	LinkPropertyToUInt32("VoteComputeMethod"		,VoteComputeMethod		,VOTE_COMPUTE_ADDITION,"!!LIST:Add=0,Multiply,Count!!");
 	LinkPropertyToUInt32("OnEqualVotes"				,VoteOnEqual			,VOTE_NEGATIVE,"!!LIST:VoteNegative=0,VotePositive!!\nSets the vote that will be considered in case of equal votes");
 	LinkPropertyToString("WeightPath"				,WeightPath				,"*.txt","The path where the weigh files are");
+
+	// Hash-uri
+	LinkPropertyToUInt32("HashSelectMethod"			,HashSelectMethod		,HASH_SELECT_NONE,"!!LIST:None=0,All,CorectelyClasify,IncorectelyClasify,Positive,Negative,PositiveCorectelyClasify,PositiveInCorectelyClasify,NegativeCorectelyClasify,NegativeInCorectelyClasify!!");
+	AddHashSavePropery();
 }
 bool LinearVote::Create(PerceptronVector &pv,char *fileName)
 {
@@ -288,7 +292,15 @@ bool LinearVote::Init()
 		}
 	if (CheckValidVotes()==false)
 		return false;
-
+	if (HashSelectMethod!=HASH_SELECT_NONE)
+	{
+		if (RecordsStatus.Create(con->GetRecordCount())==false)
+		{
+			notif->Error("[%s] -> Unable to create RecordsStatus object !",ObjectName);
+			return false;
+		}
+		RecordsStatus.SetAll(false);
+	}
 
 
 	return true;
@@ -383,6 +395,8 @@ void LinearVote::DoTest()
 	res.time.Stop();
 	notif->Info("[%s] -> Equal votes : %d",ObjectName,eqVotes);
 	notif->Result(res);
+	if (HashSelectMethod!=HASH_SELECT_NONE)
+		SaveHashResult(HashFileName.GetText(),HashStoreMethod,RecordsStatus);
 }
 void LinearVote::OnExecute()
 {
