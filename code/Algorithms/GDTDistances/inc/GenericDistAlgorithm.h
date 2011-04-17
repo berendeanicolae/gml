@@ -30,7 +30,7 @@ public:
 	
 	bool							OnInitThreadData(GML::Algorithm::MLThreadData &thData);
 	virtual bool					OnInit();
-	virtual bool					OnCompute();
+	virtual bool					OnCompute()=0;
 
 	bool							Init();
 	void							OnExecute();
