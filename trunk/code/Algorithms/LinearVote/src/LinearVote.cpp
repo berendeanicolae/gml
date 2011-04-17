@@ -312,6 +312,7 @@ bool LinearVote::PerformTest(GML::Algorithm::MLThreadData &td)
 	LinearVoteThreadData	*ltd;
 	double					scorPozitive,scorNegative,result;
 	double					*scor;
+	bool					corectelyClasified;
 	
 	ltd = (LinearVoteThreadData *)td.Context;
 	index = td.Range.Start;
@@ -325,7 +326,7 @@ bool LinearVote::PerformTest(GML::Algorithm::MLThreadData &td)
 	{
 		if (con->GetRecord(td.Record,index)==false)
 		{
-			notif->Error("[%s] -> Unable to read record %d",ObjectName,tr);
+			notif->Error("[%s] -> Unable to read record %d",ObjectName,index);
 			return false;
 		}
 		switch (VoteComputeMethod)
@@ -372,7 +373,48 @@ bool LinearVote::PerformTest(GML::Algorithm::MLThreadData &td)
 			result = 1;
 		else 
 			result = -1;
-		td.Res.Update(td.Record.Label==1,(bool)((result * td.Record.Label)>0));	
+		corectelyClasified = (bool)((result * td.Record.Label)>0);
+		td.Res.Update(td.Record.Label==1,corectelyClasified);	
+		switch (HashSelectMethod)
+		{
+			case HASH_SELECT_NONE:
+				break;
+			case HASH_SELECT_ALL:
+				RecordsStatus.Set(index,true);
+				break;
+			case HASH_SELECT_CORECTELY_CLASIFY:
+				if (corectelyClasified)
+					RecordsStatus.Set(index,true);
+				break;
+			case HASH_SELECT_INCORECTELY_CLASIFY:
+				if (corectelyClasified==false)
+					RecordsStatus.Set(index,true);
+				break;
+			case HASH_SELECT_POSITIVE:
+				if (td.Record.Label==1)
+					RecordsStatus.Set(index,true);
+				break;
+			case HASH_SELECT_NEGATIVE:
+				if (td.Record.Label!=1)
+					RecordsStatus.Set(index,true);
+				break;
+			case HASH_SELECT_POSITIVE_CORECTELY_CLASIFY:
+				if ((td.Record.Label==1) && (corectelyClasified))
+					RecordsStatus.Set(index,true);
+				break;
+			case HASH_SELECT_POSITIVE_INCORECTELY_CLASIFY:
+				if ((td.Record.Label==1) && (corectelyClasified==false))
+					RecordsStatus.Set(index,true);
+				break;
+			case HASH_SELECT_NEGATIVE_CORECTELY_CLASIFY:
+				if ((td.Record.Label!=1) && (corectelyClasified))
+					RecordsStatus.Set(index,true);
+				break;
+			case HASH_SELECT_NEGATIVE_INCORECTELY_CLASIFY:
+				if ((td.Record.Label!=1) && (corectelyClasified==false))
+					RecordsStatus.Set(index,true);
+				break;
+		};
 		index++;
 	}
 
