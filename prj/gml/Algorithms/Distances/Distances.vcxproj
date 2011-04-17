@@ -86,6 +86,7 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\code\Algorithms\GDTDistances\src\Distances.cpp" />
     <ClCompile Include="..\..\..\..\code\Algorithms\GDTDistances\src\GenericDistAlgorithm.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -97,6 +98,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\code\Algorithms\GDTDistances\inc\Distances.h" />
     <ClInclude Include="..\..\..\..\code\Algorithms\GDTDistances\inc\GenericDistAlgorithm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
