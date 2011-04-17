@@ -641,6 +641,40 @@ namespace GML
 		};
 	}
 }
+//===================== BitSet.h =================================================================================
+#ifndef __BIT_SET__
+#define __BIT_SET__
+
+
+namespace GML
+{
+	namespace Utils
+	{
+		class  BitSet
+		{
+			UInt8	*Data;
+			UInt32	Allocated;
+			UInt32	ElementsCount;
+		public:
+			BitSet();
+			~BitSet();
+
+			bool	Create(UInt32 elements);
+			void	Destroy();
+			bool	Get(UInt32 poz);
+			bool	Set(UInt32 poz,bool value);
+			void	SetAll(bool value);
+			bool	Reverse(UInt32 poz);
+			void	ReverseAll();
+			UInt32	Len();
+			UInt32	GetAllocated();
+			UInt8*	GetData();
+			UInt32	CountElements(bool value);
+		};
+	}
+}
+#endif
+
 //===================== Matrix.h =================================================================================
 
 #define DIM_MAX 1000

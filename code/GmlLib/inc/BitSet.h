@@ -26,6 +26,7 @@ namespace GML
 			UInt32	Len();
 			UInt32	GetAllocated();
 			UInt8*	GetData();
+			UInt32	CountElements(bool value);
 		};
 	}
 }
