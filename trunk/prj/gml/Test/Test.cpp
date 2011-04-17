@@ -39,18 +39,20 @@ int my_fnc(UInt32 &e1,UInt32 &e2)
 }
 int _tmain(int argc, _TCHAR* argv[])
 {
-	GML::Utils::GTFVector<UInt32> v;
-	v.Create(30);
-	v.Push(100);
-	v.Push(50);
-	v.Push(1000);
-	v.Push(5);
-	v.Push(2);
-	v.Sort(my_fnc);
-	for (int tr=0;tr<v.Len();tr++)
-		printf("%d,",v[tr]);
-	printf("\n");
-	return 1;
+	//GML::Utils::GTFVector<UInt32> v;
+	//v.Create(30);
+	//v.Push(100);
+	//v.Push(50);
+	//v.Push(1000);
+	//v.Push(5);
+	//v.Push(2);
+	//v.Sort(my_fnc);
+	//for (int tr=0;tr<v.Len();tr++)
+	//	printf("%d,",v[tr]);
+	//printf("\n");
+	//UInt32 val = 1;
+	//printf("%d\n",v.BinarySearch(val,my_fnc));
+	//return 1;
 
 	//GML::Utils::AttributeList	attr;
 
