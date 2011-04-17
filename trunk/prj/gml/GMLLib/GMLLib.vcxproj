@@ -180,6 +180,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
   <ItemGroup>
     <ClInclude Include="..\..\..\Code\GmlLib\inc\AlgorithmResult.h" />
     <ClInclude Include="..\..\..\code\GmlLib\inc\AttributeList.h" />
+    <ClInclude Include="..\..\..\code\GmlLib\inc\BitSet.h" />
     <ClInclude Include="..\..\..\code\GmlLib\inc\builder.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\compat.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\DBRecord.h" />
@@ -208,6 +209,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
   <ItemGroup>
     <ClCompile Include="..\..\..\Code\GmlLib\src\AlgorithmResult.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\AttributeList.cpp" />
+    <ClCompile Include="..\..\..\code\GmlLib\src\BitSet.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\Builder.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\DBRecord.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\dllmain.cpp" />
