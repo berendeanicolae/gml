@@ -1,9 +1,9 @@
-#include "SplitConnector.h"
+#include "HashFilterConnector.h"
 
-SplitConnector::SplitConnector()
+HashFilterConnector::HashFilterConnector()
 {
 	FeatureCount = RecordCount = 0;
-	ObjectName = "SplitConnector";
+	ObjectName = "HashFilterConnector";
 	attrStart = attrEnd = 0;
 	Start = End = 0;
 
@@ -15,11 +15,11 @@ SplitConnector::SplitConnector()
 	LinkPropertyToUInt32("NegativeStart",	negativeProcStart,0,	"The start procent for negative Class (works only for SplitMode = CustomPercentage)");
 	LinkPropertyToUInt32("NegativeEnd",		negativeProcEnd,100,	"The end procent for negative Class (works only for SplitMode = CustomPercentage)");
 }
-SplitConnector::~SplitConnector()
+HashFilterConnector::~HashFilterConnector()
 {
 	Indexes.Destroy();
 }
-bool   SplitConnector::CreateIndexList()
+bool   HashFilterConnector::CreateIndexList()
 {
 	UInt32		count;
 	
@@ -47,7 +47,7 @@ bool   SplitConnector::CreateIndexList()
 	}
 	return true;
 }
-bool   SplitConnector::AddIndexes()
+bool   HashFilterConnector::AddIndexes()
 {
 	UInt32	cPoz = Start;
 	UInt32	recCount = conector->GetRecordCount();
@@ -67,7 +67,7 @@ bool   SplitConnector::AddIndexes()
 	}
 	return true;
 }
-bool   SplitConnector::CheckProcentInterval(UInt32	pStart,UInt32 pEnd)
+bool   HashFilterConnector::CheckProcentInterval(UInt32	pStart,UInt32 pEnd)
 {
 	if (pStart>100)
 	{
@@ -81,7 +81,7 @@ bool   SplitConnector::CheckProcentInterval(UInt32	pStart,UInt32 pEnd)
 	}
 	return true;
 }
-bool   SplitConnector::CreateUniformPercentageIndex(UInt32 pozStart,UInt32 pozEnd,UInt32 negStart,UInt32 negEnd)
+bool   HashFilterConnector::CreateUniformPercentageIndex(UInt32 pozStart,UInt32 pozEnd,UInt32 negStart,UInt32 negEnd)
 {
 	UInt32		countByClass[2]={0,0};
 	UInt32		_start[2];
@@ -183,11 +183,11 @@ bool   SplitConnector::CreateUniformPercentageIndex(UInt32 pozStart,UInt32 pozEn
 	notifier->Info("[%s] -> Added: Pozitive = %d, Negative = %d",ObjectName,_added[1],_added[0]);
 	return true;
 }
-UInt32 SplitConnector::GetRecordCount() 
+UInt32 HashFilterConnector::GetRecordCount() 
 {
 	return RecordCount;	
 }
-bool   SplitConnector::GetRecordLabel( double &label,UInt32 index )
+bool   HashFilterConnector::GetRecordLabel( double &label,UInt32 index )
 {
 	if (index >= RecordCount)
 	{
@@ -196,11 +196,11 @@ bool   SplitConnector::GetRecordLabel( double &label,UInt32 index )
 	}
 	return conector->GetRecordLabel(label, (UInt32)Indexes.Get(index));
 }
-UInt32 SplitConnector::GetFeatureCount()
+UInt32 HashFilterConnector::GetFeatureCount()
 {
 	return FeatureCount;
 }
-bool   SplitConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMask ) 
+bool   HashFilterConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMask ) 
 {
 	if (index >= RecordCount)
 	{
@@ -210,7 +210,7 @@ bool   SplitConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMas
 
 	return conector->GetRecord(record,(UInt32)Indexes.Get(index),recordMask);
 }
-bool   SplitConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
+bool   HashFilterConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 {
 	if (index >= RecordCount)
 	{
@@ -220,21 +220,21 @@ bool   SplitConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 
 	return conector->GetRecordHash(recHash,(UInt32)Indexes.Get(index));
 }
-bool   SplitConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
+bool   HashFilterConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
 {
 	return conector->GetFeatureName(str,index);
 }
-bool   SplitConnector::CreateMlRecord( MLRecord &record )
+bool   HashFilterConnector::CreateMlRecord( MLRecord &record )
 {
 	if (this->conector)
 		return this->conector->CreateMlRecord(record);
 	return false;
 }
-bool   SplitConnector::SetRecordInterval( UInt32 start, UInt32 end )
+bool   HashFilterConnector::SetRecordInterval( UInt32 start, UInt32 end )
 {
 	return false;
 }
-bool   SplitConnector::OnInitConnectionToConnector() 
+bool   HashFilterConnector::OnInitConnectionToConnector() 
 {
 	notifier->Info("[%s] -> Loading data (Start = %d,End = %d)",ObjectName,attrStart,attrEnd);
 
@@ -275,19 +275,19 @@ bool   SplitConnector::OnInitConnectionToConnector()
 	notifier->Info("[%s] -> Done. Total records = %d , Total Features = %d ",ObjectName,RecordCount,FeatureCount);
 	return true;
 }
-bool   SplitConnector::FreeMLRecord( MLRecord &record )
+bool   HashFilterConnector::FreeMLRecord( MLRecord &record )
 {
 	if (this->conector)
 		return this->conector->FreeMLRecord(record);
 	return false;
 }
-bool   SplitConnector::Close()
+bool   HashFilterConnector::Close()
 {
 	if (this->conector)
 		return this->conector->Close();	 
 	return false;
 }
-UInt32 SplitConnector::GetTotalRecordCount()
+UInt32 HashFilterConnector::GetTotalRecordCount()
 {
 	if (conector)
 		return conector->GetTotalRecordCount();
