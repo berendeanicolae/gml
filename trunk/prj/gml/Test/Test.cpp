@@ -27,7 +27,7 @@ void PrintBitSet(GML::Utils::BitSet &bs)
 {
 	for (int tr=0;tr<bs.Len();tr++)
 		printf("%d,",bs.Get(tr));
-	printf("\n");
+	printf(" => %d\n",bs.CountElements(true));
 }
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -68,11 +68,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Utils:BitSet	b;
+	GML::Utils::BitSet	b;
 	b.Create(20);
 	PrintBitSet(b);
-	b.Set(15,True);
-	b.Set(3,True);
+	b.Set(15,true);
+	b.Set(3,true);
 	PrintBitSet(b);
 	b.ReverseAll();
 	PrintBitSet(b);

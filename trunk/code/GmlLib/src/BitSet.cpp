@@ -61,7 +61,7 @@ void	GML::Utils::BitSet::SetAll(bool value)
 	if ((ElementsCount==0) || (Data == NULL))
 		return;
 	if (value)
-		memset(Data,1,Allocated);
+		memset(Data,0xFF,Allocated);
 	else
 		memset(Data,0,Allocated);
 }
@@ -88,7 +88,7 @@ void	GML::Utils::BitSet::ReverseAll()
 	{
 		for (tr=0,p=Data;tr<Allocated;tr++,p++)
 		{
-			(*p) = !(*p);
+			(*p) = ~(*p);
 		}
 	}
 }
@@ -103,4 +103,24 @@ UInt32	GML::Utils::BitSet::GetAllocated()
 UInt8*	GML::Utils::BitSet::GetData()
 {
 	return Data;
+}
+UInt32	GML::Utils::BitSet::CountElements(bool value)
+{
+	UInt8	*p;
+	UInt8	mask;
+	UInt32	tr,count;
+	bool	set;
+
+	if ((Data==NULL) || (ElementsCount==0))
+		return 0;
+	for (tr=0,count=0,p=(Data-1);tr<ElementsCount;tr++)
+	{
+		if ((tr % 8)==0)
+			p++;
+		mask = 1 << (tr % 8);
+		set = (bool)(((*p) & mask)!=0);
+		if (set==value)
+			count++;
+	}
+	return count;
 }
