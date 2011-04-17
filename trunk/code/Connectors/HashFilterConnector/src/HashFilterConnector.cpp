@@ -62,6 +62,57 @@ bool   HashFilterConnector::LoadBinaryHashFile()
 	notifier->Error("[%s] -> Unable to read all data / Invalid format for %s",ObjectName,HashFileName.GetText());
 	return false;
 }
+bool   HashFilterConnector::LoadTextHashFile()
+{
+	GML::Utils::GString		tempStr,line;
+	int						poz,count;
+	GML::DB::RecordHash		rHash;
+
+	if (tempStr.LoadFromFile(HashFileName.GetText())==false)
+	{
+		notifier->Error("[%s] -> Unable to load %s",ObjectName,HashFileName.GetText());
+		return false;
+	}
+	//numar sa vad cate linii am
+	poz = count = 0;
+	while (tempStr.CopyNextLine(&line,&poz))
+	{
+		if (line.Len()==32)
+			count++;
+	}
+	if (count==0)
+	{
+		notifier->Error("[%s] -> No hashes found in %s",ObjectName,HashFileName.GetText());
+		return false;
+	}
+	if (HashList.Create(count)==false)
+	{
+		notifier->Error("[%s] -> Unable to alloc %d hashes",ObjectName,count);
+		return false;
+	}
+	poz = 0;
+	while (tempStr.CopyNextLine(&line,&poz))
+	{
+		if (line.Len()==32)
+		{
+			if (rHash.CreateFromText(line.GetText()))
+			{
+				if (HashList.Push(rHash)==false)
+				{
+					notifier->Error("[%s] -> Unable to add '%s' to hash list",ObjectName,line.GetText());
+					return false;
+				}
+			}
+		}
+	}
+	if (HashList.Len()==0)
+	{
+		notifier->Error("[%s] -> No hashes found in %s",ObjectName,HashFileName.GetText());
+		return false;
+	}
+	notifier->Info("[%s] -> %s loaded ok (%d hashes)",ObjectName,HashFileName.GetText(),HashList.Len());
+	return true;
+}
 UInt32 HashFilterConnector::GetRecordCount() 
 {
 	return RecordCount;	
@@ -122,6 +173,10 @@ bool   HashFilterConnector::OnInitConnectionToConnector()
 	notifier->Info("[%s] -> Loading hash list from %s",ObjectName,HashFileName.GetText());
 	switch (HashFileType)
 	{
+		case GML::Algorithm::HASH_FILE_TEXT:
+			if (LoadTextHashFile()==false)
+				return false;
+			break;
 		case GML::Algorithm::HASH_FILE_BINARY:
 			if (LoadBinaryHashFile()==false)
 				return false;
@@ -137,7 +192,7 @@ bool   HashFilterConnector::OnInitConnectionToConnector()
 	}
 
 	// sortare
-	notifier->Info("[%s] -> Sorting ... ");
+	notifier->Info("[%s] -> Sorting ... ",ObjectName);
 	HashList.Sort(HashCompareFunction);
 	// bag in list
 	notifier->StartProcent("[%s] -> Filtering ",ObjectName);
@@ -154,6 +209,10 @@ bool   HashFilterConnector::OnInitConnectionToConnector()
 			continue;
 		if ((FilterMethod==FILTER_KEEP_HASH) && (!isInList))
 			continue;
+
+		//GML::Utils::GString	tmpStr;
+		//recHash.ToString(tmpStr);
+		//notifier->Info("[%s] -> Adding : %s",ObjectName,tmpStr.GetText());
 		if (Indexes.Push(tr)==false)
 		{
 			notifier->Error("[%s] -> Unable to add record #d to index list",ObjectName,tr);

@@ -28,7 +28,7 @@ private:
 
 
 	bool					LoadBinaryHashFile();
-
+	bool					LoadTextHashFile();
 	
 	bool					OnInitConnectionToConnector();
 public:

@@ -17,7 +17,7 @@
 #ifdef _DEBUG
 	#define DEBUGMSG	printf
 #else
-	#define DEBUGMSG
+	#define DEBUGMSG	
 #endif
 
 #ifdef WIN32
