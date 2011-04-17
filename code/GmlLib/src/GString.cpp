@@ -429,62 +429,57 @@ bool GML::Utils::GString::ConvertToInt64(TCHAR *text,TYPE_INT64 *value,unsigned 
 }
 bool GML::Utils::GString::ConvertToDouble(TCHAR *text,double *value,int textSize)
 {
-	TCHAR	temp[128];
-	bool	punct;
+	int		punctCount,tr;
+	double	val,cCifra,rap;
+	bool	negative = false;
 
-	if (value==NULL)
+	if ((value==NULL) || (text==NULL) || (textSize<1))
 		return false;
-	if (Set(temp,text,127,textSize)==false)
-		return false;
-	(*value) = atof(text);
-	if ((*value)==0.0)
+	val = 0;
+	rap = 10;
+	tr = 0;
+	if (text[0]=='-')
 	{
-		// verific daca valoarea chiar este 0
-		punct = false;
-		while ((*text)!=0)
-		{
-			if (((*text)!='0') && ((*text)!='.'))
-				return false;
-			if ((*text)=='.')
-			{
-				if (punct)
-					return false;
-				punct = true;
-			}
-			text++;
-		}
-		return true;
+		tr++;
+		negative = true;
+		text++;
 	}
+	for (punctCount=0;tr<textSize;tr++,text++)
+	{
+		if ((*text)=='.')
+		{
+			punctCount++;
+			if (punctCount>1)
+				return false;
+			continue;
+		}
+		if (((*text)>='0') && ((*text)<='9'))
+		{
+			cCifra = (double)((*text)-'0');
+			if (punctCount==0) {
+				val = val * 10+ cCifra;
+			} else {
+				val+=cCifra/rap;
+				rap*=10;
+			}
+			continue;
+		}
+		// nu e un caracter valid
+		return false;
+	}
+	if (negative)
+		val = -val;
+	(*value) = val;
 	return true;
 }
 bool GML::Utils::GString::ConvertToFloat(TCHAR *text,float *value,int textSize)
 {
-	TCHAR	temp[128];
-	bool	punct;
-
+	double val;
+	if (ConvertToDouble(text,&val,textSize)==false)
+		return false;
 	if (value==NULL)
 		return false;
-	if (Set(temp,text,127,textSize)==false)
-		return false;
-	(*value) = (float)atof(text);
-	if ((*value)==0.0)
-	{
-		// verific daca valoarea chiar este 0
-		punct = false;
-		while ((*text)!=0)
-		{
-			if (((*text)!='0') && ((*text)!='.'))
-				return false;
-			if ((*text)=='.')
-			{
-				if (punct)
-					return false;
-				punct = true;
-			}
-		}
-		text++;
-		return true;
-	}
+	(*value) = (float)val;
 	return true;
 }
 //--------------------------------------------------- CONSTRUCTORI OBIECT ----------------------------------------------------------------

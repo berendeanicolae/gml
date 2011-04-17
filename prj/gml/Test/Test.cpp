@@ -39,6 +39,7 @@ int my_fnc(UInt32 &e1,UInt32 &e2)
 }
 int _tmain(int argc, _TCHAR* argv[])
 {
+
 	//GML::Utils::GTFVector<UInt32> v;
 	//v.Create(30);
 	//v.Push(100);
@@ -97,7 +98,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (alg->SetProperty(
 		"Name=Test;"
 		/*"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"//*/
-		"DataBase=MySQL{Server='127.0.0.1';Database=TestDB;Username=root;Password=a};" //*/
+		"DataBase=MySQL{Server='127.0.0.1';Database=Test_DB;Username=root;Password=a;};" //*/
 		"Connector=BitConnector{Query=SELECT * FROM MAL;CountQuery = SELECT COUNT(*) from MAL;StoreRecordHash=True};" //*/
 		/*"Connector=SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=20;}=>BitConnector{Table=RecordTable;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
 		/*"Connector=BitConnector=>SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=20;}=>BitConnector{DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
