@@ -6,9 +6,6 @@ GenericDistAlgorithm::GenericDistAlgorithm()
 	ObjectName = "GenericDistance";
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
-
-
-
 }
 bool	GenericDistAlgorithm::CreatePozitiveAndNegativeIndexes()
 {
@@ -76,6 +73,8 @@ bool	GenericDistAlgorithm::Init()
 		notif->Error("[%s] -> Unable to create BitSet for %d records ",ObjectName,con->GetRecordCount());
 		return false;
 	}
+	// curat toate recordurile
+	RecordsStatus.SetAll(false);
 
 
 

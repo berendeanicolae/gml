@@ -27,8 +27,7 @@ protected:
 	
 public:
 	GenericDistAlgorithm();
-
-
+	
 	bool							OnInitThreadData(GML::Algorithm::MLThreadData &thData);
 	virtual bool					OnInit();
 	virtual bool					OnCompute();
