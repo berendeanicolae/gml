@@ -92,13 +92,13 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("LinearVote");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("Distances");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
 		"Name=Test;"
-		/*"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"//*/
-		"DataBase=MySQL{Server='127.0.0.1';Database=Test_DB;Username=root;Password=a;};" //*/
+		"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"//*/
+		/*"DataBase=MySQL{Server='127.0.0.1';Database=Test_DB;Username=root;Password=a;};" //*/
 		"Connector=BitConnector{Query=SELECT * FROM MAL;CountQuery = SELECT COUNT(*) from MAL;StoreRecordHash=True};" //*/
 		/*"Connector=SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=20;}=>BitConnector{Table=RecordTable;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
 		/*"Connector=BitConnector=>SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=20;}=>BitConnector{DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
@@ -131,7 +131,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		"ColumnWidth=20;"
 		"SaveFeaturesWeight=F2;"
 		"FeaturesWeightFile=E:\\a.a;"
-		"Command=Test;"
+		"Command=Compute;"
 		"CacheName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache.test;"
 		"MaxIterations=(INT32)40;")==false)
 		return 1;
