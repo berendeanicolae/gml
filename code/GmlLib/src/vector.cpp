@@ -41,7 +41,65 @@ int  _Get_InsertSort_Locus(unsigned char *Data,int ElementSize,void *Element,_Bi
 	if( res<0 ) return lo;
 	else return hi+1;
 }
+void __ElementsSwap(unsigned char *e1,unsigned char *e2,unsigned int ElementSize)
+{
+	unsigned char Temp[1024];
+	
+	if (ElementSize<1024)
+	{
+		memcpy(Temp,e1,ElementSize);
+		memcpy(e1,e2,ElementSize);
+		memcpy(e2,Temp,ElementSize);
+	} else {
+		for (int tr=0;tr<ElementSize;tr++,e1++,e2++)
+		{
+			Temp[0] = (*e1);
+			(*e1) = (*e2);
+			(*e2) = Temp[0];
+		}
+	}
+}
+void __QSort(unsigned char *Data,int ElementSize,_BinarySearchCompFunction cmpFunc,int lo,int hi,bool ascendent)
+{
+	Int32				left,right,mid;
+	unsigned char		*pivot;	
 
+	if (lo>=hi) 
+		return;
+
+	left=lo;
+	right=hi;
+	mid=(lo+hi)/2;
+	__ElementsSwap(&Data[left*ElementSize],&Data[mid*ElementSize],ElementSize);
+	pivot=&Data[left*ElementSize];
+	lo++;
+
+	while (lo<=hi)
+	{
+		if (ascendent)
+		{
+			while ((lo<=right) && (cmpFunc(&Data[lo*ElementSize],pivot)<=0))
+				++lo;
+			while ((hi>=left) &&  (cmpFunc(&Data[hi*ElementSize],pivot)>0))
+				--hi;
+		} else {
+			while ((lo<=right) && (cmpFunc(&Data[lo*ElementSize],pivot)>=0))
+				++lo;
+			while ((hi>=left) &&  (cmpFunc(&Data[hi*ElementSize],pivot)<0))
+				--hi;
+		}
+		if (lo<hi)
+		{
+			__ElementsSwap(&Data[lo*ElementSize],&Data[hi*ElementSize],ElementSize);
+
+		}
+	} 
+	__ElementsSwap(&Data[left*ElementSize],&Data[hi*ElementSize],ElementSize);
+
+	// apelurile recursive
+	__QSort(Data,ElementSize,cmpFunc,left,hi-1,ascendent);
+	__QSort(Data,ElementSize,cmpFunc,hi+1,right,ascendent);
+}
 //===================================================================================================================
 GML::Utils::Vector::Vector(void)
 {
@@ -190,4 +248,9 @@ int  GML::Utils::Vector::BinarySearch (void *ElementToFind,_BinarySearchCompFunc
 		return -1;
 	else
 		return _Do_BinarySearch(Data,ElementSize,ElementToFind,compFnc,0,NrElemente-1);
+}
+void GML::Utils::Vector::Sort(_BinarySearchCompFunction cmpFunc,bool ascendet)
+{
+	if (NrElemente>0)
+		__QSort(Data,ElementSize,cmpFunc,0,NrElemente-1,ascendet);
 }
