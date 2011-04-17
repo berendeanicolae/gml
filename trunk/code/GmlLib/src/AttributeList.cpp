@@ -414,9 +414,9 @@ bool GML::Utils::AttributeList::UpdateString(char *Name,GML::Utils::GString &tex
 		else
 			return false;
 	}
-	if (a->Data==NULL)
+	if ((a->Data==NULL) || (a->DataSize<1))
 		return false;
-	return text.Set((char*)a->Data,a->DataSize);
+	return text.Set((char*)a->Data,a->DataSize-1);
 }
 bool GML::Utils::AttributeList::UpdateBool(char *Name,bool &boolValue,bool useDefault,bool defaultValue)
 {
