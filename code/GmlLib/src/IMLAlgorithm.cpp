@@ -280,3 +280,111 @@ bool GML::Algorithm::IMLAlgorithm::SaveHashResult(char *fname,UInt32 method,GML:
 	notif->Error("[%s] -> Unable to write hashes to %s",ObjectName,fname);
 	return false;
 }
+bool GML::Algorithm::IMLAlgorithm::SaveHashResult(char *fname,UInt32 method,GML::Utils::GTFVector<UInt8> &v,UInt32 CacheSize)
+{
+	GML::Utils::File		f;
+	GML::Utils::Vector		Cache;
+	UInt8					*p,*ptr;
+	UInt32					recSize,tr,count,totalRecords;
+	GML::DB::RecordHash		rHash;
+	GML::Utils::GString		temp;
+
+	switch (method)
+	{
+		case HASH_FILE_TEXT:
+			recSize = 32+1;
+			break;
+		case HASH_FILE_BINARY:
+			recSize = 16;
+			break;
+		default:
+			notif->Error("[%s] -> Unknown HashStoreMethod = %d",ObjectName,method);
+			return false;
+	};
+	p = v.GetVector();
+	totalRecords = v.Len();
+	for (count=0,tr=0;tr<totalRecords;tr++,p++)
+	{
+		if ((*p)!=0)
+			count++;
+	}	
+	if (count==0)
+	{
+		notif->Error("[%s] -> No elements selected in the BitSet",ObjectName);
+		return false;
+	}
+	if ((fname==NULL) || (fname[0]==0))
+	{
+		notif->Error("[%s] -> You need to set 'HashFileName' property with the name of the file where you want to save your results",ObjectName);
+		return false;
+	}
+	if (f.Create(fname)==false)
+	{
+		notif->Error("[%s] -> Unable to create %s",ObjectName,fname);
+		return false;
+	}	
+	while (true)
+	{
+		if (Cache.Create(CacheSize,recSize)==false)
+		{
+			notif->Error("[%s] -> Unable to allocate %d bytes for caching ...",ObjectName,recSize * CacheSize);
+			break;
+		}
+		// pentru binary method , scriu cateva date
+		if (method==HASH_FILE_BINARY)
+		{
+			if (f.Write("HASHLIST",8)==false)
+				break;
+			if (f.Write(&count,sizeof(UInt32))==false)
+				break;
+		}
+		for (tr=0,ptr=v.GetVector();tr<totalRecords;tr++,ptr++)
+		{
+			if ((*ptr)!=0)
+			{
+				// scriu datele
+				if (con->GetRecordHash(rHash,tr)==false)
+				{
+					notif->Error("[%s] -> Unable to read hash for record #%d",ObjectName,tr);
+					break;
+				}
+				switch (method)
+				{
+					case HASH_FILE_TEXT:
+						rHash.ToString(temp);
+						temp.Add("\n");
+						p = (UInt8 *)temp.GetText();
+						break;
+					case HASH_FILE_BINARY:
+						recSize = 16;
+						p = (UInt8 *)&rHash.Hash.bValue[0];
+						break;
+				};
+				if (Cache.GetSize()>=CacheSize)
+				{
+					if (f.Write(Cache.GetVector(),Cache.GetSize()*recSize)==false)
+						break;
+					if (Cache.Resize(0)==false)
+						break;
+				}
+				if (Cache.Push(p)==false)
+					break;
+			}
+		}
+		// daca nu am ajuns la final , am o eroare
+		if (tr!=totalRecords)
+			break;
+		if (Cache.GetSize()>=0)
+		{
+			if (f.Write(Cache.GetVector(),Cache.GetSize()*recSize)==false)
+				break;
+		}
+		f.Close();
+		notif->Info("[%s] -> Hashes saved ok in %s (%d hashesh)",ObjectName,fname,count);
+		return true;
+	}
+	f.Close();
+	DeleteFileA(fname);
+	notif->Error("[%s] -> Unable to write hashes to %s",ObjectName,fname);
+	return false;
+}

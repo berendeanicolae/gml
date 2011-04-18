@@ -2032,6 +2032,7 @@ namespace GML
 			bool							ExecuteParalelCommand(UInt32 command);
 			bool							SplitMLThreadDataRange(UInt32 maxCount);
 			bool							SaveHashResult(char *fname,UInt32 method,GML::Utils::BitSet &bs,UInt32 CacheSize=0x1000);
+			bool							SaveHashResult(char *fname,UInt32 method,GML::Utils::GTFVector<UInt8> &v,UInt32 CacheSize=0x1000);
 
 			virtual bool					OnInitThreadData(GML::Algorithm::MLThreadData &thData);
 			virtual bool					OnInitThreads();

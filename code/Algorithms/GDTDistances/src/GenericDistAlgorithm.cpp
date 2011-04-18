@@ -70,11 +70,17 @@ bool	GenericDistAlgorithm::Init()
 		return false;
 	if (RecordsStatus.Create(con->GetRecordCount())==false)
 	{
-		notif->Error("[%s] -> Unable to create BitSet for %d records ",ObjectName,con->GetRecordCount());
+		notif->Error("[%s] -> Unable to create Status Record for %d records ",ObjectName,con->GetRecordCount());
 		return false;
 	}
+	if (RecordsStatus.Resize(con->GetRecordCount())==false)
+	{
+		notif->Error("[%s] -> Unable to alloc Status Record for %d records ",ObjectName,con->GetRecordCount());
+		return false;
+	}
+	memset(RecordsStatus.GetVector(),0,RecordsStatus.Len());
 	// curat toate recordurile
-	RecordsStatus.SetAll(false);
+	
 
 
 
