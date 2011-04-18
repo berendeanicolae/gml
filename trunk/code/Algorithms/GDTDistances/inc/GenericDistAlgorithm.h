@@ -22,7 +22,7 @@ protected:
 
 
 	GML::Utils::Indexes				indexesPozitive,indexesNegative;
-	GML::Utils::BitSet				RecordsStatus;
+	GML::Utils::GTFVector<UInt8>	RecordsStatus;
 
 	
 public:

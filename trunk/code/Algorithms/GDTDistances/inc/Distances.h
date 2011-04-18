@@ -8,6 +8,7 @@ class Distances: public GenericDistAlgorithm
 
 	};
 	UInt32		Method;
+	double		MinDist,MaxDist;
 
 	bool	ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &thData);
 public:

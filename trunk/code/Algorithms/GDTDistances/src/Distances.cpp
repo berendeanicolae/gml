@@ -5,6 +5,8 @@ Distances::Distances()
 	ObjectName = "Distances";
 
 	LinkPropertyToUInt32("Method",Method,0,"!!LIST:PositiveToNegativeDistance=0!!");
+	LinkPropertyToDouble("MinDistance",MinDist,0,"Minimal distance");
+	LinkPropertyToDouble("MaxDistance",MaxDist,1,"Maximal distance");
 }
 bool Distances::OnInit()
 {
@@ -17,9 +19,10 @@ bool Distances::OnInit()
 }
 bool Distances::ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &thData)
 {
-	UInt32				tr,gr,featuresCount,pozitiveCount,negativeCount;
+	UInt32				tr,gr,featuresCount,pozitiveCount,negativeCount,idxPoz,idxNeg;
 	DistThreadData*		dt = (DistThreadData *)thData.Context;
 	double				dist;
+	UInt8				*ptr = RecordsStatus.GetVector();
 
 	featuresCount = con->GetFeatureCount();
 	pozitiveCount = indexesPozitive.Len();
@@ -28,19 +31,26 @@ bool Distances::ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &
 		notif->StartProcent("[%s] -> Computing ... ",ObjectName);
 	for (tr=thData.ThreadID;tr<pozitiveCount;tr+=threadsCount)
 	{
-		if (con->GetRecord(thData.Record,indexesPozitive.Get(tr))==false)
+		idxPoz = indexesPozitive.Get(tr);
+		if (con->GetRecord(thData.Record,idxPoz)==false)
 		{
-			notif->Error("[%s] -> Unable to read record #%d",ObjectName,indexesPozitive.Get(tr));
+			notif->Error("[%s] -> Unable to read record #%d",ObjectName,idxPoz);
 			return false;
 		}
 		for (gr=0;gr<negativeCount;gr++)
 		{
-			if (con->GetRecord(dt->SetRec,indexesNegative.Get(tr))==false)
+			idxNeg = indexesNegative.Get(tr);
+			if (con->GetRecord(dt->SetRec,idxNeg)==false)
 			{
-				notif->Error("[%s] -> Unable to read record #%d",ObjectName,indexesNegative.Get(tr));
+				notif->Error("[%s] -> Unable to read record #%d",ObjectName,idxNeg);
 				return false;
 			}
 			dist = GML::ML::VectorOp::PointToPointDistance(thData.Record.Features,dt->SetRec.Features,featuresCount);
+			if ((dist>=MinDist) && (dist<=MaxDist))
+			{				
+				ptr[idxPoz] = 1;
+				ptr[idxNeg] = 1;
+			}
 		}
 		if (thData.ThreadID==0)
 			notif->SetProcent(tr,pozitiveCount);
