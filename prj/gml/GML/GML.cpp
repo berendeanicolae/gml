@@ -205,15 +205,18 @@ int  PyTemplate(char *objectName)
 {
 	GML::Utils::AttributeList	attr;
 	GML::Utils::Attribute		*a;
-	GML::Utils::GString			tmp,result,desc;
+	GML::Utils::GString			tmp,result,desc,fullName;
 	GML::Utils::File			f;
 	
-	if (GML::Builder::GetPluginProperties(objectName,attr)==false)
+	if (GML::Builder::GetPluginProperties(objectName,attr,&fullName)==false)
 	{
 		printf("[ERROR] There is no algorithm, notifier, database or conector with the name : %s\n",objectName);
 		return 1;
 	}
-	result.SetFormated("{\n\t\"AlgorithmName\":\"%s\",\n",objectName);
+	if (fullName.EndsWith(".alg",true))
+		result.SetFormated("{\n\t\"AlgorithmName\":\"%s\",\n",objectName);
+	else
+		result.SetFormated("{\n\t\"Type\":\"%s\",\n",objectName);
 	for (UInt32 tr=0;tr<attr.GetCount();tr++)
 	{
 		if ((a=attr.Get(tr))==NULL)

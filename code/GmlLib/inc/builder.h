@@ -5,6 +5,7 @@
 #include "IDataBase.h"
 #include "MLInterface.h"
 #include "IAlgorithm.h"
+#include "GString.h"
 
 
 namespace GML
@@ -17,7 +18,7 @@ namespace GML
 		static GML::ML::IConnector*			CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database);
 		static GML::ML::IConnector*			CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify);
 		static GML::Algorithm::IAlgorithm*	CreateAlgorithm(char *algorithmLib);	
-		static bool							GetPluginProperties(char *pluginName,GML::Utils::AttributeList &attr);
+		static bool							GetPluginProperties(char *pluginName,GML::Utils::AttributeList &attr,GML::Utils::GString *fullName=NULL);
 	};
 }
 

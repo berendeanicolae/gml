@@ -239,7 +239,7 @@ GML::Algorithm::IAlgorithm*	GML::Builder::CreateAlgorithm(char *algorithmPath)
 	// am incarcat si totul e ok -> cer o interfata
 	return fnCreate();
 }
-bool						GML::Builder::GetPluginProperties(char *pluginName,GML::Utils::AttributeList &attr)
+bool						GML::Builder::GetPluginProperties(char *pluginName,GML::Utils::AttributeList &attr,GML::Utils::GString *fullName)
 {
 	GML::Utils::GString		path;
 	HMODULE					hModule;
@@ -264,6 +264,8 @@ bool						GML::Builder::GetPluginProperties(char *pluginName,GML::Utils::Attribu
 		*(FARPROC *)&fnGetInterfaceProperty = GetProcAddress(hModule,"GetInterfaceProperty");
 		if (fnGetInterfaceProperty==NULL)
 			continue;
+		if (fullName!=NULL)
+			fullName->Set(&path);
 		return fnGetInterfaceProperty(attr);
 	}
 	return false;
