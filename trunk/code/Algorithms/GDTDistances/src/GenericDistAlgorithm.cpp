@@ -6,6 +6,8 @@ GenericDistAlgorithm::GenericDistAlgorithm()
 	ObjectName = "GenericDistance";
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
+
+	AddHashSavePropery();
 }
 bool	GenericDistAlgorithm::CreatePozitiveAndNegativeIndexes()
 {
