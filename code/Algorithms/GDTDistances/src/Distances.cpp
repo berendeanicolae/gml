@@ -7,6 +7,7 @@ Distances::Distances()
 	LinkPropertyToUInt32("Method",Method,0,"!!LIST:PositiveToNegativeDistance=0!!");
 	LinkPropertyToDouble("MinDistance",MinDist,0,"Minimal distance");
 	LinkPropertyToDouble("MaxDistance",MaxDist,1,"Maximal distance");
+
 }
 bool Distances::OnInit()
 {
@@ -15,6 +16,7 @@ bool Distances::OnInit()
 		if (CreatePozitiveAndNegativeIndexes()==false)
 			return false;
 	}
+	
 	return true;
 }
 bool Distances::ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &thData)
