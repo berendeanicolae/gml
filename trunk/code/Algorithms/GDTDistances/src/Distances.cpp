@@ -61,10 +61,21 @@ bool Distances::ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &
 }
 void Distances::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand)
 {
-	ComputePositiveToNegativeDistance(thData);
+	switch (Method)
+	{
+		case METHOD_PositiveToNegativeDistance:
+			ComputePositiveToNegativeDistance(thData);
+			break;
+	}
 }
 bool Distances::OnCompute()
 {
-	ExecuteParalelCommand(0);
+	switch (Method)
+	{
+		case METHOD_PositiveToNegativeDistance:
+			ExecuteParalelCommand(Method);
+			SaveHashResult(HashFileName.GetText(),HashFileType,RecordsStatus);
+			return true;
+	}
 	return false;
 }

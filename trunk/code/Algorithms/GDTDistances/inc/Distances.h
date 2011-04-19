@@ -5,7 +5,6 @@ class Distances: public GenericDistAlgorithm
 {
 	enum {
 		METHOD_PositiveToNegativeDistance = 0,
-
 	};
 	UInt32		Method;
 	double		MinDist,MaxDist;
