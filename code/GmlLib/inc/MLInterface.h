@@ -45,6 +45,9 @@ namespace GML
 			bool						UpdateColumnInformations(char *QueryStatement);
 
 
+			void						AddDataBaseProperties();
+			void						AddCacheProperties();
+
 			virtual bool				OnInit();
 			virtual bool				OnInitConnectionToDataBase();
 			virtual bool				OnInitConnectionToConnector();

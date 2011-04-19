@@ -5,6 +5,9 @@ BitConnector::BitConnector()
 	nrRecords = 0;
 	Data = NULL;
 	ObjectName = "BitConnector";
+
+	AddDataBaseProperties();
+	AddCacheProperties();
 }
 
 bool	BitConnector::AllocMemory()
