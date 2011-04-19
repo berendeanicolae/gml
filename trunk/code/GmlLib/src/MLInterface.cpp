@@ -11,11 +11,17 @@ GML::ML::IConnector::IConnector()
 	columns.featName = NULL;
 	ClearColumnIndexes();
 	
+	LinkPropertyToBool  ("StoreRecordHash",StoreRecordHash,false,"Specify if the connector should store records hash or not");
+}
+void GML::ML::IConnector::AddDataBaseProperties()
+{
 	LinkPropertyToString("Query",Query,"SELECT * FROM RecordTable","The query for the select statement");
 	LinkPropertyToString("CountQuery",CountQuery,"SELECT COUNT(*) FROM RecordTable","The query for counting the elements in the record set");
-	LinkPropertyToString("DataFileName",DataFileName,"","Name of the file that contains data to be loaded");
 	LinkPropertyToUInt32("CachedRecords",CachedRecords,10000,"Number of records to be cached during one SQL query.");
-	LinkPropertyToBool  ("StoreRecordHash",StoreRecordHash,false,"Specify if the connector should store records hash or not");
+}
+void GML::ML::IConnector::AddCacheProperties()
+{
+	LinkPropertyToString("DataFileName",DataFileName,"","Name of the file that contains data to be loaded");
 }
 void GML::ML::IConnector::ClearColumnIndexes()
 {
