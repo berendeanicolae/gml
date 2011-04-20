@@ -3,10 +3,7 @@
 
 #include "gmllib.h"
 
-struct DistThreadData
-{
-	GML::ML::MLRecord	SetRec;
-};
+
 
 #define SAVE_CACHE_SIZE		1024
 
@@ -28,7 +25,7 @@ protected:
 public:
 	GenericDistAlgorithm();
 	
-	bool							OnInitThreadData(GML::Algorithm::MLThreadData &thData);
+
 	virtual bool					OnInit();
 	virtual bool					OnCompute()=0;
 

@@ -92,16 +92,6 @@ bool	GenericDistAlgorithm::OnInit()
 {
 	return true;
 }
-bool	GenericDistAlgorithm::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
-{
-	DistThreadData *d = new DistThreadData();
-	if (d==NULL)
-		return false;
-	if (con->CreateMlRecord(d->SetRec)==false)
-		return false;
-	thData.Context = d;
-	return true;
-}
 void	GenericDistAlgorithm::OnExecute()
 {
 	StopAlgorithm = false;

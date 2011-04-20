@@ -9,6 +9,16 @@ Distances::Distances()
 	LinkPropertyToDouble("MaxDistance",MaxDist,1,"Maximal distance");
 
 }
+bool Distances::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
+{
+	DistThreadData *d = new DistThreadData();
+	if (d==NULL)
+		return false;
+	if (con->CreateMlRecord(d->SetRec)==false)
+		return false;
+	thData.Context = d;
+	return true;
+}
 bool Distances::OnInit()
 {
 	if (Method==METHOD_PositiveToNegativeDistance)
