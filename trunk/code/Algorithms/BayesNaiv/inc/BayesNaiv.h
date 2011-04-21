@@ -11,9 +11,13 @@ class BayesNaiv: public GML::Algorithm::IMLAlgorithm
 
 	UInt32					procIgnoreFeature;
 	UInt32					penaltyForInfFile;
+	UINT32					nrOfIterations;
 	double					procToSetInfected;
+	double					bestIteration;
+	bool					saveTrainedProbs;
 	bool					classicMul;
-	GML::Utils::GString		pathToProbsFile;		
+	GML::Utils::GString		pathToProbsFile;	
+	GML::Utils::GString		pathTrainedProbsFile;
 
 public:
 	BayesNaiv();

@@ -6,9 +6,12 @@ BayesNaiv::BayesNaiv()
 
 	LinkPropertyToUInt32("ProcIgnoreFeature",procIgnoreFeature,25,"A procent from where a flag is ignored");
 	LinkPropertyToUInt32("PenaltyForInfFiles",penaltyForInfFile,100,"A procent to penalize the probability for infected files");
+	LinkPropertyToUInt32("NrOfIterations", nrOfIterations, 1, "Number of iterations");
 	LinkPropertyToDouble("ProcToSetVerdictInfected",procToSetInfected,0.999,"MinProbability to set the verdict=infected");
 	LinkPropertyToBool("ClassicMul", classicMul, true, "Use normal multiplication method for probabilities");	
-	LinkPropertyToString("ProbsFilePath", pathToProbsFile, "", "Path to the file to save the probabilities in");
+	LinkPropertyToString("ProbsFilePath", pathToProbsFile, "", "Path to the file to save the probabilities in");	
+	LinkPropertyToString("PathTrainedProbsFile", pathTrainedProbsFile, "", "Path to the file to save the trained probabilities in");
+	LinkPropertyToBool("SaveTrainedProbs", saveTrainedProbs, false, "Save the trained probabilities");
 	
 	SetPropertyMetaData("Command","!!LIST:None=0,Train,Test!!");
 }
@@ -68,6 +71,10 @@ bool BayesNaiv::PerformTestClassicMul()
 	double						*pFeatCondClean;
 	double						pFileInf, pFileClean;
 	unsigned int				i, j;
+	unsigned int				*vcFNs;
+	unsigned int				*vcFNsC;
+	unsigned int				*vcFPs;
+	unsigned int				*vcFPsC;
 	int							clasif;
 	GML::Utils::AlgorithmResult	result;
 	GML::ML::MLRecord			currentRecord;
@@ -80,9 +87,22 @@ bool BayesNaiv::PerformTestClassicMul()
 		notif->Error("[%s] Invalid path for file to load probabilities from", ObjectName);
 		return false;
 	}
+	if(saveTrainedProbs && pathTrainedProbsFile.Equals(""))
+	{
+		notif->Error("[%s] Invalid path for file to save trained probabilities from", ObjectName);
+		return false;
+	}
 
 	pFeatCondInf = new double[con->GetFeatureCount()];
 	pFeatCondClean = new double[con->GetFeatureCount()];
+
+	vcFNs = new unsigned int[con->GetFeatureCount()];
+	vcFPs = new unsigned int[con->GetFeatureCount()];
+	vcFNsC = new unsigned int[con->GetFeatureCount()];
+	vcFPsC = new unsigned int[con->GetFeatureCount()];
+
+	for(i=0; i<con->GetFeatureCount(); i++)
+			vcFNsC[i] = vcFPsC[i] = 0;
 
 	a.Load(pathToProbsFile);
 	a.UpdateDouble("Pinf", pFileInf,true, 0.5);
@@ -90,41 +110,137 @@ bool BayesNaiv::PerformTestClassicMul()
 	a.Update("pFeatCondClean", &pFeatCondClean[0], con->GetFeatureCount()*sizeof(double));
 	a.Update("pFeatCondInf", &pFeatCondInf[0], con->GetFeatureCount()*sizeof(double));	
 
-	result.Clear();
-	result.time.Start();
 	a.Clear();
+	bestIteration = 0.0;
 
-	for(i=0; i<con->GetRecordCount(); i++)
+	int copyOfNrIter = nrOfIterations;
+	while(copyOfNrIter--)
 	{
-		if(!(con->GetRecord(currentRecord, i)))
+		result.Clear();
+		result.time.Start();
+
+		for(i=0; i<con->GetFeatureCount(); i++)
+			vcFNs[i] = vcFPs[i] = 0;
+
+		for(i=0; i<con->GetRecordCount(); i++)
 		{
-			notif->Info("[%s] -> error getting record #%d",ObjectName,i);
-			return false;
-		}			
-		double pInf		= pFileInf*penaltyForInfFile;
-		double pClean	= pFileClean;							
-
-		clasif = -1;
-
-		for(j=0; j<currentRecord.FeatCount; j++)
-			if((unsigned int)currentRecord.Features[j])
-			{								
-				pInf *= pFeatCondInf[j];
-				pClean *= pFeatCondClean[j];
+			if(!(con->GetRecord(currentRecord, i)))
+			{
+				notif->Info("[%s] -> error getting record #%d",ObjectName,i);
+				return false;
 			}
 
-		if(pInf>pClean)
-			if((double)pInf/(pInf+pClean) > procToSetInfected)
-				clasif = 1;		
+			double pInf		= pFileInf*penaltyForInfFile;
+			double pClean	= pFileClean;							
+
+			for(j=0; j<currentRecord.FeatCount; j++)
+				if((unsigned int)currentRecord.Features[j])
+				{								
+					pInf *= pFeatCondInf[j];
+					pClean *= pFeatCondClean[j];
+				}
+
+			clasif = -1;
+			if(pInf>pClean)
+				if((double)pInf/(pInf+pClean) > procToSetInfected)
+					clasif = 1;		
 		
-		result.Update(currentRecord.Label==1,clasif==currentRecord.Label);	
+			result.Update(currentRecord.Label==1,clasif==currentRecord.Label);
+
+			if(clasif != currentRecord.Label)
+			{				
+				if(clasif == 1)		//fp
+				{
+					for(j=0; j<currentRecord.FeatCount; j++)					
+						if((unsigned int)currentRecord.Features[j])
+							vcFPs[j]++;
+				}
+				else				//fn
+				{
+					for(j=0; j<currentRecord.FeatCount; j++)					
+						if((unsigned int)currentRecord.Features[j])
+							vcFNs[j]++;
+				}
+			}
+		}
+
+		result.Compute();
+		result.Iteration = nrOfIterations - copyOfNrIter - 1;
+		result.time.Stop();
+		notif->Result(result);
+
+		if(saveTrainedProbs)
+		{
+			a.Clear();
+			a.AddAttribute("pFeatCondClean",&pFeatCondClean[0],GML::Utils::AttributeList::DOUBLE,con->GetFeatureCount(),"Conditional probabilities for clean files");
+			a.AddAttribute("pFeatCondInf",&pFeatCondInf[0],GML::Utils::AttributeList::DOUBLE,con->GetFeatureCount(),"Conditional probabilities for infected files");
+			a.AddDouble("Pinf", pFileInf, "Prob for infected file");
+			a.AddDouble("Pclean", pFileClean, "Prob for clean files");		
+			a.AddDouble("Se", result.se);
+			a.AddDouble("Sp", result.sp);
+			a.AddDouble("Acc", result.acc);
+			GML::Utils::GString temp;
+			temp.Add(pathTrainedProbsFile);
+			temp.AddFormated("%d", result.Iteration);
+			a.Save(temp);	
+
+			if(bestIteration < result.sp)
+			{
+				temp.Set(pathTrainedProbsFile);
+				temp.Add("BEST");
+				a.Save(temp);
+			}
+		}
+
+		int maxApFPs		= 0;		
+		int maxApFPsIndex	= 0;		
+		int maxApFNs		= 0;		
+		int maxApFNsIndex	= 0;		
+		for(i=0; i<con->GetFeatureCount(); i++)
+		{
+			if((unsigned int)pFeatCondInf[i] == 1 || (unsigned int)pFeatCondClean[i] == 1)
+				continue;
+
+			if(maxApFPs < vcFPs[i])
+			{
+				maxApFPs = vcFPs[i];
+				maxApFPsIndex = i;
+			}
+			if(maxApFNs < vcFNs[i])
+			{
+				maxApFNs = vcFNs[i];
+				maxApFNsIndex = i;
+			}			
+		}
+				
+		//pFeatCondInf[maxApFPsIndex] *= 0.8;
+		//pFeatCondClean[maxApFNsIndex] *= 0.9;
+		vcFPsC[maxApFPsIndex]++;
+		vcFNsC[maxApFNsIndex]++;
+		if(vcFPsC[maxApFPsIndex]>5)
+		{
+			pFeatCondInf[maxApFPsIndex] = 1.0;
+			pFeatCondClean[maxApFPsIndex] = 1.0;
+		}
+		else if(vcFNsC[maxApFNsIndex]>5)
+		{
+			pFeatCondInf[maxApFNsIndex] = 1.0;
+			pFeatCondClean[maxApFNsIndex] = 1.0;
+		}
+		else
+		{
+			//pFeatCondInf[maxApFPsIndex] -= (double)vcFPs[maxApFPsIndex]/(result.tp+result.fp);
+			//pFeatCondClean[maxApFNsIndex] -= (double)vcFNs[maxApFNsIndex]/(result.tn+result.fn);
+			//pFeatCondClean[maxApFPsIndex] += (double)vcFPs[maxApFPsIndex]/(result.tp+result.fp);
+			//pFeatCondInf[maxApFNsIndex] += (double)vcFNs[maxApFNsIndex]/(result.tn+result.fn);
+			if(vcFPs[maxApFPsIndex]/(result.fp) > vcFNs[maxApFNsIndex]/(result.fn))
+				//pFeatCondClean[maxApFPsIndex] += (double)vcFPs[maxApFPsIndex]/(result.fp);
+				pFeatCondInf[maxApFPsIndex] *= 0.9;
+			else
+				//pFeatCondInf[maxApFNsIndex] += (double)vcFNs[maxApFNsIndex]/(result.fn);
+				pFeatCondClean[maxApFPsIndex] *= 0.9;
+		}		
 	}
-
-	result.Compute();
-	result.time.Stop();
-	notif->Result(result);
-	
-
 	return true;
 }
 
