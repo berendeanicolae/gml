@@ -175,6 +175,19 @@ bool GML::Utils::GMLObject::RemoveProperty(char *Name)
 		}
 	return true;
 }
+bool GML::Utils::GMLObject::HasPropery(char *Name)
+{
+	GML::Utils::AttributeLink	*link;
+	UInt32						tr;
+
+	for (tr=0;tr<AttrLinks.Len();tr++)
+		if ((link=(GML::Utils::AttributeLink *)AttrLinks.GetPtrToObject(tr))!=NULL)
+		{
+			if (GML::Utils::GString::Equals(link->Name,Name,true))
+				return true; 
+		}
+	return false;
+}
 bool GML::Utils::GMLObject::SetProperty(GML::Utils::AttributeList &config)
 {
 	UInt32						tr;
