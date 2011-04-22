@@ -165,7 +165,7 @@ bool GML::Algorithm::IMLAlgorithm::SplitMLThreadDataRange(UInt32 maxCount)
 		return false;
 	}
 
-	splitValue = (maxCount/threadsCount);
+	splitValue = (maxCount/threadsCount)+1;
 	start = 0;
 	for (tr=0;tr<threadsCount;tr++)
 	{
