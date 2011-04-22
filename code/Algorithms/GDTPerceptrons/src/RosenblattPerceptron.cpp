@@ -5,12 +5,16 @@ RosenblattPerceptron::RosenblattPerceptron()
 	ObjectName = "RosenblattPerceptron";
 	RemoveProperty("ThreadsCount");
 }
-
-bool RosenblattPerceptron::PerformTrainIteration()
+bool RosenblattPerceptron::OnInit()
 {
-	return Train(&FullData,false,false);
+	range.Set(0,RecordIndexes.Len());
+	return true;
 }
-bool RosenblattPerceptron::PerformTestIteration()
+bool RosenblattPerceptron::PerformTrainIteration(UInt32 iteration)
 {
-	return Test(&FullData);
+	return Train(pvMain,pvMain,range,MainRecord,&RecordIndexes);
+}
+bool RosenblattPerceptron::PerformTestIteration(GML::Utils::AlgorithmResult &Result)
+{
+	return Test(pvMain,range,MainRecord,Result,&RecordIndexes);
 }

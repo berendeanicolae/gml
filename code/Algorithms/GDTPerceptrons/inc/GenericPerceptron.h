@@ -6,33 +6,20 @@
 struct PerceptronVector
 {
 	double	*Weight;
-	double	*Bias;
+	double	Bias;
 	UInt32	Count;
 public:
 	PerceptronVector();
 	~PerceptronVector();
 
 	bool	Create(UInt32 count);
-	bool	Create(PerceptronVector &pv);
 	bool	Copy(PerceptronVector &pv);
+	void	ResetValues();
 	void	Destroy();
 	void	Add(PerceptronVector &pv);
 };
-struct PerceptronThreadData
-{
-	GML::ML::MLRecord				Record;
-	PerceptronVector				Primary;
-	PerceptronVector				Delta;
-	UInt32							ID;
-	UInt32							corectelyClasify;
-	GML::Utils::AlgorithmResult		Res;
-	GML::Utils::Interval			Range;
-	void							*ExtraData;
-public:
-	PerceptronThreadData();
-};
 
-class GenericPerceptron : public GML::Algorithm::IAlgorithm
+class GenericPerceptron : public GML::Algorithm::IMLAlgorithm
 {
 protected:
 	enum {
@@ -65,25 +52,20 @@ protected:
 		ADJUST_WEIGHT_SPLIT_LEARNING_RATE,
 		ADJUST_WEIGHT_SPLIT_LEASTMEANSQUARE,
 		ADJUST_WEIGHT_USE_FEAT_WEIGHT,
-		
+		ADJUST_WEIGHT_USE_POZITIVE_NEGATIVE_LEARNING_RATE,		
 	};
 protected:
-	GML::DB::IDataBase				*db;
-	GML::ML::IConnector				*con;
-
 	// proprietati
 	GML::Utils::GString				Name;
-	GML::Utils::GString				Conector;
-	GML::Utils::GString				DataBase;
-	GML::Utils::GString				Notifier;
 	GML::Utils::GString				WeightFileName;
 	GML::Utils::GString				FeaturesWeightFile;
 	UInt32							InitialWeight;
 
 	// proprietati de training
 	double							learningRate;
+	double							pozitiveLearningRate;
+	double							negativeLearningRate;
 	bool							useB;
-	bool							batchPerceptron;
 	UInt32							saveData;
 	UInt32							saveBest;
 	UInt32							testAfterIterations;
@@ -95,53 +77,45 @@ protected:
 	double							minimSp;
 	UInt32							maxIterations;
 
-	// fire
-	UInt32							threadsCount;
-	
-
-	// Thread data	
+		
+	GML::Utils::GTFVector<UInt32>	activeFeatCount;
 	GML::Utils::Indexes				RecordIndexes;
-	PerceptronThreadData			FullData,BestData;
-	GML::Utils::ThreadParalelUnit	*tpu;
+	GML::Utils::AlgorithmResult		BestResult;
+	GML::ML::MLRecord				MainRecord;
+	PerceptronVector				pvBest,pvMain;
+
+
 	double							*featWeight;
 	
-
-public:
-	PerceptronThreadData			*ptData;
-protected:
-	bool					Train(PerceptronThreadData *ptd,bool clearDelta,bool addDeltaToPrimary);
-	bool					Train(PerceptronThreadData *ptd,GML::Utils::Indexes *recordIndexes,bool clearDelta,bool addDeltaToPrimary);
-	
-	bool					Test(PerceptronThreadData *ptd);
-	bool					Test(PerceptronThreadData *ptd,GML::Utils::Indexes *recordIndexes);
-	
-	bool					SplitInterval(PerceptronThreadData *ptd,UInt32 ptdElements,GML::Utils::Interval &interval);
-	bool					Create(PerceptronThreadData &ptd,UInt32 id,PerceptronThreadData *original=NULL);
-	bool					CreateIndexes();
-	bool					UpdateBest(PerceptronThreadData &ptd);
-	bool					Save(PerceptronThreadData &ptd,char *fileName);
-	bool					Load(PerceptronThreadData &ptd,char *fileName);
+private:
+	bool					PerformTrain();
+	bool					PerformTest();
 	bool					LoadFeatureWeightFile();
-	bool					InitWeight(PerceptronThreadData &ptd);
-	bool					ExecuteParalelCommand(UInt32 command);
-	void					CheckTerminateCondition(PerceptronThreadData &ptd);
+	bool					InitWeight(PerceptronVector &ptd);
+	bool					CreateIndexes();
 
-	virtual void			OnTestTerminateCondition(PerceptronThreadData &ptd);
+// functii virtuale
+	virtual bool			OnUpdateBest(PerceptronVector &pv,GML::Utils::AlgorithmResult &Result,bool &bestUpdated);
+	virtual void			OnTestTerminateCondition(GML::Utils::AlgorithmResult &Result);
 	virtual bool			OnInit();
-	virtual bool			OnUpdateBestData();
-	virtual bool			OnSaveData(char *fileName);		
+	virtual bool			OnSaveData(char *fileName,GML::Utils::AlgorithmResult *Result=NULL);
+	virtual bool			OnSaveBest(char *fileName,GML::Utils::AlgorithmResult *Result=NULL);
 
-	virtual bool			PerformTrainIteration()=0;
-	virtual bool			PerformTestIteration()=0;
+// functii virtuale pure
+	virtual bool			PerformTrainIteration(UInt32 iteration)=0;
+	virtual bool			PerformTestIteration(GML::Utils::AlgorithmResult &Result)=0;
+
+protected:
+		
+	bool					Load(PerceptronVector &ptd,char *fileName);
+	bool					Save(PerceptronVector &pv,char *fileName,GML::Utils::AlgorithmResult *result=NULL);
+	bool					Train(PerceptronVector &pvTrain,PerceptronVector &pvTest,GML::Utils::Interval &interval,GML::ML::MLRecord &rec,GML::Utils::Indexes *indexes=NULL);
+	bool					Test(PerceptronVector &pvTest,GML::Utils::Interval &range,GML::ML::MLRecord &rec,GML::Utils::AlgorithmResult &Result,GML::Utils::Indexes *indexes=NULL,bool resetResult=true,bool resetResultTime=true);
 
 public:
 	GenericPerceptron();
 
-	virtual void			OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command) {};
-
 	bool					Init();
-	bool					PerformTrain();
-	bool					PerformTest();
 	void					OnExecute();
 };
 

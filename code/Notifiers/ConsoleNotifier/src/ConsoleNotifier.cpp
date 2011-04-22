@@ -75,7 +75,8 @@ bool ConsoleNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 			p = p * 100;
 			printf("[%.2lf%%]   ",p);
 			timer.Stop();
-			printf("ETA:%s  ",timer.EstimateETA(tempStr,(UInt32)(p),100));
+			p*=1000;
+			printf("ETA:%s  ",timer.EstimateETA(tempStr,(UInt32)(p),100000));
 			break;
 		case GML::Utils::INotifier::NOTIFY_END_PROCENT:
 			printf("\n");

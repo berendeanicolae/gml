@@ -8,12 +8,16 @@ AdalinePerceptron::AdalinePerceptron()
 	
 	adjustWeightMode = ADJUST_WEIGHT_LEASTMEANSQUARE;
 }
-
-bool AdalinePerceptron::PerformTrainIteration()
+bool AdalinePerceptron::OnInit()
 {
-	return Train(&FullData,false,false);
+	range.Set(0,RecordIndexes.Len());
+	return true;
 }
-bool AdalinePerceptron::PerformTestIteration()
+bool AdalinePerceptron::PerformTrainIteration(UInt32 iteration)
 {
-	return Test(&FullData);
+	return Train(pvMain,pvMain,range,MainRecord,&RecordIndexes);
+}
+bool AdalinePerceptron::PerformTestIteration(GML::Utils::AlgorithmResult &Result)
+{
+	return Test(pvMain,range,MainRecord,Result,&RecordIndexes);
 }

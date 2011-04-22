@@ -8,31 +8,43 @@
 OneSidePerceptron::OneSidePerceptron()
 {
 	ObjectName = "OneSidePerceptron";
-	batchPerceptron = true;
 
 	LinkPropertyToUInt32("MarginType"			,MarginType			,MARGIN_NEGATIVE,"!!LIST:Positive=0,Negative!!");
+	LinkPropertyToUInt32("MarginTrainMethod"	,MarginTrainMethod	,MARGIN_BATCH,"!!LIST:Batch=0,Stream!!");
 }
-void OneSidePerceptron::OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command)
+bool OneSidePerceptron::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
 {
+	MarginThreadData	*mtd;
+
+	if ((mtd = new MarginThreadData())==NULL)
+		return false;
+	if (mtd->Delta.Create(con->GetFeatureCount())==false)
+		return false;
+	thData.Context = mtd;
+	return true;
+}
+void OneSidePerceptron::OnRunThreadCommand(GML::Algorithm::MLThreadData &td,UInt32 command)
+{
+	MarginThreadData *mtd = (MarginThreadData*)td.Context;
 	switch (command)
 	{
 		case COMMAND_TRAIN:
-			Train(&ptd,&TrainIndexes,true,false);
+			Train(mtd->Delta,pvMain,td.Range,td.Record,&TrainIndexes);
 			break;
 		case COMMAND_TEST:
-			Test(&ptd,&TrainIndexes);
+			Test(pvMain,td.Range,td.Record,td.Res,&TrainIndexes,true,false);
 			break;
 		case COMMAND_TRAIN_ON_MARGIN:
-			Train(&ptd,&WorkMarginIndexes,true,false);
+			Train(mtd->Delta,pvMain,mtd->MarginRange,td.Record,&WorkMarginIndexes);
 			break;
 		case COMMAND_REDUCE:
-			TestAndReduce(&WorkMarginIndexes,&ptd);
+			TestAndReduce(pvMain,td.Record,WorkMarginIndexes,mtd->MarginRange);
 			break;
 	}
 }
 bool OneSidePerceptron::OnInit()
 {
-	UInt32					tr,count;
+	UInt32					tr,count,splitValue,start;
 	UInt32					*list;
 	double					label;
 	GML::Utils::Interval	tempRange;
@@ -89,80 +101,85 @@ bool OneSidePerceptron::OnInit()
 				TrainIndexes.Push(*list);
 		}
 	}
+	if (MarginIndexes.Len()==0)
+	{
+		notif->Error("[%s] -> Invalid number of indexes for a margin (0). A margin must have at least one element !",ObjectName);
+		return false;
+	}
+	if (TrainIndexes.Len()==0)
+	{
+		notif->Error("[%s] -> Invalid number of indexes for a train list (0). A margin must have at least one element !",ObjectName);
+		return false;
+	}
 	notif->Info("[%s] -> Margin & Train indexes created (Train=%d , Margin=%d)",ObjectName,TrainIndexes.Len(),MarginIndexes.Len());
-	// aloc si date pentru extraIntervale
-	for (tr=0;tr<threadsCount;tr++)
-	{
-		if ((ptData[tr].ExtraData = new GML::Utils::Interval[2])==NULL)
-		{
-			notif->Error("[%s] -> Unable to alloc interval for thread %d",ObjectName,tr);
-			return false;			
-		}		
-	}
-	// splituim si pentru train
-	tempRange.Set(0,TrainIndexes.Len());
-	if (SplitInterval(ptData,threadsCount,tempRange)==false)
+	// splituies pentru TrainIndexes
+	if (SplitMLThreadDataRange(TrainIndexes.Len())==false)
 		return false;
+
+	splitValue = (MarginIndexes.Len()/threadsCount)+1;
+	start = 0;
 	for (tr=0;tr<threadsCount;tr++)
 	{
-		((GML::Utils::Interval *)ptData[tr].ExtraData)[0]=ptData[tr].Range;
+		if ((start+splitValue)>=MarginIndexes.Len())
+			splitValue = MarginIndexes.Len()-start;
+		((MarginThreadData *)(ThData[tr].Context))->OriginalMarginRange.Set(start,start+splitValue);
+		start+=splitValue;
 	}
-	// splituim si pentru work
-	tempRange.Set(0,MarginIndexes.Len());
-	if (SplitInterval(ptData,threadsCount,tempRange)==false)
-		return false;
-	for (tr=0;tr<threadsCount;tr++)
-	{
-		((GML::Utils::Interval *)ptData[tr].ExtraData)[1]=ptData[tr].Range;
-	}
+
 	return true;
 }
-bool OneSidePerceptron::TestAndReduce(GML::Utils::Indexes *indexes,PerceptronThreadData *ptd)
+bool OneSidePerceptron::TestAndReduce(PerceptronVector &pv,GML::ML::MLRecord &Record,GML::Utils::Indexes &indexes,GML::Utils::Interval &Range)
 {
-	UInt32	*ptrIndex = indexes->GetList();
-	UInt32	count = ptd->Range.Size(),tr;
+	UInt32	*ptrIndex;
+	UInt32	*ptrLastNotTrained;
+	UInt32	count = Range.Size();
 	UInt32	nrFeatures = con->GetFeatureCount();
 	UInt32	diff = 0;
-	double	*w = ptd->Primary.Weight;
-	double	*b = ptd->Primary.Bias;
 	
 	if (!useB)
-		(*b)=0;
+		pv.Bias = 0.0;
 	
-	ptrIndex+=ptd->Range.Start;
+	ptrIndex = indexes.GetList();
+	ptrIndex+=Range.Start;
+	ptrLastNotTrained = ptrIndex;
 
-	for (tr=0;tr<count;tr++)
+	while (count>0)
 	{
-		if (con->GetRecord(ptd->Record,ptrIndex[tr])==false)
+		if (con->GetRecord(Record,*ptrIndex)==false)
 		{
-			notif->Error("[%s] -> (TEST)::Error reading record #%d from thread #%d",ObjectName,(ptrIndex[tr]),ptd->ID);
+			notif->Error("[%s] -> Unable to read record #d",ObjectName,*ptrIndex);
 			return false;
 		}
-		if (GML::ML::VectorOp::IsPerceptronTrained(ptd->Record.Features,w,nrFeatures,*b,ptd->Record.Label)==true)
+		if (GML::ML::VectorOp::IsPerceptronTrained(Record.Features,pv.Weight,nrFeatures,pv.Bias,Record.Label)==true)
 		{
 			diff++;
+			ptrIndex++;
 		} else {
-			ptrIndex[tr-diff]=ptrIndex[tr];
+			(*ptrLastNotTrained) = (*ptrIndex);
+			ptrLastNotTrained++;
+			ptrIndex++;			
 		}
+		count--;
 	}
-	ptd->Range.End-=diff;
+	Range.End-=diff;
 
 	return true;	
 }
 
-bool OneSidePerceptron::PerformTrainIteration()
+bool OneSidePerceptron::PerformTrainIterationForBatchData(UInt32 iteration)
 {
-	UInt32	tr,errorCount;
+	UInt32				tr,errorCount;
+	MarginThreadData	*mtd;
 	
-	// paralel mode
 	for (tr=0;tr<threadsCount;tr++)
-		ptData[tr].Range = ((GML::Utils::Interval *)ptData[tr].ExtraData)[0];
+		((MarginThreadData *)ThData[tr].Context)->Delta.ResetValues();
+		
 	ExecuteParalelCommand(COMMAND_TRAIN);
-	
-	// aditie de date	
+		
 	for (tr=0;tr<threadsCount;tr++)
-		FullData.Primary.Add(ptData[tr].Delta);	
+		pvMain.Add(((MarginThreadData *)ThData[tr].Context)->Delta);
 	
+
 	// refac indexii
 	if (MarginIndexes.CopyTo(WorkMarginIndexes)==false)
 	{
@@ -171,35 +188,72 @@ bool OneSidePerceptron::PerformTrainIteration()
 	}
 	// reducere efectiva
 	for (tr=0;tr<threadsCount;tr++)
-		ptData[tr].Range = ((GML::Utils::Interval *)ptData[tr].ExtraData)[1];
+	{
+		mtd = (MarginThreadData	*)ThData[tr].Context;
+		mtd->MarginRange.Set(mtd->OriginalMarginRange.Start,mtd->OriginalMarginRange.End);		
+	}
 	do
 	{
+		for (tr=0;tr<threadsCount;tr++)
+			((MarginThreadData *)ThData[tr].Context)->Delta.ResetValues();
 		ExecuteParalelCommand(COMMAND_TRAIN_ON_MARGIN);
 		for (tr=0;tr<threadsCount;tr++)
-			FullData.Primary.Add(ptData[tr].Delta);	
+			pvMain.Add(((MarginThreadData *)ThData[tr].Context)->Delta);
 		ExecuteParalelCommand(COMMAND_REDUCE);
 		for (tr=0,errorCount=0;tr<threadsCount;tr++)
-			errorCount+=ptData[tr].Range.Size();
-		//DEBUGMSG("ERROR_COUNT = %d\n",errorCount);
+			errorCount+=((MarginThreadData *)ThData[tr].Context)->MarginRange.Size();
+		//DEBUGMSG("[%s] -> ErrorCount = %d",errorCount);
 	} while (errorCount>0);
 
 	return true;
 }
-bool OneSidePerceptron::PerformTestIteration()
+bool OneSidePerceptron::PerformTrainIterationForStreamData(UInt32 iteration)
 {
-	UInt32	tr;
+	GML::Utils::Interval	Range;
 
-	for (tr=0;tr<threadsCount;tr++)
-		ptData[tr].Range = ((GML::Utils::Interval *)ptData[tr].ExtraData)[0];
-	ExecuteParalelCommand(COMMAND_TEST);
-	FullData.Res.Clear();
-	for (tr=0;tr<threadsCount;tr++)
-		FullData.Res.Add(&ptData[tr].Res);
+	// antrenament normal
+	Range.Set(0,TrainIndexes.Len());
+	Train(pvMain,pvMain,Range,MainRecord,&TrainIndexes);
+
+	// refac indexii
+	if (MarginIndexes.CopyTo(WorkMarginIndexes)==false)
+	{
+		notif->Error("[%s] -> Unable to copy indexes ...",ObjectName);
+		return false;
+	}
+
+	// reducere efectiva
+	Range.Set(0,MarginIndexes.Len());
+	do
+	{
+		Train(pvMain,pvMain,Range,MainRecord,&MarginIndexes);
+		TestAndReduce(pvMain,MainRecord,MarginIndexes,Range);
+		ExecuteParalelCommand(COMMAND_REDUCE);
+	} while (Range.Size()>0);
+
+	return true;
+}
+bool OneSidePerceptron::PerformTrainIteration(UInt32 iteration)
+{
+	switch (MarginTrainMethod)
+	{
+		case MARGIN_BATCH:
+			return PerformTrainIterationForBatchData(iteration);
+		case MARGIN_STREAM:
+			return PerformTrainIterationForStreamData(iteration);
+	}
+	notif->Error("[%s] -> Unknown margin train method : %d",ObjectName,MarginTrainMethod);
+	return false;
+}
+
+bool OneSidePerceptron::PerformTestIteration(GML::Utils::AlgorithmResult &Result)
+{
+	ExecuteParalelCommand(COMMAND_TEST);		
+	for (UInt32 tr=0;tr<threadsCount;tr++)
+		Result.Add(&ThData[tr].Res);
 	if (MarginType==MARGIN_POZITIVE)
-		FullData.Res.tp+=MarginIndexes.Len();
+		Result.tp+=MarginIndexes.Len();
 	if (MarginType==MARGIN_NEGATIVE)
-		FullData.Res.tn+=MarginIndexes.Len();
-	FullData.Res.Compute();
-
+		Result.tn+=MarginIndexes.Len();
 	return true;
 }

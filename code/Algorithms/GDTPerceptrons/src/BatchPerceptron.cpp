@@ -7,53 +7,52 @@
 BatchPerceptron::BatchPerceptron()
 {
 	ObjectName = "BatchPerceptron";
-	batchPerceptron = true;
 }
-void BatchPerceptron::OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command)
+bool BatchPerceptron::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
+{
+	PerceptronVector *pv;
+	if ((pv = new PerceptronVector())==NULL)
+		return false;
+	if (pv->Create(con->GetFeatureCount())==false)
+		return false;
+	thData.Context = pv;
+	return true;
+}
+void BatchPerceptron::OnRunThreadCommand(GML::Algorithm::MLThreadData &td,UInt32 command)
 {
 	switch (command)
 	{
 		case COMMAND_TRAIN:
-			Train(&ptd,true,false);
+			Train(*((PerceptronVector *)td.Context),pvMain,td.Range,td.Record,&RecordIndexes);
 			break;
 		case COMMAND_TEST:
-			Test(&ptd);
+			Test(pvMain,td.Range,td.Record,td.Res,&RecordIndexes,true,false);
 			break;
 	}
 }
-bool BatchPerceptron::PerformTrainIteration()
+bool BatchPerceptron::PerformTrainIteration(UInt32 iteration)
 {
-	UInt32	tr;
-	//if (threadsCount==1)
-	//{
-	//	bool res = Train(&FullData,true,true);		
-	//	return res;
-	//}
+	UInt32				tr;
 	
-	// paralel mode
-	ExecuteParalelCommand(COMMAND_TRAIN);
-	// aditie de date
-	
+	// curat datele -> delta = 0
 	for (tr=0;tr<threadsCount;tr++)
-		FullData.Primary.Add(ptData[tr].Delta);	
+		((PerceptronVector *)ThData[tr].Context)->ResetValues();
+	
+		
+	ExecuteParalelCommand(COMMAND_TRAIN);
+		
+	for (tr=0;tr<threadsCount;tr++)
+		pvMain.Add(*((PerceptronVector *)ThData[tr].Context));
 	
 	return true;
 }
-bool BatchPerceptron::PerformTestIteration()
+bool BatchPerceptron::PerformTestIteration(GML::Utils::AlgorithmResult &Result)
 {
-	UInt32	tr;
-
-	if (threadsCount==1)
-	{
-		if (Test(&FullData)==false)
-			return false;
-	} else {
-		ExecuteParalelCommand(COMMAND_TEST);
-		FullData.Res.Clear();
-		for (tr=0;tr<threadsCount;tr++)
-			FullData.Res.Add(&ptData[tr].Res);
-		FullData.Res.Compute();
-	}
+	//Result.Clear(); // a fost deja curatat de apelant
+	ExecuteParalelCommand(COMMAND_TEST);		
+	for (UInt32 tr=0;tr<threadsCount;tr++)
+		Result.Add(&ThData[tr].Res);
+	//Result.Compute(); // calculeaza apelantul
 
 	return true;
 }
