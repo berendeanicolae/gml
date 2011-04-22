@@ -175,7 +175,7 @@ bool GML::Utils::GMLObject::RemoveProperty(char *Name)
 		}
 	return true;
 }
-bool GML::Utils::GMLObject::HasPropery(char *Name)
+bool GML::Utils::GMLObject::HasProperty(char *Name)
 {
 	GML::Utils::AttributeLink	*link;
 	UInt32						tr;
