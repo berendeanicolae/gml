@@ -169,7 +169,7 @@ bool GML::Algorithm::IMLAlgorithm::SplitMLThreadDataRange(UInt32 maxCount)
 	start = 0;
 	for (tr=0;tr<threadsCount;tr++)
 	{
-		if ((start+splitValue)>maxCount)
+		if ((start+splitValue)>=maxCount)
 			splitValue = maxCount-start;
 		ThData[tr].Range.Set(start,start+splitValue);
 		start+=splitValue;
