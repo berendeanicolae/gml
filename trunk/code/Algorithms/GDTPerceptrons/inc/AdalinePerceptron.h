@@ -5,9 +5,11 @@
 
 class AdalinePerceptron : public GenericPerceptron
 {
-	bool	PerformTrainIteration();
-	bool	PerformTestIteration();
+	GML::Utils::Interval	range;
 
+	bool	PerformTrainIteration(UInt32 iteration);
+	bool	PerformTestIteration(GML::Utils::AlgorithmResult &Result);
+	bool	OnInit();
 public:
 	AdalinePerceptron();
 };

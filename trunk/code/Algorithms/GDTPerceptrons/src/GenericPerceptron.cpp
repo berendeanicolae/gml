@@ -1,10 +1,5 @@
 #include "GenericPerceptron.h"
 
-void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
-{
-	GenericPerceptron *gp = (GenericPerceptron *)context;
-	gp->OnRunThreadCommand(gp->ptData[paralel->GetID()],paralel->GetCodeID());
-}
 UInt32 CountActiveFeatures(double *feat,UInt32 nrElements)
 {
 	UInt32	sum = 0;
@@ -21,7 +16,7 @@ UInt32 CountActiveFeatures(double *feat,UInt32 nrElements)
 PerceptronVector::PerceptronVector()
 {
 	Weight = NULL;
-	Bias = NULL;
+	Bias = 0;
 	Count = 0;
 }
 PerceptronVector::~PerceptronVector()
@@ -32,10 +27,8 @@ void PerceptronVector::Destroy()
 {
 	if (Weight!=NULL)
 		delete Weight;
-	if (Bias)
-		delete Bias;
 	Weight = NULL;
-	Bias = NULL;
+	Bias = 0;
 	Count = 0;
 }
 bool PerceptronVector::Create(UInt32 count)
@@ -43,10 +36,8 @@ bool PerceptronVector::Create(UInt32 count)
 	Destroy();
 	if ((Weight = new double[count])==NULL)
 		return false;
-	if ((Bias = new double)==NULL)
-		return false;
 	memset(Weight,0,sizeof(double)*count);
-	(*Bias) = 0.0;
+	Bias = 0.0;
 	Count = count;
 
 	return true;
@@ -54,47 +45,37 @@ bool PerceptronVector::Create(UInt32 count)
 void PerceptronVector::Add(PerceptronVector &pv)
 {
 	GML::ML::VectorOp::AddVectors(Weight,pv.Weight,Count);
-	(*Bias)+=(*pv.Bias);
+	Bias+=pv.Bias;
 }
-bool PerceptronVector::Create(PerceptronVector &pv)
-{
-	Weight = pv.Weight;
-	Bias = pv.Bias;
-	Count = pv.Count;
 
-	return true;
-}
 bool PerceptronVector::Copy(PerceptronVector &pv)
 {
 	if (Count!=pv.Count)
 		if (Create(pv.Count))
 			return false;
-	(*Bias) = (*pv.Bias);
+	Bias = pv.Bias;
 	memcpy(Weight,pv.Weight,sizeof(double)*pv.Count);
 
 	return true;
 }
-//====================================================================================================
-PerceptronThreadData::PerceptronThreadData()
+void PerceptronVector::ResetValues()
 {
-	ExtraData = NULL;
+	if (Weight)
+		memset(Weight,0,sizeof(double)*Count);
+	Bias = 0.0;
 }
+
 //====================================================================================================
 GenericPerceptron::GenericPerceptron()
 {
-	db = NULL;
-	con = NULL;
 	featWeight = NULL;
-
-	batchPerceptron = false;
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Train,Test!!");
 
 	LinkPropertyToString("Name"						,Name					,"Perceptron");
-	LinkPropertyToString("DataBase"					,DataBase				,"");
-	LinkPropertyToString("Connector"				,Conector				,"");
-	LinkPropertyToString("Notifier"					,Notifier				,"");
 	LinkPropertyToDouble("LearningRate"				,learningRate			,0.01);
+	LinkPropertyToDouble("PozitiveLearningRate"		,pozitiveLearningRate	,0.01);
+	LinkPropertyToDouble("NegativeLearningRate"		,negativeLearningRate	,0.01);
 	LinkPropertyToBool  ("UseBias"					,useB					,true);
 	LinkPropertyToUInt32("SaveData"					,saveData				,SAVE_DATA_AT_FINISH,"!!LIST:None=0,AfterEachIteration,WhenAlgorithmEnds!!");
 	LinkPropertyToUInt32("SaveBest"					,saveBest				,SAVE_BEST_NONE,"!!LIST:None=0,BestACC,BestSE,BestSP!!");
@@ -105,61 +86,10 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToUInt32("MaxIterations"			,maxIterations			,10);
 	LinkPropertyToString("WeightFileName"			,WeightFileName			,"");
 	LinkPropertyToUInt32("InitialWeight"			,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,Statistics,Relevant,FromFile!!");
-	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1,"");
-	LinkPropertyToUInt32("AdjustWeightMode"			,adjustWeightMode		,ADJUST_WEIGHT_LEARNING_RATE,"!!LIST:UseLearningRate=0,UseWeight,UseLeastMeanSquare,UseSplitLearningRate,UseSplitLeastMeanSquare,UseFeaturesWeight!!");
+	LinkPropertyToUInt32("AdjustWeightMode"			,adjustWeightMode		,ADJUST_WEIGHT_LEARNING_RATE,"!!LIST:UseLearningRate=0,UseWeight,UseLeastMeanSquare,UseSplitLearningRate,UseSplitLeastMeanSquare,UseFeaturesWeight,UsePozitiveNegativeLearningRate!!");
 	LinkPropertyToString("FeaturesWeightFile"		,FeaturesWeightFile		,"");
 }
-bool	GenericPerceptron::SplitInterval(PerceptronThreadData *ptd,UInt32 ptdElements,GML::Utils::Interval &interval)
-{
-	UInt32	tr;
-	UInt32	rap = (interval.Size()/threadsCount)+1;
 
-	// aloc memorie pentru indexi
-	for (tr=0;tr<threadsCount;tr++)
-	{
-		if (tr+1==threadsCount)
-			ptd[tr].Range.Set(tr*rap+interval.Start,interval.End);
-		else
-			ptd[tr].Range.Set(tr*rap+interval.Start,(tr+1)*rap+interval.Start);
-	}
-
-	return true;
-}
-bool	GenericPerceptron::Create(PerceptronThreadData &ptd,UInt32 id,PerceptronThreadData *original)
-{
-	if (con->CreateMlRecord(ptd.Record)==false)
-	{
-		notif->Error("[%s] -> Unable to create MLRecord !",ObjectName);
-		return false;
-	}
-	if (original==NULL)
-	{
-		if (ptd.Primary.Create(con->GetFeatureCount())==false)
-		{
-			notif->Error("[%s] -> Unable to allocate prymary vector !",ObjectName);
-			return false;
-		}		
-	} else {
-		if (ptd.Primary.Create(original->Primary)==false)
-		{
-			notif->Error("[%s] -> Unable to allocate prymary vector !",ObjectName);
-			return false;
-		}	
-	}
-	if (batchPerceptron)
-	{
-		if (ptd.Delta.Create(con->GetFeatureCount())==false)
-		{
-			notif->Error("[%s] -> Unable to allocate delta vector !",ObjectName);
-			return false;
-		}		
-	} else {
-		ptd.Delta.Destroy();
-	}
-	ptd.Res.Clear();
-	ptd.ID = id;
-	return true;	
-}
 bool	GenericPerceptron::CreateIndexes()
 {
 	UInt32	tr,nrRec;
@@ -183,74 +113,48 @@ bool	GenericPerceptron::CreateIndexes()
 	}
 	return true;
 }
-bool	GenericPerceptron::UpdateBest(PerceptronThreadData &ptd)
-{
-	switch (saveBest)
-	{
-		case SAVE_BEST_NONE:
-			return false;
-		case SAVE_BEST_ACC:
-			if (ptd.Res.acc<BestData.Res.acc)
-				return false;
-			break;
-		case SAVE_BEST_SE:
-			if (ptd.Res.se<BestData.Res.se)
-				return false;
-			break;
-		case SAVE_BEST_SP:
-			if (ptd.Res.sp<BestData.Res.sp)
-				return false;
-			break;
-		default:
-			notif->Error("UpdateBest => false (code = %d) ",saveBest);
-			return false;
-	}
-	// copii datele
-	memcpy(BestData.Primary.Weight,ptd.Primary.Weight,con->GetFeatureCount()*sizeof(double));
-	BestData.Primary.Bias = ptd.Primary.Bias;
-	BestData.Res.Copy(&ptd.Res);
 
-	return true;
-}
-bool	GenericPerceptron::Save(PerceptronThreadData &ptd,char *fileName)
+bool	GenericPerceptron::Save(PerceptronVector &pv,char *fileName,GML::Utils::AlgorithmResult *result)
 {
 	GML::Utils::AttributeList	tempAttr;
 
 	tempAttr.Clear();
-	if (tempAttr.AddDouble("Bias",*ptd.Primary.Bias,"b value form line equation Sum(xi*wi)+b")==false)
+	if (tempAttr.AddDouble("Bias",pv.Bias,"b value form line equation Sum(xi*wi)+b")==false)
 	{
 		notif->Error("Unable to populate AttributeList for saving ...");
 		return false;
 	}
-	if (tempAttr.AddAttribute("Weight",ptd.Primary.Weight,GML::Utils::AttributeList::DOUBLE,ptd.Primary.Count,"w value form line equation Sum(xi*wi)+b")==false)
+	if (tempAttr.AddAttribute("Weight",pv.Weight,GML::Utils::AttributeList::DOUBLE,pv.Count,"w value form line equation Sum(xi*wi)+b")==false)
 	{
 		notif->Error("Unable to populate AttributeList for saving ...");
 		return false;
 	}
-	if (tempAttr.AddDouble("acc",ptd.Res.acc)==false)
+	if (result!=NULL)
 	{
-		notif->Error("Unable to populate AttributeList for saving ...");
-		return false;
+		if (tempAttr.AddDouble("acc",result->acc)==false)
+		{
+			notif->Error("[%s] -> Unable to populate AttributeList with 'acc' for saving ...",ObjectName);
+			return false;
+		}
+		if (tempAttr.AddDouble("se",result->se)==false)
+		{
+			notif->Error("[%s] -> Unable to populate AttributeList with 'se' for saving ...",ObjectName);
+			return false;
+		}
+		if (tempAttr.AddDouble("sp",result->sp)==false)
+		{
+			notif->Error("[%s] -> Unable to populate AttributeList with 'sp' for saving ...",ObjectName);
+			return false;
+		}
 	}
-	if (tempAttr.AddDouble("se",ptd.Res.se)==false)
-	{
-		notif->Error("Unable to populate AttributeList for saving ...");
-		return false;
-	}
-	if (tempAttr.AddDouble("sp",ptd.Res.sp)==false)
-	{
-		notif->Error("Unable to populate AttributeList for saving ...");
-		return false;
-	}
-
 	if (tempAttr.Save(fileName)==false)
 	{
-		notif->Error("Unable to save data to %s",fileName);
+		notif->Error("[%s] -> Unable to save data to %s",ObjectName,fileName);
 		return false;
 	}
 	return true;
 }
-bool	GenericPerceptron::Load(PerceptronThreadData &ptd,char *fileName)
+bool	GenericPerceptron::Load(PerceptronVector &pv,char *fileName)
 {
 	GML::Utils::AttributeList	tempAttr;
 
@@ -259,58 +163,56 @@ bool	GenericPerceptron::Load(PerceptronThreadData &ptd,char *fileName)
 		notif->Error("Unable to load : %s",fileName);
 		return false;
 	}
-	if (tempAttr.UpdateDouble("Bias",*ptd.Primary.Bias,true)==false)
+	if (tempAttr.UpdateDouble("Bias",pv.Bias,true)==false)
 	{
 		notif->Error("Unable to update 'b' value from %s",fileName);
 		return false;
 	}
-	if (tempAttr.Update("Weight",ptd.Primary.Weight,sizeof(double)*ptd.Primary.Count)==false)
+	if (tempAttr.Update("Weight",pv.Weight,sizeof(double)*pv.Count)==false)
 	{
 		notif->Error("Unable to update 'Weight' value from %s",fileName);
 		return false;
 	}
 	return true;
 }
-bool	GenericPerceptron::InitWeight(PerceptronThreadData &ptd)
+bool	GenericPerceptron::InitWeight(PerceptronVector &pv)
 {
 	UInt32	tr,recCount,gr;
 	double	rap,v_poz,v_neg,t_rap,label;
 
-	if (ptd.Primary.Weight==NULL)
-		return true;
 	switch (InitialWeight)
 	{
 		case INITIAL_WEIGHT_ZERO:
-			memset(ptd.Primary.Weight,0,sizeof(double)*ptd.Primary.Count);
-			(*ptd.Primary.Bias) = 0.0;
+			memset(pv.Weight,0,sizeof(double)*pv.Count);
+			(pv.Bias) = 0.0;
 			break;
 		case INITIAL_WEIGHT_RANDOM:
-			for (tr=0;tr<ptd.Primary.Count;tr++)
-				ptd.Primary.Weight[tr]=((double)((rand()%201)-100))/100.0;
-			(*ptd.Primary.Bias) = ((double)((rand()%201)-100))/100.0;
+			for (tr=0;tr<pv.Count;tr++)
+				pv.Weight[tr]=((double)((rand()%201)-100))/100.0;
+			(pv.Bias) = ((double)((rand()%201)-100))/100.0;
 			break;
 		case INITIAL_WEIGHT_STATISTICS:
-			memset(ptd.Primary.Weight,0,sizeof(double)*ptd.Primary.Count);
-			(*ptd.Primary.Bias) = 0.0;
+			memset(pv.Weight,0,sizeof(double)*pv.Count);
+			(pv.Bias) = 0.0;
 			notif->Info("[%s] Computing initial weights statisticaly ... ",ObjectName);
 			recCount = con->GetRecordCount();
 			for (tr=0;tr<recCount;tr++)
 			{
-				if (con->GetRecord(ptd.Record,tr)==false)
+				if (con->GetRecord(MainRecord,tr)==false)
 				{
 					notif->Error("[%s] Unable to read record #%d ",ObjectName,tr);
 					return false;
 				}
-				for (gr=0;gr<ptd.Record.FeatCount;gr++)
+				for (gr=0;gr<MainRecord.FeatCount;gr++)
 				{
-					ptd.Primary.Weight[gr]+=learningRate * ptd.Record.Features[gr]*ptd.Record.Label;
+					pv.Weight[gr]+=learningRate * MainRecord.Features[gr]*MainRecord.Label;
 				}
-				(*ptd.Primary.Bias) += learningRate * ptd.Record.Label;
+				(pv.Bias) += learningRate * MainRecord.Label;
 			}
 			break;
 		case INITIAL_WEIGHT_RELEVANT:
-			memset(ptd.Primary.Weight,0,sizeof(double)*ptd.Primary.Count);
-			(*ptd.Primary.Bias) = 0.0;
+			memset(pv.Weight,0,sizeof(double)*pv.Count);
+			(pv.Bias) = 0.0;
 			notif->Info("[%s] Computing initial weights in a relevant way ... ",ObjectName);
 			recCount = con->GetRecordCount();
 			v_poz = v_neg = 0;
@@ -328,26 +230,26 @@ bool	GenericPerceptron::InitWeight(PerceptronThreadData &ptd)
 			}
 			for (tr=0;tr<recCount;tr++)
 			{
-				if (con->GetRecord(ptd.Record,tr)==false)
+				if (con->GetRecord(MainRecord,tr)==false)
 				{
 					notif->Error("[%s] Unable to read record #%d ",ObjectName,tr);
 					return false;
 				}
-				for (rap=1,gr=0;gr<ptd.Record.FeatCount;gr++)
-					rap+=ptd.Record.Features[gr];
-				if (ptd.Record.Label==1)
+				for (rap=1,gr=0;gr<MainRecord.FeatCount;gr++)
+					rap+=MainRecord.Features[gr];
+				if (MainRecord.Label==1)
 					t_rap = rap*v_poz;
 				else
 					t_rap = rap*v_neg;
-				for (gr=0;gr<ptd.Record.FeatCount;gr++)
+				for (gr=0;gr<MainRecord.FeatCount;gr++)
 				{
-					ptd.Primary.Weight[gr]+=(learningRate * ptd.Record.Features[gr]*ptd.Record.Label)/t_rap;
+					pv.Weight[gr]+=(learningRate * MainRecord.Features[gr]*MainRecord.Label)/t_rap;
 				}
-				(*ptd.Primary.Bias) += (learningRate * ptd.Record.Label)/t_rap;
+				(pv.Bias) += (learningRate * MainRecord.Label)/t_rap;
 			}
 			break;
 		case INITIAL_WEIGHT_FROMFILE:
-			if (Load(ptd,WeightFileName.GetText())==false)
+			if (Load(pv,WeightFileName.GetText())==false)
 				return false;
 			break;
 		default:
@@ -390,39 +292,41 @@ bool	GenericPerceptron::LoadFeatureWeightFile()
 }
 bool	GenericPerceptron::Init()
 {
-	UInt32		tr;
-
-	// creez obiectele:
-	if ((notif = GML::Builder::CreateNotifier(Notifier.GetText()))==NULL)
+	// creez conexiunea
+	if (InitConnections()==false)
 		return false;
-	if (DataBase.Len()>0)
+
+	if (CreateIndexes()==false)
+		return false;
+	// creez vectorii pentr Main si Best
+	if (pvMain.Create(con->GetFeatureCount())==false)
 	{
-		if ((db = GML::Builder::CreateDataBase(DataBase.GetText(),*notif))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Database (%s)",ObjectName,DataBase.GetText());
-			return false;
-		}
-		if (db->Connect()==false)
-		{
-			notif->Error("[%s] -> Unable to connesct to Database (%s)",ObjectName,DataBase.GetText());
-			return false;
-		}
-		if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif,*db))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,Conector.GetText());
-			return false;
-		}
-	} else {
-		if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,Conector.GetText());
-			return false;
-		}
+		notif->Error("[%s] -> Unable to create Main Perceptron Vector",ObjectName);
+		return false;
 	}
-	if (batchPerceptron==false)
-		threadsCount = 1;
-	if (threadsCount<1)
-		threadsCount = 1;
+	if (pvBest.Create(con->GetFeatureCount())==false)
+	{
+		notif->Error("[%s] -> Unable to create Best Perceptron Vector",ObjectName);
+		return false;
+	}
+	if (con->CreateMlRecord(MainRecord)==false)
+	{
+		notif->Error("[%s] -> Unable to create MainRecord ",ObjectName);
+		return false;
+	}
+	BestResult.Clear();
+	memset(&BestResult,0,sizeof(BestResult)); // ca sa fiu sigur ca si acc , se si sp sunt pe 0
+	if (InitWeight(pvMain)==false)
+		return false;
+
+	// creez firele daca e cazul
+	if (HasProperty("ThreadsCount"))
+	{
+		if (InitThreads()==false)
+			return false;
+		if (SplitMLThreadDataRange(RecordIndexes.Len())==false)
+			return false;
+	}
 	
 	if (adjustWeightMode==ADJUST_WEIGHT_USE_FEAT_WEIGHT)
 	{
@@ -430,209 +334,200 @@ bool	GenericPerceptron::Init()
 			return false;
 	}
 
-	if (CreateIndexes()==false)
-		return false;
-	// creez indexii pentru toate
-	if (Create(FullData,0xFFFFFFFF)==false)
-		return false;
-	FullData.Range.Set(0,RecordIndexes.Len());
-	if (InitWeight(FullData)==false)
-		return false;
-	if (Create(BestData,0xFFFFFFFF)==false)
-		return false;
-	
-
-
-	if (threadsCount>=1)
-	{
-		if ((ptData = new PerceptronThreadData[threadsCount])==NULL)
-		{
-			notif->Error("[%s] -> Unable to allocate PerceptronThreadData[%d]",ObjectName,threadsCount);
-			return false;
-		}
-		for (tr=0;tr<threadsCount;tr++)
-		{
-			if (Create(ptData[tr],tr,&FullData)==false)
-				return false;
-		}
-		if (SplitInterval(ptData,threadsCount,FullData.Range)==false)
-			return false;
-		
-		if ((tpu = new GML::Utils::ThreadParalelUnit[threadsCount])==NULL)
-		{
-			notif->Error("[%s] -> Unable to create %d threads ",ObjectName,threadsCount);
-			return false;
-		}
-		for (tr=0;tr<threadsCount;tr++)
-		{
-			if (tpu[tr].Init(tr,this,ThreadRedirectFunction)==false)
-			{
-				notif->Error("[%s] -> Unable to start thread #%d",ObjectName,tr);
-				return false;
-			}
-		}
-	}
-
 	return OnInit();
 }
-bool	GenericPerceptron::Train(PerceptronThreadData *ptd,bool clearDelta,bool addDeltaToPrimary)
+
+bool	GenericPerceptron::Train(PerceptronVector &pvTrain,PerceptronVector &pvTest,GML::Utils::Interval &range,GML::ML::MLRecord &rec, GML::Utils::Indexes *indexes)
 {
-	return Train(ptd,&RecordIndexes,clearDelta,addDeltaToPrimary);
-}
-bool    GenericPerceptron::Train(PerceptronThreadData *ptd,GML::Utils::Indexes *indexes,bool clearDelta,bool addDeltaToPrimary)
-{
-	UInt32	*ptrIndex = indexes->GetList();
-	UInt32	count,act_featCount;
+	UInt32	*ptrIndex;
+	UInt32	currentIndex,count,act_featCount;
 	UInt32	nrFeatures = con->GetFeatureCount();
-	double	*w = ptd->Primary.Weight;
-	double	*b = ptd->Primary.Bias;
-	double	error;
-	double	sum;
+	double	sum,error;
 
-	ptd->corectelyClasify = 0;
-	if (ptd->Range.End>indexes->Len())
+	count = range.Size();
+	if (indexes==NULL)
 	{
-		notif->Error("[%s] -> (TRAIN)::Invalid Range (%d..%d) for thread %d with %d records",ObjectName,ptd->Range.Start,ptd->Range.End,ptd->ID,indexes->Len());
-		return false;
-	}
-	ptrIndex += ptd->Range.Start;
-	count=ptd->Range.Size();
-
-	if (ptd->Delta.Weight!=NULL)
-	{
-		w = ptd->Delta.Weight;
-		b = ptd->Delta.Bias;
-		if (clearDelta)
+		currentIndex = range.Start;
+	} else {
+		if (range.End>indexes->Len())
 		{
-			memset(w,0,sizeof(double)*ptd->Delta.Count);
-			(*b)=0;
-		}
-	}
-	if (!useB)
-		(*ptd->Primary.Bias)=0;
-
-	while (count>0)
-	{		
-		if (con->GetRecord(ptd->Record,*ptrIndex)==false)
-		{
-			notif->Error("(TRAIN)::Error reading record #%d from thread #%d",(*ptrIndex),ptd->ID);
+			notif->Error("[%s] -> Invalid Range (%d..%d) for %d records",ObjectName,range.Start,range.End,indexes->Len());
 			return false;
 		}
-		sum = GML::ML::VectorOp::ComputeVectorsSum(ptd->Record.Features,ptd->Primary.Weight,nrFeatures)+(*ptd->Primary.Bias);
-
-		if ((sum * ptd->Record.Label)<=0)
+		ptrIndex = indexes->GetList();
+		ptrIndex += range.Start;
+	}
+	// use or not Bias
+	if (!useB)
+	{
+		(pvTrain.Bias)=0;
+		(pvTest.Bias)=0;
+	}
+	// train efectiv
+	while (count>0)
+	{
+		if (indexes!=NULL)
+			currentIndex = (*ptrIndex);
+		// citesc elementul
+		if (con->GetRecord(rec,currentIndex)==false)
+		{
+			notif->Error("[%s] -> Error reading record #%d",ObjectName,currentIndex);
+			return false;
+		}
+		// calculez suma
+		sum = GML::ML::VectorOp::ComputeVectorsSum(rec.Features,pvTest.Weight,nrFeatures)+(pvTest.Bias);
+		// daca nu e corect clasificat , ajustam
+		if ((sum * rec.Label)<=0)
 		{
 			switch (adjustWeightMode)
 			{
 				case ADJUST_WEIGHT_LEARNING_RATE:
-					error = ptd->Record.Label * learningRate;
+					error = rec.Label * learningRate;
 					break;
 				case ADJUST_WEIGHT_USE_WEIGHT:
-					error = ptd->Record.Label * ptd->Record.Weight * learningRate;
+					error = rec.Label * rec.Weight * learningRate;
 					break;
 				case ADJUST_WEIGHT_LEASTMEANSQUARE:					
 					if (sum==0)
-						error = ptd->Record.Label * learningRate;
+						error = rec.Label * learningRate;
 					else
-						error = -learningRate * sum;
+						error = learningRate * (-sum);
 					break;
 				case ADJUST_WEIGHT_SPLIT_LEARNING_RATE:
-					act_featCount = CountActiveFeatures(ptd->Record.Features,nrFeatures)+1; // +1 pentru Bias si ca sa fiu sigur ca e mai mare ca 0
-					error = (ptd->Record.Label * learningRate) / ((double)act_featCount);
+					act_featCount = CountActiveFeatures(rec.Features,nrFeatures)+1; // +1 pentru Bias si ca sa fiu sigur ca e mai mare ca 0
+					error = (rec.Label * learningRate) / ((double)act_featCount);
 					break;
 				case ADJUST_WEIGHT_SPLIT_LEASTMEANSQUARE:
 					if (sum==0)
-						error = ptd->Record.Label * learningRate;
+						error = rec.Label * learningRate;
 					else
 						error = -learningRate * sum;
-					act_featCount = CountActiveFeatures(ptd->Record.Features,nrFeatures)+1; // +1 pentru Bias si ca sa fiu sigur ca e mai mare ca 0
+					act_featCount = CountActiveFeatures(rec.Features,nrFeatures)+1; // +1 pentru Bias si ca sa fiu sigur ca e mai mare ca 0
 					error = error / ((double)act_featCount);
 					break;
 				case ADJUST_WEIGHT_USE_FEAT_WEIGHT:
-					error = ptd->Record.Label * learningRate;
+					error = rec.Label * learningRate;
+					break;
+				case ADJUST_WEIGHT_USE_POZITIVE_NEGATIVE_LEARNING_RATE:
+					if (rec.Label==1)
+						error = rec.Label * pozitiveLearningRate;
+					else
+						error = rec.Label * negativeLearningRate;
 					break;
 				default:
-					error = 0;
-					break;
+					notif->Error("[%s] -> Unknown value for property 'AdjustWeightMode' (%d) ",ObjectName,adjustWeightMode);
+					return false;
 			};
 			
 			if (adjustWeightMode==ADJUST_WEIGHT_USE_FEAT_WEIGHT)
 			{
-				GML::ML::VectorOp::AdjustPerceptronWeights(ptd->Record.Features,w,nrFeatures,error,featWeight);
+				GML::ML::VectorOp::AdjustPerceptronWeights(rec.Features,pvTrain.Weight,nrFeatures,error,featWeight);
 				if (useB)
-					(*b) += error;
+					(pvTrain.Bias) += error;
 			} else {
-				GML::ML::VectorOp::AdjustPerceptronWeights(ptd->Record.Features,w,nrFeatures,error);
+				GML::ML::VectorOp::AdjustPerceptronWeights(rec.Features,pvTrain.Weight,nrFeatures,error);
 				if (useB)
-					(*b) += error;
+					(pvTrain.Bias) += error;
 			}
-		} else {
-			ptd->corectelyClasify ++;
 		}
+
+		// next element
+		if (indexes!=NULL)
+			ptrIndex++;
+		else
+			currentIndex++;
 		count--;
-		ptrIndex++;
 	}
-	if ((ptd->Delta.Weight!=NULL) && (addDeltaToPrimary))
-		ptd->Primary.Add(ptd->Delta);
 	return true;
 }
-bool	GenericPerceptron::Test(PerceptronThreadData *ptd)
+bool	GenericPerceptron::Test(PerceptronVector &pvTest,GML::Utils::Interval &range,GML::ML::MLRecord &rec,GML::Utils::AlgorithmResult &Result,GML::Utils::Indexes *indexes,bool resetResult,bool resetResultTime)
 {
-	return Test(ptd,&RecordIndexes);
-}
-bool	GenericPerceptron::Test(PerceptronThreadData *ptd,GML::Utils::Indexes *indexes)
-{
-	UInt32	*ptrIndex = indexes->GetList();
-	UInt32	count = ptd->Range.Size();
+	UInt32	*ptrIndex;
+	UInt32	currentIndex,count;
 	UInt32	nrFeatures = con->GetFeatureCount();
-	double	*w = ptd->Primary.Weight;
-	double	*b = ptd->Primary.Bias;
-	
-	if (!useB)
-		(*b)=0;
 
-	ptd->Res.Clear();
-	ptrIndex+=ptd->Range.Start;
-
-	while (count>0)
+	if (resetResult)
+		Result.Clear();
+	if (resetResultTime)
+		Result.time.Start();
+	count = range.Size();
+	if (indexes==NULL)
 	{
-		if (con->GetRecord(ptd->Record,*ptrIndex)==false)
+		currentIndex = range.Start;
+	} else {
+		if (range.End>indexes->Len())
 		{
-			notif->Error("(TEST)::Error reading record #%d from thread #%d",(*ptrIndex),ptd->ID);
+			notif->Error("[%s] -> Invalid Range (%d..%d) for %d records",ObjectName,range.Start,range.End,indexes->Len());
 			return false;
 		}
-		ptd->Res.Update(ptd->Record.Label==1,GML::ML::VectorOp::IsPerceptronTrained(ptd->Record.Features,w,nrFeatures,*b,ptd->Record.Label));
-		count--;
-		ptrIndex++;
+		ptrIndex = indexes->GetList();
+		ptrIndex += range.Start;
 	}
-	ptd->Res.Compute();
+	// use or not Bias
+	if (!useB)
+		(pvTest.Bias)=0;
+	// train efectiv
+	while (count>0)
+	{
+		if (indexes!=NULL)
+			currentIndex = (*ptrIndex);
+		// citesc elementul
+		if (con->GetRecord(rec,currentIndex)==false)
+		{
+			notif->Error("[%s] -> Error reading record #%d",ObjectName,currentIndex);
+			return false;
+		}
+		Result.Update(rec.Label==1,GML::ML::VectorOp::IsPerceptronTrained(rec.Features,pvTest.Weight,nrFeatures,pvTest.Bias,rec.Label));
+		// next element
+		if (indexes!=NULL)
+			ptrIndex++;
+		else
+			currentIndex++;
+		count--;
+	}
+	if (resetResult)
+		Result.Compute();
+	if (resetResultTime)
+		Result.time.Stop();
 
 	return true;
 }
 bool	GenericPerceptron::PerformTrain()
 {
-	UInt32					it;
-	GML::Utils::GString		saveNM;
-
-	FullData.Res.time.Start();
+	UInt32							it,loopIterations;
+	GML::Utils::GString				saveNM;
+	GML::Utils::AlgorithmResult		Result;
+	bool							bestUpdated;
+	
+	loopIterations = testAfterIterations;
 
 	for (it=0;(it<maxIterations) && (!StopAlgorithm);it++)
 	{
-		FullData.Res.Iteration = it;
-		if (PerformTrainIteration()==false)
+		Result.time.Start();		
+		if (PerformTrainIteration(it)==false)
 		{
-			notif->Error("Error on training iteration ...");
+			notif->Error("[%s] -> Error on training iteration ...",ObjectName);
 			return false;
 		}
-		if ((it % testAfterIterations)==0)
+		loopIterations--;
+		if (loopIterations==0)
 		{
-			if (PerformTest()==false)			
+			loopIterations = testAfterIterations;
+			Result.Iteration = it;
+			Result.Clear();
+			if (PerformTestIteration(Result)==false)
 			{
-				notif->Error("Error on test iteration ...");
+				notif->Error("[%s] -> Error on test iteration ...",ObjectName);
 				return false;
 			}
-			CheckTerminateCondition(FullData);
-			if (OnUpdateBestData())
+			Result.Compute();
+			Result.time.Stop();
+			notif->Result(Result);
+
+			OnTestTerminateCondition(Result);
+			if (OnUpdateBest(pvMain,Result,bestUpdated)==false)
+				return false;
+			if (bestUpdated)
 			{
 				switch (saveBest)
 				{
@@ -649,33 +544,36 @@ bool	GenericPerceptron::PerformTrain()
 						saveNM.SetFormated("%s_best.txt",Name.GetText());
 						break;
 				}				
-				OnSaveData(saveNM.GetText());
+				OnSaveBest(saveNM.GetText(),&BestResult);
 			}
 			if (saveData==SAVE_DATA_AFTER_EACH_ITERATION)
 			{
 				saveNM.SetFormated("%s_it_%d.txt",Name.GetText(),it+1);
-				OnSaveData(saveNM.GetText());
-			}
-			FullData.Res.time.Start();
+				OnSaveData(saveNM.GetText(),&Result);
+			}			
 		}
 	}
 	if (saveData==SAVE_DATA_AT_FINISH)
 	{
 		saveNM.SetFormated("%s_final.txt",Name.GetText());
-		OnSaveData(saveNM.GetText());
+		OnSaveData(saveNM.GetText(),&Result);
 	}
 	return true;
 }
 bool	GenericPerceptron::PerformTest()
 {
-	//GML::Utils::GString		saveNM;
-	if (PerformTestIteration()==false)
+	GML::Utils::AlgorithmResult		Result;
+
+	Result.Clear();
+	Result.time.Start();
+	if (PerformTestIteration(Result)==false)
 	{
-		notif->Error("Error on test iteration ...");
+		notif->Error("[%s] -> Error on test iteration ...",ObjectName);
 		return false;
 	}	
-	FullData.Res.time.Stop();
-	notif->Notify(100,&FullData.Res,sizeof(FullData.Res));
+	Result.Compute();
+	Result.time.Stop();
+	notif->Result(Result);
 	return true;
 }
 void	GenericPerceptron::OnExecute()
@@ -696,61 +594,70 @@ void	GenericPerceptron::OnExecute()
 	};
 	notif->Error("[%s] -> Unkwnown command ID : %d",ObjectName,Command);
 }
-bool    GenericPerceptron::ExecuteParalelCommand(UInt32 command)
-{
-	UInt32	tr;
 
-	// executie
-	for (tr=0;tr<threadsCount;tr++)
-		if (tpu[tr].Execute(command)==false)
-		{
-			notif->Error("Error on runnig thread #%d",tr);
-			return false;
-		}
-	// asteptare
-	for (tr=0;tr<threadsCount;tr++)
-		if (tpu[tr].WaitToFinish()==false)
-		{
-			notif->Error("WaitToFinish failed on thread #%d",tr);
-			return false;
-		}
-	// all ok
-	return true;
-}
 bool	GenericPerceptron::OnInit()
 {
 	return true;
 }
-void	GenericPerceptron::OnTestTerminateCondition(PerceptronThreadData &ptd)
+
+void	GenericPerceptron::OnTestTerminateCondition(GML::Utils::AlgorithmResult &Result)
 {
-}
-void	GenericPerceptron::CheckTerminateCondition(PerceptronThreadData &ptd)
-{
-	if (ptd.Res.acc>=minimAcc)
+	if (Result.acc>=minimAcc)
 	{
-		notif->Info("[%s] -> Accuracy (Acc) exceded %2.3lf (%2.3lf) -> Terminating Algorithm !",ObjectName,minimAcc,ptd.Res.acc);
+		notif->Info("[%s] -> Accuracy (Acc) exceded %2.3lf (%2.3lf) -> Terminating Algorithm !",ObjectName,minimAcc,Result.acc);
 		StopAlgorithm = true;
 		return;
 	}
-	if (ptd.Res.se>=minimSe)
+	if (Result.se>=minimSe)
 	{
-		notif->Info("[%s] -> Sensitivity (Se) exceded %2.3lf (%2.3lf) -> Terminating Algorithm !",ObjectName,minimSe,ptd.Res.se);
+		notif->Info("[%s] -> Sensitivity (Se) exceded %2.3lf (%2.3lf) -> Terminating Algorithm !",ObjectName,minimSe,Result.se);
 		StopAlgorithm = true;
 		return;
 	}
-	if (ptd.Res.sp>=minimSp)
+	if (Result.sp>=minimSp)
 	{
-		notif->Info("[%s] -> Specificity (Sp) exceded %2.3lf (%2.3lf) -> Terminating Algorithm !",ObjectName,minimSp,ptd.Res.sp);
+		notif->Info("[%s] -> Specificity (Sp) exceded %2.3lf (%2.3lf) -> Terminating Algorithm !",ObjectName,minimSp,Result.sp);
 		StopAlgorithm = true;
 		return;
 	}
-	OnTestTerminateCondition(ptd);
 }
-bool	GenericPerceptron::OnUpdateBestData()
+bool	GenericPerceptron::OnUpdateBest(PerceptronVector &pv,GML::Utils::AlgorithmResult &Result,bool &bestUpdated)
 {
-	return UpdateBest(FullData);
+	bestUpdated = false;
+	switch (saveBest)
+	{
+		case SAVE_BEST_NONE:
+			return true;
+		case SAVE_BEST_ACC:
+			if (Result.acc<BestResult.acc)
+				return true;
+			break;
+		case SAVE_BEST_SE:
+			if (Result.se<BestResult.se)
+				return true;
+			break;
+		case SAVE_BEST_SP:
+			if (Result.sp<BestResult.sp)
+				return true;
+			break;
+		default:
+			notif->Error("[%s] -> UpdateBest => false (code = %d) ",ObjectName,saveBest);
+			return false;
+	}
+	if (pvBest.Copy(pv)==false)
+	{
+		notif->Error("[%s] -> Unable to update Best Result",ObjectName);
+		return false;
+	}
+	BestResult.Copy(&Result);
+	bestUpdated = true;
+	return true;
 }
-bool	GenericPerceptron::OnSaveData(char *fileName)
+bool	GenericPerceptron::OnSaveData(char *fileName,GML::Utils::AlgorithmResult *Result)
 {
-	return Save(FullData,fileName);
+	return Save(pvMain,fileName,Result);
+}
+bool	GenericPerceptron::OnSaveBest(char *fileName,GML::Utils::AlgorithmResult *Result)
+{
+	return Save(pvBest,fileName,Result);
 }

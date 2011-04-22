@@ -5,9 +5,10 @@
 
 class BatchPerceptron: public GenericPerceptron
 {
-	bool	PerformTrainIteration();
-	bool	PerformTestIteration();
-	void	OnRunThreadCommand(PerceptronThreadData &ptd,UInt32 command);
+	bool	OnInitThreadData(GML::Algorithm::MLThreadData &thData);
+	bool	PerformTrainIteration(UInt32 iteration);
+	bool	PerformTestIteration(GML::Utils::AlgorithmResult &Result);
+	void	OnRunThreadCommand(GML::Algorithm::MLThreadData &td,UInt32 command);
 public:
 	BatchPerceptron();
 }; 
