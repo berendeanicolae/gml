@@ -23,13 +23,14 @@ void GML::Utils::AlgorithmResult::Update(bool classType,bool corectellyClasified
 void GML::Utils::AlgorithmResult::Clear()
 {
     tp = tn = fp = fn = 0;
-    sp = se = acc = 0.0;
+    sp = se = acc = med = 0.0;
 }
 void GML::Utils::AlgorithmResult::Compute()
 {
 	se = (tp * 100.0) / (double)(tp + fn);
 	sp = (tn * 100.0) / (double)(tn + fp);
 	acc = ((tp + tn) * 100.0) / (double)(tp + fp + tn + fn);
+	med = (se+sp)/2;
 }
 void GML::Utils::AlgorithmResult::Add(AlgorithmResult *res)
 {
@@ -51,4 +52,5 @@ void GML::Utils::AlgorithmResult::Copy(AlgorithmResult *res)
     sp = res->sp;
     se = res->se;
     acc = res->acc;
+	med = res->med;
 }
