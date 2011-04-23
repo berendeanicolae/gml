@@ -11,11 +11,14 @@ class MapConnector: public GML::ML::IConnector
 		UseMultiply,
 		UseAddition,
 		UseFeatAverage,
+		Negate,
+		Interval,
 
 	};
 
 	UInt32	mapMethod;
 	UInt32	featuresCount;	
+	double	startMapInterval,endMapInterval;
 
 	bool		OnInitConnectionToConnector();
 

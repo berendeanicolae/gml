@@ -4,11 +4,13 @@ MapConnector::MapConnector()
 {
 	ObjectName = "MapConnector";
 
-	LinkPropertyToUInt32("MapMethod",mapMethod,UseAND,	"!!LIST:UseAND=0,UseOR,UseXOR,UseAnd+Or,UseMultiply,UseAddition,UseFeatAverage!!\n"
+	LinkPropertyToUInt32("MapMethod",mapMethod,UseAND,	"!!LIST:UseAND=0,UseOR,UseXOR,UseAnd+Or,UseMultiply,UseAddition,UseFeatAverage,Negate,Interval!!\n"
 														"Selects the method to be used for mapping\n"
 														"* UseAND -> feat(1..n) will become feat`(1..m) where\n"														
 														"\n"
 														);
+	LinkPropertyToDouble("StartInterval",startMapInterval,0.0,"Value for the start of the interval");
+	LinkPropertyToDouble("EndInterval",endMapInterval,1.0,"Value for the end of the interval");
 }
 
 bool	MapConnector::OnInitConnectionToConnector()
@@ -29,6 +31,10 @@ bool	MapConnector::OnInitConnectionToConnector()
 			break;
 		case UseFeatAverage:
 			featuresCount = conector->GetFeatureCount()+1;
+			break;
+		case Negate:
+		case Interval:
+			featuresCount = conector->GetFeatureCount();
 			break;
 		default:
 			notifier->Error("[%s] -> Unknown method ID = %d",ObjectName,mapMethod);
@@ -121,6 +127,21 @@ bool	MapConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recor
 				sum+=(*p1);
 			}
 			(*pMap) = sum/((double)pCount);
+			break;
+		case Negate:
+			p1 = record.Parent->Features;
+			for (tr=0;tr<pCount;tr++,p1++,pMap++)
+			{
+				(*pMap) = 1.0-(*p1);
+			}
+			break;
+		case Interval:
+			p1 = record.Parent->Features;
+			sum = endMapInterval-startMapInterval;
+			for (tr=0;tr<pCount;tr++,p1++,pMap++)
+			{
+				(*pMap) = (*p1) * sum + startMapInterval;
+			}
 			break;
 		default:
 			notifier->Error("[%s] -> Unknown method ID = %d",ObjectName,mapMethod);
