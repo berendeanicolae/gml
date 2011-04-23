@@ -126,6 +126,7 @@ bool OneSidePerceptron::OnInit()
 		start+=splitValue;
 	}
 
+
 	return true;
 }
 bool OneSidePerceptron::TestAndReduce(PerceptronVector &pv,GML::ML::MLRecord &Record,GML::Utils::Indexes &indexes,GML::Utils::Interval &Range)
