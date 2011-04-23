@@ -10,6 +10,7 @@ class MapConnector: public GML::ML::IConnector
 		UseAnd_Or,
 		UseMultiply,
 		UseAddition,
+		UseFeatAverage,
 
 	};
 

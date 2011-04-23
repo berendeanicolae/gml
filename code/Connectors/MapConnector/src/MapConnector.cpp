@@ -4,7 +4,7 @@ MapConnector::MapConnector()
 {
 	ObjectName = "MapConnector";
 
-	LinkPropertyToUInt32("MapMethod",mapMethod,UseAND,	"!!LIST:UseAND=0,UseOR,UseXOR,UseAnd+Or,UseMultiply,UseAddition!!\n"
+	LinkPropertyToUInt32("MapMethod",mapMethod,UseAND,	"!!LIST:UseAND=0,UseOR,UseXOR,UseAnd+Or,UseMultiply,UseAddition,UseFeatAverage!!\n"
 														"Selects the method to be used for mapping\n"
 														"* UseAND -> feat(1..n) will become feat`(1..m) where\n"														
 														"\n"
@@ -26,6 +26,9 @@ bool	MapConnector::OnInitConnectionToConnector()
 			break;
 		case UseAnd_Or:
 			featuresCount = (conector->GetFeatureCount() * (conector->GetFeatureCount()+1));
+			break;
+		case UseFeatAverage:
+			featuresCount = conector->GetFeatureCount()+1;
 			break;
 		default:
 			notifier->Error("[%s] -> Unknown method ID = %d",ObjectName,mapMethod);
@@ -61,6 +64,7 @@ bool	MapConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recor
 {
 	UInt32		tr,gr,pCount;
 	double		*p1,*p2,*pMap;
+	double		sum;
 
 	if (conector->GetRecord(*record.Parent,index,recordMask)==false)
 		return false;
@@ -107,6 +111,16 @@ bool	MapConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recor
 			for (tr=0,p1=record.Parent->Features;tr<pCount;tr++,p1++)
 				for (gr=tr,p2=p1;gr<pCount;gr++,p2++,pMap++)
 					(*pMap) = (*p1) + (*p2);
+			break;
+		case UseFeatAverage:
+			p1 = record.Parent->Features;
+			sum = 0.0;
+			for (tr=0;tr<pCount;tr++,p1++,pMap++)
+			{
+				(*pMap) = (*p1);
+				sum+=(*p1);
+			}
+			(*pMap) = sum/((double)pCount);
 			break;
 		default:
 			notifier->Error("[%s] -> Unknown method ID = %d",ObjectName,mapMethod);
