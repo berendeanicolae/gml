@@ -111,6 +111,48 @@ bool   ShuffleConnector::ShufflePozitiveFirst()
 	}
 	return true;
 }
+bool   ShuffleConnector::ShuffleNegativeFirst()
+{
+	UInt32	tr;
+	double  label;
+
+	notifier->Info("[%s] -> Ordering (First negative)",ObjectName);
+	
+	for (tr=0;tr<conector->GetRecordCount();tr++)
+	{
+		if (conector->GetRecordLabel(label,tr)==false)
+		{
+			notifier->Error("[%s] -> Unable to read label for %d index ",ObjectName,tr);
+			return false;
+		}
+		if (label!=1)
+		{
+			if (Indexes.Push(tr)==false)
+			{
+				notifier->Error("[%s] -> Unable to add record #d to index list",ObjectName,tr);
+				return false;
+			}
+		}
+	}
+		
+	for (tr=0;tr<conector->GetRecordCount();tr++)
+	{
+		if (conector->GetRecordLabel(label,tr)==false)
+		{
+			notifier->Error("[%s] -> Unable to read label for %d index ",ObjectName,tr);
+			return false;
+		}
+		if (label==1)
+		{
+			if (Indexes.Push(tr)==false)
+			{
+				notifier->Error("[%s] -> Unable to add record #d to index list",ObjectName,tr);
+				return false;
+			}
+		}
+	}
+	return true;
+}
 bool   ShuffleConnector::OnInitConnectionToConnector() 
 {
 	if (Indexes.Create(conector->GetRecordCount())==false)
@@ -126,6 +168,8 @@ bool   ShuffleConnector::OnInitConnectionToConnector()
 				return false;
 			break;
 		case SHUFFLE_METHOD_NEGATIVE_FIRST:
+			if (ShuffleNegativeFirst()==false)
+				return false;
 			break;
 		case SHUFFLE_METHOD_RANDOM:
 			break;
