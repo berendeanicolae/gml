@@ -78,7 +78,7 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToDouble("NegativeLearningRate"		,negativeLearningRate	,0.01);
 	LinkPropertyToBool  ("UseBias"					,useB					,true);
 	LinkPropertyToUInt32("SaveData"					,saveData				,SAVE_DATA_AT_FINISH,"!!LIST:None=0,AfterEachIteration,WhenAlgorithmEnds!!");
-	LinkPropertyToUInt32("SaveBest"					,saveBest				,SAVE_BEST_NONE,"!!LIST:None=0,BestACC,BestSE,BestSP,BestSPSEAverage!!");
+	LinkPropertyToUInt32("SaveBest"					,saveBest				,SAVE_BEST_NONE,"!!LIST:None=0,BestACC,BestSE,BestSP,BestSPSEAverage,BestTP,BestTN,BestFP,BestFN!!");
 	LinkPropertyToUInt32("TestAfterIterations"		,testAfterIterations	,1);
 	LinkPropertyToDouble("MinimAcc"					,minimAcc				,100.0);
 	LinkPropertyToDouble("MinimSe"					,minimSe				,100.1);
@@ -149,6 +149,31 @@ bool	GenericPerceptron::Save(PerceptronVector &pv,char *fileName,GML::Utils::Alg
 		if (tempAttr.AddDouble("med",result->med)==false)
 		{
 			notif->Error("[%s] -> Unable to populate AttributeList with 'med' for saving ...",ObjectName);
+			return false;
+		}
+		if (tempAttr.AddDouble("tp",result->tp)==false)
+		{
+			notif->Error("[%s] -> Unable to populate AttributeList with 'tp' for saving ...",ObjectName);
+			return false;
+		}
+		if (tempAttr.AddDouble("tn",result->tn)==false)
+		{
+			notif->Error("[%s] -> Unable to populate AttributeList with 'tn' for saving ...",ObjectName);
+			return false;
+		}
+		if (tempAttr.AddDouble("fp",result->fp)==false)
+		{
+			notif->Error("[%s] -> Unable to populate AttributeList with 'fp' for saving ...",ObjectName);
+			return false;
+		}
+		if (tempAttr.AddDouble("fn",result->fn)==false)
+		{
+			notif->Error("[%s] -> Unable to populate AttributeList with 'fn' for saving ...",ObjectName);
+			return false;
+		}
+		if (tempAttr.AddUInt32("Iteration",result->Iteration)==false)
+		{
+			notif->Error("[%s] -> Unable to populate AttributeList with 'Iteration' for saving ...",ObjectName);
 			return false;
 		}
 	}
@@ -548,6 +573,18 @@ bool	GenericPerceptron::PerformTrain()
 					case SAVE_BEST_MED:
 						saveNM.SetFormated("%s_best_spse_average.txt",Name.GetText()); 
 						break;
+					case SAVE_BEST_TP:
+						saveNM.SetFormated("%s_best_tp.txt",Name.GetText()); 
+						break;
+					case SAVE_BEST_TN:
+						saveNM.SetFormated("%s_best_tn.txt",Name.GetText()); 
+						break;
+					case SAVE_BEST_FP:
+						saveNM.SetFormated("%s_best_fp.txt",Name.GetText()); 
+						break;
+					case SAVE_BEST_FN:
+						saveNM.SetFormated("%s_best_fn.txt",Name.GetText()); 
+						break;
 					default:
 						saveNM.SetFormated("%s_best.txt",Name.GetText());
 						break;
@@ -652,6 +689,22 @@ bool	GenericPerceptron::OnUpdateBest(PerceptronVector &pv,GML::Utils::AlgorithmR
 			if (Result.med<BestResult.med)
 				return true;
 			break;
+		case SAVE_BEST_TP:
+			if (Result.tp<BestResult.tp)
+				return true;
+			break;		
+		case SAVE_BEST_TN:
+			if (Result.tn<BestResult.tn)
+				return true;
+			break;		
+		case SAVE_BEST_FP:
+			if (Result.fp<BestResult.fp)
+				return true;
+			break;		
+		case SAVE_BEST_FN:
+			if (Result.fn<BestResult.fn)
+				return true;
+			break;		
 		default:
 			notif->Error("[%s] -> UpdateBest => false (code = %d) ",ObjectName,saveBest);
 			return false;
