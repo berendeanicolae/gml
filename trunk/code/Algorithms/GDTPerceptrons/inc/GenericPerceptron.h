@@ -39,6 +39,7 @@ protected:
 		SAVE_BEST_ACC,
 		SAVE_BEST_SE,
 		SAVE_BEST_SP,
+		SAVE_BEST_MED,
 	};
 	enum {
 		SAVE_DATA_NONE = 0,
