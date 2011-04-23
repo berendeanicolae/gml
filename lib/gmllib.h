@@ -1440,7 +1440,7 @@ namespace GML
 		public:
 			UInt32		Iteration;
 			double		tp,tn,fp,fn;
-			double		sp,se,acc;
+			double		sp,se,acc,med;
 			Timer		time;
 
 		public:
