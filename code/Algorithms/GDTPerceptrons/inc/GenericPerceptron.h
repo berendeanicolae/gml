@@ -40,6 +40,10 @@ protected:
 		SAVE_BEST_SE,
 		SAVE_BEST_SP,
 		SAVE_BEST_MED,
+		SAVE_BEST_TP,
+		SAVE_BEST_TN,
+		SAVE_BEST_FP,
+		SAVE_BEST_FN
 	};
 	enum {
 		SAVE_DATA_NONE = 0,
