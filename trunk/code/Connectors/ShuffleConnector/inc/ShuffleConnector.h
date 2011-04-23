@@ -28,6 +28,7 @@ private:
 	bool					ShufflePozitiveFirst();
 	bool					ShuffleNegativeFirst();
 	bool					ShuffleRandom();
+	bool					ShuffleUniform();
 	bool					OnInitConnectionToConnector();
 public:
 	ShuffleConnector();
