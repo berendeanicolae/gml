@@ -184,7 +184,7 @@ bool   ShuffleConnector::ShuffleRandom()
 bool   ShuffleConnector::ShuffleUniform()
 {
 	UInt32	tr,countPozitive,countNegative;
-	double  label;
+	double  label,rapPoz,rapNeg;
 
 	notifier->Info("[%s] -> Ordering (uniform distribution)",ObjectName);
 	
@@ -208,6 +208,12 @@ bool   ShuffleConnector::ShuffleUniform()
 		return false;
 	}
 	// adaug cele negative
+	rapPoz = rapNeg = 1;
+	if (countPozitive>countNegative)
+		rapNeg = ((double)countPozitive)/((double)countNegative);
+	if (countPozitive<countNegative)
+		rapPoz = ((double)countNegative)/((double)countPozitive);
+	// to do ...
 
 	return true;
 }
@@ -234,6 +240,8 @@ bool   ShuffleConnector::OnInitConnectionToConnector()
 				return false;
 			break;
 		case SHUFFLE_METHOD_UNIFORM:
+			notifier->Error("[%s] -> Uniform method not implemented yet !!!",ObjectName);
+			return false;
 			break;
 		default:
 			notifier->Error("[%s] -> Unknwon shuffle method (%d)",ObjectName,Method);
