@@ -181,6 +181,36 @@ bool   ShuffleConnector::ShuffleRandom()
 	}
 	return true;
 }
+bool   ShuffleConnector::ShuffleUniform()
+{
+	UInt32	tr,countPozitive,countNegative;
+	double  label;
+
+	notifier->Info("[%s] -> Ordering (uniform distribution)",ObjectName);
+	
+	countPozitive = countNegative = 0;
+	for (tr=0;tr<conector->GetRecordCount();tr++)
+	{
+		if (conector->GetRecordLabel(label,tr)==false)
+		{
+			notifier->Error("[%s] -> Unable to read label for %d index ",ObjectName,tr);
+			return false;
+		}
+		if (label==1)
+			countPozitive++;
+		else
+			countNegative++;
+	}
+	notifier->Info("[%s] -> Pozitive elements = %d, Negative elements = %d",ObjectName,countPozitive,countNegative);
+	if ((countPozitive==0) || (countNegative==0))
+	{
+		notifier->Error("[%s] -> There must be at least one element in each class (negative and pozitive)",ObjectName);
+		return false;
+	}
+	// adaug cele negative
+
+	return true;
+}
 bool   ShuffleConnector::OnInitConnectionToConnector() 
 {
 	if (Indexes.Create(conector->GetRecordCount())==false)
