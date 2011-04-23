@@ -85,7 +85,7 @@ bool ConsoleNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 		case 100:
 			if (useColors)
 				SetColor(14,0);
-			printf("%4d|TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|%s\n",(res->Iteration+1),(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc,res->time.GetPeriodAsString(tempStr));
+			printf("%4d|TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|Med:%3.2lf|%s\n",(res->Iteration+1),(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc,res->med,res->time.GetPeriodAsString(tempStr));
 			break;
 		default:
 			tempStr.SetFormated("Unknown message ID = %d , DataSize = %d",messageID,DataSize);
@@ -93,45 +93,5 @@ bool ConsoleNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 			break;
 	}
 
-
-	//printf("%4d => ",messageID);
-	//// pentru AlgResult
-	//if (messageID==100)
-	//{
-	//	if (useColors)
-	//		SetColor(14,0);
-	//	GML::Utils::AlgorithmResult	*res = (GML::Utils::AlgorithmResult *)Data;	
-	//	printf("%4d|TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|%s\n",(res->Iteration+1),(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc,res->time.GetPeriodAsString(tempStr));
-	//	SetColor(7,0);
-	//	return true;
-	//}
-	//if (useColors)
-	//{
-	//	switch (messageID)
-	//	{
-	//		case GML::Utils::INotifier::NOTIFY_ERROR:
-	//			SetColor(12,0);
-	//			break;
-	//		case GML::Utils::INotifier::NOTIFY_INFO:
-	//			SetColor(11,0);
-	//			break;
-	//		case GML::Utils::INotifier::NOTIFY_START_PROCENT:
-	//			SetColor(9,0);
-	//			break;
-	//	};
-	//}
-	//
-	//// afisare date
-	//if ((Data!=NULL) && (DataSize>0))
-	//{
-	//	for (UInt32 tr =0;tr<DataSize;tr++)
-	//	{
-	//		if ((text[tr]>=' ') && (text[tr]<=128))
-	//			printf("%c",text[tr]);
-	//		else
-	//			printf("{\\x%02X}",(unsigned char)text[tr]);
-	//	}
-	//}
-	//printf("\n");
 	return true;
 }
