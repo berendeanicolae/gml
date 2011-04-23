@@ -1,9 +1,6 @@
 #include "ShuffleConnector.h"
+#include "math.h"
 
-int HashCompareFunction(GML::DB::RecordHash &h1,GML::DB::RecordHash &h2)
-{
-	return memcmp(&h1,&h2,sizeof(GML::DB::RecordHash));
-}
 //========================================================
 ShuffleConnector::ShuffleConnector()
 {
@@ -153,6 +150,37 @@ bool   ShuffleConnector::ShuffleNegativeFirst()
 	}
 	return true;
 }
+bool   ShuffleConnector::ShuffleRandom()
+{
+	UInt32	tr,i1,i2,aux;
+	UInt32	*idx;
+
+	notifier->Info("[%s] -> Ordering (random order)",ObjectName);
+	
+	for (tr=0;tr<conector->GetRecordCount();tr++)
+	{
+		if (Indexes.Push(tr)==false)
+		{
+			notifier->Error("[%s] -> Unable to add record #d to index list",ObjectName,tr);
+			return false;
+		}		
+	}
+	
+	srand(GetTickCount());
+	idx = Indexes.GetList();
+	for (tr=0;tr<conector->GetRecordCount();tr++)
+	{
+		i1 = rand() % conector->GetRecordCount();
+		i2 = rand() % conector->GetRecordCount();
+		if (i1!=i2)
+		{
+			aux = idx[i1];
+			idx[i1] = idx[i2];
+			idx[i2] = aux;
+		}
+	}
+	return true;
+}
 bool   ShuffleConnector::OnInitConnectionToConnector() 
 {
 	if (Indexes.Create(conector->GetRecordCount())==false)
@@ -172,6 +200,8 @@ bool   ShuffleConnector::OnInitConnectionToConnector()
 				return false;
 			break;
 		case SHUFFLE_METHOD_RANDOM:
+			if (ShuffleRandom()==false)
+				return false;
 			break;
 		case SHUFFLE_METHOD_UNIFORM:
 			break;
