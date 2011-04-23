@@ -26,6 +26,7 @@ private:
 	UInt32					Method;
 
 	bool					ShufflePozitiveFirst();
+	bool					ShuffleNegativeFirst();
 	bool					OnInitConnectionToConnector();
 public:
 	ShuffleConnector();
