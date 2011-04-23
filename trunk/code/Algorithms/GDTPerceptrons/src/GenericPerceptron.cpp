@@ -651,6 +651,7 @@ bool	GenericPerceptron::OnUpdateBest(PerceptronVector &pv,GML::Utils::AlgorithmR
 		case SAVE_BEST_MED:
 			if (Result.med<BestResult.med)
 				return true;
+			break;
 		default:
 			notif->Error("[%s] -> UpdateBest => false (code = %d) ",ObjectName,saveBest);
 			return false;
