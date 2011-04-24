@@ -2,6 +2,15 @@
 
 #define FIND_CENTROID	0
 
+int CentroidDistanceCompareFunction(CentroidDistances &c1,CentroidDistances &c2)
+{
+	if (c1.corectelyClasify>c2.corectelyClasify)
+		return 1;
+	if (c1.corectelyClasify<c2.corectelyClasify)
+		return 1;
+	return 0;
+}
+//========================================================================================================================
 
 Centroid::Centroid()
 {
@@ -155,7 +164,7 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 		maxDiffDist = 10000000000;
 		for (gr=0;gr<diffClassCount;gr++)
 		{
-			idx = indexDiffClass->Get(tr);
+			idx = indexDiffClass->Get(gr);
 			if (con->GetRecord(dt->SecRec,idx)==false)
 			{
 				notif->Error("[%s] -> Unable to read record #%d",ObjectName,idx);
@@ -171,7 +180,7 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 		centroidRay = 0.0;
 		for (gr=0;gr<sameClassCount;gr++)
 		{
-			idx = indexSameClass->Get(tr);
+			idx = indexSameClass->Get(gr);
 			if (con->GetRecord(dt->SecRec,idx)==false)
 			{
 				notif->Error("[%s] -> Unable to read record #%d",ObjectName,idx);
@@ -184,11 +193,12 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 				if (dist>centroidRay)
 					centroidRay = dist;
 			}
-			cd[tr].corectelyClasify = countClasified;
-			cd[tr].ClosestDifferentDistance = maxDiffDist;
-			cd[tr].MostDistantSimilarDistance = centroidRay;
 		}
 
+		// salvez datele
+		cd[tr].corectelyClasify = countClasified;
+		cd[tr].ClosestDifferentDistance = maxDiffDist;
+		cd[tr].MostDistantSimilarDistance = centroidRay;
 		// salvez cate ar putea clasifica
 		if (thData.ThreadID==0)
 			notif->SetProcent(tr,workCount);
@@ -202,6 +212,9 @@ void Centroid::OnExecute()
 	if (Command==1)	//Train
 	{
 		ExecuteParalelCommand(FIND_CENTROID);
+		for (int tr=0;tr<distInfo.Len();tr++)
+			if (distInfo[tr].corectelyClasify>50)
+				notif->Info("Index = %d, CorectClasified = %d,Dist=%.3lf , MaxDist=%.3lf",distInfo[tr].index,distInfo[tr].corectelyClasify,distInfo[tr].MostDistantSimilarDistance,distInfo[tr].ClosestDifferentDistance);
 		return;
 	}
 	notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);

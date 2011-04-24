@@ -79,7 +79,11 @@ bool ConsoleNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 			printf("ETA:%s  ",timer.EstimateETA(tempStr,(UInt32)(p),100000));
 			break;
 		case GML::Utils::INotifier::NOTIFY_END_PROCENT:
-			printf("\n");
+			RestoreCursorCoord();
+			timer.Stop();
+			if (useColors)
+				SetColor(14,0);
+			printf("[100.00%%] Done in %s  \n",timer.GetPeriodAsString(tempStr));
 			savedCursorCoord.X = -1;
 			break;
 		case 100:
