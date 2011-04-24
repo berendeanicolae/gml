@@ -202,6 +202,7 @@ void Centroid::OnExecute()
 	if (Command==1)	//Train
 	{
 		ExecuteParalelCommand(FIND_CENTROID);
+		return;
 	}
 	notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);
 }
