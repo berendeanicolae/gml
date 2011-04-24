@@ -29,7 +29,7 @@ void Centroid::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 th
 	switch (threadCommand)
 	{
 		case FIND_CENTROID:
-			FindCentroid(thData,indexesPozitive,indexesPozitive,indexesNegative);
+			FindCentroid(thData,indexesNegative,indexesPozitive,indexesNegative);
 			return;
 	}
 }
@@ -276,6 +276,7 @@ bool Centroid::SaveResultsToDisk()
 	UInt32					tr,count;
 	GML::Utils::GString		all,temp;
 
+	notif->Info("[%s] -> Saving results to %s",ObjectName,ResultFileName.GetText());
 	if (all.Create(0x4000)==false)
 	{
 		notif->Error("[%s] -> Unable to alloc 0x4000 bytes for caching ...",ObjectName);
@@ -339,7 +340,10 @@ void Centroid::OnExecute()
 	{
 		ExecuteParalelCommand(FIND_CENTROID);
 		if (SortResults)
-			distInfo.Sort(CentroidDistanceCompareFunction);		
+		{
+			notif->Info("[%s] -> Sorting ...",ObjectName);
+			distInfo.Sort(CentroidDistanceCompareFunction,false);		
+		}
 		if (SaveResults!=SAVE_RESULTS_NONE)
 			SaveResultsToDisk();
 		return;
