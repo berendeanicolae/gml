@@ -66,7 +66,7 @@ void __QSort(unsigned char *Data,int ElementSize,_BinarySearchCompFunction cmpFu
 
 	if (lo>=hi) 
 		return;
-
+	//DEBUGMSG("QSORT:(%d,%d)\n",lo,hi);
 	left=lo;
 	right=hi;
 	mid=(lo+hi)/2;
@@ -99,6 +99,54 @@ void __QSort(unsigned char *Data,int ElementSize,_BinarySearchCompFunction cmpFu
 	// apelurile recursive
 	__QSort(Data,ElementSize,cmpFunc,left,hi-1,ascendent);
 	__QSort(Data,ElementSize,cmpFunc,hi+1,right,ascendent);
+}
+void __BubbleSort(unsigned char *Data,int ElementSize,_BinarySearchCompFunction cmpFunc,int nrElements,bool ascendent)
+{
+	Int32			tr,lastChange,lastElement;
+	unsigned char	*e1,*e2;
+	bool			sorted;
+
+	if (nrElements<2)
+		return;
+
+	if (ascendent)
+	{
+		lastChange = nrElements;
+		do
+		{
+			sorted = true;		
+			lastElement = lastChange-1;
+			for (tr=0;tr<lastElement;tr++)
+			{
+				e1 = &Data[tr*ElementSize];
+				e2 = (e1+ElementSize);
+				if (cmpFunc(e1,e2)>0)
+				{
+					__ElementsSwap(e1,e2,ElementSize);
+					lastChange = tr+1;
+					sorted = false;
+				}
+			}
+		} while (!sorted);
+	} else {
+		lastChange = nrElements;
+		do
+		{
+			sorted = true;		
+			lastElement = lastChange-1;
+			for (tr=0;tr<lastElement;tr++)
+			{
+				e1 = &Data[tr*ElementSize];
+				e2 = (e1+ElementSize);
+				if (cmpFunc(e1,e2)<0)
+				{
+					__ElementsSwap(e1,e2,ElementSize);
+					lastChange = tr+1;
+					sorted = false;
+				}
+			}
+		} while (!sorted);
+	}
 }
 //===================================================================================================================
 GML::Utils::Vector::Vector(void)
@@ -252,5 +300,6 @@ int  GML::Utils::Vector::BinarySearch (void *ElementToFind,_BinarySearchCompFunc
 void GML::Utils::Vector::Sort(_BinarySearchCompFunction cmpFunc,bool ascendet)
 {
 	if (NrElemente>0)
-		__QSort(Data,ElementSize,cmpFunc,0,NrElemente-1,ascendet);
+		//__QSort(Data,ElementSize,cmpFunc,0,NrElemente-1,ascendet);
+		__BubbleSort(Data,ElementSize,cmpFunc,NrElemente,ascendet);
 }
