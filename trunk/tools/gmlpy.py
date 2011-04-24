@@ -2,6 +2,7 @@ import os,time,random
 
 #Fill with the path for GML Package
 GML_PATH = r"E:\lucru\GML\gml\prj\gml\Release"
+GML_REV = 100
 
 def __GetVarType(var):
 	s = str(type(var))
@@ -138,6 +139,8 @@ def __CreateTemplateFile(dictionar,fname):
 			
 def Run(dictionar):
 	fname = __GenerateRandomFileName()
+	if __GetVarType(dictionar)=="instance":
+		dictionar = dictionar._attr;
 	if __CreateTemplateFile(dictionar,fname)==False:
 		return False
 	os.system(os.path.join(GML_PATH,"gml.exe")+" run "+fname)
@@ -146,3 +149,135 @@ def Run(dictionar):
 	except:
 		pass
 	return True		
+
+class AttributeList:
+	_attr = {}
+	_error = ""
+	def __init__(self):
+		self._attr = {}
+		self._error = ""
+	def __init__(self,dictionar):
+		self._attr = {}
+		for item in dictionar:
+			self._attr[item.lower()] = dictionar[item]		
+		self._error = ""
+	def __iter__(self):
+		return self._attr.__iter__()
+	def next(self):
+		return self._attr.next()	
+	def __len__(self):
+		return len(self._attr)
+	def __getitem__(self,attrName):
+		if attrName.lower() in self._attr:
+			return self._attr[attrName.lower()]
+		return None
+	def __delitem__(self,attrName):
+		if attrName.lower() in self._attr:
+			del(self._attr[attrName.lower()])
+	def __contains__(self,attrName):
+		if attrName.lower() in self._attr:
+			return True
+		return False
+	def __repr__(self):
+		return str(self._attr)
+	def __ConvertToValue(self,typeName,value):
+		if typeName=="(STRING)":
+			return value[1:-1]
+		if typeName=="(BOOL)":
+			if (value.lower()=="true") or (value.lower()=="yes"):
+				return True
+			elif (value.lower()=="false") or (value.lower()=="no"):
+				return False
+		if typeName.startswith("(UINT") or typeName.startswith("(INT"):
+			return int(value.strip())
+		if typeName=="(DOUBLE)" or typeName=="(FLOAT)":
+			return float(value.strip())			
+		return None
+	def __GetTypeName(self,value):
+		if value.startswith("\"") and value.endswith("\""):
+			return "(STRING)"
+		if value.startswith("'") and value.endswith("'"):
+			return "(STRING)"
+		if (value.lower()=="true") or (value.lower()=="yes") or (value.lower()=="false") or (value.lower()=="no"):
+			return "(BOOL)"
+		# numere intregi
+		try:
+			i = int(value.strip())
+			if value.startswith("-"):
+				return "(INT32)"
+			return "(UINT32)"
+		except:
+			pass
+			
+		# valori reale	
+		try:
+			f = float(value.strip())
+			return "(DOUBLE)"
+		except:
+			pass		
+		return ""	
+	def __AnalizeLine(self,line):
+		t_name = ""		
+		t_extra = ""
+		if line.startswith("("):
+			t_name = line.split(")",1)[0].upper()+")"
+			line = line.split(")",1)[1].strip()
+		if line.startswith("[") and line.endswith("]"):
+			line = line[1:-1].strip()
+			t_extra = "(ARRAY)"
+		if len(t_name)==0:
+			t_name = self.__GetTypeName(line)
+		if (len(t_extra)==0) and (len(t_name)!=0):
+			return self.__ConvertToValue(t_name,line)
+		if t_extra == "(ARRAY)":
+			list = line.split(",")
+			if len(t_name)==0:
+				return None
+			res_l = []
+			for item in list:
+				res_l+=[self.__ConvertToValue(t_name,item)]
+			return res_l
+			
+		# daca nu imi dau seama ce este , este string
+		return line.strip()
+	def GetError(self):
+		return self._error
+	def Load(self,fname):
+		is_metadata = False
+		self._error = ""
+		try:
+			for line in open(fname,"rt"):
+				line = line.strip()
+				if line.startswith(";") or line.startswith("#"):
+					continue
+				if line.startswith("[") and line.endswith("]"):
+					continue
+				if line.startswith("["):
+					is_metadata = True
+					continue
+				if (line.endswith("]")) and (is_metadata==True):
+					is_metadata = False
+					continue
+				if (is_metadata):
+					continue
+				if "=" in line:
+					(k,v) = line.split("=",1)
+					k = k.strip().lower()
+					v = v.strip()
+					if k in self._attr:
+						self._error = "Key "+k+" already in list !"
+						return False
+					if len(v)==0:
+						self._error = "Invalid value in line : "+line
+						return False
+					res = self.__AnalizeLine(v)
+					if res==None:
+						self._error = "Invalid format in line : "+line
+						return False
+					self._attr[k] = res					
+			return True
+		except Exception,e:
+			self._error = str(e)
+			return False
+	def Save(self,fname):
+		return __CreateTemplateFile(self._attr,fname)
