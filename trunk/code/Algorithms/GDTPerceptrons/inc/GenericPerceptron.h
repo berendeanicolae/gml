@@ -61,7 +61,7 @@ protected:
 	};
 protected:
 	// proprietati
-	GML::Utils::GString				Name;
+	GML::Utils::GString				ResultsName;
 	GML::Utils::GString				WeightFileName;
 	GML::Utils::GString				FeaturesWeightFile;
 	UInt32							InitialWeight;

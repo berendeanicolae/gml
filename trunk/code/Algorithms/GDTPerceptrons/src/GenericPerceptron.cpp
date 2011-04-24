@@ -72,7 +72,7 @@ GenericPerceptron::GenericPerceptron()
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Train,Test!!");
 
-	LinkPropertyToString("Name"						,Name					,"Perceptron");
+	LinkPropertyToString("ResultsName"				,ResultsName			,"Path and name for the results files");
 	LinkPropertyToDouble("LearningRate"				,learningRate			,0.01);
 	LinkPropertyToDouble("PozitiveLearningRate"		,pozitiveLearningRate	,0.01);
 	LinkPropertyToDouble("NegativeLearningRate"		,negativeLearningRate	,0.01);
@@ -562,45 +562,45 @@ bool	GenericPerceptron::PerformTrain()
 				switch (saveBest)
 				{
 					case SAVE_BEST_ACC: 
-						saveNM.SetFormated("%s_best_acc.txt",Name.GetText()); 
+						saveNM.SetFormated("%s_best_acc.txt",ResultsName.GetText()); 
 						break;
 					case SAVE_BEST_SE: 
-						saveNM.SetFormated("%s_best_se.txt",Name.GetText()); 
+						saveNM.SetFormated("%s_best_se.txt",ResultsName.GetText()); 
 						break;
 					case SAVE_BEST_SP: 
-						saveNM.SetFormated("%s_best_sp.txt",Name.GetText()); 
+						saveNM.SetFormated("%s_best_sp.txt",ResultsName.GetText()); 
 						break;
 					case SAVE_BEST_MED:
-						saveNM.SetFormated("%s_best_spse_average.txt",Name.GetText()); 
+						saveNM.SetFormated("%s_best_spse_average.txt",ResultsName.GetText()); 
 						break;
 					case SAVE_BEST_TP:
-						saveNM.SetFormated("%s_best_tp.txt",Name.GetText()); 
+						saveNM.SetFormated("%s_best_tp.txt",ResultsName.GetText()); 
 						break;
 					case SAVE_BEST_TN:
-						saveNM.SetFormated("%s_best_tn.txt",Name.GetText()); 
+						saveNM.SetFormated("%s_best_tn.txt",ResultsName.GetText()); 
 						break;
 					case SAVE_BEST_FP:
-						saveNM.SetFormated("%s_best_fp.txt",Name.GetText()); 
+						saveNM.SetFormated("%s_best_fp.txt",ResultsName.GetText()); 
 						break;
 					case SAVE_BEST_FN:
-						saveNM.SetFormated("%s_best_fn.txt",Name.GetText()); 
+						saveNM.SetFormated("%s_best_fn.txt",ResultsName.GetText()); 
 						break;
 					default:
-						saveNM.SetFormated("%s_best.txt",Name.GetText());
+						saveNM.SetFormated("%s_best.txt",ResultsName.GetText());
 						break;
 				}				
 				OnSaveBest(saveNM.GetText(),&BestResult);
 			}
 			if (saveData==SAVE_DATA_AFTER_EACH_ITERATION)
 			{
-				saveNM.SetFormated("%s_it_%d.txt",Name.GetText(),it+1);
+				saveNM.SetFormated("%s_it_%d.txt",ResultsName.GetText(),it+1);
 				OnSaveData(saveNM.GetText(),&Result);
 			}			
 		}
 	}
 	if (saveData==SAVE_DATA_AT_FINISH)
 	{
-		saveNM.SetFormated("%s_final.txt",Name.GetText());
+		saveNM.SetFormated("%s_final.txt",ResultsName.GetText());
 		OnSaveData(saveNM.GetText(),&Result);
 	}
 	return true;
