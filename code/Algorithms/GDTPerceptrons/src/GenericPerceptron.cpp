@@ -72,7 +72,7 @@ GenericPerceptron::GenericPerceptron()
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Train,Test!!");
 
-	LinkPropertyToString("ResultsName"				,ResultsName			,"Path and name for the results files");
+	LinkPropertyToString("ResultsName"				,ResultsName			,"GenericPerceptron","Path and name for the results files");
 	LinkPropertyToDouble("LearningRate"				,learningRate			,0.01);
 	LinkPropertyToDouble("PozitiveLearningRate"		,pozitiveLearningRate	,0.01);
 	LinkPropertyToDouble("NegativeLearningRate"		,negativeLearningRate	,0.01);
