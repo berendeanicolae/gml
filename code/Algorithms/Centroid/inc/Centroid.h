@@ -17,8 +17,20 @@ struct CentroidThreadData
 
 class Centroid: public GML::Algorithm::IMLAlgorithm
 {
+	enum
+	{
+		SAVE_RESULTS_NONE=0,
+		SAVE_RESULTS_TEXT,
+		SAVE_RESULTS_PARSABLE
+	};
+protected:
 	GML::Utils::Indexes							indexesPozitive,indexesNegative;
 	GML::Utils::GTFVector<CentroidDistances>	distInfo;
+
+	UInt32					SaveResults;
+	bool					SortResults;
+	UInt32					minimCorectelyClassified;
+	GML::Utils::GString		ResultFileName;
 
 	bool					CreatePozitiveAndNegativeIndexes();
 
@@ -26,7 +38,8 @@ class Centroid: public GML::Algorithm::IMLAlgorithm
 	bool					OnInitThreadData(GML::Algorithm::MLThreadData &thData);
 
 	bool					FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Indexes &indexWork,GML::Utils::Indexes &indexPoz,GML::Utils::Indexes &indexNeg);
-
+	bool					BuildLineRecord(CentroidDistances *cd,GML::Utils::GString &str);
+	bool					SaveResultsToDisk();
 public:
 	Centroid();
 
