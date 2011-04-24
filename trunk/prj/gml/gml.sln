@@ -109,8 +109,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MapConnector", "Connectors\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PipeNotifier", "Notifiers\PipeNotifier\PipeNotifier.vcxproj", "{C8E34B13-27E4-4D71-918D-DD2AC8C1F543}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KNN", "Algorithms\KNN\KNN.vcxproj", "{7CC4D12C-51CB-4323-A773-AD858B254BA9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CacheBuilder", "Algorithms\CacheBuilder\CacheBuilder.vcxproj", "{42E84A4A-86BB-4CCE-A77F-76ADADED97FC}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -123,6 +129,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GML", "GML\GML.vcxproj", "{
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BayesNaiv", "Algorithms\BayesNaiv\BayesNaiv.vcxproj", "{3CC99E4C-54F1-457D-AECE-E5352AA913FE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Projectron", "Algorithms\Projectron\Projectron.vcxproj", "{A267261D-B7B7-4250-97E9-ECD251467DA7}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -135,6 +144,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WrapperNotifier", "Notifier
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Distances", "Algorithms\Distances\Distances.vcxproj", "{E9C9BF92-1ACC-4F4C-A2C1-53DB44281245}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileNotifier", "Notifiers\FileNotifier\FileNotifier.vcxproj", "{F7B17EB0-FECA-49E6-A90C-AFC057FE5E8E}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -142,12 +154,24 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileNotifier", "Notifiers\F
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LinearVote", "Algorithms\LinearVote\LinearVote.vcxproj", "{ACDE888E-E204-4CCF-B8C3-4F9B853C5467}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HashFilterConnector", "Connectors\HashFilterConnector\HashFilterConnector.vcxproj", "{3CA616EF-2A8F-4DA1-9B71-4E662365EE40}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ShuffleConnector", "Connectors\ShuffleConnector\ShuffleConnector.vcxproj", "{4ADD39E9-B282-488F-982B-DB01BF7A063E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Centroid", "Algorithms\Centroid\Centroid.vcxproj", "{8A1A538D-359E-4E43-B35F-D0D40873C2D1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

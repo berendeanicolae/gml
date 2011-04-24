@@ -7,7 +7,7 @@ int CentroidDistanceCompareFunction(CentroidDistances &c1,CentroidDistances &c2)
 	if (c1.corectelyClasify>c2.corectelyClasify)
 		return 1;
 	if (c1.corectelyClasify<c2.corectelyClasify)
-		return 1;
+		return -1;
 	return 0;
 }
 //========================================================================================================================
@@ -17,7 +17,11 @@ Centroid::Centroid()
 	ObjectName = "Centroid";
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Train,Test!!");
-
+	
+	LinkPropertyToUInt32("SaveResults",SaveResults,SAVE_RESULTS_NONE,"!!LIST:None=0,Text,Parsable!!");
+	LinkPropertyToString("ResultFileName",ResultFileName,"","The name of the file where the results will be saved !");
+	LinkPropertyToBool  ("SortResults",SortResults,false,"Specify if the results should be sorted before saving");
+	LinkPropertyToUInt32("MinimElements",minimCorectelyClassified,0,"Specify the minimum number of elemens in a centroid");
 		
 }
 void Centroid::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand)
@@ -126,6 +130,65 @@ bool Centroid::Init()
 	}
 	return true;
 }
+bool Centroid::BuildLineRecord(CentroidDistances *cd,GML::Utils::GString &str)
+{
+	double					label;
+	char					cLabel;
+	GML::Utils::GString		tmp;
+	GML::DB::RecordHash		rHash;
+
+	if (con->GetRecordHash(rHash,cd->index)==false)
+	{
+		str.Set("");
+	} else {
+		if (rHash.ToString(str)==false)
+			return false;
+	}
+	if (con->GetRecordLabel(label,cd->index)==false)
+		return false;
+	
+	if (SaveResults==SAVE_RESULTS_PARSABLE)
+	{		
+		if (label==1)
+			cLabel='+';
+		else
+			cLabel='-';
+		if (!str.AddFormated("|%d|%c|%d|%lf|%lf",cd->index,cLabel,cd->corectelyClasify,cd->MostDistantSimilarDistance,cd->ClosestDifferentDistance))
+			return false;
+	} else {
+		while (str.Len()<32)
+			if (!str.AddChar(' '))
+				return false;
+
+		if (str.AddFormated("|%6d|",cd->index)==false)
+			return false;
+		if (label==1)
+		{
+			if (str.Add("+|")==false)
+				return false;
+		} else {
+			if (str.Add("-|")==false)
+				return false;
+		}
+		if (str.AddFormated("%6d|",cd->corectelyClasify)==false)
+			return false;
+		if (tmp.SetFormated("%.4lf|",cd->MostDistantSimilarDistance)==false)
+			return false;
+		while (tmp.Len()<10)
+			if (tmp.Insert(" ",0)==false)
+				return false;
+		if (str.Add(&tmp)==false)
+			return false;
+		if (tmp.SetFormated("%.4lf|",cd->ClosestDifferentDistance)==false)
+			return false;
+		while (tmp.Len()<10)
+			if (tmp.Insert(" ",0)==false)
+				return false;
+		if (str.Add(&tmp)==false)
+			return false;		
+	}
+	return true;
+}
 bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Indexes &indexWork,GML::Utils::Indexes &indexPoz,GML::Utils::Indexes &indexNeg)
 {
 	UInt32					tr,gr,featuresCount,sameClassCount,diffClassCount,workCount,idxWork,idx,countClasified;
@@ -196,9 +259,9 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 		}
 
 		// salvez datele
-		cd[tr].corectelyClasify = countClasified;
-		cd[tr].ClosestDifferentDistance = maxDiffDist;
-		cd[tr].MostDistantSimilarDistance = centroidRay;
+		cd[idxWork].corectelyClasify = countClasified;
+		cd[idxWork].ClosestDifferentDistance = maxDiffDist;
+		cd[idxWork].MostDistantSimilarDistance = centroidRay;
 		// salvez cate ar putea clasifica
 		if (thData.ThreadID==0)
 			notif->SetProcent(tr,workCount);
@@ -207,14 +270,78 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 		notif->EndProcent();
 	return true;
 }
+bool Centroid::SaveResultsToDisk()
+{
+	GML::Utils::File		f;
+	UInt32					tr,count;
+	GML::Utils::GString		all,temp;
+
+	if (all.Create(0x4000)==false)
+	{
+		notif->Error("[%s] -> Unable to alloc 0x4000 bytes for caching ...",ObjectName);
+		return false;
+	}
+	if (f.Create(ResultFileName.GetText())==false)
+	{
+		notif->Error("[%s] -> Unable to create: %s",ObjectName,ResultFileName.GetText());
+	}
+	count = 0;
+	for (tr=0;tr<distInfo.Len();tr++)
+	{
+		if (distInfo[tr].corectelyClasify<minimCorectelyClassified)
+			continue;
+		if (distInfo[tr].corectelyClasify==0)
+			continue;
+		count++;
+		if (BuildLineRecord(&distInfo[tr],temp)==false)
+		{
+			notif->Error("[%s] -> Unable to alloc create line #%d",ObjectName,tr);
+			return false;
+		}
+		if (all.Add(&temp)==false)
+		{
+			notif->Error("[%s] -> Unable to add string to cache",ObjectName);
+			return false;
+		}
+		if (all.Add("\n")==false)
+		{
+			notif->Error("[%s] -> Unable to add string to cache",ObjectName);
+			return false;
+		}
+		if (all.Len()>0x3000)
+		{
+			if (f.Write(all.GetText(),all.Len())==false)
+			{
+				notif->Error("[%s] -> Unable to write data to %s",ObjectName,ResultFileName.GetText());
+				f.Close();
+				DeleteFile(ResultFileName.GetText());
+				return false;
+			}
+			all.Set("");
+		}
+	}
+	if (all.Len()>0)
+	{
+		if (f.Write(all.GetText(),all.Len())==false)
+		{
+			notif->Error("[%s] -> Unable to write data to %s",ObjectName,ResultFileName.GetText());
+			f.Close();
+			DeleteFile(ResultFileName.GetText());
+			return false;
+		}
+	}
+	notif->Info("[%s] -> %d records written to %s",ObjectName,count,ResultFileName.GetText());
+	return true;
+}
 void Centroid::OnExecute()
 {
 	if (Command==1)	//Train
 	{
 		ExecuteParalelCommand(FIND_CENTROID);
-		for (int tr=0;tr<distInfo.Len();tr++)
-			if (distInfo[tr].corectelyClasify>50)
-				notif->Info("Index = %d, CorectClasified = %d,Dist=%.3lf , MaxDist=%.3lf",distInfo[tr].index,distInfo[tr].corectelyClasify,distInfo[tr].MostDistantSimilarDistance,distInfo[tr].ClosestDifferentDistance);
+		if (SortResults)
+			distInfo.Sort(CentroidDistanceCompareFunction);		
+		if (SaveResults!=SAVE_RESULTS_NONE)
+			SaveResultsToDisk();
 		return;
 	}
 	notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);
