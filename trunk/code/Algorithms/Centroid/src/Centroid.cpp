@@ -726,12 +726,32 @@ void Centroid::Compute()
 		SaveResultsToDisk();
 	SaveCentroids();
 }
+bool Centroid::Test()
+{
+	// incarc datele
+	notif->Info("[%s] -> Loading centroids ... ",ObjectName);
+	if (CentroidsLoadingMethod==LOAD_CENTROIDS_FROMLIST)
+	{
+		if (LoadCentroidsFromList()==false)
+			return false;
+	} else {
+		if (LoadCentroidsFromPath()==false)
+			return false;
+	}
+	notif->Info("[%s] -> Total centroids loaded : %d",ObjectName,cVectors.Len());
 
+	return true;
+}
 void Centroid::OnExecute()
 {
 	if (Command==1)	//Compute
 	{
 		Compute();
+		return;
+	}
+	if (Command==2) // Test
+	{
+		Test();
 		return;
 	}
 	notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);
