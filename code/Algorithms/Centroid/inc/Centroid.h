@@ -86,6 +86,7 @@ protected:
 	bool					SaveCentroid(CentroidDistances *cd,char *fileName);
 
 	void					Compute();
+	bool					Test();
 public:
 	Centroid();
 
