@@ -3,6 +3,65 @@
 #define FIND_CENTROID_POZ	0
 #define FIND_CENTROID_NEG	1
 
+
+//================================================================================
+CentroidData::CentroidData()
+{
+	Center = NULL;
+	Count = 0;
+	Ray = 0;
+	Vote = 0;
+}
+CentroidData::CentroidData(CentroidData &ref)
+{
+	Center = NULL;
+	Ray = 0;
+	Vote = 0;
+	Count = 0;
+
+	if (Create(ref.Count))
+	{
+		memcpy(Center,ref.Center,sizeof(double)*ref.Count);
+		Count = ref.Count;
+		Vote = ref.Vote;
+		Ray = ref.Ray;
+		FileName.Set(&ref.FileName);
+	}	
+}
+bool CentroidData::operator > (CentroidData &r)
+{
+	return (bool)(Vote>r.Vote);
+}
+bool CentroidData::operator < (CentroidData &r)
+{
+	return (bool)(Vote<r.Vote);
+}
+CentroidData::~CentroidData()
+{
+	Destroy();
+}
+void CentroidData::Destroy()
+{
+	if (Center!=NULL)
+		delete Center;
+	Center = NULL;
+	Count = 0;
+	Vote = 0;
+	Ray = 0;
+}
+bool CentroidData::Create(UInt32 count)
+{
+	Destroy();
+	if ((Center = new double[count])==NULL)
+		return false;
+	memset(Center,0,sizeof(double)*count);
+	Vote = 0;
+	Ray = 0;
+	Count = count;
+
+	return true;
+}
+//========================================================================================================================
 int CentroidDistanceCompareFunction(CentroidDistances &c1,CentroidDistances &c2)
 {
 	if (c1.corectelyClasify>c2.corectelyClasify)
@@ -28,8 +87,170 @@ Centroid::Centroid()
 	LinkPropertyToBool  ("SortResults",SortResults,false,"Specify if the results should be sorted before saving");
 	LinkPropertyToUInt32("MinimPositiveElements",minPositiveElements,0,"Specify the minimum number of positive elemens in a centroid");
 	LinkPropertyToUInt32("MinimNegativeElements",minNegativeElements,0,"Specify the minimum number of negative elemens in a centroid");
+
+	LinkPropertyToString("CentroidsFileList"		,CentroidsFileList		,"","A list of weight files to be loaded separated by a comma.");
+	LinkPropertyToString("CentroidsPath"			,CentroidsPath			,"*.txt","The path where the weigh files are");
+	LinkPropertyToString("RayPropertyName"			,RayPropertyName		,"ray","The name of the property that contains the ray of the centroid. It has to be a numeric property.");
+	LinkPropertyToString("VotePropertyName"			,VotePropertyName		,"vote","The name of the property that contains the vote of the centroid. It has to be a numeric property.");
+	LinkPropertyToUInt32("CentroidsLoadingMethod"	,CentroidsLoadingMethod	,0,"!!LIST:FromList=0,FromPath!!");
+	
+
 		
 }
+bool Centroid::Create(CentroidData &pv,char *fileName)
+{
+	GML::Utils::AttributeList	attr;
+	GML::Utils::Attribute		*a;
+
+	if (pv.Create(con->GetFeatureCount())==false)
+	{
+		notif->Error("[%s] -> Unable to create CentroidData object ",ObjectName);
+		return false;
+	}
+	if (attr.Load(fileName)==false)
+	{
+		notif->Error("[%s] -> Unable to load / Invalid format for %s ",ObjectName,fileName);
+		return false;
+	}
+	if (attr.Update("Center",pv.Center,sizeof(double)*con->GetFeatureCount())==false)
+	{
+		notif->Error("[%s] -> Missing 'Center' field or different count of Center coordinates in %s ",ObjectName,fileName);
+		return false;
+	}
+	if (pv.FileName.Set(fileName)==false)
+	{
+		notif->Error("[%s] -> Unable to set FileName property for CentroidData",ObjectName);
+		return false;
+	}
+	if (attr.UpdateDouble(RayPropertyName.GetText(),pv.Ray)==false)
+	{
+		notif->Error("[%s] -> Missing '%s' property in %s or not double.",ObjectName,RayPropertyName.GetText(),fileName);
+		return false;
+	}
+	// vote
+	if ((a = attr.Get(VotePropertyName.GetText()))==NULL)
+	{
+		notif->Error("[%s] -> Missing '%s' property in %s",ObjectName,VotePropertyName.GetText(),fileName);
+		return false;
+	}
+	switch (a->AttributeType)
+	{
+		case GML::Utils::AttributeList::DOUBLE:
+			pv.Vote = (double)(*(double *)a->Data);
+			break;
+		case GML::Utils::AttributeList::FLOAT:
+			pv.Vote = (double)(*(float *)a->Data);
+			break;
+		case GML::Utils::AttributeList::UINT8:
+			pv.Vote = (double)(*(UInt8 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::INT8:
+			pv.Vote = (double)(*(Int8 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::UINT16:
+			pv.Vote = (double)(*(UInt16 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::INT16:
+			pv.Vote = (double)(*(Int16 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::UINT32:
+			pv.Vote = (double)(*(UInt32 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::INT32:
+			pv.Vote = (double)(*(Int32 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::UINT64:
+			pv.Vote = (double)(*(UInt64 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::INT64:
+			pv.Vote = (double)(*(Int64 *)a->Data);
+			break;
+		default:
+			notif->Error("[%s] -> Property '%s' should be a numeric type (in %s)",ObjectName,VotePropertyName.GetText(),fileName);
+			return false;
+	}
+	return true;
+}
+bool Centroid::LoadCentroidsFromPath()
+{
+	HANDLE					hFile;
+	WIN32_FIND_DATA			dt;
+	GML::Utils::GString		tmp;
+	CentroidData			cv;
+
+	cVectors.DeleteAll();
+	if ((hFile=FindFirstFileA(CentroidsPath.GetText(),&dt))==INVALID_HANDLE_VALUE)
+	{
+		notif->Error("[%s] -> Invalid path : %s !",ObjectName,CentroidsPath.GetText());
+		return false;
+	}
+	do
+	{
+		// daca e fisier , il incarc
+		if ((dt.dwFileAttributes & 16)==0)
+		{
+			CentroidsPath.CopyPathName(&tmp);
+			tmp.PathJoinName(dt.cFileName);
+			notif->Info("[%s] -> Loading : %s",ObjectName,tmp.GetText());
+			if (Create(cv,tmp.GetText())==false)
+				return false;	
+			if (cVectors.PushByRef(cv)==false)
+			{
+				notif->Error("[%s] -> Unable to add Centroid to list !",ObjectName);
+				return false;
+			}
+		}
+	} while (FindNextFile(hFile,&dt));
+	FindClose(hFile);
+	return true;
+}
+bool Centroid::LoadCentroidsFromList()
+{
+	GML::Utils::GString		tmp;
+	int						poz,count;
+	CentroidData			cv;
+
+	cVectors.DeleteAll();
+	if (CentroidsFileList.Len()==0)
+	{
+		notif->Error("[%s] -> You need to set up 'CentroidsFileList' property with a list of files !",ObjectName);
+		return false;
+	}
+
+	poz = 0;
+	count = 0;
+	while (CentroidsFileList.CopyNext(&tmp,";",&poz))
+	{
+		tmp.Strip();
+		if (tmp.GetText()[0]!=0)
+			count++;
+	}
+	if (count==0)
+	{
+		notif->Error("[%s] -> You need to set up 'CentroidsFileList' property with a list of files !",ObjectName);
+		return false;
+	}
+
+	poz = 0;
+	while (CentroidsFileList.CopyNext(&tmp,";",&poz))
+	{	
+		tmp.Strip();
+		if (tmp.GetText()[0]!=0)
+		{
+			notif->Info("[%s] -> Loading : %s",ObjectName,tmp.GetText());
+			if (Create(cv,tmp.GetText())==false)
+				return false;	
+			if (cVectors.PushByRef(cv)==false)
+			{
+				notif->Error("[%s] -> Unable to add centroid to list !",ObjectName);
+				return false;
+			}			
+		}
+	}
+
+	return true;
+}
+
 void Centroid::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand)
 {
 	switch (threadCommand)

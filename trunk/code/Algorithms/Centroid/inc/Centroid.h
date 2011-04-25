@@ -14,7 +14,25 @@ struct CentroidThreadData
 {
 	GML::ML::MLRecord				SecRec;
 };
+class CentroidData
+{
+public:
+	double				*Center;
+	UInt32				Count;
+	double				Vote;
+	double				Ray;
+	GML::Utils::GString	FileName;
+public:
+	CentroidData();
+	CentroidData(CentroidData &);
+	~CentroidData();
 
+	bool operator > (CentroidData &r);
+	bool operator < (CentroidData &r);
+
+	void	Destroy();
+	bool	Create(UInt32 count);
+};
 class Centroid: public GML::Algorithm::IMLAlgorithm
 {
 	enum
@@ -29,10 +47,14 @@ class Centroid: public GML::Algorithm::IMLAlgorithm
 		CLASSTYPE_NEGATIVE,
 		CLASSTYPE_BOTH
 	};
-
+	enum {
+		LOAD_CENTROIDS_FROMLIST = 0,
+		LOAD_CENTROIDS_FROMWEIGHTPATH,
+	};
 protected:
 	GML::Utils::Indexes							indexesPozitive,indexesNegative;
 	GML::Utils::GTFVector<CentroidDistances>	distInfo;
+	GML::Utils::GTVector<CentroidData>			cVectors;
 
 	UInt32					ClassType;
 	UInt32					SaveResults;
@@ -40,10 +62,18 @@ protected:
 	UInt32					minPositiveElements,minNegativeElements;
 	GML::Utils::GString		ResultFileName;
 	GML::Utils::GString		CentroidFileName;
+	GML::Utils::GString		CentroidsFileList;
+	GML::Utils::GString		CentroidsPath;
+	GML::Utils::GString		RayPropertyName;
+	GML::Utils::GString		VotePropertyName;
+	UInt32					CentroidsLoadingMethod;
 
 	GML::ML::MLRecord		MainRecord;
 
 	bool					CreatePozitiveAndNegativeIndexes();
+	bool					Create(CentroidData &pv,char *fileName);
+	bool					LoadCentroidsFromPath();
+	bool					LoadCentroidsFromList();
 
 	void					OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
 	bool					OnInitThreadData(GML::Algorithm::MLThreadData &thData);
