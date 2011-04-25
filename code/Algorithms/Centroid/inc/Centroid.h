@@ -21,6 +21,7 @@ public:
 	UInt32				Count;
 	double				Vote;
 	double				Ray;
+	double				Label;
 	GML::Utils::GString	FileName;
 public:
 	CentroidData();
