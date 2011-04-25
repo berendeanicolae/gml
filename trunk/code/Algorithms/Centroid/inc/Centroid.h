@@ -80,6 +80,7 @@ protected:
 	bool					OnInitThreadData(GML::Algorithm::MLThreadData &thData);
 
 	bool					FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Indexes &indexWork,GML::Utils::Indexes &indexPoz,GML::Utils::Indexes &indexNeg);
+	bool					PerformSimpleTest(GML::Algorithm::MLThreadData &td);
 	bool					BuildHeaders(GML::Utils::GString &str);
 	bool					BuildLineRecord(CentroidDistances *cd,GML::Utils::GString &str);
 	bool					SaveResultsToDisk();

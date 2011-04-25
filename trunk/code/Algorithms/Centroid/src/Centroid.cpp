@@ -1,7 +1,8 @@
 #include "Centroid.h"
 
-#define FIND_CENTROID_POZ	0
-#define FIND_CENTROID_NEG	1
+#define FIND_CENTROID_POZ		0
+#define FIND_CENTROID_NEG		1
+#define PARALLEL_SIMPLE_TEST	2
 
 
 //================================================================================
@@ -271,6 +272,9 @@ void Centroid::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 th
 		case FIND_CENTROID_NEG:
 			FindCentroid(thData,indexesNegative,indexesPozitive,indexesNegative);
 			return;
+		case PARALLEL_SIMPLE_TEST:
+			PerformSimpleTest(thData);
+			return;
 	}
 }
 bool Centroid::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
@@ -529,6 +533,47 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 		notif->EndProcent();
 	return true;
 }
+bool Centroid::PerformSimpleTest(GML::Algorithm::MLThreadData &td)
+{
+	UInt32					index,tr,nrFeatures,nrVectors;
+	CentroidData			*cv;
+	double					testLabel;
+	
+	index = td.Range.Start;
+	td.Res.Clear();
+	nrFeatures = con->GetFeatureCount();
+	nrVectors = cVectors.Len();
+
+	while (index<td.Range.End)
+	{
+		if (con->GetRecord(td.Record,index)==false)
+		{
+			notif->Error("[%s] -> Unable to read record %d",ObjectName,index);
+			return false;
+		}
+		for (tr=0;tr<nrVectors;tr++)
+		{
+			cv = cVectors.GetPtrToObject(tr);
+			if (GML::ML::VectorOp::PointToPointDistanceSquared(td.Record.Features,cv->Center,nrFeatures)<=cv->Ray)
+			{
+				testLabel = cv->Label;
+				break;
+			}		
+		}
+		// daca nu a fost clasificat de nimeni -> ii pun label-ul exact invers
+		if (tr==nrVectors)
+		{
+			if (td.Record.Label==1)
+				testLabel = -1;
+			else
+				testLabel = 1;
+		}
+		td.Res.Update(td.Record.Label==1,(bool)(td.Record.Label==testLabel));	
+		index++;
+	}
+
+	return true;
+}
 bool Centroid::SaveResultsToDisk()
 {
 	GML::Utils::File		f;
@@ -740,6 +785,8 @@ void Centroid::Compute()
 }
 bool Centroid::Test()
 {
+	GML::Utils::AlgorithmResult		res;
+	UInt32							tr;
 	// incarc datele
 	notif->Info("[%s] -> Loading centroids ... ",ObjectName);
 	if (CentroidsLoadingMethod==LOAD_CENTROIDS_FROMLIST)
@@ -751,7 +798,15 @@ bool Centroid::Test()
 			return false;
 	}
 	notif->Info("[%s] -> Total centroids loaded : %d",ObjectName,cVectors.Len());
-
+	// testare efectiva
+	res.Clear();
+	res.time.Start();
+	ExecuteParalelCommand(PARALLEL_SIMPLE_TEST);
+	for (tr=0;tr<threadsCount;tr++)
+		res.Add(&ThData[tr].Res);
+	res.Compute();
+	res.time.Stop();
+	notif->Result(res);
 	return true;
 }
 void Centroid::OnExecute()
