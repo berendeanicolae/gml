@@ -9,6 +9,7 @@ CentroidData::CentroidData()
 {
 	Center = NULL;
 	Count = 0;
+	Label = 0;
 	Ray = 0;
 	Vote = 0;
 }
@@ -18,6 +19,7 @@ CentroidData::CentroidData(CentroidData &ref)
 	Ray = 0;
 	Vote = 0;
 	Count = 0;
+	Label = 0;
 
 	if (Create(ref.Count))
 	{
@@ -25,6 +27,7 @@ CentroidData::CentroidData(CentroidData &ref)
 		Count = ref.Count;
 		Vote = ref.Vote;
 		Ray = ref.Ray;
+		Label = ref.Label;
 		FileName.Set(&ref.FileName);
 	}	
 }
@@ -47,6 +50,7 @@ void CentroidData::Destroy()
 	Center = NULL;
 	Count = 0;
 	Vote = 0;
+	Label = 0;
 	Ray = 0;
 }
 bool CentroidData::Create(UInt32 count)
@@ -58,6 +62,7 @@ bool CentroidData::Create(UInt32 count)
 	Vote = 0;
 	Ray = 0;
 	Count = count;
+	Label = 0;
 
 	return true;
 }
@@ -125,6 +130,11 @@ bool Centroid::Create(CentroidData &pv,char *fileName)
 	if (attr.UpdateDouble(RayPropertyName.GetText(),pv.Ray)==false)
 	{
 		notif->Error("[%s] -> Missing '%s' property in %s or not double.",ObjectName,RayPropertyName.GetText(),fileName);
+		return false;
+	}
+	if (attr.UpdateDouble("ClassType",pv.Label)==false)
+	{
+		notif->Error("[%s] -> Missing 'ClassType' property in %s or not double.",ObjectName,fileName);
 		return false;
 	}
 	// vote
@@ -340,6 +350,8 @@ bool Centroid::Init()
 	if (CreatePozitiveAndNegativeIndexes()==false)
 		return false;
 	if (InitThreads()==false)
+		return false;
+	if (SplitMLThreadDataRange(con->GetRecordCount())==false)
 		return false;
 	if (distInfo.Create(con->GetRecordCount())==false)
 	{
