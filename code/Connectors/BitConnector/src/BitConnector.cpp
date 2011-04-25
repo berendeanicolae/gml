@@ -337,7 +337,10 @@ bool	BitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recor
 
 	if (recordMask & GML::ML::RECORD_STORE_HASH)
 	{
-		record.Hash.Copy(*Hashes.GetPtrToObject(index));
+		if (StoreRecordHash)
+			record.Hash.Copy(*Hashes.GetPtrToObject(index));
+		else
+			record.Hash.Reset();
 	}
 
 	return true;

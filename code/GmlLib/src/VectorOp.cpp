@@ -128,7 +128,7 @@ double  GML::ML::VectorOp::PointToPointDistanceSquared(double *p1,double *p2,UIn
 	while (elements>0)
 	{
 		temp = (*p1)-(*p2);
-		sum+= temp*temp;
+		sum+= (temp*temp);
 		p1++;
 		p2++;
 		elements--;

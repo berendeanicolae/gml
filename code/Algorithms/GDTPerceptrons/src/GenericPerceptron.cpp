@@ -715,6 +715,7 @@ bool	GenericPerceptron::OnUpdateBest(PerceptronVector &pv,GML::Utils::AlgorithmR
 		return false;
 	}
 	BestResult.Copy(&Result);
+	BestResult.Iteration = Result.Iteration;
 	bestUpdated = true;
 	return true;
 }
