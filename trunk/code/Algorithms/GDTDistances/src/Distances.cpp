@@ -57,7 +57,7 @@ bool Distances::ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &
 				notif->Error("[%s] -> Unable to read record #%d",ObjectName,idxNeg);
 				return false;
 			}
-			dist = GML::ML::VectorOp::PointToPointDistance(thData.Record.Features,dt->SetRec.Features,featuresCount);
+			dist = GML::ML::VectorOp::PointToPointDistanceSquared(thData.Record.Features,dt->SetRec.Features,featuresCount);
 			if ((dist>=MinDist) && (dist<=MaxDist))
 			{				
 				ptr[idxPoz] = 1;
