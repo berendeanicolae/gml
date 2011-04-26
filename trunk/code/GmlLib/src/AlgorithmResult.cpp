@@ -24,6 +24,7 @@ void GML::Utils::AlgorithmResult::Clear()
 {
     tp = tn = fp = fn = 0;
     sp = se = acc = med = 0.0;
+	precision = fallout = FMeasure = 0.0;
 }
 void GML::Utils::AlgorithmResult::Compute()
 {
@@ -31,6 +32,9 @@ void GML::Utils::AlgorithmResult::Compute()
 	sp = (tn * 100.0) / (double)(tn + fp);
 	acc = ((tp + tn) * 100.0) / (double)(tp + fp + tn + fn);
 	med = (se+sp)/2;
+	precision = (tp * 100.0)/(tp+fp);
+	fallout = (fp * 100.0)/(tn+fp);
+	FMeasure = (2 * precision * se)/(precision + se);
 }
 void GML::Utils::AlgorithmResult::Add(AlgorithmResult *res)
 {
@@ -53,4 +57,7 @@ void GML::Utils::AlgorithmResult::Copy(AlgorithmResult *res)
     se = res->se;
     acc = res->acc;
 	med = res->med;
+	precision = res->precision;
+	fallout = res->fallout;
+	FMeasure = res->FMeasure;
 }
