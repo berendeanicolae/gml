@@ -13,6 +13,7 @@ namespace GML
 			UInt32		Iteration;
 			double		tp,tn,fp,fn;
 			double		sp,se,acc,med;
+			double		precision,FMeasure,fallout;
 			Timer		time;
 
 		public:
