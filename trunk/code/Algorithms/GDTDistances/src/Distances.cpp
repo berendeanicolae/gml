@@ -120,7 +120,9 @@ bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::U
 			}
 			dist = GML::ML::VectorOp::PointToPointDistanceSquared(thData.Record.Features,dt->SetRec.Features,featuresCount);
 			if ((dist>=MinDist) && (dist<=MaxDist))
-			{				
+			{		
+				ptr[i1Poz] = 1;
+				ptr[i2Poz] = 1;
 				if (thData.Record.Hash.ToString(tmp)==false)
 				{
 					notif->Error("[%s] -> Unable to convert hash to string",ObjectName);
@@ -272,6 +274,7 @@ bool Distances::OnCompute()
 			ExecuteParalelCommand(Method);
 			if (MergeDistanceTableFiles)
 				MergeDistances();
+			SaveHashResult(HashFileName.GetText(),HashFileType,RecordsStatus);
 			return true;
 		case METHOD_DistanceTablePositiveToPositive:
 			if (DistanceTableFileName.Len()==0)
@@ -283,6 +286,7 @@ bool Distances::OnCompute()
 			ExecuteParalelCommand(Method);
 			if (MergeDistanceTableFiles)
 				MergeDistances();
+			SaveHashResult(HashFileName.GetText(),HashFileType,RecordsStatus);
 			return true;
 		case METHOD_DistanceTableNegativeToPositive:
 			if (DistanceTableFileName.Len()==0)
@@ -294,6 +298,7 @@ bool Distances::OnCompute()
 			ExecuteParalelCommand(Method);
 			if (MergeDistanceTableFiles)
 				MergeDistances();
+			SaveHashResult(HashFileName.GetText(),HashFileType,RecordsStatus);
 			return true;
 		case METHOD_DistanceTableNegativeToNegative:
 			if (DistanceTableFileName.Len()==0)
@@ -305,6 +310,7 @@ bool Distances::OnCompute()
 			ExecuteParalelCommand(Method);
 			if (MergeDistanceTableFiles)
 				MergeDistances();
+			SaveHashResult(HashFileName.GetText(),HashFileType,RecordsStatus);
 			return true;
 	}
 	return false;
