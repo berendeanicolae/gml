@@ -51,7 +51,7 @@ bool Distances::ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &
 		}
 		for (gr=0;gr<negativeCount;gr++)
 		{
-			idxNeg = indexesNegative.Get(tr);
+			idxNeg = indexesNegative.Get(gr);
 			if (con->GetRecord(dt->SetRec,idxNeg)==false)
 			{
 				notif->Error("[%s] -> Unable to read record #%d",ObjectName,idxNeg);
