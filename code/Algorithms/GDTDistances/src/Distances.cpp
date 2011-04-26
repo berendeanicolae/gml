@@ -8,6 +8,7 @@ Distances::Distances()
 	LinkPropertyToDouble("MinDistance",MinDist,0,"Minimal distance");
 	LinkPropertyToDouble("MaxDistance",MaxDist,1,"Maximal distance");
 	LinkPropertyToString("DistanceTableFileName",DistanceTableFileName,"","Name of the file names where the distance will be written");
+	LinkPropertyToBool  ("MergeDistanceTableFiles",MergeDistanceTableFiles,true,"If set all of the distance table files will be merge into one");
 
 }
 bool Distances::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
@@ -68,7 +69,7 @@ bool Distances::ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &
 		notif->EndProcent();
 	return true;
 }
-bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::Utils::Indexes &i1,GML::Utils::Indexes &i2)
+bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::Utils::Indexes &i1,GML::Utils::Indexes &i2,char *Type)
 {
 	UInt32				tr,gr,featuresCount,i1Count,i2Count,i1Poz,i2Poz;
 	DistThreadData*		dt = (DistThreadData *)thData.Context;
@@ -89,7 +90,7 @@ bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::U
 	}
 	if (f.Create(buf.GetText(),true)==false)
 	{
-		notif->Error("[%s] -> Unable to create file : %s ",ObjectName,thData.ThreadID,buf.GetText());
+		notif->Error("[%s] -> Unable to create file : %s ",ObjectName,buf.GetText());
 		return false;
 	}
 
@@ -125,7 +126,7 @@ bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::U
 					notif->Error("[%s] -> Unable to convert hash to string",ObjectName);
 					return false;
 				}
-				if (buf.AddFormated("%s|",tmp.GetText())==false)
+				if (buf.AddFormated("%s|%s|",Type,tmp.GetText())==false)
 				{
 					notif->Error("[%s] -> Unable to add data to string",ObjectName);
 					return false;
@@ -171,6 +172,67 @@ bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::U
 	f.Close();
 	return true;
 }
+bool Distances::MergeDistances()
+{
+	GML::Utils::GString		fName,rName;
+	GML::Utils::File		f,fr;
+	unsigned char			buf[0x10000];
+	UInt32					read,tr;
+
+	if (fName.SetFormated("%s",DistanceTableFileName.GetText())==false)
+	{
+		notif->Error("[%s] -> Unable to create table file : %s ",ObjectName,DistanceTableFileName.GetText());
+		return false;
+	}
+	if (f.Create(fName.GetText(),true)==false)
+	{
+		notif->Error("[%s] -> Unable to create file : %s ",ObjectName,fName.GetText());
+		return false;
+	}
+	for (tr=0;tr<threadsCount;tr++)
+	{
+		if (rName.SetFormated("%s.%d",DistanceTableFileName.GetText(),tr)==false)
+		{
+			notif->Error("[%s] -> Unable to create table file : %s (%d)",ObjectName,DistanceTableFileName.GetText(),tr);
+			f.Close();
+			DeleteFile(fName.GetText());
+			return false;
+		}
+		if (fr.OpenRead(rName.GetText(),true)==false)
+		{
+			notif->Error("[%s] -> Unable to create file : %s ",ObjectName,rName.GetText());
+			f.Close();
+			DeleteFile(fName.GetText());
+			return false;
+		}
+		notif->Info("[%s] -> Adding : %s",ObjectName,rName.GetText());
+		do
+		{
+			if (fr.Read(buf,0x10000,&read)==false)
+			{
+				notif->Error("[%s] -> Unable to read from file : %s ",ObjectName,rName.GetText());
+				f.Close();
+				DeleteFile(fName.GetText());
+				return false;
+			}
+			if (read>0)
+			{
+				if (f.Write(buf,read)==false)
+				{
+					notif->Error("[%s] -> Unable to write to file : %s ",ObjectName,fName.GetText());
+					f.Close();
+					DeleteFile(fName.GetText());
+					return false;
+				}
+			}
+		} while (read>0);
+		fr.Close();
+		DeleteFileA(rName.GetText());
+	}
+	f.Close();
+	notif->Info("[%s] -> %s created ok.",ObjectName,fName.GetText());
+	return true;
+}
 void Distances::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand)
 {
 	switch (Method)
@@ -179,16 +241,16 @@ void Distances::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 t
 			ComputePositiveToNegativeDistance(thData);
 			break;
 		case METHOD_DistanceTablePositiveToNegative:
-			ComputeDistanceTable(thData,indexesPozitive,indexesNegative);
+			ComputeDistanceTable(thData,indexesPozitive,indexesNegative,"PN");
 			break;
 		case METHOD_DistanceTablePositiveToPositive:
-			ComputeDistanceTable(thData,indexesPozitive,indexesPozitive);
+			ComputeDistanceTable(thData,indexesPozitive,indexesPozitive,"PP");
 			break;
 		case METHOD_DistanceTableNegativeToNegative:
-			ComputeDistanceTable(thData,indexesNegative,indexesNegative);
+			ComputeDistanceTable(thData,indexesNegative,indexesNegative,"NN");
 			break;
 		case METHOD_DistanceTableNegativeToPositive:
-			ComputeDistanceTable(thData,indexesNegative,indexesPozitive);
+			ComputeDistanceTable(thData,indexesNegative,indexesPozitive,"NP");
 			break;
 	}
 }
@@ -208,6 +270,8 @@ bool Distances::OnCompute()
 			}
 			notif->Info("[%s] -> Computing table distances between positive and negative elements ...",ObjectName);
 			ExecuteParalelCommand(Method);
+			if (MergeDistanceTableFiles)
+				MergeDistances();
 			return true;
 		case METHOD_DistanceTablePositiveToPositive:
 			if (DistanceTableFileName.Len()==0)
@@ -217,6 +281,8 @@ bool Distances::OnCompute()
 			}
 			notif->Info("[%s] -> Computing table distances between positive and positive elements ...",ObjectName);
 			ExecuteParalelCommand(Method);
+			if (MergeDistanceTableFiles)
+				MergeDistances();
 			return true;
 		case METHOD_DistanceTableNegativeToPositive:
 			if (DistanceTableFileName.Len()==0)
@@ -226,6 +292,8 @@ bool Distances::OnCompute()
 			}
 			notif->Info("[%s] -> Computing table distances between negative and positive elements ...",ObjectName);
 			ExecuteParalelCommand(Method);
+			if (MergeDistanceTableFiles)
+				MergeDistances();
 			return true;
 		case METHOD_DistanceTableNegativeToNegative:
 			if (DistanceTableFileName.Len()==0)
@@ -235,6 +303,8 @@ bool Distances::OnCompute()
 			}
 			notif->Info("[%s] -> Computing table distances between negative and negative elements ...",ObjectName);
 			ExecuteParalelCommand(Method);
+			if (MergeDistanceTableFiles)
+				MergeDistances();
 			return true;
 	}
 	return false;

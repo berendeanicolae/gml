@@ -17,9 +17,11 @@ class Distances: public GenericDistAlgorithm
 	UInt32					Method;
 	double					MinDist,MaxDist;
 	GML::Utils::GString		DistanceTableFileName;
+	bool					MergeDistanceTableFiles;
 
 	bool		ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &thData);
-	bool		ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::Utils::Indexes &i1,GML::Utils::Indexes &i2);
+	bool		ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::Utils::Indexes &i1,GML::Utils::Indexes &i2,char *Type);
+	bool		MergeDistances();
 public:
 	Distances();
 	bool		OnInitThreadData(GML::Algorithm::MLThreadData &thData);
