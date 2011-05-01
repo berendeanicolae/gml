@@ -192,17 +192,17 @@ bool	GenericPerceptron::Load(PerceptronVector &pv,char *fileName)
 
 	if (tempAttr.Load(fileName)==false)
 	{
-		notif->Error("Unable to load : %s",fileName);
+		notif->Error("[%s] -> Unable to load : %s",ObjectName,fileName);
 		return false;
 	}
 	if (tempAttr.UpdateDouble("Bias",pv.Bias,true)==false)
 	{
-		notif->Error("Unable to update 'b' value from %s",fileName);
+		notif->Error("[%s] -> Unable to update 'bias' value from %s",ObjectName,fileName);
 		return false;
 	}
 	if (tempAttr.Update("Weight",pv.Weight,sizeof(double)*pv.Count)==false)
 	{
-		notif->Error("Unable to update 'Weight' value from %s",fileName);
+		notif->Error("[%s] -> Unable to update 'Weight' value from %s",ObjectName,fileName);
 		return false;
 	}
 	// verific daca am si iteratia in fisier scrisa
@@ -211,6 +211,7 @@ bool	GenericPerceptron::Load(PerceptronVector &pv,char *fileName)
 		notif->Info("[%s] -> Start iteration set to %d",ObjectName,it+1);
 		StartIteration = it+1;
 	}
+	notif->Info("[%s] -> Weight file loaded ok: %s",ObjectName,fileName);
 	return true;
 }
 bool	GenericPerceptron::InitWeight(PerceptronVector &pv)
