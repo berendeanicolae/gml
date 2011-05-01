@@ -69,6 +69,7 @@ void PerceptronVector::ResetValues()
 GenericPerceptron::GenericPerceptron()
 {
 	featWeight = NULL;
+	StartIteration = 0;
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Train,Test!!");
 
@@ -187,6 +188,7 @@ bool	GenericPerceptron::Save(PerceptronVector &pv,char *fileName,GML::Utils::Alg
 bool	GenericPerceptron::Load(PerceptronVector &pv,char *fileName)
 {
 	GML::Utils::AttributeList	tempAttr;
+	UInt32						it;
 
 	if (tempAttr.Load(fileName)==false)
 	{
@@ -202,6 +204,12 @@ bool	GenericPerceptron::Load(PerceptronVector &pv,char *fileName)
 	{
 		notif->Error("Unable to update 'Weight' value from %s",fileName);
 		return false;
+	}
+	// verific daca am si iteratia in fisier scrisa
+	if (tempAttr.UpdateUInt32("Iteration",it))
+	{
+		notif->Info("[%s] -> Start iteration set to %d",ObjectName,it+1);
+		StartIteration = it+1;
 	}
 	return true;
 }
@@ -308,6 +316,7 @@ bool	GenericPerceptron::LoadFeatureWeightFile()
 		notif->Error("[%s] -> Unable to update 'Weight' property from %s",ObjectName,FeaturesWeightFile.GetText());
 		return false;
 	}
+
 	notif->Info("[%s] -> %s loaded ok ",ObjectName,FeaturesWeightFile.GetText());
 	// facem si un mic test
 
@@ -322,6 +331,8 @@ bool	GenericPerceptron::LoadFeatureWeightFile()
 }
 bool	GenericPerceptron::Init()
 {
+	StartIteration=0;
+
 	// creez conexiunea
 	if (InitConnections()==false)
 		return false;
@@ -529,9 +540,10 @@ bool	GenericPerceptron::PerformTrain()
 	GML::Utils::AlgorithmResult		Result;
 	bool							bestUpdated;
 	
+	notif->Info("[%s] -> Training started: (IT=%d)",ObjectName,StartIteration+1);
 	loopIterations = testAfterIterations;
 
-	for (it=0;(it<maxIterations) && (!StopAlgorithm);it++)
+	for (it=StartIteration;(it<maxIterations) && (!StopAlgorithm);it++)
 	{
 		Result.time.Start();		
 		if (PerformTrainIteration(it)==false)
@@ -593,7 +605,7 @@ bool	GenericPerceptron::PerformTrain()
 			}
 			if (saveData==SAVE_DATA_AFTER_EACH_ITERATION)
 			{
-				saveNM.SetFormated("%s_it_%d.txt",ResultsName.GetText(),it+1);
+				saveNM.SetFormated("%s_it_%06d.txt",ResultsName.GetText(),it+1);
 				OnSaveData(saveNM.GetText(),&Result);
 			}			
 		}
