@@ -92,7 +92,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("Centroid");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("OneSidePerceptron");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(
@@ -123,6 +123,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		"SaveBest=None;"
 		"WeightFileName=E:\\lucru\\GML\\gml\\prj\\gml\\Debug\\test.txt;"
 		"ThreadsCount=2;"
+		"ResultsNam = '.\\tmp\\res';"
 		"MaxError=0;"
 		"MarginType=Negative;"
 		"SortBy=F2;"

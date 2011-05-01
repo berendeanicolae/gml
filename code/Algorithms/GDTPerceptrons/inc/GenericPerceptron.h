@@ -89,6 +89,8 @@ protected:
 	GML::ML::MLRecord				MainRecord;
 	PerceptronVector				pvBest,pvMain;
 
+	UInt32							StartIteration;
+
 
 	double							*featWeight;
 	
