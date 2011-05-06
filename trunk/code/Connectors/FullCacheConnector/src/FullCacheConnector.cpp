@@ -121,16 +121,12 @@ bool   FullCacheConnector::OnInitConnectionToDataBase()
 		{
 			if (UpdateDoubleValue(VectPtr,columns.indexFeature[gr],cValue)==false)
 				return false;
-			if (cValue==1.0)
-				cPoz[gr] = 1.0;
+			cPoz[gr]=cValue;
 		}
 		// pun si label-ul
 		if (UpdateDoubleValue(VectPtr,columns.indexLabel,cValue)==false)
 			return false;
-		if (cValue==1.0)
-			Labels[tr] = 1.0;
-		else
-			Labels[tr] = -1.0;
+		Labels[tr]=cValue;
 		// trecem la urmatorul record
 		cPoz+=columns.nrFeatures;
 	}	
