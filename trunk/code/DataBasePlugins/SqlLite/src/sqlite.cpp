@@ -167,23 +167,23 @@ bool SqliteDatabase::FetchNextRow(GML::Utils::GTFVector<GML::DB::DBRecord> &Vect
 				case SQLITE_TEXT:
 					if (strcmp (rec.Name, "Hash") != 0)
 					{
-						current_type = GML::DB::ASCIISTTVAL;
-						rec.AsciiStrVal = (char*)sqlite3_column_text(this->res, i);
+						current_type = GML::DB::TYPES::ASCII;
+						rec.Value.AsciiStrVal = (char*)sqlite3_column_text(this->res, i);
 					}
 					else
 					{					
-						current_type = GML::DB::HASHVAL;		
+						current_type = GML::DB::TYPES::HASH;		
 						struct GML::DB::RecordHash nhash = {};
 						if (TextToInt((char*)sqlite3_column_text(this->res, i), nhash) == false) {
 							notifier->Error ("error convering ascii string to Hash value");
 							return false;
 						}
-						rec.Hash = nhash;
+						rec.Value.Hash = nhash;
 					}
                     break;
 				case SQLITE_FLOAT:
-                    current_type = GML::DB::DOUBLEVAL;					
-                    rec.DoubleVal = (double)sqlite3_column_double(this->res, i); // To be replaced with floatval
+                    current_type = GML::DB::TYPES::DOUBLE;					
+                    rec.Value.DoubleVal = (double)sqlite3_column_double(this->res, i); // To be replaced with floatval
                     break;
 				case SQLITE_NULL:
                     current_type = GML::DB::NULLVAL;
@@ -194,8 +194,8 @@ bool SqliteDatabase::FetchNextRow(GML::Utils::GTFVector<GML::DB::DBRecord> &Vect
 					rec.Size = sqlite3_column_bytes(this->res, 0);
                     break;
 				case SQLITE_INTEGER:
-                    current_type = GML::DB::INT32VAL;
-                    rec.UInt32Val = (UInt32)sqlite3_column_int(this->res, i);
+                    current_type = GML::DB::TYPES::INT32;
+                    rec.Value.UInt32Val = (UInt32)sqlite3_column_int(this->res, i);
                     break;
 				default:					
 					notifier->Error("Unknown type of column.");
@@ -282,12 +282,12 @@ bool SqliteDatabase::_InsertRow(char* Table, GML::Utils::GTFVector<GML::DB::DBRe
 	{
 	    switch(Vect[i].Type)
 	    {		
-	        case GML::DB::UINT8VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt8Val); break;
-	        case GML::DB::UINT16VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt16Val); break;
-	        case GML::DB::UINT32VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt32Val); break;
-	        case GML::DB::UINT64VAL: sprintf(statement, "%s %d, ", statement, Vect[i].UInt64Val); break;
-	        case GML::DB::ASCIISTTVAL: sprintf(statement, "%s '%s', ", statement, Vect[i].AsciiStrVal); break;
-	        case GML::DB::UNICSTRVAL: sprintf(statement, "%s '%s', ", statement, Vect[i].UnicStrVal); break;
+	        case GML::DB::TYPES::UINT8: sprintf(statement, "%s %d, ", statement, Vect[i].Value.UInt8Val); break;
+	        case GML::DB::TYPES::UINT16: sprintf(statement, "%s %d, ", statement, Vect[i].Value.UInt16Val); break;
+	        case GML::DB::TYPES::UINT32: sprintf(statement, "%s %d, ", statement, Vect[i].Value.UInt32Val); break;
+	        case GML::DB::TYPES::UINT64: sprintf(statement, "%s %d, ", statement, Vect[i].Value.UInt64Val); break;
+	        case GML::DB::TYPES::ASCII: sprintf(statement, "%s '%s', ", statement, Vect[i].Value.AsciiStrVal); break;
+	        case GML::DB::TYPES::UNICODE: sprintf(statement, "%s '%s', ", statement, Vect[i].Value.UnicStrVal); break;
 	        case GML::DB::NULLVAL: sprintf(statement, "%sNULL, ", statement); break;
 			case GML::DB::BYTESVAL: 
 				{
@@ -349,12 +349,12 @@ bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTFVector<GML::DB::D
 	{
         switch(WhereVals[i].Type)
         {
-	        case GML::DB::UINT8VAL: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UInt8Val); break;
-	        case GML::DB::UINT16VAL: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UInt16Val); break;
-	        case GML::DB::UINT32VAL: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UInt32Val); break;
-	        case GML::DB::UINT64VAL: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UInt64Val); break;
-	        case GML::DB::ASCIISTTVAL: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].AsciiStrVal); break;
-	        case GML::DB::UNICSTRVAL: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].UnicStrVal); break;
+	        case GML::DB::TYPES::UINT8: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].Value.UInt8Val); break;
+	        case GML::DB::TYPES::UINT16: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].Value.UInt16Val); break;
+	        case GML::DB::TYPES::UINT32: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].Value.UInt32Val); break;
+	        case GML::DB::TYPES::UINT64: sprintf(buffer_w, "%s %s %s = %d ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].Value.UInt64Val); break;
+	        case GML::DB::TYPES::ASCII: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].Value.AsciiStrVal); break;
+	        case GML::DB::TYPES::UNICODE: sprintf(buffer_w, "%s %s %s = '%s' ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name, WhereVals[i].Value.UnicStrVal); break;
 	        case GML::DB::NULLVAL: sprintf(buffer_w, "%s %s %s = NULL ", buffer_w, i == 0 ? "" : "and", WhereVals[i].Name); break;
 			case GML::DB::BYTESVAL: 
 				{
@@ -383,14 +383,14 @@ bool SqliteDatabase::Update(char* SqlStatement, GML::Utils::GTFVector<GML::DB::D
 	{
         switch(UpdateVals[i].Type)
         {
-	        case GML::DB::UINT8VAL: sprintf(buffer_u, "%s %s %s = %d ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UInt8Val); break;
-	        case GML::DB::UINT16VAL: sprintf(buffer_u, "%s %s %s = %d ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UInt16Val); break;
-	        case GML::DB::UINT32VAL: sprintf(buffer_u, "%s %s %s = %d ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UInt32Val); break;
-	        case GML::DB::UINT64VAL: sprintf(buffer_u, "%s %s %s = %lld ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UInt64Val); break;
-	        case GML::DB::ASCIISTTVAL: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].AsciiStrVal); break;
-	        case GML::DB::UNICSTRVAL: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].UnicStrVal); break;
-	        case GML::DB::NULLVAL: sprintf(buffer_u, "%s %s %s = NULL ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name); break;
-			case GML::DB::BYTESVAL: 
+	        case GML::DB::TYPES::UINT8: sprintf(buffer_u, "%s %s %s = %d ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].Value.UInt8Val); break;
+	        case GML::DB::TYPES::UINT16: sprintf(buffer_u, "%s %s %s = %d ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].Value.UInt16Val); break;
+	        case GML::DB::TYPES::UINT32: sprintf(buffer_u, "%s %s %s = %d ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].Value.UInt32Val); break;
+	        case GML::DB::TYPES::UINT64: sprintf(buffer_u, "%s %s %s = %lld ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].Value.UInt64Val); break;
+	        case GML::DB::TYPES::ASCII: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].Value.Ascii); break;
+	        case GML::DB::TYPES::UNICODE: sprintf(buffer_u, "%s %s %s = '%s' ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name, UpdateVals[i].Value.Unicode); break;
+	        case GML::DB::TYPES::NULLVAL: sprintf(buffer_u, "%s %s %s = NULL ", buffer_u, i == 0 ? "" : ",", UpdateVals[i].Name); break;
+			case GML::DB::TYPES::BYTESVAL: 
 				{								
 					char* _bytes_val_statement = (char*)malloc(sizeof(char) * (UpdateVals[i].Size * 4) + 1);
 					if(_bytes_val_statement == NULL)
@@ -457,15 +457,15 @@ bool SqliteDatabase::GetColumnInformations( char* TableName, GML::Utils::GTFVect
 				case SQLITE3_TEXT:
 					if (strcmp (rec.Name, "Hash") != 0)
 					{
-						current_type = GML::DB::ASCIISTTVAL;					
+						current_type = GML::DB::TYPES::ASCII;					
 					}
 					else
 					{					
-						current_type = GML::DB::HASHVAL;		
+						current_type = GML::DB::TYPES::HASH;		
 					}
 					break;
 				case SQLITE_FLOAT:
-					current_type = GML::DB::DOUBLEVAL;									
+					current_type = GML::DB::TYPES::DOUBLE;									
 					break;
 				case SQLITE_NULL:
 					current_type = GML::DB::NULLVAL;
@@ -474,7 +474,7 @@ bool SqliteDatabase::GetColumnInformations( char* TableName, GML::Utils::GTFVect
 					current_type = GML::DB::BYTESVAL;
 					break;
 				case SQLITE_INTEGER:
-					current_type = GML::DB::INT32VAL;				
+					current_type = GML::DB::TYPES::INT32;				
 					break;
 				default:					
 					notifier->Error("Unknown type of column.");

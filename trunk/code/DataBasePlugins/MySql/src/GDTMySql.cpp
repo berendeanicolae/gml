@@ -123,16 +123,16 @@ bool   GDTMySQL::GetColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> 
 		switch (field->type)
 		{
 			case MYSQL_TYPE_DOUBLE:
-				rec.Type = GML::DB::DOUBLEVAL;
+				rec.Type = GML::DB::TYPES::DOUBLE;
 				break;
 			case MYSQL_TYPE_BIT:
-				rec.Type = GML::DB::BOOLVAL;
+				rec.Type = GML::DB::TYPES::BOOLEAN;
 				break;
 			case MYSQL_TYPE_LONGLONG:
-				rec.Type = GML::DB::UINT64VAL;
+				rec.Type = GML::DB::TYPES::UINT64;
 				break;
 			case MYSQL_TYPE_STRING:
-				rec.Type = GML::DB::ASCIISTTVAL;
+				rec.Type = GML::DB::TYPES::ASCII;
 				break;
 			default:
 				notifier->Error("[%s] Unknwon column type (%d) for column %s",ObjectName,field->type,field->name);
@@ -172,31 +172,31 @@ bool   GDTMySQL::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr
 		switch (field->type)
 		{
 			case MYSQL_TYPE_DOUBLE:
-				rec.Type = GML::DB::DOUBLEVAL;
-				if (GML::Utils::GString::ConvertToDouble(row[tr],&rec.DoubleVal)==false)
+				rec.Type = GML::DB::TYPES::DOUBLE;
+				if (GML::Utils::GString::ConvertToDouble(row[tr],&rec.Value.DoubleVal)==false)
 				{
 					notifier->Error("[%s] -> Invalid conversion to double (%s) on column %s",ObjectName,row[tr],field->name);
 					return false;
 				}
 				break;
 			case MYSQL_TYPE_LONGLONG:
-				rec.Type = GML::DB::UINT64VAL;
-				if (GML::Utils::GString::ConvertToUInt64(row[tr],&rec.UInt64Val)==false)
+				rec.Type = GML::DB::TYPES::UINT64;
+				if (GML::Utils::GString::ConvertToUInt64(row[tr],&rec.Value.UInt64Val)==false)
 				{
 					notifier->Error("[%s] -> Invalid conversion to UInt64 (%s) on column %s",ObjectName,row[tr],field->name);
 					return false;
 				}
 				break;
 			case MYSQL_TYPE_BIT:
-				rec.Type = GML::DB::BOOLVAL;
+				rec.Type = GML::DB::TYPES::BOOLEAN;
 				if (row[tr][0]!=0)
-					rec.BoolVal = true;
+					rec.Value.BoolVal = true;
 				else
-					rec.BoolVal = false;
+					rec.Value.BoolVal = false;
 				break;
 			case MYSQL_TYPE_STRING:
-				rec.Type = GML::DB::ASCIISTTVAL;
-				rec.AsciiStrVal = row[tr];
+				rec.Type = GML::DB::TYPES::ASCII;
+				rec.Value.AsciiStrVal = row[tr];
 				break;
 			default:
 				notifier->Error("[%s] -> Unknwon column type (%d) for column '%s'",ObjectName,field->type,field->name);

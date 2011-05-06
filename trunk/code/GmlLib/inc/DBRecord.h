@@ -7,25 +7,28 @@ namespace GML
 {
 	namespace DB
 	{
-		enum DBRecordDataType
+		namespace TYPES
 		{
-			NULLVAL = 0,
-			BOOLVAL,
-			UINT8VAL,
-			UINT16VAL,
-			UINT32VAL,
-			UINT64VAL,
-			INT8VAL,
-			INT16VAL,
-			INT32VAL,
-			RAWPTRVAL,
-			BYTESVAL,
-			ASCIISTTVAL,
-			UNICSTRVAL,
-			DOUBLEVAL,
-			FLOATVAL,
-			HASHVAL
-		};
+			enum DBRecordDataType
+			{
+				BOOLEAN,
+				UINT8,
+				UINT16,
+				UINT32,
+				UINT64,
+				INT8,
+				INT16,
+				INT32,
+				INT64,
+				FLOAT,
+				DOUBLE,
+				ASCII,
+				UNICODE,
+				HASH,
+
+				UNKNOWN
+			};
+		}
 		struct EXPORT RecordHash
 		{
 		public:
@@ -56,14 +59,12 @@ namespace GML
 				UInt16		UInt16Val;
 				UInt32		UInt32Val;
 				UInt64		UInt64Val;
-				void*		RawPtrVal;
-				UInt8*		BytesVal;
-				double		DoubleVal;
 				float		FloatVal;
+				double		DoubleVal;
 				char*		AsciiStrVal;
-				wchar_t*	UnicStrVal;
+				wchar_t*	UnicodeStrVal;
 				RecordHash	Hash;
-			};
+			} Value;
 		};
 	}
 }
