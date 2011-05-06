@@ -1715,7 +1715,7 @@ namespace GML
 	{
 		namespace TYPES
 		{
-			enum DBRecordDataType
+			enum 
 			{
 				BOOLEAN,
 				UINT8,

@@ -3,6 +3,16 @@
 
 #include "gmllib.h"
 
+// formatul este :
+// columnName1,columnName2,.....
+// value1,value2,...
+// value1,value2,....
+//
+// unde: columnName1 este de forma Nume{tip}, cu {tip optional}
+//       {tip} = {double},{numeric},{int8},{int16},{int32},{uint8},...
+
+
+
 
 #define MAX_COLUMN_NAME		128
 struct Column
@@ -18,6 +28,8 @@ class CSV: public GML::DB::IDataBase
 	GML::Utils::GTVector<Column>				Columns;
 	int											dbPoz;
 	bool										modQueryCount;
+
+	bool					UpdateValue(GML::Utils::GString &str,GML::DB::DBRecord &rec);
 public:
 	CSV();
 
@@ -28,9 +40,9 @@ public:
 	bool					FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
 	bool					GetColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
 
-	bool				InsertRow (char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect);
-	bool				InsertRow (char* Table, char* Fields, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect);
-	bool				Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTFVector<GML::DB::DBRecord> &UpdateVals);
+	bool					InsertRow (char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect);
+	bool					InsertRow (char* Table, char* Fields, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect);
+	bool					Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTFVector<GML::DB::DBRecord> &UpdateVals);
 
 };
  
