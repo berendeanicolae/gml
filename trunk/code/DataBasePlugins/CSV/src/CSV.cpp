@@ -9,8 +9,44 @@ struct TypeNames
 
 TypeNames tNames[]=
 {
-	{"Boolean",GML::DB::TYPES::BOOLEAN},
-	{"Bool",GML::DB::TYPES::BOOLEAN},
+	{"boolean",GML::DB::TYPES::BOOLEAN},
+	{"bool",GML::DB::TYPES::BOOLEAN},
+	{"b",GML::DB::TYPES::BOOLEAN},
+
+	{"int8",GML::DB::TYPES::INT8},
+	{"int16",GML::DB::TYPES::INT16},
+	{"int32",GML::DB::TYPES::INT32},
+	{"int",GML::DB::TYPES::INT32},
+	{"int64",GML::DB::TYPES::INT64},
+
+	{"i8",GML::DB::TYPES::INT8},
+	{"i16",GML::DB::TYPES::INT16},
+	{"i32",GML::DB::TYPES::INT32},
+	{"i64",GML::DB::TYPES::INT64},
+
+
+	{"uint8",GML::DB::TYPES::UINT8},
+	{"uint16",GML::DB::TYPES::UINT16},
+	{"uint32",GML::DB::TYPES::UINT32},
+	{"uint",GML::DB::TYPES::UINT32},
+	{"uint64",GML::DB::TYPES::UINT64},
+
+	{"u8",GML::DB::TYPES::UINT8},
+	{"u16",GML::DB::TYPES::UINT16},
+	{"u32",GML::DB::TYPES::UINT32},	
+	{"u64",GML::DB::TYPES::UINT64},
+
+
+	{"float",GML::DB::TYPES::FLOAT},
+	{"double",GML::DB::TYPES::DOUBLE},
+	{"numeric",GML::DB::TYPES::DOUBLE},
+
+	{"f",GML::DB::TYPES::FLOAT},
+	{"d",GML::DB::TYPES::DOUBLE},
+	{"n",GML::DB::TYPES::DOUBLE},
+
+	{"hash",GML::DB::TYPES::HASH},
+	{"h",GML::DB::TYPES::HASH},
 };
 
 CSV::CSV()

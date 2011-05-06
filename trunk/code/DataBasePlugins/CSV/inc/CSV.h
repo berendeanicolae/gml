@@ -10,7 +10,7 @@
 //
 // unde: columnName1 este de forma Nume{tip}, cu {tip optional}
 //       {tip} = {double},{numeric},{int8},{int16},{int32},{uint8},...
-
+//		 {tip} = i8,i16,i32,i64,u8,u16,u32,u64,b,f,d,h,n
 
 
 
