@@ -1,5 +1,18 @@
 #include "CSV.h"
 
+struct TypeNames
+{
+	char	*Name;
+	UInt32	EnumValue;
+};
+
+
+TypeNames tNames[]=
+{
+	{"Boolean",GML::DB::TYPES::BOOLEAN},
+	{"Bool",GML::DB::TYPES::BOOLEAN},
+};
+
 CSV::CSV()
 {
 	ObjectName = "CSV";
@@ -11,8 +24,8 @@ bool	CSV::OnInit()
 }
 bool	CSV::Connect ()
 {
-	GML::Utils::GString		token;
-	int						poz,poz2;
+	GML::Utils::GString		token,tip;
+	int						poz,poz2,tipPoz,tr;
 	Column					c;
 
 	Columns.DeleteAll();
@@ -32,8 +45,31 @@ bool	CSV::Connect ()
 	while (tempStr.CopyNext(&token,",",&poz2))
 	{
 		token.Strip();
+		tipPoz = token.Find("{");
+		c.Type = GML::DB::TYPES::UNKNOWN;
+		if (tipPoz>=0)
+		{
+			tip.Set(&token.GetText()[tipPoz+1]);
+			tip.Replace("}","");
+			tip.Strip();
+			token.Truncate(tipPoz);
+			token.Strip();
+			for (tr=0;tr<sizeof(tNames)/sizeof(TypeNames);tr++)
+			{
+				if (tip.Equals(tNames[tr].Name,true))
+				{
+					c.Type = tNames[tr].EnumValue;
+					break;
+				}
+			}
+			if (c.Type == GML::DB::TYPES::UNKNOWN)
+			{
+				notifier->Error("[%s] -> Unknown type (%s) for column (%s) in %s",ObjectName,tip.GetText(),token.GetText(),tempStr.GetText());
+				return false;
+			}
+		} 		
 		GML::Utils::GString::Set(c.Name,token.GetText(),MAX_COLUMN_NAME);
-		c.Type = GML::DB::TYPES::ASCII;
+		
 
 		if (Columns.PushByRef(c)==false)
 		{
@@ -144,7 +180,73 @@ bool    CSV::GetColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &Vec
 	}	
 	return true;
 }
+bool	CSV::UpdateValue(GML::Utils::GString &str,GML::DB::DBRecord &rec)
+{
+	if (rec.Type == GML::DB::TYPES::UNKNOWN)
+	{
+		// verific daca e bool
+		if ((str.Equals("true",true)) || (str.Equals("t",true)) || (str.Equals("yes",true)))
+		{
+			rec.Type = GML::DB::TYPES::BOOLEAN;
+			rec.Value.BoolVal = true;
+			return true;
+		}
+		if ((str.Equals("false",true)) || (str.Equals("f",true)) || (str.Equals("no",true)))
+		{
+			rec.Type = GML::DB::TYPES::BOOLEAN;
+			rec.Value.BoolVal = false;
+			return true;
+		}
+		// verific daca e numar
+		if (str.ConvertToDouble(&rec.Value.DoubleVal)==true)
+		{
+			rec.Type = GML::DB::TYPES::DOUBLE;
+			return true;
+		}
+		// verific daca nu cumva e hash
+		if (rec.Value.Hash.CreateFromText(str.GetText())==true)
+		{
+			rec.Type = GML::DB::TYPES::HASH;
+			return true;
+		}
+		// altfel e string	
+		return false;
+	} 
+	// daca am deja un tip setat
+	switch (rec.Type)
+	{
+		case GML::DB::TYPES::BOOLEAN:
+			rec.Value.BoolVal = (bool)((str.Equals("true",true)) || (str.Equals("t",true)) || (str.Equals("yes",true)));
+			return true;			
+		case GML::DB::TYPES::INT8:
+			return str.ConvertToInt8(&rec.Value.Int8Val);
+		case GML::DB::TYPES::INT16:
+			return str.ConvertToInt16(&rec.Value.Int16Val);
+		case GML::DB::TYPES::INT32:
+			return str.ConvertToInt32(&rec.Value.Int32Val);
+		case GML::DB::TYPES::INT64:
+			return str.ConvertToInt64(&rec.Value.Int64Val);
 
+		case GML::DB::TYPES::UINT8:
+			return str.ConvertToUInt8(&rec.Value.UInt8Val);
+		case GML::DB::TYPES::UINT16:
+			return str.ConvertToUInt16(&rec.Value.UInt16Val);
+		case GML::DB::TYPES::UINT32:
+			return str.ConvertToUInt32(&rec.Value.UInt32Val);
+		case GML::DB::TYPES::UINT64:
+			return str.ConvertToUInt64(&rec.Value.UInt64Val);
+
+		case GML::DB::TYPES::FLOAT:
+			return str.ConvertToFloat(&rec.Value.FloatVal);
+		case GML::DB::TYPES::DOUBLE:
+			return str.ConvertToDouble(&rec.Value.DoubleVal);
+
+		case GML::DB::TYPES::HASH:
+			return rec.Value.Hash.CreateFromText(str.GetText());
+
+	}
+	return false;
+}
 bool	CSV::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
 	GML::DB::DBRecord	rec;
@@ -185,82 +287,18 @@ bool	CSV::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 	poz = tr = 0;
 	while (tempStr.CopyNext(&featureIndex,",",&poz))
 	{
+		featureIndex.Strip();
 		rec.Name = Columns[tr].Name;
 		rec.Type = Columns[tr].Type;
 		// pun si valorile
-
-		
-	}
-
-	//notifier->Info("Reading records: %d (%d)",cIndex,dbPoz);
-	// adaug si un hash
-	//rec.Name = "Hash";
-	//rec.Type = GML::DB::HASHVAL;
-	//rec.Hash.Reset();
-	//
-	//if (VectPtr.PushByRef(rec)==false)
-	//{
-	//	notifier->Error("Unable to add HASH to vector !");
-	//	return false;
-	//}
-	/*
-	// formatul este label:lista flaguri
-	tempStr.Strip();
-	tempStr.Replace(" ","");
-	tempStr.Replace("\t","");
-	rec.Name = "Label";
-	rec.Type = GML::DB::DOUBLEVAL;
-	if (tempStr.StartsWith("1:"))
-	{
-		rec.DoubleVal = 1.0;
-		tempStr.ReplaceOnPos(0,2,"");
-	} else {
-		if (tempStr.StartsWith("-1:"))
+		if (UpdateValue(featureIndex,rec)==false)
 		{
-			rec.DoubleVal = -1.0;
-			tempStr.ReplaceOnPos(0,3,"");
-		} else {
-			notifier->Error("Invalid format : %s",tempStr.GetText());
+			notifier->Error("[%s] -> Invalid format for '%s' in '%s'",ObjectName,featureIndex,tempStr.GetText());
 			return false;
 		}
+		// updatez si tipul
+		Columns[tr].Type = rec.Type;
 	}
-	if (VectPtr.PushByRef(rec)==false)
-	{
-		notifier->Error("Unable to add label to vector !");
-		return false;
-	}
-	// urc toate featurerile
-	rec.Type = GML::DB::DOUBLEVAL;
-	rec.DoubleVal = 0;
-	for (int tr=0;tr<nrFeatures;tr++)
-	{
-		rec.Name = FeatNames[tr].GetText();
-		if (VectPtr.PushByRef(rec)==false)
-		{
-			notifier->Error("Unable to add label to vector feature #%d => %s",tr,tempStr.GetText());
-			return false;
-		}
-	}
-	// am pus toate featurerile -> vad care efectiv sunt 1
-	poz = 0;
-	while (tempStr.CopyNext(&featureIndex,",",&poz))
-	{
-		if (featureIndex.ConvertToUInt32(&index)==false)
-		{
-			notifier->Error("Invalid value for feature index (%s) => %s",featureIndex.GetText(),tempStr.GetText());
-			return false;
-		}
-		if (index>=nrFeatures)
-		{
-			notifier->Error("Index outside range[0..%d] (%d) => %s",nrFeatures,index,tempStr.GetText());
-			return false;
-		}
-		// VectPtr[0] = Hash
-		// VectPtr[1] = Label
-		// VectPtr[2] = Feature[0]
-		VectPtr[index+2].DoubleVal = 1.0;
-	}	
-	//*/
 	return true;
 }
 
