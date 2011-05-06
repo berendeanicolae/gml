@@ -149,7 +149,6 @@ UInt32 FullCacheConnector::GetTotalRecordCount()
 {
 	return nrRecords;
 }
-
 bool   FullCacheConnector::GetRecordLabel( double &label,UInt32 index )
 {
 	if (index >= nrRecords) 
