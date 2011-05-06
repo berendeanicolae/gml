@@ -50,12 +50,12 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 			return false;
 		}
 		if (GML::Utils::GString::Equals(rec->Name,"Label",true))
-		{
+		{			
 			// verific ca tipul sa fie unul ok
-			if ((rec->Type!=GML::DB::DOUBLEVAL) && 
-				(rec->Type!=GML::DB::BOOLVAL) && 
-				(rec->Type!=GML::DB::INT16VAL) && 
-				(rec->Type!=GML::DB::INT32VAL))
+			if ((rec->Type!=GML::DB::TYPES::DOUBLE) && 
+				(rec->Type!=GML::DB::TYPES::BOOLEAN) && 
+				(rec->Type!=GML::DB::TYPES::INT16) && 
+				(rec->Type!=GML::DB::TYPES::INT32))
 			{
 				notifier->Error("[%s] -> Invalid type for Label at column #%d. Allowed types: BOOL,INT16,INT32,DOUBLE !",ObjectName,tr);
 				return false;
@@ -66,8 +66,8 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 			(GML::Utils::GString::Equals(rec->Name,"md5f",true)))
 		{
 			// verific ca tipul sa fie unul ok
-			if ((rec->Type!=GML::DB::HASHVAL) && 
-				(rec->Type!=GML::DB::ASCIISTTVAL))
+			if ((rec->Type!=GML::DB::TYPES::HASH) && 
+				(rec->Type!=GML::DB::TYPES::ASCII))
 			{
 				notifier->Error("[%s] -> Invalid type for Hash at column #%d. Allowed types: ASCIIVAL,HASHVAL !",ObjectName,tr);
 				return false;
@@ -77,10 +77,10 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 		if (GML::Utils::GString::StartsWith(rec->Name,"Ft_",true))
 		{
 			// verific ca tipul sa fie unul ok
-			if ((rec->Type!=GML::DB::DOUBLEVAL) && 
-				(rec->Type!=GML::DB::BOOLVAL) && 
-				(rec->Type!=GML::DB::INT16VAL) && 
-				(rec->Type!=GML::DB::INT32VAL))
+			if ((rec->Type!=GML::DB::TYPES::DOUBLE) && 
+				(rec->Type!=GML::DB::TYPES::BOOLEAN) && 
+				(rec->Type!=GML::DB::TYPES::INT16) && 
+				(rec->Type!=GML::DB::TYPES::INT32))
 			{
 				notifier->Error("[%s] Invalid type for Feature at column #%d. Allowed types: BOOL,INT16,INT32,DOUBLE !",ObjectName,tr);
 				return false;
@@ -142,20 +142,20 @@ bool GML::ML::IConnector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRec
 	}
 	switch (rec->Type)
 	{
-		case GML::DB::DOUBLEVAL:
-			value = rec->DoubleVal;
+		case GML::DB::TYPES::DOUBLE:
+			value = rec->Value.DoubleVal;
 			break;
-		case GML::DB::INT8VAL:
-			value = (double)rec->Int8Val;
+		case GML::DB::TYPES::INT8:
+			value = (double)rec->Value.Int8Val;
 			break;
-		case GML::DB::INT16VAL:
-			value = (double)rec->Int16Val;
+		case GML::DB::TYPES::INT16:
+			value = (double)rec->Value.Int16Val;
 			break;
-		case GML::DB::INT32VAL:
-			value = (double)rec->Int32Val;
+		case GML::DB::TYPES::INT32:
+			value = (double)rec->Value.Int32Val;
 			break;
-		case GML::DB::BOOLVAL:
-			if (rec->BoolVal)
+		case GML::DB::TYPES::BOOLEAN:
+			if (rec->Value.BoolVal)
 				value = 1.0;
 			else
 				value = -1.0;
@@ -177,15 +177,15 @@ bool GML::ML::IConnector::UpdateHashValue(GML::Utils::GTFVector<GML::DB::DBRecor
 	}
 	switch (rec->Type)
 	{
-		case GML::DB::ASCIISTTVAL:
-			if (recHash.CreateFromText(rec->AsciiStrVal)==false)
+		case GML::DB::TYPES::ASCII:
+			if (recHash.CreateFromText(rec->Value.AsciiStrVal)==false)
 			{
-				notifier->Error("[%s] -> Unable to convert '%s' to a valid hash !",ObjectName,rec->AsciiStrVal);
+				notifier->Error("[%s] -> Unable to convert '%s' to a valid hash !",ObjectName,rec->Value.AsciiStrVal);
 				return false;
 			}
 			break;
-		case GML::DB::HASHVAL:
-			recHash.Copy(rec->Hash);
+		case GML::DB::TYPES::HASH:
+			recHash.Copy(rec->Value.Hash);
 			break;
 		default:
 			notifier->Error("[%s] -> Unable to convert column from index %d to double !",ObjectName,index);
@@ -265,14 +265,14 @@ bool GML::ML::IConnector::QueryRecordsCount(char *CountQueryStatement,UInt32 &re
 	}
 	switch (rec->Type)
 	{
-		case GML::DB::INT32VAL:
-			recordsCount = (UInt32)rec->Int32Val;
+		case GML::DB::TYPES::INT32:
+			recordsCount = (UInt32)rec->Value.Int32Val;
 			break;
-		case GML::DB::UINT32VAL:
-			recordsCount = (UInt32)rec->UInt32Val;
+		case GML::DB::TYPES::UINT32:
+			recordsCount = (UInt32)rec->Value.UInt32Val;
 			break;
-		case GML::DB::UINT64VAL:
-			recordsCount = (UInt32)rec->UInt64Val;
+		case GML::DB::TYPES::UINT64:
+			recordsCount = (UInt32)rec->Value.UInt64Val;
 			break;
 		default:
 			notifier->Error("[%s] '%s' returnes an invalid type (non-numeric - %d )",ObjectName,CountQueryStatement,rec->Type);

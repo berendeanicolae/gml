@@ -1,21 +1,24 @@
-#include "SimpleTextFileDB.h"
+#include "CSV.h"
 
-SimpleTextFileDB::SimpleTextFileDB()
+CSV::CSV()
 {
-	FeatNames = NULL;
-	ObjectName = "SimpleTextFileDB";
+	ObjectName = "CSV";
 	LinkPropertyToString("FileName",fileName,"","File that contains the database !");
 }
-bool	SimpleTextFileDB::OnInit()
+bool	CSV::OnInit()
 {
 	return true;
 }
-bool	SimpleTextFileDB::Connect ()
+bool	CSV::Connect ()
 {
-	int poz = 0;
+	GML::Utils::GString		token;
+	int						poz,poz2;
+	Column					c;
+
+	Columns.DeleteAll();
 	if (allDB.LoadFromFile(fileName.GetText())==false)
 	{
-		notifier->Error("Unable to open (%s) for reading !",fileName.GetText());
+		notifier->Error("[%s] -> Unable to open (%s) for reading !",ObjectName,fileName.GetText());
 		return false;
 	}
 	if (allDB.CopyNextLine(&tempStr,&poz)==false)
@@ -24,57 +27,46 @@ bool	SimpleTextFileDB::Connect ()
 		return false;
 	}
 	tempStr.Strip();
-	if (tempStr.StartsWith("Records",true)==false)
+	// 
+	poz2 = 0;
+	while (tempStr.CopyNext(&token,",",&poz2))
 	{
-		notifier->Error("Expecting Records = <value> as first line in %s",fileName.GetText());
-		return false;
-	}
-	tempStr.Replace("Records","",true);
-	tempStr.Replace("=","");
-	tempStr.Strip();
-	if ((tempStr.ConvertToUInt32(&nrRecords)==false) || (nrRecords<1))
-	{
-		notifier->Error("Invalid numeric value for records number: %s",tempStr.GetText());
-		return false;
-	}
-	if (allDB.CopyNextLine(&tempStr,&poz)==false)
-	{
-		notifier->Error("Error reading from %s",fileName.GetText());
-		return false;
-	}
-	tempStr.Strip();
-	if (tempStr.StartsWith("Features",true)==false)
-	{
-		notifier->Error("Expecting Features = <value> as first line in %s",fileName.GetText());
-		return false;
-	}
-	tempStr.Replace("Features","",true);
-	tempStr.Replace("=","");
-	tempStr.Strip();
-	if ((tempStr.ConvertToUInt32(&nrFeatures)==false) || (nrFeatures<1))
-	{
-		notifier->Error("Invalid numeric value for features number: %s",tempStr.GetText());
-		return false;
-	}
-	if ((FeatNames = new GML::Utils::GString[nrFeatures])==NULL)
-		return false;
-	for (UInt32 tr = 0;tr<nrFeatures;tr++)
-	{
-		if (FeatNames[tr].SetFormated("Ft_%d",tr)==false)
+		token.Strip();
+		GML::Utils::GString::Set(c.Name,token.GetText(),MAX_COLUMN_NAME);
+		c.Type = GML::DB::TYPES::ASCII;
+
+		if (Columns.PushByRef(c)==false)
+		{
+			notifier->Error("[%s] -> Unable to add '%s' to column names !",ObjectName,token.GetText());
 			return false;
+		}
 	}
-	notifier->Info("Data Base loaded : %d records , %d features ",nrRecords,nrFeatures);
+	if (Columns.Len()==0)
+	{
+		notifier->Error("[%s] -> first line in a csv file should be the header (found nothing) -> %s",ObjectName,tempStr.GetText());
+		return false;
+	}
+	nrRecords = 0;
+	while (allDB.CopyNextLine(&tempStr,&poz))
+	{
+		tempStr.Strip();
+		if (tempStr.Len()>0)
+			nrRecords++;
+	}
+	if (nrRecords==0)
+	{
+		notifier->Error("[%s] -> Missing records in %s",ObjectName,fileName.GetText());
+		return false;
+	}
+
+	notifier->Info("[%s] -> CSV file loaded : %d records",ObjectName,nrRecords);
 	return true;
 }
-bool	SimpleTextFileDB::Disconnect ()
+bool	CSV::Disconnect ()
 {
-	//file.Close();
-	if (FeatNames!=NULL)
-		delete []FeatNames;
-	FeatNames = NULL;
 	return true;
 }
-bool	SimpleTextFileDB::ExecuteQuery (char* Statement,UInt32 *rowsCount)
+bool	CSV::ExecuteQuery (char* Statement,UInt32 *rowsCount)
 {
 	GML::Utils::GString		tempStr;
 	unsigned int			limit;
@@ -112,8 +104,8 @@ bool	SimpleTextFileDB::ExecuteQuery (char* Statement,UInt32 *rowsCount)
 	if (limit==0)
 	{
 		dbPoz = 0;
-		// skipez primele 2 linii
-		for (int tr=0;tr<2;tr++)
+		// skipez prima linie (hederul)
+		for (int tr=0;tr<1;tr++)
 		{
 			if (allDB.CopyNextLine(&tempStr,&dbPoz)==false)
 			{
@@ -134,45 +126,30 @@ bool	SimpleTextFileDB::ExecuteQuery (char* Statement,UInt32 *rowsCount)
 	// totul e ok
 	return true;
 }
-bool    SimpleTextFileDB::GetColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
+bool    CSV::GetColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
 	GML::DB::DBRecord	rec;
 
 	VectPtr.DeleteAll();
 
-	rec.Name = "Hash";
-	rec.Type = GML::DB::TYPES::HASH;
-	
-	if (VectPtr.PushByRef(rec)==false)
+	for (UInt32 tr=0;tr<Columns.Len();tr++)
 	{
-		notifier->Error("Unable to add HASH to vector !");
-		return false;
-	}
-	rec.Name = "Label";
-	rec.Type = GML::DB::TYPES::DOUBLE;
-	if (VectPtr.PushByRef(rec)==false)
-	{
-		notifier->Error("Unable to add label to vector !");
-		return false;
-	}
-	rec.Type = GML::DB::TYPES::DOUBLE;	
-	for (UInt32 tr=0;tr<nrFeatures;tr++)
-	{
-		rec.Name = FeatNames[tr].GetText();
+		rec.Name = Columns[tr].Name;
+		rec.Type = Columns[tr].Type;
 		if (VectPtr.PushByRef(rec)==false)
 		{
-			notifier->Error("Unable to add label to vector feature #%d => %s",tr,tempStr.GetText());
+			notifier->Error("[%s] -> Unable to add column (%s) to Columns vectors",ObjectName,rec.Name);
 			return false;
 		}
 	}	
 	return true;
 }
 
-bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
+bool	CSV::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
 	GML::DB::DBRecord	rec;
-	int					poz;
-	UInt32				index;
+	int					poz,tr;
+	//UInt32				index;
 
 	memset(&rec,0,sizeof(rec));
 
@@ -194,10 +171,6 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &V
 		return true;
 	}
 
-
-	// daca nu mai am linii
-	//if (file.ReadNextLine(tempStr)==false)
-	//	return false;
 	while (true)
 	{
 		if (allDB.CopyNextLine(&tempStr,&dbPoz)==false)
@@ -209,32 +182,42 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &V
 	}
 	
 	cIndex++;
+	poz = tr = 0;
+	while (tempStr.CopyNext(&featureIndex,",",&poz))
+	{
+		rec.Name = Columns[tr].Name;
+		rec.Type = Columns[tr].Type;
+		// pun si valorile
+
+		
+	}
+
 	//notifier->Info("Reading records: %d (%d)",cIndex,dbPoz);
 	// adaug si un hash
-	rec.Name = "Hash";
-	rec.Type = GML::DB::TYPES::HASH;
-	rec.Value.Hash.Reset();
-	
-	if (VectPtr.PushByRef(rec)==false)
-	{
-		notifier->Error("Unable to add HASH to vector !");
-		return false;
-	}
-	//*
+	//rec.Name = "Hash";
+	//rec.Type = GML::DB::HASHVAL;
+	//rec.Hash.Reset();
+	//
+	//if (VectPtr.PushByRef(rec)==false)
+	//{
+	//	notifier->Error("Unable to add HASH to vector !");
+	//	return false;
+	//}
+	/*
 	// formatul este label:lista flaguri
 	tempStr.Strip();
 	tempStr.Replace(" ","");
 	tempStr.Replace("\t","");
 	rec.Name = "Label";
-	rec.Type = GML::DB::TYPES::DOUBLE;
+	rec.Type = GML::DB::DOUBLEVAL;
 	if (tempStr.StartsWith("1:"))
 	{
-		rec.Value.DoubleVal = 1.0;
+		rec.DoubleVal = 1.0;
 		tempStr.ReplaceOnPos(0,2,"");
 	} else {
 		if (tempStr.StartsWith("-1:"))
 		{
-			rec.Value.DoubleVal = -1.0;
+			rec.DoubleVal = -1.0;
 			tempStr.ReplaceOnPos(0,3,"");
 		} else {
 			notifier->Error("Invalid format : %s",tempStr.GetText());
@@ -247,9 +230,9 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &V
 		return false;
 	}
 	// urc toate featurerile
-	rec.Type = GML::DB::TYPES::DOUBLE;
-	rec.Value.DoubleVal = 0;
-	for (UInt32 tr=0;tr<nrFeatures;tr++)
+	rec.Type = GML::DB::DOUBLEVAL;
+	rec.DoubleVal = 0;
+	for (int tr=0;tr<nrFeatures;tr++)
 	{
 		rec.Name = FeatNames[tr].GetText();
 		if (VectPtr.PushByRef(rec)==false)
@@ -275,24 +258,24 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &V
 		// VectPtr[0] = Hash
 		// VectPtr[1] = Label
 		// VectPtr[2] = Feature[0]
-		VectPtr[index+2].Value.DoubleVal = 1.0;
+		VectPtr[index+2].DoubleVal = 1.0;
 	}	
 	//*/
 	return true;
 }
 
-bool	SimpleTextFileDB::InsertRow (char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
+bool	CSV::InsertRow (char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
 {
-	notifier->Error("InsertRow function not suported !");
+	notifier->Error("[%s] -> InsertRow function not suported !",ObjectName);
 	return false;
 }
-bool	SimpleTextFileDB::InsertRow (char* Table, char* Fields, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
+bool	CSV::InsertRow (char* Table, char* Fields, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)
 {
-	notifier->Error("InsertRow function not suported !");
+	notifier->Error("[%s] -> InsertRow function not suported !",ObjectName);
 	return false;
 }
-bool	SimpleTextFileDB::Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTFVector<GML::DB::DBRecord> &UpdateVals)
+bool	CSV::Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTFVector<GML::DB::DBRecord> &UpdateVals)
 {
-	notifier->Error("Update function not suported !");
+	notifier->Error("[%s] -> Update function not suported !",ObjectName);
 	return false;
 }
