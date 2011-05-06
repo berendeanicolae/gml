@@ -61,9 +61,10 @@ bool	CSV::OnInit()
 bool	CSV::Connect ()
 {
 	GML::Utils::GString		token,tip;
-	int						poz,poz2,tipPoz,tr;
+	int						poz,poz2,tipPoz,tr,countUnk;
 	Column					c;
 
+	poz = 0;
 	Columns.DeleteAll();
 	if (allDB.LoadFromFile(fileName.GetText())==false)
 	{
@@ -72,12 +73,13 @@ bool	CSV::Connect ()
 	}
 	if (allDB.CopyNextLine(&tempStr,&poz)==false)
 	{
-		notifier->Error("Error reading from %s",fileName.GetText());
+		notifier->Error("[%s] -> Error reading header from %s",ObjectName,fileName.GetText());
 		return false;
 	}
 	tempStr.Strip();
 	// 
 	poz2 = 0;
+	countUnk = 0;
 	while (tempStr.CopyNext(&token,",",&poz2))
 	{
 		token.Strip();
@@ -103,7 +105,9 @@ bool	CSV::Connect ()
 				notifier->Error("[%s] -> Unknown type (%s) for column (%s) in %s",ObjectName,tip.GetText(),token.GetText(),tempStr.GetText());
 				return false;
 			}
-		} 		
+		} else {
+			countUnk++;
+		}
 		GML::Utils::GString::Set(c.Name,token.GetText(),MAX_COLUMN_NAME);
 		
 
@@ -130,6 +134,17 @@ bool	CSV::Connect ()
 		notifier->Error("[%s] -> Missing records in %s",ObjectName,fileName.GetText());
 		return false;
 	}
+	// daca am macar unul necunoscut , citesc prima linie ca sa fac un update
+	if (countUnk>0)
+	{
+		if (ExecuteQuery("select * from table",NULL)==false)
+			return false;
+		GML::Utils::GTFVector<GML::DB::DBRecord> VectPtr;
+		if (FetchNextRow(VectPtr)==false)
+			return false;
+
+	}
+
 
 	notifier->Info("[%s] -> CSV file loaded : %d records",ObjectName,nrRecords);
 	return true;
@@ -323,17 +338,31 @@ bool	CSV::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 	poz = tr = 0;
 	while (tempStr.CopyNext(&featureIndex,",",&poz))
 	{
+		if (tr>=Columns.Len())
+		{
+			notifier->Error("[%s] -> Too many values (%s)",ObjectName,tempStr.GetText());
+		}
 		featureIndex.Strip();
 		rec.Name = Columns[tr].Name;
 		rec.Type = Columns[tr].Type;
 		// pun si valorile
+		
 		if (UpdateValue(featureIndex,rec)==false)
 		{
 			notifier->Error("[%s] -> Invalid format for '%s' in '%s'",ObjectName,featureIndex,tempStr.GetText());
 			return false;
 		}
-		// updatez si tipul
+		if (VectPtr.PushByRef(rec)==false)
+		{
+			notifier->Error("[%s] -> Unable to add record count to vector !",ObjectName);
+			return false;
+		}
 		Columns[tr].Type = rec.Type;
+		tr++;	
+	}
+	if (tr!=Columns.Len())
+	{
+		notifier->Error("[%s] -> Incomplete list of values (%s)",ObjectName,tempStr.GetText());
 	}
 	return true;
 }

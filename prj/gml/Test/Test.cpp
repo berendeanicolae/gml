@@ -97,10 +97,12 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 1;
 	if (alg->SetProperty(
 		"Name=Test;"
+		"DataBase = CSV{FileName=E:\\lucru\\GML\\gml\\prj\\gml\\Release\\a.csv};" //*/
 		/*"DataBase=SimpleTextFileDB{FileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.text-plugin};"//*/
 		/*"DataBase=MySQL{Server='127.0.0.1';Database=Test_DB;Username=root;Password=a;};" //*/
 		/*"Connector=BitConnector{Query=SELECT * FROM MAL;CountQuery = SELECT COUNT(*) from MAL;StoreRecordHash=True};" //*/
-		"Connector=BitConnector{DataFileName=E:\\lucru\\GML\\gml\\bin\\smalldb_2.cache};" //*/
+		/*"Connector=BitConnector{DataFileName=E:\\lucru\\GML\\gml\\bin\\smalldb_2.cache};" //*/
+		"Connector=FullCacheConnector;"
 		/*"Connector=SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=20;}=>BitConnector{Table=RecordTable;DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
 		/*"Connector=BitConnector=>SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=80;NegativeStart=0;NegativeEnd=20;}=>BitConnector{DataFileName=E:\\lucru\\GML\\gml\\bin\\small_mcu.txt.cache};" //*/
 		/*"Connector=BitConnector{StoreRecordHash=False}=>SplitConnector{SplitMode=CustomPercentage;PozitiveStart=0;PozitiveEnd=100;NegativeStart=0;NegativeEnd=100;}=>BitConnector{Query=SELECT * FROM MAL;CountQuery = SELECT COUNT(*) from MAL;StoreRecordHash=True};" //*/
