@@ -496,7 +496,7 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 				notif->Error("[%s] -> Unable to read record #%d",ObjectName,idx);
 				return false;
 			}
-			dist = GML::ML::VectorOp::PointToPointDistanceSquared(thData.Record.Features,dt->SecRec.Features,featuresCount);
+			dist = GML::ML::VectorOp::EuclideanDistanceSquared(thData.Record.Features,dt->SecRec.Features,featuresCount);
 			if (dist<maxDiffDist)
 				maxDiffDist = dist;
 		}
@@ -512,7 +512,7 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 				notif->Error("[%s] -> Unable to read record #%d",ObjectName,idx);
 				return false;
 			}
-			dist = GML::ML::VectorOp::PointToPointDistanceSquared(thData.Record.Features,dt->SecRec.Features,featuresCount);
+			dist = GML::ML::VectorOp::EuclideanDistanceSquared(thData.Record.Features,dt->SecRec.Features,featuresCount);
 			if (dist<maxDiffDist)
 			{
 				countClasified++;
@@ -554,7 +554,7 @@ bool Centroid::PerformSimpleTest(GML::Algorithm::MLThreadData &td)
 		for (tr=0;tr<nrVectors;tr++)
 		{
 			cv = cVectors.GetPtrToObject(tr);
-			if (GML::ML::VectorOp::PointToPointDistanceSquared(td.Record.Features,cv->Center,nrFeatures)<=cv->Ray)
+			if (GML::ML::VectorOp::EuclideanDistanceSquared(td.Record.Features,cv->Center,nrFeatures)<=cv->Ray)
 			{
 				testLabel = cv->Label;
 				break;

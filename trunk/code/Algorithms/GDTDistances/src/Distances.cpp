@@ -1,15 +1,121 @@
 #include "Distances.h"
 
+double	ProcDistance(double *p1,double *p2,UInt32 elements)
+{
+	double sum=0.0;;
+	double total=0.0;
+	while (elements>0)
+	{
+		if ((*p1)!=(*p2))
+			sum+=1;
+		if (((*p1)!=0.0) || ((*p2)!=0.0))
+			total+=1;
+		p1++;
+		p2++;
+		elements--;
+	}
+	return (double)(sum/total);
+}
+double	ProcDistance(double *p1,double *p2,UInt32 elements,double *pWeight)
+{
+	double sum=0.0;;
+	double total=0.0;
+	while (elements>0)
+	{
+		if ((*p1)!=(*p2))
+			sum+=(*pWeight);
+		if (((*p1)!=0.0) || ((*p2)!=0.0))
+			total+=(*pWeight);
+		p1++;
+		p2++;
+		pWeight++;
+		elements--;
+	}
+	return (double)(sum/total);
+}
+//===============================================================================
 Distances::Distances()
 {
 	ObjectName = "Distances";
+	featWeight = NULL;
 
 	LinkPropertyToUInt32("Method",Method,0,"!!LIST:PositiveToNegativeDistance=0,DistanceTablePositiveToNegative,DistanceTablePositiveToPositive,DistanceTableNegativeToNegative,DistanceTableNegativeToPositive!!");
 	LinkPropertyToDouble("MinDistance",MinDist,0,"Minimal distance");
 	LinkPropertyToDouble("MaxDistance",MaxDist,1,"Maximal distance");
+	LinkPropertyToDouble("Power",Power,1,"Power parameter in Minkowski distance");
 	LinkPropertyToString("DistanceTableFileName",DistanceTableFileName,"","Name of the file names where the distance will be written");
 	LinkPropertyToBool  ("MergeDistanceTableFiles",MergeDistanceTableFiles,true,"If set all of the distance table files will be merge into one");
+	LinkPropertyToBool  ("UseWeightsForFeatures",UseWeightsForFeatures,false,"Specifyes if weights for features should be used.");
+	LinkPropertyToUInt32("DistanceFunction",DistanceFunction,DIST_FUNC_Euclidean,"!!LIST:Manhattan=0,Euclidean,EuclideanSquared,Minkowski,ProcDifference!!");
+	LinkPropertyToString("FeaturesWeightFile",FeaturesWeightFile,"","Name of the file that contains the weights for features!");
 
+}
+double Distances::GetDistance(GML::ML::MLRecord &r1,GML::ML::MLRecord &r2)
+{
+	if (UseWeightsForFeatures)
+	{
+		switch (DistanceFunction)
+		{
+			case DIST_FUNC_Manhattan:
+				return GML::ML::VectorOp::ManhattanDistance(r1.Features,r2.Features,r1.FeatCount,featWeight);
+			case DIST_FUNC_Euclidean:
+				return GML::ML::VectorOp::EuclideanDistance(r1.Features,r2.Features,r1.FeatCount,featWeight);
+			case DIST_FUNC_Euclidean_Square:
+				return pow(GML::ML::VectorOp::EuclideanDistance(r1.Features,r2.Features,r1.FeatCount,featWeight),2);
+			case DIST_FUNC_Minkowski:
+				return GML::ML::VectorOp::MinkowskiDistance(r1.Features,r2.Features,r1.FeatCount,Power,featWeight);
+			case DIST_FUNC_ProcDifference:
+				return ProcDistance(r1.Features,r2.Features,r1.FeatCount,featWeight);
+		}
+	} else {
+		switch (DistanceFunction)
+		{
+			case DIST_FUNC_Manhattan:
+				return GML::ML::VectorOp::ManhattanDistance(r1.Features,r2.Features,r1.FeatCount);
+			case DIST_FUNC_Euclidean:
+				return GML::ML::VectorOp::EuclideanDistance(r1.Features,r2.Features,r1.FeatCount);
+			case DIST_FUNC_Euclidean_Square:
+				return GML::ML::VectorOp::EuclideanDistanceSquared(r1.Features,r2.Features,r1.FeatCount);
+			case DIST_FUNC_Minkowski:
+				return GML::ML::VectorOp::MinkowskiDistance(r1.Features,r2.Features,r1.FeatCount,Power);
+			case DIST_FUNC_ProcDifference:
+				return ProcDistance(r1.Features,r2.Features,r1.FeatCount);
+		}
+	}
+	return 0;
+}
+bool Distances::LoadFeatureWeightFile()
+{
+	GML::Utils::AttributeList	attrList;
+	UInt32						tr;
+
+	if ((featWeight = new double[con->GetFeatureCount()])==NULL)
+	{
+		notif->Error("[%s] -> Unable to alloc featWeight[%d]",ObjectName,con->GetFeatureCount());
+		return false;
+	}
+	if (attrList.Load(FeaturesWeightFile.GetText())==false)
+	{
+		notif->Error("[%s] -> Unable to load FeaturesWeightFile : %s",ObjectName,FeaturesWeightFile.GetText());
+		return false;
+	}
+	if (attrList.Update("Weight",featWeight,sizeof(double)*con->GetFeatureCount())==false)
+	{
+		notif->Error("[%s] -> Unable to update 'Weight' property from %s",ObjectName,FeaturesWeightFile.GetText());
+		return false;
+	}
+
+	notif->Info("[%s] -> %s loaded ok ",ObjectName,FeaturesWeightFile.GetText());
+	// facem si un mic test
+
+	for (tr=0;tr<con->GetFeatureCount();tr++)
+	{
+		if (featWeight[tr]<=0.0)
+		{
+			notif->Error("[%s] -> Feature Weight %d is lower than 0.0 (%.4lf)",ObjectName,tr,featWeight[tr]);
+		}	
+	}
+	return true;
 }
 bool Distances::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
 {
@@ -25,6 +131,11 @@ bool Distances::OnInit()
 {
 	if (CreatePozitiveAndNegativeIndexes()==false)
 		return false;
+	if (UseWeightsForFeatures)
+	{
+		if (LoadFeatureWeightFile()==false)
+			return false;
+	}
 	return true;
 }
 bool Distances::ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &thData)
@@ -55,7 +166,7 @@ bool Distances::ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &
 				notif->Error("[%s] -> Unable to read record #%d",ObjectName,idxNeg);
 				return false;
 			}
-			dist = GML::ML::VectorOp::PointToPointDistanceSquared(thData.Record.Features,dt->SetRec.Features,featuresCount);
+			dist = GetDistance(thData.Record,dt->SetRec);
 			if ((dist>=MinDist) && (dist<=MaxDist))
 			{				
 				ptr[idxPoz] = 1;
@@ -118,7 +229,8 @@ bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::U
 				notif->Error("[%s] -> Unable to read record #%d",ObjectName,i2Poz);
 				return false;
 			}
-			dist = GML::ML::VectorOp::PointToPointDistanceSquared(thData.Record.Features,dt->SetRec.Features,featuresCount);
+			dist = GetDistance(thData.Record,dt->SetRec);
+			
 			if ((dist>=MinDist) && (dist<=MaxDist))
 			{		
 				ptr[i1Poz] = 1;

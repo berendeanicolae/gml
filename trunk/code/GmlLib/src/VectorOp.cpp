@@ -121,7 +121,106 @@ double	GML::ML::VectorOp::PointToPlaneDistanceSigned(double *plane,double *point
 		return sqrt(-dist);
 	return sqrt(dist);
 }
-double  GML::ML::VectorOp::PointToPointDistanceSquared(double *p1,double *p2,UInt32 elements)
+
+double	GML::ML::VectorOp::MinkowskiDistance(double *p1,double *p2,UInt32 elements,double power)
+{
+	double sum=0.0;;
+	double temp;
+	while (elements>0)
+	{
+		temp = (*p1)-(*p2);
+		if (temp<0)
+			temp = -temp;
+		temp = pow(temp,power);
+		sum+= temp;
+		p1++;
+		p2++;
+		elements--;
+	}
+	return pow(sum,1.0/power);
+}
+double	GML::ML::VectorOp::MinkowskiDistance(double *p1,double *p2,UInt32 elements,double power,double *pWeight)
+{
+	double sum=0.0;;
+	double temp;
+	while (elements>0)
+	{
+		temp = ((*p1)-(*p2))*(*pWeight);
+		if (temp<0)
+			temp = -temp;
+
+		temp = pow(temp,power);
+		sum+= temp;
+		p1++;
+		p2++;
+		pWeight++;
+		elements--;
+	}
+	return pow(sum,1.0/power);
+}
+double	GML::ML::VectorOp::ManhattanDistance(double *p1,double *p2,UInt32 elements)
+{
+	double sum=0.0;;
+	double temp;
+	while (elements>0)
+	{
+		temp = (*p1)-(*p2);
+		if (temp<0)
+			temp = -temp;
+		sum+= temp;
+		p1++;
+		p2++;
+		elements--;
+	}
+	return sum;
+}
+double	GML::ML::VectorOp::ManhattanDistance(double *p1,double *p2,UInt32 elements,double *pWeight)
+{
+	double sum=0.0;;
+	double temp;
+	while (elements>0)
+	{
+		temp = ((*p1)-(*p2))*(*pWeight);
+		if (temp<0)
+			temp = -temp;
+		sum+= temp;
+		p1++;
+		p2++;
+		pWeight++;
+		elements--;
+	}
+	return sum;
+}
+double	GML::ML::VectorOp::EuclideanDistance(double *p1,double *p2,UInt32 elements)
+{
+	double sum=0.0;;
+	double temp;
+	while (elements>0)
+	{
+		temp = (*p1)-(*p2);
+		sum+= (temp*temp);
+		p1++;
+		p2++;
+		elements--;
+	}
+	return sqrt(sum);
+}
+double	GML::ML::VectorOp::EuclideanDistance(double *p1,double *p2,UInt32 elements,double *pWeight)
+{
+	double sum=0.0;;
+	double temp;
+	while (elements>0)
+	{
+		temp = ((*p1)-(*p2))*(*pWeight);
+		sum+= (temp*temp);
+		p1++;
+		p2++;
+		pWeight++;
+		elements--;
+	}
+	return sqrt(sum);
+}
+double  GML::ML::VectorOp::EuclideanDistanceSquared(double *p1,double *p2,UInt32 elements)
 {
 	double sum=0.0;;
 	double temp;
@@ -135,29 +234,7 @@ double  GML::ML::VectorOp::PointToPointDistanceSquared(double *p1,double *p2,UIn
 	}
 	return sum;
 }
-double  GML::ML::VectorOp::PointToPointDistance(double *p1,double *p2,UInt32 elements)
-{
-	return sqrt(PointToPointDistanceSquared(p1,p2,elements));
-}
-double  GML::ML::VectorOp::PointToPointDistanceSquared(double *p1,double *p2,double *pWeight,UInt32 elements)
-{
-	double sum=0.0;;
-	double temp;
-	while (elements>0)
-	{
-		temp = ((*p1)-(*p2))*(*pWeight);
-		sum+= temp*temp;
-		p1++;
-		p2++;
-		pWeight++;
-		elements--;
-	}
-	return sum;
-}
-double  GML::ML::VectorOp::PointToPointDistance(double *p1,double *p2,double *pWeight,UInt32 elements)
-{
-	return sqrt(PointToPointDistanceSquared(p1,p2,pWeight,elements));
-}
+
 double  GML::ML::VectorOp::Average(double *v,UInt32 elements)
 {
 	double sum = 0;
