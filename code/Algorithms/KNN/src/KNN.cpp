@@ -100,7 +100,7 @@ void KNN::OnExecute()
 				if (con->GetRecord(ob2,myIndex)==false)
 					return;
 				element.Label = ob2.Label;
-				element.Dist = GML::ML::VectorOp::PointToPointDistance(ob1.Features,ob2.Features,ob1.FeatCount);
+				element.Dist = GML::ML::VectorOp::EuclideanDistanceSquared(ob1.Features,ob2.Features,ob1.FeatCount);
 				list.PushByRef(element);
 				list.Sort(true);
 				if (list.Len()==k+1)

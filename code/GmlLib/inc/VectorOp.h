@@ -25,10 +25,15 @@ namespace GML
 			static double	PointToPlaneDistanceSquared(double *plane,double *point,UInt32 elements,double planeBias);
 			static double	PointToPlaneDistanceSigned(double *plane,double *point,UInt32 elements,double planeBias);	
 			static double	PointToPlaneDistanceSquaredSigned(double *plane,double *point,UInt32 elements,double planeBias);			
-			static double	PointToPointDistanceSquared(double *p1,double *p2,UInt32 elements);
-			static double	PointToPointDistance(double *p1,double *p2,UInt32 elements);
-			static double	PointToPointDistanceSquared(double *p1,double *p2,double *pWeight,UInt32 elements);
-			static double	PointToPointDistance(double *p1,double *p2,double *pWeight,UInt32 elements);
+			
+			static double	MinkowskiDistance(double *p1,double *p2,UInt32 elements,double power);
+			static double	MinkowskiDistance(double *p1,double *p2,UInt32 elements,double power,double *pWeight);
+			static double	ManhattanDistance(double *p1,double *p2,UInt32 elements);
+			static double	ManhattanDistance(double *p1,double *p2,UInt32 elements,double *pWeight);
+			static double	EuclideanDistance(double *p1,double *p2,UInt32 elements);
+			static double	EuclideanDistanceSquared(double *p1,double *p2,UInt32 elements);
+			static double	EuclideanDistance(double *p1,double *p2,UInt32 elements,double *pWeight);
+
 			static double	Average(double *v,UInt32 elements);
 			static double	StandardDeviation(double *v,UInt32 elements);
 			
