@@ -70,6 +70,8 @@ bool	GenericDistAlgorithm::Init()
 		return false;
 	if (InitThreads()==false)
 		return false;
+	if (SplitMLThreadDataRange(con->GetRecordCount())==false)
+		return false;
 	if (RecordsStatus.Create(con->GetRecordCount())==false)
 	{
 		notif->Error("[%s] -> Unable to create Status Record for %d records ",ObjectName,con->GetRecordCount());
