@@ -39,7 +39,7 @@ Distances::Distances()
 	ObjectName = "Distances";
 	featWeight = NULL;
 
-	LinkPropertyToUInt32("Method",Method,0,"!!LIST:PositiveToNegativeDistance=0,DistanceTablePositiveToNegative,DistanceTablePositiveToPositive,DistanceTableNegativeToNegative,DistanceTableNegativeToPositive!!");
+	LinkPropertyToUInt32("Method",Method,0,"!!LIST:PositiveToNegativeDistance=0,DistanceTablePositiveToNegative,DistanceTablePositiveToPositive,DistanceTableNegativeToNegative,DistanceTableNegativeToPositive,DistanceToPlan!!");
 	LinkPropertyToDouble("MinDistance",MinDist,0,"Minimal distance");
 	LinkPropertyToDouble("MaxDistance",MaxDist,1,"Maximal distance");
 	LinkPropertyToDouble("Power",Power,1,"Power parameter in Minkowski distance");
@@ -48,6 +48,7 @@ Distances::Distances()
 	LinkPropertyToBool  ("UseWeightsForFeatures",UseWeightsForFeatures,false,"Specifyes if weights for features should be used.");
 	LinkPropertyToUInt32("DistanceFunction",DistanceFunction,DIST_FUNC_Euclidean,"!!LIST:Manhattan=0,Euclidean,EuclideanSquared,Minkowski,ProcDifference!!");
 	LinkPropertyToString("FeaturesWeightFile",FeaturesWeightFile,"","Name of the file that contains the weights for features!");
+	LinkPropertyToString("PlanFile",PlanFile,"","Name of the file that contains the informations about the plan");
 
 }
 double Distances::GetDistance(GML::ML::MLRecord &r1,GML::ML::MLRecord &r2)
@@ -83,6 +84,34 @@ double Distances::GetDistance(GML::ML::MLRecord &r1,GML::ML::MLRecord &r2)
 		}
 	}
 	return 0;
+}
+bool Distances::LoadPlan(char *fileName,Plan &pv)
+{
+	GML::Utils::AttributeList	tempAttr;
+
+	if ((pv.Weight = new double[con->GetFeatureCount()])==NULL)
+	{
+		notif->Error("[%s] -> Unable to alloc (%d) bytes for weights : %s",ObjectName,con->GetFeatureCount()*sizeof(double));
+		return false;
+	}
+	pv.Count = con->GetFeatureCount();
+	if (tempAttr.Load(fileName)==false)
+	{
+		notif->Error("[%s] -> Unable to load : %s",ObjectName,fileName);
+		return false;
+	}
+	if (tempAttr.UpdateDouble("Bias",pv.Bias,true)==false)
+	{
+		notif->Error("[%s] -> Unable to update 'bias' value from %s",ObjectName,fileName);
+		return false;
+	}
+	if (tempAttr.Update("Weight",pv.Weight,sizeof(double)*pv.Count)==false)
+	{
+		notif->Error("[%s] -> Unable to update 'Weight' value from %s",ObjectName,fileName);
+		return false;
+	}
+	notif->Info("[%s] -> %s loaded ok",ObjectName,fileName);
+	return true;
 }
 bool Distances::LoadFeatureWeightFile()
 {
@@ -136,6 +165,22 @@ bool Distances::OnInit()
 		if (LoadFeatureWeightFile()==false)
 			return false;
 	}
+	if (Method==METHOD_DistanceToPlan)
+	{
+		if (planDist.Create(con->GetRecordCount())==false)
+		{
+			notif->Error("[%s] -> Unable to allocate %d distances ",ObjectName,con->GetRecordCount());
+			return false;
+		}
+		if (planDist.Resize(con->GetRecordCount())==false)
+		{
+			notif->Error("[%s] -> Unable to allocate %d distances (2)",ObjectName,con->GetRecordCount());
+			return false;
+		}
+		memset(planDist.GetVector(),0,sizeof(double) * con->GetRecordCount());
+		if (LoadPlan(PlanFile.GetText(),plan)==false)
+			return false;
+	}
 	return true;
 }
 bool Distances::ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &thData)
@@ -175,6 +220,43 @@ bool Distances::ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &
 		}
 		if (thData.ThreadID==0)
 			notif->SetProcent(tr,pozitiveCount);
+	}
+	if (thData.ThreadID==0)
+		notif->EndProcent();
+	return true;
+}
+bool Distances::ComputeDistanceToPlan(GML::Algorithm::MLThreadData &thData)
+{
+	UInt32				tr,sz;
+	DistThreadData*		dt = (DistThreadData *)thData.Context;
+	double				dist;
+	double				*dPlan = planDist.GetVector();
+	UInt8				*ptr = RecordsStatus.GetVector();
+
+	sz = thData.Range.Size();
+	if (thData.ThreadID==0)
+		notif->StartProcent("[%s] -> Computing ... ",ObjectName);
+
+	for (tr=thData.Range.Start;tr<thData.Range.End;tr++)
+	{
+		if (con->GetRecord(thData.Record,tr)==false)
+		{
+			notif->Error("[%s] -> Unable to read record #%d",ObjectName,tr);
+			return false;
+		}
+		dist = GML::ML::VectorOp::PointToPlaneDistanceSigned(plan.Weight,thData.Record.Features,plan.Count,plan.Bias);
+		if ((dist>=MinDist) && (dist<=MaxDist))
+		{
+			dPlan[tr] = dist;
+			ptr[tr] = 1;
+		} else {
+			dPlan[tr] = 0; // sau NaN
+			ptr[tr]=0;
+		}
+
+
+		if (thData.ThreadID==0)
+			notif->SetProcent(tr-thData.Range.Start,sz);
 	}
 	if (thData.ThreadID==0)
 		notif->EndProcent();
@@ -366,7 +448,74 @@ void Distances::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 t
 		case METHOD_DistanceTableNegativeToPositive:
 			ComputeDistanceTable(thData,indexesNegative,indexesPozitive,"NP");
 			break;
+		case METHOD_DistanceToPlan:
+			ComputeDistanceToPlan(thData);
+			break;
 	}
+}
+bool Distances::SavePlanDistances()
+{
+	GML::Utils::File		f;
+	GML::Utils::GString		fName,temp,hash;
+	UInt32					tr,count = 0;
+	GML::DB::RecordHash		rHash;
+	double					Label;
+
+
+	if ((fName.SetFormated("%s_plan.dist",DistanceTableFileName.GetText())==false) || (temp.Create(0x10000)==false))
+	{
+		notif->Error("[%s] -> Unable to alloc memory for plane distance file name",ObjectName);
+		return false;
+	}
+	if (f.Create(fName.GetText())==false)
+	{
+		notif->Error("[%s] -> Unable to create: %s",ObjectName,fName.GetText());
+		return false;
+	}
+	for (tr=0;tr<con->GetRecordCount();tr++)
+	{
+		if (RecordsStatus[tr]==0)
+			continue;
+		if (con->GetRecordHash(rHash,tr)==false)
+		{
+			notif->Error("[%s] -> Unable to read record hash for #%d",ObjectName,tr);
+			return false;
+		}
+		if (con->GetRecordLabel(Label,tr)==false)
+		{
+			notif->Error("[%s] -> Unable to read record hash for #%d",ObjectName,tr);
+			return false;
+		}
+		if (rHash.ToString(hash)==false)
+		{
+			notif->Error("[%s] -> Unable to convert record hash for #%d",ObjectName,tr);
+			return false;
+		}
+		if (temp.AddFormated("%s|%.3lf|%lf\n",hash.GetText(),Label,planDist[tr])==false)
+		{
+			notif->Error("[%s] -> Unable to convert record hash for #%d",ObjectName,tr);
+			return false;
+		}
+		count++;
+		if (temp.Len()>64000)
+		{
+			if (f.Write(temp,temp.Len())==false)
+			{
+				notif->Error("[%s] -> Unable to write to %s",ObjectName,fName.GetText());
+				return false;
+			}
+			temp.Truncate(0);
+			temp.Set("");
+		}
+	}
+	if (f.Write(temp,temp.Len())==false)
+	{
+		notif->Error("[%s] -> Unable to write to %s",ObjectName,fName.GetText());
+		return false;
+	}
+	f.Close();
+	notif->Info("[%s] -> %d records written in %s ",ObjectName,count,fName.GetText());
+	return true;
 }
 bool Distances::OnCompute()
 {
@@ -423,6 +572,15 @@ bool Distances::OnCompute()
 			if (MergeDistanceTableFiles)
 				MergeDistances();
 			SaveHashResult(HashFileName.GetText(),HashFileType,RecordsStatus);
+			return true;
+		case METHOD_DistanceToPlan:
+			ExecuteParalelCommand(Method);
+			SaveHashResult(HashFileName.GetText(),HashFileType,RecordsStatus);
+			if (DistanceTableFileName.Len()!=0)
+			{
+				if (SavePlanDistances()==false)
+					return false;
+			}
 			return true;
 	}
 	return false;
