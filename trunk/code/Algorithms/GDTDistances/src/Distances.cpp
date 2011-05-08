@@ -244,7 +244,7 @@ bool Distances::ComputeDistanceToPlan(GML::Algorithm::MLThreadData &thData)
 			notif->Error("[%s] -> Unable to read record #%d",ObjectName,tr);
 			return false;
 		}
-		dist = GML::ML::VectorOp::PointToPlaneDistanceSigned(plan.Weight,thData.Record.Features,plan.Count,plan.Bias);
+		dist = GML::ML::VectorOp::PointToPlaneDistanceSquaredSigned(plan.Weight,thData.Record.Features,plan.Count,plan.Bias);
 		if ((dist>=MinDist) && (dist<=MaxDist))
 		{
 			dPlan[tr] = dist;
