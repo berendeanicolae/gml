@@ -243,15 +243,24 @@ bool BayesNaiv::InitTrain()
 	memset(vcInf, 0, sizeof(unsigned int)*con->GetFeatureCount());
 	memset(vcClean, 0, sizeof(unsigned int)*con->GetFeatureCount());
 
-	totalClean = totalInf = 0;
-
 	return true;
 }
 
 bool BayesNaiv::PerformTrain()
 {
+	unsigned int totalInf,totalClean;
 	InitTrain();
 	ExecuteParalelCommand(Command);
+	//GDT: stiu ca am calculele pt. totalInf si totalClean facute pt. fiecare fir in parte
+	//GDT: le adun
+
+	totalInf = totalClean = 0;
+	for (int tr=0;tr<threadsCount;tr++)
+	{
+		totalInf+=((BayesNaivThreadData *)ThData[tr].Context)->totalInf;
+		totalClean+=((BayesNaivThreadData *)ThData[tr].Context)->totalClean;
+	}
+
 	//notif->Info("[%s] -> totalClean=%d totalInf=%d totalRecords=%d", ObjectName, totalClean, totalInf, con->GetRecordCount());
 	BuildInitialProbabilities();	
 
@@ -413,6 +422,7 @@ bool BayesNaiv::ComputeWrongFeaturesFreq(GML::Algorithm::MLThreadData &thData)
 bool BayesNaiv::ComputeFeaturesFreq(GML::Algorithm::MLThreadData &thData)
 {		
 	unsigned int		i,j;
+	BayesNaivThreadData	*bntd = (BayesNaivThreadData*)thData.Context;
 		
 	GML::ML::MLRecord currentRecord;
 	
@@ -432,7 +442,7 @@ bool BayesNaiv::ComputeFeaturesFreq(GML::Algorithm::MLThreadData &thData)
 		
 		if(currentRecord.Label == -1)	//clean
 		{
-			totalClean++;
+			bntd->totalClean++;
 
 			for(j=0; j<currentRecord.FeatCount; j++)			
 				if((unsigned int)(currentRecord.Features[j]))	
@@ -440,7 +450,7 @@ bool BayesNaiv::ComputeFeaturesFreq(GML::Algorithm::MLThreadData &thData)
 		}
 		else if(currentRecord.Label == 1)	//infected
 		{		
-			totalInf++;
+			bntd->totalInf++;
 
 			for(j=0; j<currentRecord.FeatCount; j++)
 				if((unsigned int)(currentRecord.Features[j]))	
@@ -554,4 +564,14 @@ void BayesNaiv::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 t
 			ComputeWrongFeaturesFreq(thData);
 			break;
 	}
+}
+
+bool BayesNaiv::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
+{
+	BayesNaivThreadData	*bntd = new BayesNaivThreadData();
+	if (bntd==NULL)
+		return false; // opritm astfel crearea de thread-uri
+
+	thData.Context = bntd; // asociez obiectul nou creat threadului curent
+	return true;
 }
