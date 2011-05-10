@@ -261,7 +261,7 @@ bool BayesNaiv::PerformTrain()
 		totalClean+=((BayesNaivThreadData *)ThData[tr].Context)->totalClean;
 	}
 
-	//notif->Info("[%s] -> totalClean=%d totalInf=%d totalRecords=%d", ObjectName, totalClean, totalInf, con->GetRecordCount());
+	notif->Info("[%s] -> totalClean=%d totalInf=%d totalRecords=%d", ObjectName, totalClean, totalInf, con->GetRecordCount());
 	BuildInitialProbabilities();	
 
 	pFileInf = (double)totalInf/(totalInf + totalClean);
@@ -269,7 +269,7 @@ bool BayesNaiv::PerformTrain()
 	
 	Command = COMMAND_TEST;
 	PerformTestClassicMul(false, true);
-	SaveProbsToFile(pathToProbsFile);
+	SaveProbsToFile(pathToProbsFile.GetText());
 
 	unsigned int		*vcFNs;
 	unsigned int		*vcFPs;
@@ -374,10 +374,7 @@ void BayesNaiv::SaveProbsIfBetter(double *best)
 	if(*best < currentValue)
 	{
 		*best = currentValue; 
-		GML::Utils::GString temp = pathBestProbsFile;
-		notif->Info("----> %s", temp);
-		SaveProbsToFile(temp);
-		temp.Set("");
+		SaveProbsToFile(pathBestProbsFile.GetText());		
 	}
 }
 
@@ -471,7 +468,7 @@ bool BayesNaiv::ComputeFeaturesFreq(GML::Algorithm::MLThreadData &thData)
 	return true;
 }
 
-void BayesNaiv::SaveProbsToFile(GML::Utils::GString filePath)
+void BayesNaiv::SaveProbsToFile(char* filePath)
 {
 	GML::Utils::AttributeList	a;
 
