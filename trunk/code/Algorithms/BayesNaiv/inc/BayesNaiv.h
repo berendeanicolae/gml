@@ -59,7 +59,7 @@ public:
 
 	bool	Init();
 
-	void	SaveProbsToFile(GML::Utils::GString filePath);
+	void	SaveProbsToFile(char* filePath);
 	void	LoadProbsFromFile();	
 	void	SaveProbsIfBetter(double *best);
 
