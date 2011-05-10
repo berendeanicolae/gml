@@ -1,6 +1,13 @@
 #include "gmllib.h"
 #include <math.h>
 
+//structura in care iti pui tu ce date vrei sa fie specifice threadului
+struct BayesNaivThreadData
+{
+	unsigned int			totalClean;
+	unsigned int			totalInf;	
+};
+
 class BayesNaiv: public GML::Algorithm::IMLAlgorithm
 {	
 	enum {
@@ -40,8 +47,7 @@ class BayesNaiv: public GML::Algorithm::IMLAlgorithm
 	double					pFileInf,pFileClean;
 	unsigned int			*vcInf;
 	unsigned int			*vcClean;		
-	unsigned int			totalClean;
-	unsigned int			totalInf;	
+
 	UInt8					*recordsClassif;
 	UInt8					*vcFNsC;	
 	UInt8					*vcFPsC;
@@ -69,6 +75,9 @@ public:
 	int		GetNrTotalFoundFlags();
 
 	void	OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
+
+	//GDT: functie care se apeleaza la initializare pentru fiecare thread in parte
+	bool	OnInitThreadData(GML::Algorithm::MLThreadData &thData);
 
 	void	OnExecute();
 };
