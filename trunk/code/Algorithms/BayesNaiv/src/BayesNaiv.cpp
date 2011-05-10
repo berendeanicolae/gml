@@ -425,6 +425,10 @@ bool BayesNaiv::ComputeFeaturesFreq(GML::Algorithm::MLThreadData &thData)
 	BayesNaivThreadData	*bntd = (BayesNaivThreadData*)thData.Context;
 		
 	GML::ML::MLRecord currentRecord;
+
+	//GDT: initializam la 0 totalClean si totalInf
+	bntd->totalClean = 0;
+	bntd->totalInf = 0;
 	
 	if(!(con->CreateMlRecord(currentRecord)))
 		return false;
