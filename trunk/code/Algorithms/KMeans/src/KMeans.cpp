@@ -30,7 +30,8 @@ KMeans::KMeans()
 	LinkPropertyToUInt32("K",K,2,"");
 	LinkPropertyToUInt32("MaxIterations",MaxIterations,100,"Maximum number of iterations");
 	LinkPropertyToUInt32("InitialClusters",InitialClusters,INITIAL_RANDOM_VALUES,"!!LIST:RandomPos=0,RandomElements!!");
-			
+	LinkPropertyToDouble("MinRandomValue",minRandomValue,-1);
+	LinkPropertyToDouble("MaxRandomValue",maxRandomValue,1);
 }
 
 
@@ -51,6 +52,45 @@ bool KMeans::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
 	thData.Context = cl;
 	return true;
 }
+bool KMeans::InitRandomValues()
+{
+	double	value;
+	double	dif;
+
+	if (minRandomValue>=maxRandomValue)
+	{
+		notif->Error("[%s] -> Invalid 'MinRandomValue' or 'MaxRandomValue' properties",ObjectName);
+		return false;
+	}
+	dif = maxRandomValue - minRandomValue;
+
+	for (UInt32 tr=0;tr<K;tr++)
+	{
+		for (UInt32 gr=0;gr<con->GetFeatureCount();gr++)
+		{
+			value = (double)(rand() % 10000000);
+			value = ((value * dif)/10000000.0) + minRandomValue;
+			Clusters.Clusters[tr].Weight[gr] = value;
+		}
+	}
+	return true;
+}
+bool KMeans::InitRandomElements()
+{
+	UInt32	index;
+	for (UInt32 tr=0;tr<K;tr++)
+	{
+		index = rand() % (con->GetRecordCount());
+		if (con->GetRecord(MainRecord,index)==false)
+		{
+			notif->Error("[%s] -> Unable to read record #%d",ObjectName,index);
+			return false;
+		}
+		memcpy(Clusters.Clusters[tr].Weight,MainRecord.Features,sizeof(double)*con->GetFeatureCount());
+		notif->Info("[%s] -> Cluster #d initialized as element %d ",ObjectName,tr,index);
+	}
+	return true;
+}
 bool KMeans::Init()
 {
 	if (InitConnections()==false)
@@ -65,7 +105,25 @@ bool KMeans::Init()
 		notif->Error("[%s] -> Unable to alloc %d clusters",ObjectName,K);
 		return false;
 	}
-
+	if (con->CreateMlRecord(MainRecord)==false)
+	{
+		notif->Error("[%s] -> Unable to create MainRecord",ObjectName);
+		return false;
+	}
+	switch (InitialClusters)
+	{
+		case INITIAL_RANDOM_VALUES:
+			if (InitRandomValues()==false)
+				return false;
+			break;
+		case INITIAL_RANDOM_ELEMENTS:
+			if (InitRandomElements()==false)
+				return false;
+			break;
+		default:
+			notif->Error("[%s] -> Unknown 'InitialCluster' property value (%d)",ObjectName,InitialClusters);
+			return false;
+	}
 	if (InitThreads()==false)
 		return false;
 	if (SplitMLThreadDataRange(con->GetRecordCount())==false)

@@ -29,7 +29,14 @@ class KMeans: public GML::Algorithm::IMLAlgorithm
 	UInt32					MaxIterations;
 	UInt32					InitialClusters;
 	GML::Utils::GString		tempStr;
+	double					minRandomValue,maxRandomValue;
 
+
+	GML::ML::MLRecord		MainRecord;
+
+
+	bool					InitRandomValues();
+	bool					InitRandomElements();
 
 	void					OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
 	bool					OnInitThreadData(GML::Algorithm::MLThreadData &thData);
