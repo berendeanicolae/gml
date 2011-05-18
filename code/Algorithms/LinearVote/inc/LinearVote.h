@@ -65,6 +65,8 @@ class LinearVote: public GML::Algorithm::IMLAlgorithm
 	UInt32										VoteComputeMethod;
 	UInt32										VoteOnEqual;
 	UInt32										HashSelectMethod;
+	double										PositiveVoteFactor;
+	double										NegativeVoteFactor;
 
 public:
 	GML::Utils::GTVector<PerceptronVector>		pVectors;
