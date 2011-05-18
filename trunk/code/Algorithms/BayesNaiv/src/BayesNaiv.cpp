@@ -483,20 +483,27 @@ void BayesNaiv::SaveProbsToFile(char* filePath)
 	a.Save(filePath);	
 }
 
-void BayesNaiv::LoadProbsFromFile()
+bool BayesNaiv::LoadProbsFromFile()
 {
 	if(pathToProbsFile.Equals(""))
 	{
-		notif->Error("[%s] Invalid path for file to load probabilities from", ObjectName);		
+		notif->Error("[%s] -> Invalid path for file to load probabilities from", ObjectName);	
+		return false;
 	}
 
 	GML::Utils::AttributeList	a;
 
-	a.Load(pathToProbsFile);
+	if (a.Load(pathToProbsFile.GetText())==false)
+	{
+		notif->Error("[%s] -> Unable to load %s ",ObjectName,pathToProbsFile.GetText());
+		return false;
+	}
 	a.UpdateDouble("Pinf", pFileInf,true, 0.5);
 	a.UpdateDouble("Pclean", pFileClean,true, 0.5);
 	a.Update("pFeatCondClean", &pFeatCondClean[0], con->GetFeatureCount()*sizeof(double));
 	a.Update("pFeatCondInf", &pFeatCondInf[0], con->GetFeatureCount()*sizeof(double));	
+
+	return true;
 }
 
 bool BayesNaiv::BuildInitialProbabilities()
