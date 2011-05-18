@@ -60,7 +60,7 @@ public:
 	bool	Init();
 
 	void	SaveProbsToFile(char* filePath);
-	void	LoadProbsFromFile();	
+	bool	LoadProbsFromFile();	
 	void	SaveProbsIfBetter(double *best);
 
 	bool	ComputeFeaturesFreq(GML::Algorithm::MLThreadData &thData);
