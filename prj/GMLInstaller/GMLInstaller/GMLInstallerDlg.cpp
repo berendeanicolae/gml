@@ -325,7 +325,7 @@ CString CGMLInstallerDlg::GetDiskFreeSpaceStr(char* path, DWORD size)
 		}
 		if(DiskSize == 0)
 		{
-			DiskSize = (float)freeSpace.QuadPart / (float)(1024*1024*1024*1024);
+			DiskSize = (double)freeSpace.QuadPart / (double)(1024.0*1024.0*1024.0*1024);
 			unit = "TeraB";
 		}
 	}
