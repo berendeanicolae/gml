@@ -18,6 +18,48 @@ bool ClustersList::Create(UInt32 clusterCount,UInt32 featCount)
 	Count = clusterCount;
 	return true;
 }
+bool ClustersList::Save(char *fName)
+{
+	GML::Utils::GString		tmp;
+	GML::Utils::File		f;
+
+	if (f.Create(fName)==false)
+		return false;
+	for (UInt32 tr=0;tr<Count;tr++)
+	{
+		for (UInt32 gr=0;gr<Clusters[tr].Count;gr++)
+			if (tmp.AddFormated("%lf,",Clusters[tr].Weight[gr])==false)
+				return false;
+		if (tmp.Add("\n")==false)
+			return false;
+	}
+	if (f.Write(tmp.GetText(),tmp.Len())==false)
+		return false;
+	f.Close();
+	return true;
+}
+bool Cluster::Save(char *fName)
+{
+	GML::Utils::AttributeList	a;
+	
+	if (a.AddAttribute("Weight",Weight,GML::Utils::AttributeList::DOUBLE,Count)==false)
+		return false;
+	if (a.AddUInt32("Elements",ElementsCount)==false)
+		return false;
+	if (a.Save(fName)==false)
+		return false;
+	return true;
+}
+bool Cluster::Load(char *fName)
+{
+	GML::Utils::AttributeList	a;
+
+	if (a.Load(fName)==false)
+		return false;
+	if (a.Update("Weight",Weight,sizeof(double)*ElementsCount)==false)
+		return false;
+	return true;
+}
 //================================================================================
 
 
@@ -32,9 +74,43 @@ KMeans::KMeans()
 	LinkPropertyToUInt32("InitialClusters",InitialClusters,INITIAL_RANDOM_VALUES,"!!LIST:RandomPos=0,RandomElements!!");
 	LinkPropertyToDouble("MinRandomValue",minRandomValue,-1);
 	LinkPropertyToDouble("MaxRandomValue",maxRandomValue,1);
+	LinkPropertyToString("ResultFileName",ResultFileName,"","The name of the file where the results will be written");
+	LinkPropertyToUInt32("ResultFileType",ResultFileType,SAVE_METHOD_NORMAL,"!!LIST:Normal=0,CSV,Both!!");
+	LinkPropertyToBool  ("SaveAfterEachIteration",SaveAfterEachIteration,false,"Specify if data should be saved after each iteration");
 }
 
+bool KMeans::SaveData(char *fName)
+{
+	UInt32					gr;
+	GML::Utils::GString		tmp;
 
+	while (true)
+	{
+		if ((ResultFileType==SAVE_METHOD_NORMAL) || (ResultFileType==SAVE_METHOD_BOTH))
+		{
+			for (gr=0;gr<Clusters.Count;gr++)
+			{
+				
+				if (tmp.SetFormated("%s_CL_%d.txt",fName,gr)==false)
+					break;				
+				if (Clusters.Clusters[gr].Save(tmp.GetText())==false)
+					break;				
+			}
+			if (gr!=Clusters.Count)
+				break;
+		}
+		if ((ResultFileType==SAVE_METHOD_CSV) || (ResultFileType==SAVE_METHOD_BOTH))
+		{
+			if (tmp.SetFormated("%s.csv",fName)==false)
+				break;
+			if (Clusters.Save(tmp.GetText())==false)
+				break;
+		}
+		return true;
+	}
+	notif->Error("[%s] -> Unable to save data to: %s",ObjectName,fName);
+	return false;
+}
 void KMeans::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand)
 {
 	switch (threadCommand)
@@ -204,6 +280,7 @@ bool KMeans::Train(UInt32 iteration)
 			div += cl->Clusters[tr].ElementsCount;
 		}
 		tempStr.AddFormated("%5d|",(UInt32)div);
+		Clusters.Clusters[tr].ElementsCount = (UInt32)div;
 		for (gr=0;(gr<con->GetFeatureCount()) && (div!=0);gr++)
 		{
 			sum = 0;
@@ -223,6 +300,11 @@ bool KMeans::Train(UInt32 iteration)
 		}
 	}
 	notif->Info(tempStr.GetText());
+	if (SaveAfterEachIteration)
+	{
+		tempStr.SetFormated("%s_it_%d",ResultFileName.GetText(),iteration);
+		SaveData(tempStr.GetText());
+	}
 	return change;
 }
 void KMeans::PerformTrain()
@@ -230,6 +312,8 @@ void KMeans::PerformTrain()
 	for (UInt32 tr=0;tr<10;tr++)
 		if (!Train(tr+1))
 			break;
+	tempStr.SetFormated("%s_final",ResultFileName.GetText());
+	SaveData(tempStr.GetText());
 }
 void KMeans::OnExecute()
 {
