@@ -70,6 +70,9 @@ LinearVote::LinearVote()
 	LinkPropertyToUInt32("VoteComputeMethod"		,VoteComputeMethod		,VOTE_COMPUTE_ADDITION,"!!LIST:Add=0,Multiply,Count!!");
 	LinkPropertyToUInt32("OnEqualVotes"				,VoteOnEqual			,VOTE_NEGATIVE,"!!LIST:VoteNegative=0,VotePositive!!\nSets the vote that will be considered in case of equal votes");
 	LinkPropertyToString("WeightPath"				,WeightPath				,"*.txt","The path where the weigh files are");
+	LinkPropertyToDouble("PositiveVoteFactor"		,PositiveVoteFactor		,1.0,"Factor used to multiply the positive votes");
+	LinkPropertyToDouble("NegativeVoteFactor"		,NegativeVoteFactor		,1.0,"Factor used to multiply the negative votes");
+
 
 	// Hash-uri
 	LinkPropertyToUInt32("HashSelectMethod"			,HashSelectMethod		,HASH_SELECT_NONE,"!!LIST:None=0,All,CorectelyClasify,IncorectelyClasify,Positive,Negative,PositiveCorectelyClasify,PositiveInCorectelyClasify,NegativeCorectelyClasify,NegativeInCorectelyClasify!!");
@@ -268,6 +271,16 @@ bool LinearVote::Init()
 		return false;
 	if (SplitMLThreadDataRange(con->GetRecordCount())==false)
 		return false;
+	if (PositiveVoteFactor<=0)
+	{
+		notif->Error("[%s] -> 'PositiveVoteFactor' shoulb be bigger than 0.0");
+		return false;
+	}
+	if (NegativeVoteFactor<=0)
+	{
+		notif->Error("[%s] -> 'NegativeVoteFactor' shoulb be bigger than 0.0");
+		return false;
+	}
 
 	if (VotesLoadingMethod==LOAD_VOTES_FROMLIST)
 	{
@@ -361,6 +374,8 @@ bool LinearVote::PerformTest(GML::Algorithm::MLThreadData &td)
 					break;
 			};
 		}
+		scorPozitive *= PositiveVoteFactor;
+		scorNegative *= NegativeVoteFactor;
 		if (scorPozitive==scorNegative)
 		{
 			ltd->eqVotes++;
