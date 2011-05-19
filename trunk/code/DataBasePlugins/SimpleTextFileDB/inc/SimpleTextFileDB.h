@@ -24,7 +24,7 @@ class SimpleTextFileDB: public GML::DB::IDataBase
 {
 	//GML::Utils::File		file;
 	GML::Utils::GString		fileName,tempStr,featureIndex,allDB;
-	UInt32					nrRecords,nrFeatures;
+	UInt32					nrRecords,nrFeatures,namedFeaturesCount;
 	UInt32					cIndex;
 	GML::Utils::GString*	FeatNames;
 	int						dbPoz;
