@@ -113,7 +113,7 @@ BOOL CGMLInstallerDlg::OnInitDialog()
 	nrControls = 0;
 
 	// TODO: Add extra initialization here
-	char* strEula = "LICENSE:\n\r\n\rThis End User License Agreement is an agreement between Webteh, d.o.o. and you regarding the use of software.\n\rInstalling this software implies that you agree to the terms of this agreement. \n\rIf you disagree with any part of this license agreement, you must erase this software. \n\r\n\r\n\r1. RIGHT TO USE THE SOFTWARE\n\r\n\rWebteh, d.o.o. grants you the right to use BS.Player PRO in accordance with the terms of this agreement. \n\rYou may install and use this software on 3 (three) of your computers.\n\rYou may NOT sell this software to third parties. You cannot use this software or any part of it as part of another software package (commercial or non-commercial). You may not reverse engineer, decompile, or disassemble this software.\n\r\n\r2. COPYRIGHT\n\r\n\rThe copyright and intellectual property rights of this software and its documentation and are owned by Webteh, d.o.o., and are protected by the copyright laws of Slovenia and international intellectual property right treaties. \n\r\n\r3. OWNER INFORMATION\n\rYou may not rent, lease, lend, or in any way distribute or transfer any rights in this Agreement or the Software to third parties without Licensor's written approval.  \n\r\n\r4. NO WARRANTY \n\rThe Software is being delivered to you \"AS IS\" and Licensor and its suppliers make no warranty as to its use or performance.  LICENSOR AND ITS SUPPLIERS DO NOT AND CANNOT WARRANT THE PERFORMANCE OR RESULTS YOU MAY OBTAIN BY USING THE SOFTWARE.  LICENSOR AND ITS SUPPLIERS MAKE NO WARRANTIES, EXPRESS OR IMPLIED, AS TO NONINFRINGEMENT OF THIRD PARTY RIGHTS, TITLE, MERCHANTABILITY, OR FITNESS FOR ANY PARTICULAR PURPOSE.  YOU ASSUME ALL RISK ASSOCIATED WITH THE QUALITY, PERFORMANCE, INSTALLATION AND USE OF THE SOFTWARE INCLUDING, BUT NOT LIMITED TO, THE RISKS OF PROGRAM ERRORS, DAMAGE TO EQUIPMENT, LOSS OF DATA OR SOFTWARE PROGRAMS, OR UNAVAILABILITY OR INTERRUPTION OF OPERATIONS.  YOU ARE SOLELY RESPONSIBLE FOR DETERMINING THE APPROPRIATENESS OF USE THE SOFTWARE AND ASSUME ALL RISKS ASSOCIATED WITH ITS USE.\n\r\n\r\n\r5. ACKNOWLEDGEMENT\n\r\n\rYou acknowledge that you have read and understand this license agreement and that you agree to its terms. You acknowledge that this agreement has priority over any order, engagement, advertisement, or other written agreement which preceded it.\n\r";
+	char* strEula = "License";
 	CEdit* edt = (CEdit*) GetDlgItem(ID_PANEL_EDIT_EULA);
 	edt->SetWindowTextA(strEula);
 	edt->SetSel(1,3); //?
@@ -852,7 +852,10 @@ void CGMLInstallerDlg::OnBnClickedNext()
 	
 		destinationPath.Set(installPath);
 		destinationPath.PathJoinName(gmlPackage.GetFileName(tr));
-		gmlPackage.Extract(tr,destinationPath.GetText());
+		if (gmlPackage.Extract(tr,destinationPath.GetText())==false)
+		{
+			MessageBox(destinationPath.GetText(),gmlPackage.GetError());			
+		}
 		temp.SetFormated("Installing: %s",gmlPackage.GetFileName(tr));
 		groupBoxProgress.ShowWindow(SW_SHOW);
 		component = GetPackage(gmlPackage.GetFileName(tr));
