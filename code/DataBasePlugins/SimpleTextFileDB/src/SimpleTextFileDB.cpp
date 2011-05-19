@@ -8,11 +8,15 @@ SimpleTextFileDB::SimpleTextFileDB()
 }
 bool	SimpleTextFileDB::OnInit()
 {
+	namedFeaturesCount = 0;
 	return true;
 }
 bool	SimpleTextFileDB::Connect ()
 {
 	int poz = 0;
+	int pzEq;
+
+	namedFeaturesCount = 0;
 	if (allDB.LoadFromFile(fileName.GetText())==false)
 	{
 		notifier->Error("Unable to open (%s) for reading !",fileName.GetText());
@@ -63,6 +67,34 @@ bool	SimpleTextFileDB::Connect ()
 		if (FeatNames[tr].SetFormated("Ft_%d",tr)==false)
 			return false;
 	}
+	namedFeaturesCount = 0;
+	for (UInt32 tr=0;tr<nrFeatures;tr++)
+	{
+		if ((allDB.CopyNextLine(&tempStr,&poz)==true) && (tempStr.Contains("=")))
+		{
+			tempStr.Strip();
+			if ((tempStr.StartsWith("Ft_",true)) || (tempStr.StartsWith("Feat",true)))
+			{
+				pzEq = tempStr.Find("=");
+				tempStr.ReplaceOnPos(0,pzEq,"");
+				tempStr.Replace("=","");
+				tempStr.Strip();
+				if (tempStr.StartsWith("Ft_",false)==false)
+				{
+					if (FeatNames[tr].SetFormated("Ft_%s",tempStr.GetText())==false)
+						return false;
+				} else {
+					if (FeatNames[tr].SetFormated("F%s",tempStr.GetText())==false)
+						return false;				
+				}
+				namedFeaturesCount++;
+			} else {
+				break;
+			}			
+		} else {
+			break;
+		}
+	}
 	notifier->Info("Data Base loaded : %d records , %d features ",nrRecords,nrFeatures);
 	return true;
 }
@@ -112,8 +144,8 @@ bool	SimpleTextFileDB::ExecuteQuery (char* Statement,UInt32 *rowsCount)
 	if (limit==0)
 	{
 		dbPoz = 0;
-		// skipez primele 2 linii
-		for (int tr=0;tr<2;tr++)
+		// skipez primele 2 + namedFeaturesCount linii
+		for (UInt32 tr=0;tr<2+namedFeaturesCount;tr++)
 		{
 			if (allDB.CopyNextLine(&tempStr,&dbPoz)==false)
 			{
@@ -173,6 +205,7 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &V
 	GML::DB::DBRecord	rec;
 	int					poz;
 	UInt32				index;
+	char				hash[33];
 
 	memset(&rec,0,sizeof(rec));
 
@@ -208,23 +241,44 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &V
 		break;
 	}
 	
+	// formatul este [hash]:label:lista flaguri
+	tempStr.Strip();
+	tempStr.Replace(" ","");
+	tempStr.Replace("\t","");
+
 	cIndex++;
 	//notifier->Info("Reading records: %d (%d)",cIndex,dbPoz);
 	// adaug si un hash
 	rec.Name = "Hash";
 	rec.Type = GML::DB::TYPES::HASH;
 	rec.Value.Hash.Reset();
+	if (tempStr.StartsWith("["))
+	{
+		// am si hash in lista
+		int poz = tempStr.Find("]");
+		if (poz!=33)
+		{
+			notifier->Error("[%s] -> Invalid line format : %s\n",tempStr.GetText());
+			return false;
+		}
+		memcpy(hash,&tempStr.GetText()[1],32);
+		hash[32]=0;
+		if (rec.Value.Hash.CreateFromText(hash)==false)
+		{
+			notifier->Error("[%s] -> Invalid line format : %s (invalid hash value)\n",tempStr.GetText());
+			return false;
+		}
+		tempStr.ReplaceOnPos(0,33,"");
+		tempStr.Strip();
+	}
 	
 	if (VectPtr.PushByRef(rec)==false)
 	{
-		notifier->Error("Unable to add HASH to vector !");
+		notifier->Error("[%s] -> Unable to add HASH to vector !",ObjectName);
 		return false;
 	}
 	//*
-	// formatul este label:lista flaguri
-	tempStr.Strip();
-	tempStr.Replace(" ","");
-	tempStr.Replace("\t","");
+
 	rec.Name = "Label";
 	rec.Type = GML::DB::TYPES::DOUBLE;
 	if (tempStr.StartsWith("1:"))
@@ -237,13 +291,13 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &V
 			rec.Value.DoubleVal = -1.0;
 			tempStr.ReplaceOnPos(0,3,"");
 		} else {
-			notifier->Error("Invalid format : %s",tempStr.GetText());
+			notifier->Error("[%s] -> Invalid format : %s",ObjectName,tempStr.GetText());
 			return false;
 		}
 	}
 	if (VectPtr.PushByRef(rec)==false)
 	{
-		notifier->Error("Unable to add label to vector !");
+		notifier->Error("[%s] -> Unable to add label to vector !",ObjectName);
 		return false;
 	}
 	// urc toate featurerile
@@ -264,12 +318,12 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &V
 	{
 		if (featureIndex.ConvertToUInt32(&index)==false)
 		{
-			notifier->Error("Invalid value for feature index (%s) => %s",featureIndex.GetText(),tempStr.GetText());
+			notifier->Error("[%s] -> Invalid value for feature index (%s) => %s",ObjectName,featureIndex.GetText(),tempStr.GetText());
 			return false;
 		}
 		if (index>=nrFeatures)
 		{
-			notifier->Error("Index outside range[0..%d] (%d) => %s",nrFeatures,index,tempStr.GetText());
+			notifier->Error("[%s] -> Index outside range[0..%d] (%d) => %s",ObjectName,nrFeatures,index,tempStr.GetText());
 			return false;
 		}
 		// VectPtr[0] = Hash
