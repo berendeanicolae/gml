@@ -252,20 +252,25 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &V
 	rec.Name = "Hash";
 	rec.Type = GML::DB::TYPES::HASH;
 	rec.Value.Hash.Reset();
+	if (tempStr.StartsWith("[]:"))
+	{
+		tempStr.ReplaceOnPos(0,4,"");
+		tempStr.Strip();
+	}
 	if (tempStr.StartsWith("["))
 	{
 		// am si hash in lista
 		int poz = tempStr.Find("]");
 		if (poz!=33)
 		{
-			notifier->Error("[%s] -> Invalid line format : %s\n",tempStr.GetText());
+			notifier->Error("[%s] -> Invalid line format : %s\n",ObjectName,tempStr.GetText());
 			return false;
 		}
 		memcpy(hash,&tempStr.GetText()[1],32);
 		hash[32]=0;
 		if (rec.Value.Hash.CreateFromText(hash)==false)
 		{
-			notifier->Error("[%s] -> Invalid line format : %s (invalid hash value)\n",tempStr.GetText());
+			notifier->Error("[%s] -> Invalid line format : %s (invalid hash value)\n",ObjectName,tempStr.GetText());
 			return false;
 		}
 		tempStr.ReplaceOnPos(0,35,"");
