@@ -69,10 +69,13 @@ BEGIN_MESSAGE_MAP(CGMLInstallerDlg, CDialogEx)
 	ON_BN_CLICKED(ID_BUTTON_NEXT,&CGMLInstallerDlg::OnBnClickedNext)
 	ON_BN_CLICKED(ID_BUTTON_BACK,&CGMLInstallerDlg::OnBnClickedBack)
 	ON_BN_CLICKED(ID_BUTTON_BROWSE,&CGMLInstallerDlg::OnBnClickedBrowse)
+	ON_BN_CLICKED(ID_BUTTON_FINISH,&CGMLInstallerDlg::OnOK)
 	ON_NOTIFY(LVN_HOTTRACK,ID_LIST_COMPONENTS,OnComponentsListViewHoover)
 	ON_NOTIFY(LVN_ITEMCHANGING,ID_LIST_COMPONENTS,OncomponentListViewChanged)
+	ON_WM_CTLCOLOR()
 
 END_MESSAGE_MAP()
+
 
 
 // CGMLInstallerDlg message handlers
@@ -126,6 +129,8 @@ BOOL CGMLInstallerDlg::OnInitDialog()
 
 	//linia si butonul cancel
 	AddControl(GetDlgItem(BTN_CANCEL),TAB_SHOWALWAYS);
+	
+
 	AddControl(GetDlgItem(IDC_LINE_ABOVE_CANCEL),TAB_SHOWALWAYS);
 
 	greyDeschis.CreateSolidBrush(RGB(255,255,255));
@@ -142,11 +147,16 @@ BOOL CGMLInstallerDlg::OnInitDialog()
 		ExitProcess(-1);
 	}
 
+	//doar pentru debug
+	//gmlPackage.Load("D:\\work-facultate\\GML\\trunk\\prj\\GMLInstaller\\GMLInstaller\\gml-package-r599.gdrp",0);
+	
+	
 	if(!gmlPackage.Load(filePath,overlayStart))
 	{
 		MessageBox("Could not load GML package into memory. Possible cause may be corrupt installer! Download and try again","Error loading GML",MB_ICONERROR | MB_OK);
 		ExitProcess(-1);
 	}
+	
 	boldFont.CreateFontA(14,0,0,0,FW_BOLD,FALSE,FALSE,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH | FF_DONTCARE,TEXT("Arial"));
 	simpleFont.CreateFontA(14,0,0,0,FW_REGULAR,FALSE,FALSE,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH | FF_DONTCARE,TEXT("Arial"));
 
@@ -305,7 +315,6 @@ DWORD CGMLInstallerDlg::GetNecesaryBytesForSDKComponent()
 DWORD CGMLInstallerDlg::GetNecesaryBytes()
 {
 	DWORD necesaryBytes;
-	DWORD state;
 
 	if(!IsWindow(listComponents.GetSafeHwnd()))
 		return 0;
@@ -402,13 +411,13 @@ CString CGMLInstallerDlg::GetDiskNecesarySpaceStr()
 	if(bytesNeeded / 1024 < 1024)
 	{
 		size = (float)bytesNeeded / 1024;
-		unit = "KBytes";
+		unit = "Kb";
 	}
 
 	if((bytesNeeded / (1024*1024) < 1024) && (size == 0))
 	{
 		size = (float)bytesNeeded / (1024*1024);
-		unit = "MBytes";
+		unit = "Mb";
 	}
 
 	returnStr.Format("Space Required: %.2f%s",size,unit);
@@ -532,7 +541,7 @@ void CGMLInstallerDlg::AddProgressTab()
 	staticProgressStatus.SetFont(&simpleFont);
 	AddControl(&staticProgressStatus,TAB_PROGRESS);
 
-	staticLinieProgress.Create("",WS_CHILD |WS_VISIBLE | SS_GRAYFRAME, CRect(30,130,150,131),this,NULL);
+	staticLinieProgress.Create("",WS_CHILD |WS_VISIBLE | SS_GRAYFRAME, CRect(30,130,300,131),this,NULL);
 	AddControl(&staticLinieProgress,TAB_PROGRESS);
 //GML framework info
 	staticProgress1.Create("GML Framework:", WS_CHILD | WS_VISIBLE , CRect(30,140,150,160),this,NULL);
@@ -543,6 +552,16 @@ void CGMLInstallerDlg::AddProgressTab()
 	staticProgressGMLStatus.Create("Install not started", WS_CHILD | WS_VISIBLE , CRect(180,140,400,160),this,NULL);
 	staticProgressGMLStatus.SetFont(&simpleFont);
 	AddControl(&staticProgressGMLStatus,TAB_PROGRESS);
+
+	globalStatusColor = RGB(0,0,0);
+	globalStatus.Create("Install not started",WS_CHILD | WS_VISIBLE, CRect(220,350,400,390),this);
+	//globalProgressFont.CreateFontA(14,0,0,0,FW_BOLD,FALSE,FALSE,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH | FF_DONTCARE,TEXT("Arial"));
+	AddControl(&globalStatus,TAB_PROGRESS);
+
+
+	finishButton.Create("&Finish",WS_VISIBLE |WS_CHILD |BS_PUSHBUTTON,CRect(460,498,537,520),this,ID_BUTTON_FINISH);
+	finishButton.SetFont(&simpleFont);
+	AddControl(&finishButton,TAB_PROGRESS);
 //GML Python info
 	staticProgress2.Create("GML Pyhon Module:", WS_CHILD | WS_VISIBLE , CRect(30,160,150,180),this,NULL);
 	staticProgress2.SetFont(&simpleFont);
@@ -575,6 +594,16 @@ void CGMLInstallerDlg::AddProgressTab()
 }
 void CGMLInstallerDlg::OnBnClickedPanel1BtnCancel()
 {
+	OnCancel();
+}
+
+void CGMLInstallerDlg::OnCancel()
+{
+	if(currentTab == TAB_PROGRESS)
+	{
+		this->EndDialog(0);
+		return;
+	}
 	if(IDYES == MessageBox("Are you sure you want to quit GML installer?","GML installer",MB_ICONEXCLAMATION | MB_YESNO))
 	{
 		this->EndDialog(-1);
@@ -748,8 +777,11 @@ bool CGMLInstallerDlg::InstallPythonModule(char* installPath)
 					return false;
 			}
 	
+			DeleteFile(fileName);
 		}
 	}
+
+	
 
 	return true;
 }
@@ -825,17 +857,27 @@ bool CGMLInstallerDlg::AddInstallKeyForGML(char* installPath)
 	RegCloseKey(gmlKey); RegCloseKey(software); 
 	return true;
 }
+
+void CGMLInstallerDlg::ShowErrorAndUpdateGlobalStatus(char* mbError)
+{
+	globalStatusColor = RGB(255,0,0);
+	globalStatus.SetWindowText("Install Failed");
+	finishButton.EnableWindow(TRUE);
+	MessageBox(mbError,"Install Error",MB_OK | MB_ICONERROR);
+}
 void CGMLInstallerDlg::OnBnClickedNext()
 {
 	int low,up;
 	unsigned char component;
 	
 	ShowControls(++currentTab);
+
 	//instaleaza si calculeaza progress barul
 	char installPath[MAX_PATH];
 	GString destinationPath,temp;
-
-
+	GetDlgItem(BTN_CANCEL)->ShowWindow(SW_HIDE);
+	finishButton.EnableWindow(FALSE);
+	
 	editDestinationFolder.GetWindowText(installPath,MAX_PATH);
 	
 	for(int i=0;i<MAX_COMPONENTS_NR;i++)
@@ -846,6 +888,7 @@ void CGMLInstallerDlg::OnBnClickedNext()
 	
 
 	progressBar.GetRange(low,up);
+	globalStatus.SetWindowText("Copying files");
 	for (int tr=0;tr<gmlPackage.Header->TotalFiles;tr++)
 	{
 		//printf("[CRC:%08X] [Compressed:%8d] [Uncompressed:%8d] => %s\n",drp.Header->Files[tr].CRC32,drp.Header->Files[tr].CompressedSize,drp.Header->Files[tr].UncompressedSize,drp.GetFileName(tr));
@@ -854,9 +897,11 @@ void CGMLInstallerDlg::OnBnClickedNext()
 		destinationPath.PathJoinName(gmlPackage.GetFileName(tr));
 		if (gmlPackage.Extract(tr,destinationPath.GetText())==false)
 		{
-			MessageBox(destinationPath.GetText(),gmlPackage.GetError());			
+			
+			ShowErrorAndUpdateGlobalStatus(gmlPackage.GetError());	
+			return;
 		}
-		temp.SetFormated("Installing: %s",gmlPackage.GetFileName(tr));
+		temp.SetFormated("Copying: %s",gmlPackage.GetFileName(tr));
 		groupBoxProgress.ShowWindow(SW_SHOW);
 		component = GetPackage(gmlPackage.GetFileName(tr));
 		if(intallComponents[component])
@@ -880,16 +925,22 @@ void CGMLInstallerDlg::OnBnClickedNext()
 
 	}
 
+	globalStatus.SetWindowText("Installing registry");
+	this->RedrawWindow();
+	
 	if(!AddGmlToSystemPath(installPath))
 	{
 		SetInstallComponentStatus(COMPONENT_GML,"Failed to add GML to system path");
+		ShowErrorAndUpdateGlobalStatus("Failed to add GML to system path");	
+		return;
 	}
 	
 	if(!AddInstallKeyForGML(installPath))
 	{
 		SetInstallComponentStatus(COMPONENT_GML,"Failed to create GML install key");	
+		ShowErrorAndUpdateGlobalStatus("Failed to add GML to system registry");	
+		return;
 	}
-
 
 
 	
@@ -899,15 +950,21 @@ void CGMLInstallerDlg::OnBnClickedNext()
 		//modifica pahtul din GML py
 		SetInstallComponentStatus(COMPONENT_PYTHON,"Installing ...");
 		if(!InstallPythonModule(installPath))
+		{
 			SetInstallComponentStatus(COMPONENT_PYTHON,"Failed");
-		else
-			SetInstallComponentStatus(COMPONENT_PYTHON,"Installed");
+			ShowErrorAndUpdateGlobalStatus("Failed to add insatll python module");	
+			return;
+		}
+		
+		SetInstallComponentStatus(COMPONENT_PYTHON,"Installed");
 	}
 
 
-
+	finishButton.EnableWindow(TRUE);
 	progressBar.SetPos(up);
-	staticProgressStatus.SetWindowTextA("Install Completed");
+	staticProgressStatus.SetWindowTextA("Files copied");
+	globalStatusColor = RGB(0,255,0);
+	globalStatus.SetWindowText("Install Completed");
 	
 
 }
@@ -951,4 +1008,21 @@ void CGMLInstallerDlg::OnBnClickedBrowse()
 		}
 			
 	}
+}
+
+//schimba culoarea la default installer
+
+
+HBRUSH CGMLInstallerDlg::OnCtlColor(CDC* pDC, CWnd *pWnd, UINT nCtlColor)
+{
+
+	if(pWnd == &globalStatus)
+	{
+		pDC->SetTextColor(globalStatusColor);
+		pDC->SetBkMode(TRANSPARENT);
+
+		return (HBRUSH)GetSysColorBrush(COLOR_3DFACE);
+	}
+	
+    return CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
 }

@@ -8,7 +8,7 @@
 
 #define MAX_PYTHON_PATHS	10
 
-#define MAX_CONTROL_NR		100
+#define MAX_CONTROL_NR		120
 #define MAX_COMPONENTS_NR	4
 #define TAB_SHOWALWAYS	0		
 #define TAB_EULA		1
@@ -22,6 +22,7 @@
 #define ID_BUTTON_BROWSE			0x1002
 #define ID_BUTTON_NEXT				0x1003
 #define ID_BUTTON_BACK				0x1004
+#define ID_BUTTON_FINISH			0x1005
 // CGMLInstallerDlg dialog
 
 
@@ -78,6 +79,7 @@ public:
 	bool AddInstallKeyForGML(char* installPath);
 	unsigned char GetPackage(char* fileName);
 	DWORD GetOverlayStart(char* filePath);
+	void ShowErrorAndUpdateGlobalStatus(char* mbError);
 	
 	DWORD GetNecesaryBytes();
 	bool intallComponents[NRTABS];
@@ -85,6 +87,7 @@ public:
 	//Components Tab:
 	CFont boldFont;
 	CFont simpleFont;
+	CFont globalProgressFont;
 	CBrush greyDeschis;
 	CStatic staticComponents1;
 	CStatic staticComponents2;
@@ -103,13 +106,16 @@ public:
 
 	//Progress Tab:
 	CButton groupBoxProgress;
+	CButton finishButton;
 	CProgressCtrl progressBar;
 	CStatic staticProgressStatus;
+	CStatic globalStatus;
 	CStatic staticLinieProgress;
 	CStatic staticProgressGMLStatus;
 	CStatic staticProgressPythonStatus;
 	CStatic staticProgressSDKStatus;
 	CStatic staticProgressGUIStatus;
+	COLORREF globalStatusColor;
 
 	CStatic staticProgress1,staticProgress2,staticProgress3,staticProgress4;
 
@@ -129,17 +135,19 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnComponentsListViewHoover(NMHDR* /*pNMHDR*/, LRESULT* pResult);
 	afx_msg void OncomponentListViewChanged(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnCancel();
 
-	DECLARE_MESSAGE_MAP()
-public:
+
 	afx_msg void OnBnClickedPanel1BtnCancel();
 	afx_msg void OnBnClickedPanel1BtnAgree();
 	bool GetRegistryPythonPaths(GString* pythonPaths, unsigned char* nrElements,unsigned int registryType);
 	
 
-
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd *pWnd, UINT nCtlColor);
 	afx_msg void OnBnClickedNext();
 	afx_msg void OnBnClickedBack();
 	afx_msg void OnBnClickedBrowse();
 	afx_msg void GetDefaultInstallPath(char* path,unsigned int size);
+	
+	DECLARE_MESSAGE_MAP()
 };
