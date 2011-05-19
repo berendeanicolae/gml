@@ -80,6 +80,7 @@ END_MESSAGE_MAP()
 BOOL CGMLInstallerDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+	char filePath[MAX_PATH];
 
 	// Add "About..." menu item to system menu.
 
@@ -128,11 +129,22 @@ BOOL CGMLInstallerDlg::OnInitDialog()
 	AddControl(GetDlgItem(IDC_LINE_ABOVE_CANCEL),TAB_SHOWALWAYS);
 
 	greyDeschis.CreateSolidBrush(RGB(255,255,255));
-	
-	if(!gmlPackage.Load("D:\\work-facultate\\GML\\trunk\\prj\\GMLInstaller\\Debug\\gml-package-r599.gdrp",0))
+	if(!GetModuleFileName(NULL,filePath,MAX_PATH))
 	{
-		
-		MessageBox("Could not load GML package into memory! Please contact the GML team","Error loading GML",MB_ICONERROR | MB_OK);
+		MessageBox("Could not get module file name! Please run the installer in a path containing only ascii characters","Error loading GML",MB_ICONERROR | MB_OK);
+		ExitProcess(-1);
+	}
+	
+	DWORD overlayStart = GetOverlayStart(filePath);
+	if(overlayStart == 0)
+	{
+		MessageBox("Could not locate current package.Possible cause is corrupt installer! Download and try again","Error loading GML",MB_ICONERROR | MB_OK);
+		ExitProcess(-1);
+	}
+
+	if(!gmlPackage.Load(filePath,overlayStart))
+	{
+		MessageBox("Could not load GML package into memory. Possible cause may be corrupt installer! Download and try again","Error loading GML",MB_ICONERROR | MB_OK);
 		ExitProcess(-1);
 	}
 	boldFont.CreateFontA(14,0,0,0,FW_BOLD,FALSE,FALSE,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH | FF_DONTCARE,TEXT("Arial"));
@@ -149,6 +161,54 @@ BOOL CGMLInstallerDlg::OnInitDialog()
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
+DWORD CGMLInstallerDlg::GetOverlayStart(char* filePath)
+{
+	HANDLE hFile;
+	unsigned char* buffer;
+	DWORD nrBytesRead;
+	IMAGE_DOS_HEADER* dh;
+	IMAGE_NT_HEADERS* nh;
+	IMAGE_SECTION_HEADER* sect;
+	DWORD nrSections;
+	DWORD overlayPos = 0;
+	DWORD peHeaderPos = 0;
+	
+
+	hFile = CreateFile(filePath,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+	if(hFile == INVALID_HANDLE_VALUE)
+		return 0;
+	buffer = (unsigned char*)malloc(sizeof(IMAGE_DOS_HEADER));
+	if(buffer == NULL){CloseHandle(hFile);return 0;}
+	if(!ReadFile(hFile,buffer,sizeof(IMAGE_DOS_HEADER),&nrBytesRead,NULL) || nrBytesRead!= sizeof(IMAGE_DOS_HEADER)){free(buffer);CloseHandle(hFile);return 0;}
+	dh = (IMAGE_DOS_HEADER*)buffer;
+	if(INVALID_SET_FILE_POINTER == SetFilePointer(hFile,dh->e_lfanew,NULL,FILE_BEGIN)){free(buffer);CloseHandle(hFile);return 0;}
+	peHeaderPos = dh->e_lfanew;
+	free(buffer);
+	//citesc nt_header
+	buffer = (unsigned char*)malloc(sizeof(IMAGE_NT_HEADERS));
+	if(buffer == NULL){CloseHandle(hFile);return 0;}
+	if(!ReadFile(hFile,buffer,sizeof(IMAGE_NT_HEADERS),&nrBytesRead,NULL) || nrBytesRead!= sizeof(IMAGE_NT_HEADERS)){free(buffer);CloseHandle(hFile);return 0;}
+	nh = (IMAGE_NT_HEADERS*)buffer;
+	nrSections = nh->FileHeader.NumberOfSections;
+	free(buffer);
+	overlayPos = 0;
+
+	buffer = (unsigned char*)malloc(sizeof(IMAGE_SECTION_HEADER)*nrSections);
+	if(buffer == NULL){CloseHandle(hFile);return 0;}
+	if(INVALID_SET_FILE_POINTER == SetFilePointer(hFile,peHeaderPos+sizeof(IMAGE_NT_HEADERS),NULL,FILE_BEGIN)){free(buffer);CloseHandle(hFile);return 0;}
+	if(!ReadFile(hFile,buffer,sizeof(IMAGE_SECTION_HEADER)*nrSections,&nrBytesRead,NULL) || nrBytesRead!= sizeof(IMAGE_SECTION_HEADER)*nrSections){free(buffer);CloseHandle(hFile);return 0;}
+	
+	for(int i=0;i<nrSections;i++)
+	{
+		sect = &((IMAGE_SECTION_HEADER*)buffer)[i];
+		if((sect->PointerToRawData+sect->SizeOfRawData) > overlayPos)
+			overlayPos = sect->PointerToRawData+sect->SizeOfRawData;
+	}
+
+	free(buffer);CloseHandle(hFile);
+	return overlayPos;
+	
+}
 void CGMLInstallerDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
 	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
