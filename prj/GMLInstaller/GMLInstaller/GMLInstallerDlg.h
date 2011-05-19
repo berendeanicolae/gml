@@ -77,6 +77,7 @@ public:
 	bool SetInstallComponentStatus(unsigned char component, char* str);
 	bool AddInstallKeyForGML(char* installPath);
 	unsigned char GetPackage(char* fileName);
+	DWORD GetOverlayStart(char* filePath);
 	
 	DWORD GetNecesaryBytes();
 	bool intallComponents[NRTABS];
