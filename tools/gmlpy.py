@@ -69,22 +69,47 @@ def __ListOfStringsToString(lista):
 		return None
 	s = s[:-1]
 	return s	
-	
-def __ListToString(lista):
-	count_dict = 0
-	count_str = 0
+def __ListOfNumbersToString(lista):
+	s = ""
+	vname = __GetVarType(lista[0])
+	if (vname=='bool'):
+		s = "(BOOL)["
+	elif (vname=='float'):
+		s = "(DOUBLE)["
+	elif (vname=='int'):
+		s = "(INT32)["
+	else:
+		s = "["
 	for item in lista:
-		if __GetVarType(item) == 'dict':
-			count_dict += 1
-		if __GetVarType(item) == 'str':
-			count_str += 1
-	if count_dict==len(lista):
-		return __ListOfDictToString(lista)
-	if count_str==len(lista):
-		return __ListOfStringsToString(lista)
-	print("[Error] Lists should contain dict elements or string elements only")
-	return None	
-def __CreateTemplateFile(dictionar,fname):
+		s+=str(item)+","
+	if len(s)==0:
+		print("[Error] Invalid list: "+str(lista)+" => "+s)
+		return None
+	s = s[:-1]+"]"
+	return s	
+def __ListToString(lista):
+	if len(lista)==0:
+		return "\"\""
+	typeName = __GetVarType(lista[0])
+	for item in lista:
+		vname = __GetVarType(item)
+		if (vname!=typeName):
+			print("[Error] Invalid element in list ("+str(item)+") of type "+vname+" -> should be of type : "+typeName)
+			return None
+	if typeName == 'dict':
+		return "\""+__ListOfDictToString(lista)+"\""
+	elif typeName == 'str':
+		return "\""+__ListOfStringsToString(lista)+"\""
+	elif typeName == 'int':
+		return __ListOfNumbersToString(lista)
+	elif typeName == 'float':
+		return __ListOfNumbersToString(lista)
+	elif typeName == 'bool':
+		return __ListOfNumbersToString(lista)
+	else:
+		print("[Error] Lists should contain dict elements or string elements only")
+		return None	
+def CreateTemplateFile(dictionar,fname,checkForAlgorithm = False):
 	s = ""
 	alg = False
 	cmd = False
@@ -116,16 +141,17 @@ def __CreateTemplateFile(dictionar,fname):
 			r = __ListToString(v)
 			if r==None:
 				return False
-			s+="\""+r+"\"\n"
+			s+=r+"\n"
 		else:
 			print("[Error] Unknwon type for "+k+" => "+tip)
 			return False
-	if alg==False:
-		print("[Error] Missing 'Algorithm' property")
-		return False
-	if cmd==False:
-		print("[Error] Missing 'Command' property")
-		return False
+	if checkForAlgorithm:
+		if alg==False:
+			print("[Error] Missing 'Algorithm' property")
+			return False
+		if cmd==False:
+			print("[Error] Missing 'Command' property")
+			return False
 	
 	try:
 		f = open(fname,"w")
@@ -141,7 +167,7 @@ def Run(dictionar):
 	fname = __GenerateRandomFileName()
 	if __GetVarType(dictionar)=="instance":
 		dictionar = dictionar._attr;
-	if __CreateTemplateFile(dictionar,fname)==False:
+	if CreateTemplateFile(dictionar,fname,True)==False:
 		return False
 	os.system(os.path.join(GML_PATH,"gml.exe")+" run "+fname)
 	try:
@@ -153,14 +179,20 @@ def Run(dictionar):
 class AttributeList:
 	_attr = {}
 	_error = ""
+	_fileName = ""
 	def __init__(self):
 		self._attr = {}
 		self._error = ""
-	def __init__(self,dictionar):
+		self._fileName = ""
+	def Set(self,dictionar):
 		self._attr = {}
 		for item in dictionar:
 			self._attr[item.lower()] = dictionar[item]		
-		self._error = ""
+		self._error = ""	
+	def Add(self,dictionar):
+		for item in dictionar:
+			self._attr[item.lower()] = dictionar[item]		
+		self._error = ""	
 	def __iter__(self):
 		return self._attr.__iter__()
 	def next(self):
@@ -171,6 +203,8 @@ class AttributeList:
 		if attrName.lower() in self._attr:
 			return self._attr[attrName.lower()]
 		return None
+	def __setitem__(self,key,value):
+		self._attr[key] = value
 	def __delitem__(self,attrName):
 		if attrName.lower() in self._attr:
 			del(self._attr[attrName.lower()])
@@ -275,9 +309,22 @@ class AttributeList:
 						self._error = "Invalid format in line : "+line
 						return False
 					self._attr[k] = res					
+			self._fileName = fname
 			return True
 		except Exception,e:
 			self._error = str(e)
 			return False
-	def Save(self,fname):
-		return __CreateTemplateFile(self._attr,fname)
+	def Save(self,fname=""):
+		if fname=="":
+			fname = self._fileName
+		if CreateTemplateFile(self._attr,fname):
+			self._fileName = fname;
+			return True
+		else:
+			return False
+	def Reload(self):
+		if len(self._fileName.strip())==0:
+			return False
+		return self.Load(self._fileName)
+	def GetFileName(self):
+		return self._fileName
