@@ -84,7 +84,7 @@ bool	SimpleTextFileDB::Connect ()
 					if (FeatNames[tr].SetFormated("Ft_%s",tempStr.GetText())==false)
 						return false;
 				} else {
-					if (FeatNames[tr].SetFormated("F%s",tempStr.GetText())==false)
+					if (FeatNames[tr].SetFormated("%s",tempStr.GetText())==false)
 						return false;				
 				}
 				namedFeaturesCount++;
@@ -268,7 +268,7 @@ bool	SimpleTextFileDB::FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &V
 			notifier->Error("[%s] -> Invalid line format : %s (invalid hash value)\n",tempStr.GetText());
 			return false;
 		}
-		tempStr.ReplaceOnPos(0,33,"");
+		tempStr.ReplaceOnPos(0,35,"");
 		tempStr.Strip();
 	}
 	
