@@ -30,9 +30,9 @@ double	GML::ML::VectorOp::ComputeVectorsAbsPolinomialSum(double *v1,double *v2,U
 	while (elements>0)
 	{
 		tmp = ((*v1) * (*v2));
-		//if (tmp<0)
-		//	sum -= pow(-tmp,power);
-		//else
+		if (tmp<0)
+			sum -= pow(-tmp,power);
+		else
 			sum += pow(tmp,power);
 		v1++;
 		v2++;
@@ -51,10 +51,11 @@ bool	GML::ML::VectorOp::IsPerceptronTrained(double *v1,double *v2,UInt32 element
 bool	GML::ML::VectorOp::IsPerceptronWithAbsPolinomialFncTrained(double *features,double *weights,UInt32 elements,double b,double label,double power)
 {
 	double result = ComputeVectorsAbsPolinomialSum(features,weights,elements,power);
-	//if (b<0)
-	//	result -= pow(-b,power);
-	//else
+	if (b<0)
+		result -= pow(-b,power);
+	else
 		result += pow(b,power);
+	//printf("result = %lf,label = %lf,b =%lf\n",result,label,b);
 	return (bool)((label * result)>0.0);
 
 }

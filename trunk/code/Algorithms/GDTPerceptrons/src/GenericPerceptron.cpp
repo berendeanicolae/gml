@@ -423,10 +423,11 @@ bool	GenericPerceptron::Train(PerceptronVector &pvTrain,PerceptronVector &pvTest
 		if (usePolinomialFunction)
 		{
 			sum = GML::ML::VectorOp::ComputeVectorsAbsPolinomialSum(rec.Features,pvTest.Weight,nrFeatures,power);
-			//if (pvTest.Bias<0)
-			//	sum-=pow(-pvTest.Bias,power);
-			//else
+			if (pvTest.Bias<0)
+				sum-=pow(-pvTest.Bias,power);
+			else
 				sum+=pow(pvTest.Bias,power);
+			//printf("sum = %lf,label = %lf,b =%lf => FResult = %lf\n",sum,rec.Label,pvTest.Bias,rec.Label*sum);
 		} else {
 			sum = GML::ML::VectorOp::ComputeVectorsSum(rec.Features,pvTest.Weight,nrFeatures)+(pvTest.Bias);
 		}
