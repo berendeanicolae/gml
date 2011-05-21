@@ -115,6 +115,7 @@ bool MarginPerceptron::TestAndReduce(PerceptronVector &pv,GML::ML::MLRecord &Rec
 	UInt32	count = Range.Size();
 	UInt32	nrFeatures = con->GetFeatureCount();
 	UInt32	diff = 0;
+	bool	trained;
 	
 	if (!useB)
 		pv.Bias = 0.0;
@@ -130,7 +131,12 @@ bool MarginPerceptron::TestAndReduce(PerceptronVector &pv,GML::ML::MLRecord &Rec
 			notif->Error("[%s] -> Unable to read record #d",ObjectName,*ptrIndex);
 			return false;
 		}
-		if (GML::ML::VectorOp::IsPerceptronTrained(Record.Features,pv.Weight,nrFeatures,pv.Bias,Record.Label)==true)
+		if (usePolinomialFunction)
+			trained = GML::ML::VectorOp::IsPerceptronWithAbsPolinomialFncTrained(Record.Features,pv.Weight,nrFeatures,pv.Bias,Record.Label,power);
+		else
+			trained = GML::ML::VectorOp::IsPerceptronTrained(Record.Features,pv.Weight,nrFeatures,pv.Bias,Record.Label);
+
+		if (trained)
 		{
 			diff++;
 			ptrIndex++;
