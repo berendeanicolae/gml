@@ -70,7 +70,9 @@ protected:
 	double							learningRate;
 	double							pozitiveLearningRate;
 	double							negativeLearningRate;
+	double							power;
 	bool							useB;
+	bool							usePolinomialFunction;
 	UInt32							saveData;
 	UInt32							saveBest;
 	UInt32							testAfterIterations;
