@@ -6,6 +6,7 @@
 struct Cluster
 {
 	double	*Weight;
+	double	Label;
 	UInt32	Count;
 	UInt32	ElementsCount;
 

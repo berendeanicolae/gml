@@ -27,6 +27,8 @@ bool ClustersList::Save(char *fName)
 		return false;
 	for (UInt32 tr=0;tr<Count;tr++)
 	{
+		if (tmp.AddFormated("%lf:",Clusters[tr].Label)==false)
+			return false;
 		for (UInt32 gr=0;gr<Clusters[tr].Count;gr++)
 			if (tmp.AddFormated("%lf,",Clusters[tr].Weight[gr])==false)
 				return false;
@@ -46,6 +48,8 @@ bool Cluster::Save(char *fName)
 		return false;
 	if (a.AddUInt32("Elements",ElementsCount)==false)
 		return false;
+	if (a.AddDouble("Label",Label)==false)
+		return false;
 	if (a.Save(fName)==false)
 		return false;
 	return true;
@@ -58,6 +62,7 @@ bool Cluster::Load(char *fName)
 		return false;
 	if (a.Update("Weight",Weight,sizeof(double)*ElementsCount)==false)
 		return false;
+	a.UpdateDouble("Label",Label,true);
 	return true;
 }
 //================================================================================
@@ -147,6 +152,7 @@ bool KMeans::InitRandomValues()
 			value = (double)(rand() % 10000000);
 			value = ((value * dif)/10000000.0) + minRandomValue;
 			Clusters.Clusters[tr].Weight[gr] = value;
+			Clusters.Clusters[tr].Label = 0.0;
 		}
 	}
 	return true;
@@ -163,6 +169,7 @@ bool KMeans::InitRandomElements()
 			return false;
 		}
 		memcpy(Clusters.Clusters[tr].Weight,MainRecord.Features,sizeof(double)*con->GetFeatureCount());
+		Clusters.Clusters[tr].Label = MainRecord.Label;
 		notif->Info("[%s] -> Cluster #d initialized as element %d ",ObjectName,tr,index);
 	}
 	return true;
