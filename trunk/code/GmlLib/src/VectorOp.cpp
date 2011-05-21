@@ -23,6 +23,23 @@ double	GML::ML::VectorOp::ComputeVectorsSum(double *v1,double *v2,UInt32 element
 	}
 	return sum;
 }
+double	GML::ML::VectorOp::ComputeVectorsAbsPolinomialSum(double *v1,double *v2,UInt32 elements,double power)
+{
+	double	sum = 0.0;
+	double  tmp;
+	while (elements>0)
+	{
+		tmp = ((*v1) * (*v2));
+		if (tmp<0)
+			sum -= pow(-tmp,power);
+		else
+			sum += pow(tmp,power);
+		v1++;
+		v2++;
+		elements--;
+	}
+	return sum;
+}
 bool    GML::ML::VectorOp::IsPerceptronTrained(double *v1,double *v2,UInt32 elements,double label)
 {
 	return ((label*ComputeVectorsSum(v1,v2,elements))>0);
@@ -30,6 +47,10 @@ bool    GML::ML::VectorOp::IsPerceptronTrained(double *v1,double *v2,UInt32 elem
 bool	GML::ML::VectorOp::IsPerceptronTrained(double *v1,double *v2,UInt32 elements,double b,double label)
 {	
 	return (bool)((label*(ComputeVectorsSum(v1,v2,elements)+b))>0.0);
+}
+bool	GML::ML::VectorOp::IsPerceptronWithAbsPolinomialFncTrained(double *features,double *weights,UInt32 elements,double b,double label,double power)
+{
+	return (bool)((label*(ComputeVectorsAbsPolinomialSum(features,weights,elements,power)+b))>0.0);
 }
 void	GML::ML::VectorOp::AdjustTwoStatePerceptronWeights(double *features,double *weights,UInt32 elements,double error)
 {
