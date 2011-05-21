@@ -14,9 +14,13 @@ namespace GML
 		public:
 			static void		AddVectors(double *v1,double *v2,UInt32 elements);
 			static double	ComputeVectorsSum(double *v1,double *v2,UInt32 elements);
+			static double	ComputeVectorsAbsPolinomialSum(double *v1,double *v2,UInt32 elements,double power);
 			// perceptron specific
 			static bool		IsPerceptronTrained(double *features,double *weights,UInt32 elements,double label);
 			static bool		IsPerceptronTrained(double *features,double *weights,UInt32 elements,double b,double label);
+			static bool		IsPerceptronWithAbsPolinomialFncTrained(double *features,double *weights,UInt32 elements,double b,double label,double power);
+
+
 			static void		AdjustTwoStatePerceptronWeights(double *features,double *weights,UInt32 elements,double error);
 			static void		AdjustTwoStatePerceptronWeights(double *features,double *weights,UInt32 elements,double error,double *featuresWeight);			
 			static void		AdjustPerceptronWeights(double *features,double *weights,UInt32 elements,double error);
