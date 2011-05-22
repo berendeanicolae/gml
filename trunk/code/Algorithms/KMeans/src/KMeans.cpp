@@ -60,7 +60,7 @@ bool Cluster::Load(char *fName)
 
 	if (a.Load(fName)==false)
 		return false;
-	if (a.Update("Weight",Weight,sizeof(double)*ElementsCount)==false)
+	if (a.Update("Weight",Weight,sizeof(double)*Count)==false)
 		return false;
 	a.UpdateDouble("Label",Label,true);
 	return true;
