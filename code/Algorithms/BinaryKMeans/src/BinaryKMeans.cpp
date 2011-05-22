@@ -151,7 +151,7 @@ bool BinaryKMeans::InitRandomValues()
 		return false;
 	}
 	dif = maxRandomValue - minRandomValue;
-
+	srand(GetTickCount());
 	for (UInt32 tr=0;tr<K;tr++)
 	{
 		for (UInt32 gr=0;gr<con->GetFeatureCount();gr++)
@@ -167,6 +167,7 @@ bool BinaryKMeans::InitRandomValues()
 bool BinaryKMeans::InitRandomElements()
 {
 	UInt32	index;
+	srand(GetTickCount());
 	for (UInt32 tr=0;tr<K;tr++)
 	{
 		index = rand() % (con->GetRecordCount());
@@ -177,7 +178,7 @@ bool BinaryKMeans::InitRandomElements()
 		}
 		memcpy(Clusters.Clusters[tr].Weight,MainRecord.Features,sizeof(double)*con->GetFeatureCount());
 		Clusters.Clusters[tr].Label = MainRecord.Label;
-		notif->Info("[%s] -> Cluster #d initialized as element %d ",ObjectName,tr,index);
+		notif->Info("[%s] -> Cluster #%d initialized as element %d (Labeled = %lf)",ObjectName,tr,index,MainRecord.Label);
 	}
 	return true;
 }
@@ -300,8 +301,18 @@ bool BinaryKMeans::Train(UInt32 iteration)
 			nCount += cl->Clusters[tr].NegativeCount;
 		}
 		div = pCount+nCount;
-		tempStr.AddFormated("P:%5d(%3.2lf) N:%5d(%3.2lf)|",pCount,(double)(pCount/div),nCount,(double)(nCount/div));
-		
+		//tempStr.AddFormated("P:%5d(%3.2lf) N:%5d(%3.2lf)|",pCount,(double)(pCount*100/div),nCount,(double)(nCount*100/div));
+		//if (pCount>=nCount)
+		//	tempStr.AddFormated("P:%5d(%3.2lf)|",pCount+nCount,(double)(pCount*100/div));
+		//else
+		//	tempStr.AddFormated("N:%5d(%3.2lf)|",pCount+nCount,(double)(nCount*100/div));
+
+		if (pCount>=nCount)
+			tempStr.AddFormated("P:%.2lf|",(pCount*100/div));
+		else
+			tempStr.AddFormated("N:%.2lf|",(nCount*100/div));
+
+
 		Clusters.Clusters[tr].PositiveCount = pCount;
 		Clusters.Clusters[tr].NegativeCount = nCount;
 		for (gr=0;(gr<con->GetFeatureCount()) && (div!=0);gr++)
