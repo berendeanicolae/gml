@@ -175,7 +175,79 @@ def Run(dictionar):
 	except:
 		pass
 	return True		
-
+class AlgorithmResult:
+	def __init__(self):
+		self.Iteration = 0
+		self.tp = 0
+		self.tn = 0
+		self.fp = 0
+		self.fn = 0
+		self.sp = 0.0
+		self.se = 0.0
+		self.acc = 0.0
+		self.med = 0.0
+		self.precision = 0.0
+		self.FMeasure = 0.0
+		self.fallout = 0.0	
+	def Clear(self):
+		self.Iteration = 0
+		self.tp = 0
+		self.tn = 0
+		self.fp = 0
+		self.fn = 0
+		self.sp = 0.0
+		self.se = 0.0
+		self.acc = 0.0
+		self.med = 0.0
+		self.precision = 0.0
+		self.FMeasure = 0.0
+		self.fallout = 0.0
+	def Update(self,classType,corectellyClasified,updateValue=1):
+		if corectellyClasified:
+			if classType:
+				self.tp+=updateValue;
+			else:
+				self.tn+=updateValue;
+		else:
+			if classType:
+				self.fn+=updateValue;
+			else:
+				self.fp+=updateValue;
+	def Compute(self):
+		sum1 = float(self.tp+self.fn)
+		sum2 = float(self.tn+self.fp)
+		sum3 = float(self.tp+self.fp)
+		sum4 = float(self.tn+self.fp)
+		
+		self.se = self.sp = self.acc = self.med = self.precision = self.fallout = self.FMeasure = 0.0
+		
+		if sum1!=0:
+			self.se = (self.tp * 100.0) / sum1		
+		if sum2!=0:			
+			self.sp = (self.tn * 100.0) / sum2
+		if (sum1+sum2)!=0:
+			self.acc = ((self.tp + self.tn) * 100.0) / (sum1+sum2)		
+		self.med = (self.se+self.sp)/2
+		if sum3!=0:
+			self.precision = (self.tp * 100.0) / sum3
+		if sum4!=0:
+			self.fallout = (self.fp * 100.0) / sum4
+		if self.precision + self.se!=0:
+			self.FMeasure = (2 * self.precision * self.se)/float(self.precision + self.se)
+	def __repr__(self):
+		return "%4d|TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|Med:%3.2lf|"%((self.Iteration+1),int(self.tp),int(self.tn),int(self.fn),int(self.fp),self.se,self.sp,self.acc,self.med)
+	def __iadd__(self,newObj):
+		self.tp += newObj.tp
+		self.tn += newObj.tn
+		self.fp += newObj.fp
+		self.fn += newObj.fn
+		return self
+	def __add__(self,newObj):
+		self.tp += newObj.tp
+		self.tn += newObj.tn
+		self.fp += newObj.fp
+		self.fn += newObj.fn	
+		return self
 class AttributeList:
 	_attr = {}
 	_error = ""
