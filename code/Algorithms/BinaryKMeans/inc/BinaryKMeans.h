@@ -8,7 +8,8 @@ struct Cluster
 	double	*Weight;
 	double	Label;
 	UInt32	Count;
-	UInt32	ElementsCount;
+	UInt32	PositiveCount;
+	UInt32	NegativeCount;
 
 	bool	Save(char *fname);
 	bool	Load(char *fName);

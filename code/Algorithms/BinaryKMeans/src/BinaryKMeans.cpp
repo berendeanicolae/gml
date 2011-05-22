@@ -13,7 +13,8 @@ bool ClustersList::Create(UInt32 clusterCount,UInt32 featCount)
 		if ((Clusters[tr].Weight = new double[featCount])==NULL)
 			return false;
 		Clusters[tr].Count = featCount;
-		Clusters[tr].ElementsCount = 0;
+		Clusters[tr].PositiveCount = 0;
+		Clusters[tr].NegativeCount = 0;
 	}
 	Count = clusterCount;
 	return true;
@@ -46,7 +47,9 @@ bool Cluster::Save(char *fName)
 	
 	if (a.AddAttribute("Weight",Weight,GML::Utils::AttributeList::DOUBLE,Count)==false)
 		return false;
-	if (a.AddUInt32("Elements",ElementsCount)==false)
+	if (a.AddUInt32("PositiveCount",PositiveCount)==false)
+		return false;
+	if (a.AddUInt32("NegativeCount",NegativeCount)==false)
 		return false;
 	if (a.AddDouble("Label",Label)==false)
 		return false;
@@ -60,7 +63,11 @@ bool Cluster::Load(char *fName)
 
 	if (a.Load(fName)==false)
 		return false;
-	if (a.Update("Weight",Weight,sizeof(double)*ElementsCount)==false)
+	if (a.Update("Weight",Weight,sizeof(double)*Count)==false)
+		return false;
+	if (a.UpdateUInt32("PositiveCount",PositiveCount)==false)
+		return false;
+	if (a.UpdateUInt32("NegativeCount",NegativeCount)==false)
 		return false;
 	a.UpdateDouble("Label",Label,true);
 	return true;
@@ -226,7 +233,7 @@ bool BinaryKMeans::ComputeDistances(GML::Algorithm::MLThreadData &thData)
 	size = thData.Range.Size();
 	for (tr=0;tr<K;tr++)
 	{
-		cl->Clusters[tr].ElementsCount = 0;
+		cl->Clusters[tr].PositiveCount = cl->Clusters[tr].NegativeCount = 0;
 		memset(cl->Clusters[tr].Weight,0,sizeof(double)*featCount);
 	}
 
@@ -254,7 +261,11 @@ bool BinaryKMeans::ComputeDistances(GML::Algorithm::MLThreadData &thData)
 				}
 			}
 		}
-		cl->Clusters[index].ElementsCount++;
+		if (thData.Record.Label == 1)
+			cl->Clusters[index].PositiveCount++;
+		else
+			cl->Clusters[index].NegativeCount++;
+
 		for (gr=0;gr<featCount;gr++)
 			cl->Clusters[index].Weight[gr]+=thData.Record.Features[gr];		
 
@@ -268,7 +279,7 @@ bool BinaryKMeans::ComputeDistances(GML::Algorithm::MLThreadData &thData)
 
 bool BinaryKMeans::Train(UInt32 iteration)
 {
-	UInt32					tr,gr,hr;
+	UInt32					tr,gr,hr,pCount,nCount;
 	double					sum,div,newValue;
 	ClustersList			*cl;
 	bool					change=false;
@@ -281,13 +292,18 @@ bool BinaryKMeans::Train(UInt32 iteration)
 	for (tr=0;tr<K;tr++)
 	{
 		div = 0;
+		pCount = nCount = 0;
 		for (hr=0;hr<threadsCount;hr++)
 		{
 			cl = (ClustersList *)ThData[hr].Context;
-			div += cl->Clusters[tr].ElementsCount;
+			pCount += cl->Clusters[tr].PositiveCount;
+			nCount += cl->Clusters[tr].NegativeCount;
 		}
-		tempStr.AddFormated("%5d|",(UInt32)div);
-		Clusters.Clusters[tr].ElementsCount = (UInt32)div;
+		div = pCount+nCount;
+		tempStr.AddFormated("P:%5d(%3.2lf) N:%5d(%3.2lf)|",pCount,(double)(pCount/div),nCount,(double)(nCount/div));
+		
+		Clusters.Clusters[tr].PositiveCount = pCount;
+		Clusters.Clusters[tr].NegativeCount = nCount;
 		for (gr=0;(gr<con->GetFeatureCount()) && (div!=0);gr++)
 		{
 			sum = 0;
