@@ -730,7 +730,7 @@ bool CGMLInstallerDlg::GetRegistryPythonPaths(GString* pythonPaths, unsigned cha
 	return true;
 }
 
-bool CGMLInstallerDlg::InstallPythonModule(char* installPath)
+char CGMLInstallerDlg::InstallPythonModule(char* installPath)
 {
 	GString temp;
 	GString pythonFile;
@@ -743,7 +743,7 @@ bool CGMLInstallerDlg::InstallPythonModule(char* installPath)
 	GString pythonPaths[MAX_PYTHON_PATHS];
 	unsigned char nrPythonPaths = 0;
 	
-	for (int tr=0;tr<gmlPackage.Header->TotalFiles;tr++)
+	for (int tr=0;tr<gmlPackage.Header->TotalFiles;tr++)	
 	{
 		temp.Set(gmlPackage.GetFileName(tr));
 		if(temp.EndsWith(".py"))
@@ -751,18 +751,18 @@ bool CGMLInstallerDlg::InstallPythonModule(char* installPath)
 			//set gml path in gml.py
 			fileName.Set(installPath);
 			fileName.PathJoinName(gmlPackage.GetFileName(tr));
-			if(!pythonFile.LoadFromFile(fileName)) return false;
+			if(!pythonFile.LoadFromFile(fileName)) return 0;
 			temp.SetFormated("GML_PATH = r\"%s\"",installPath);
 			pythonFile.Replace("GML_PATH = r\"E:\\lucru\\GML\\gml\\prj\\gml\\Release\"",temp,true);
 			hFile = CreateFile(fileName.GetText(),GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 			if( hFile == INVALID_HANDLE_VALUE)
 			{
-				return false;
+				return 0;
 			}
 			if(!WriteFile(hFile,pythonFile.GetText(),pythonFile.GetSize(),&nrBytesWritten,NULL) || nrBytesWritten !=pythonFile.GetSize())
 			{
 				CloseHandle(hFile);
-				return false;
+				return 0;
 			}
 			CloseHandle(hFile);
 			
@@ -780,8 +780,8 @@ bool CGMLInstallerDlg::InstallPythonModule(char* installPath)
 			}
 			if(noRegistryPython)
 			{
-				MessageBox("Failed to find python in registry. Please install python first, or unselect Python Module");
-				return false;
+				MessageBox("Failed to find python in registry. Python module will not be installed","Python not found!",MB_OK | MB_ICONEXCLAMATION);
+				return 2;
 			}
 			//copie fisierul in pathul python
 			for(int i=0;i< nrPythonPaths;i++)
@@ -792,7 +792,7 @@ bool CGMLInstallerDlg::InstallPythonModule(char* installPath)
 
 				if(!CopyFile(fileName.GetText(),temp.GetText(),false))
 				{
-					return false;
+					return 0;
 				}
 			}
 	
@@ -802,7 +802,7 @@ bool CGMLInstallerDlg::InstallPythonModule(char* installPath)
 
 	
 
-	return true;
+	return 1;
 }
 
 bool CGMLInstallerDlg::SetInstallComponentStatus(unsigned char component, char* str)
@@ -888,6 +888,7 @@ void CGMLInstallerDlg::OnBnClickedNext()
 {
 	int low,up;
 	unsigned char component;
+	char pythonResult;
 	
 	ShowControls(++currentTab);
 
@@ -968,14 +969,25 @@ void CGMLInstallerDlg::OnBnClickedNext()
 	{
 		//modifica pahtul din GML py
 		SetInstallComponentStatus(COMPONENT_PYTHON,"Installing ...");
-		if(!InstallPythonModule(installPath))
+		pythonResult = InstallPythonModule(installPath);
+		
+		if(pythonResult == 0)
 		{
 			SetInstallComponentStatus(COMPONENT_PYTHON,"Failed");
 			ShowErrorAndUpdateGlobalStatus("Failed to install python module");	
 			return;
 		}
+		if(pythonResult == 2)
+		{
+			SetInstallComponentStatus(COMPONENT_PYTHON,"Python not installed");
+		}
+
+		if(pythonResult == 1)
+		{
+			SetInstallComponentStatus(COMPONENT_PYTHON,"Installed");
+		}
+
 		
-		SetInstallComponentStatus(COMPONENT_PYTHON,"Installed");
 	}
 
 
