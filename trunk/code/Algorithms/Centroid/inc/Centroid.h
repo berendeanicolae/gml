@@ -52,14 +52,28 @@ class Centroid: public GML::Algorithm::IMLAlgorithm
 		LOAD_CENTROIDS_FROMLIST = 0,
 		LOAD_CENTROIDS_FROMWEIGHTPATH,
 	};
+	enum {
+		HASH_SELECT_NONE = 0,
+		HASH_SELECT_ALL,
+		HASH_SELECT_CORECTELY_CLASIFY,
+		HASH_SELECT_INCORECTELY_CLASIFY,
+		HASH_SELECT_POSITIVE,
+		HASH_SELECT_NEGATIVE,
+		HASH_SELECT_POSITIVE_CORECTELY_CLASIFY,
+		HASH_SELECT_POSITIVE_INCORECTELY_CLASIFY,
+		HASH_SELECT_NEGATIVE_CORECTELY_CLASIFY,
+		HASH_SELECT_NEGATIVE_INCORECTELY_CLASIFY,
+	};
 protected:
 	GML::Utils::Indexes							indexesPozitive,indexesNegative;
 	GML::Utils::GTFVector<CentroidDistances>	distInfo;
 	GML::Utils::GTVector<CentroidData>			cVectors;
+	GML::Utils::GTFVector<UInt8>				RecordsStatus;
 
 	UInt32					ClassType;
 	UInt32					SaveResults;
 	bool					SortResults;
+	UInt32					HashSelectMethod;
 	UInt32					minPositiveElements,minNegativeElements;
 	GML::Utils::GString		ResultFileName;
 	GML::Utils::GString		CentroidFileName;

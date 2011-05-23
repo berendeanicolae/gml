@@ -90,8 +90,6 @@ GenericPerceptron::GenericPerceptron()
 	LinkPropertyToUInt32("InitialWeight"			,InitialWeight			,INITIAL_WEIGHT_ZERO,"!!LIST:Zeros=0,Random,Statistics,Relevant,FromFile!!");
 	LinkPropertyToUInt32("AdjustWeightMode"			,adjustWeightMode		,ADJUST_WEIGHT_LEARNING_RATE,"!!LIST:UseLearningRate=0,UseWeight,UseLeastMeanSquare,UseSplitLearningRate,UseSplitLeastMeanSquare,UseFeaturesWeight,UsePozitiveNegativeLearningRate!!");
 	LinkPropertyToString("FeaturesWeightFile"		,FeaturesWeightFile		,"");
-	LinkPropertyToBool  ("UsePolinomialFunction"	,usePolinomialFunction	,false,"Specify if polinomial function (sum((|xi*wi|)^power) should be used");
-	LinkPropertyToDouble("Power"					,power					,1.0,"The power value for perceptron polinomial equation");
 }
 
 bool	GenericPerceptron::CreateIndexes()
@@ -419,18 +417,7 @@ bool	GenericPerceptron::Train(PerceptronVector &pvTrain,PerceptronVector &pvTest
 			notif->Error("[%s] -> Error reading record #%d",ObjectName,currentIndex);
 			return false;
 		}
-		// calculez suma
-		if (usePolinomialFunction)
-		{
-			sum = GML::ML::VectorOp::ComputeVectorsAbsPolinomialSum(rec.Features,pvTest.Weight,nrFeatures,power);
-			if (pvTest.Bias<0)
-				sum-=pow(-pvTest.Bias,power);
-			else
-				sum+=pow(pvTest.Bias,power);
-			//printf("sum = %lf,label = %lf,b =%lf => FResult = %lf\n",sum,rec.Label,pvTest.Bias,rec.Label*sum);
-		} else {
-			sum = GML::ML::VectorOp::ComputeVectorsSum(rec.Features,pvTest.Weight,nrFeatures)+(pvTest.Bias);
-		}
+		sum = GML::ML::VectorOp::ComputeVectorsSum(rec.Features,pvTest.Weight,nrFeatures)+(pvTest.Bias);
 		// daca nu e corect clasificat , ajustam
 		if ((sum * rec.Label)<=0)
 		{
@@ -532,10 +519,7 @@ bool	GenericPerceptron::Test(PerceptronVector &pvTest,GML::Utils::Interval &rang
 			notif->Error("[%s] -> Error reading record #%d",ObjectName,currentIndex);
 			return false;
 		}
-		if (usePolinomialFunction)
-			Result.Update(rec.Label==1,GML::ML::VectorOp::IsPerceptronWithAbsPolinomialFncTrained(rec.Features,pvTest.Weight,nrFeatures,pvTest.Bias,rec.Label,power));
-		else
-			Result.Update(rec.Label==1,GML::ML::VectorOp::IsPerceptronTrained(rec.Features,pvTest.Weight,nrFeatures,pvTest.Bias,rec.Label));
+		Result.Update(rec.Label==1,GML::ML::VectorOp::IsPerceptronTrained(rec.Features,pvTest.Weight,nrFeatures,pvTest.Bias,rec.Label));
 			
 		// next element
 		if (indexes!=NULL)

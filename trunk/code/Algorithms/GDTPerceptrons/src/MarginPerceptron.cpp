@@ -131,10 +131,7 @@ bool MarginPerceptron::TestAndReduce(PerceptronVector &pv,GML::ML::MLRecord &Rec
 			notif->Error("[%s] -> Unable to read record #d",ObjectName,*ptrIndex);
 			return false;
 		}
-		if (usePolinomialFunction)
-			trained = GML::ML::VectorOp::IsPerceptronWithAbsPolinomialFncTrained(Record.Features,pv.Weight,nrFeatures,pv.Bias,Record.Label,power);
-		else
-			trained = GML::ML::VectorOp::IsPerceptronTrained(Record.Features,pv.Weight,nrFeatures,pv.Bias,Record.Label);
+		trained = GML::ML::VectorOp::IsPerceptronTrained(Record.Features,pv.Weight,nrFeatures,pv.Bias,Record.Label);
 
 		if (trained)
 		{

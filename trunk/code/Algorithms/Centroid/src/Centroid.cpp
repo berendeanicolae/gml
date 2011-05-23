@@ -100,7 +100,8 @@ Centroid::Centroid()
 	LinkPropertyToString("VotePropertyName"			,VotePropertyName		,"vote","The name of the property that contains the vote of the centroid. It has to be a numeric property.");
 	LinkPropertyToUInt32("CentroidsLoadingMethod"	,CentroidsLoadingMethod	,0,"!!LIST:FromList=0,FromPath!!");
 	
-
+	LinkPropertyToUInt32("HashSelectMethod"			,HashSelectMethod		,HASH_SELECT_NONE,"!!LIST:None=0,All,CorectelyClasify,IncorectelyClasify,Positive,Negative,PositiveCorectelyClasify,PositiveInCorectelyClasify,NegativeCorectelyClasify,NegativeInCorectelyClasify!!");
+	AddHashSavePropery();
 		
 }
 bool Centroid::Create(CentroidData &pv,char *fileName)
@@ -379,6 +380,20 @@ bool Centroid::Init()
 			return false;
 		}
 	}
+	if (HashSelectMethod!=HASH_SELECT_NONE)
+	{
+		if (RecordsStatus.Create(con->GetRecordCount())==false)
+		{
+			notif->Error("[%s] -> Unable to create Status Record for %d records ",ObjectName,con->GetRecordCount());
+			return false;
+		}
+		if (RecordsStatus.Resize(con->GetRecordCount())==false)
+		{
+			notif->Error("[%s] -> Unable to alloc Status Record for %d records ",ObjectName,con->GetRecordCount());
+			return false;
+		}
+		memset(RecordsStatus.GetVector(),0,RecordsStatus.Len());
+	}
 	return true;
 }
 bool Centroid::BuildHeaders(GML::Utils::GString &str)
@@ -538,6 +553,8 @@ bool Centroid::PerformSimpleTest(GML::Algorithm::MLThreadData &td)
 	UInt32					index,tr,nrFeatures,nrVectors;
 	CentroidData			*cv;
 	double					testLabel;
+	bool					corectelyClasified;
+	UInt8					*rStatus = RecordsStatus.GetVector();
 	
 	index = td.Range.Start;
 	td.Res.Clear();
@@ -569,6 +586,48 @@ bool Centroid::PerformSimpleTest(GML::Algorithm::MLThreadData &td)
 				testLabel = 1;
 		}
 		td.Res.Update(td.Record.Label==1,(bool)(td.Record.Label==testLabel));	
+		corectelyClasified = (bool)(td.Record.Label==testLabel);
+		td.Res.Update(td.Record.Label==1,corectelyClasified);	
+		switch (HashSelectMethod)
+		{
+			case HASH_SELECT_NONE:
+				break;
+			case HASH_SELECT_ALL:
+				rStatus[index] = 1;
+				break;
+			case HASH_SELECT_CORECTELY_CLASIFY:
+				if (corectelyClasified)
+					rStatus[index] = 1;
+				break;
+			case HASH_SELECT_INCORECTELY_CLASIFY:
+				if (corectelyClasified==false)
+					rStatus[index] = 1;
+				break;
+			case HASH_SELECT_POSITIVE:
+				if (td.Record.Label==1)
+					rStatus[index] = 1;
+				break;
+			case HASH_SELECT_NEGATIVE:
+				if (td.Record.Label!=1)
+					rStatus[index] = 1;
+				break;
+			case HASH_SELECT_POSITIVE_CORECTELY_CLASIFY:
+				if ((td.Record.Label==1) && (corectelyClasified))
+					rStatus[index] = 1;
+				break;
+			case HASH_SELECT_POSITIVE_INCORECTELY_CLASIFY:
+				if ((td.Record.Label==1) && (corectelyClasified==false))
+					rStatus[index] = 1;
+				break;
+			case HASH_SELECT_NEGATIVE_CORECTELY_CLASIFY:
+				if ((td.Record.Label!=1) && (corectelyClasified))
+					rStatus[index] = 1;
+				break;
+			case HASH_SELECT_NEGATIVE_INCORECTELY_CLASIFY:
+				if ((td.Record.Label!=1) && (corectelyClasified==false))
+					rStatus[index] = 1;
+				break;
+		};
 		index++;
 	}
 
@@ -807,6 +866,8 @@ bool Centroid::Test()
 	res.Compute();
 	res.time.Stop();
 	notif->Result(res);
+	if (HashSelectMethod!=HASH_SELECT_NONE)
+		SaveHashResult(HashFileName.GetText(),HashFileType,RecordsStatus);
 	return true;
 }
 void Centroid::OnExecute()
