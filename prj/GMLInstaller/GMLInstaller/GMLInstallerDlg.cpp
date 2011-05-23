@@ -704,9 +704,11 @@ bool CGMLInstallerDlg::GetRegistryPythonPaths(GString* pythonPaths, unsigned cha
 	DWORD size;
 	GString temp;
 	if(registryType != KEY_WOW64_32KEY && registryType != KEY_WOW64_64KEY)
+	{
 		return false;
+	}
 	//HKLM\Software\Python\PythonCore\2.6\InstallPath  --> (Default)
-	if(ERROR_SUCCESS != RegOpenKeyEx(HKEY_LOCAL_MACHINE,"Software\\Python\\PythonCore",NULL,KEY_ENUMERATE_SUB_KEYS  | registryType |  KEY_QUERY_VALUE ,&softwareKey)) return false;
+	if(ERROR_SUCCESS != RegOpenKeyEx(HKEY_LOCAL_MACHINE,"Software\\Python\\PythonCore",NULL,KEY_ENUMERATE_SUB_KEYS  | registryType |  KEY_QUERY_VALUE ,&softwareKey)) {return false;}
 	if(ERROR_SUCCESS != RegQueryInfoKey(softwareKey,NULL,NULL,NULL,&nrSubKeys,NULL,NULL,NULL,NULL,NULL,NULL,NULL)) { RegCloseKey(softwareKey); return false;}
 	for(int i=0;i<nrSubKeys;i++)
 	{
@@ -735,6 +737,7 @@ bool CGMLInstallerDlg::InstallPythonModule(char* installPath)
 	GString fileName;
 	HANDLE hFile;
 	DWORD nrBytesWritten;
+	bool noRegistryPython = true;
 	
 
 	GString pythonPaths[MAX_PYTHON_PATHS];
@@ -753,7 +756,9 @@ bool CGMLInstallerDlg::InstallPythonModule(char* installPath)
 			pythonFile.Replace("GML_PATH = r\"E:\\lucru\\GML\\gml\\prj\\gml\\Release\"",temp,true);
 			hFile = CreateFile(fileName.GetText(),GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 			if( hFile == INVALID_HANDLE_VALUE)
+			{
 				return false;
+			}
 			if(!WriteFile(hFile,pythonFile.GetText(),pythonFile.GetSize(),&nrBytesWritten,NULL) || nrBytesWritten !=pythonFile.GetSize())
 			{
 				CloseHandle(hFile);
@@ -762,10 +767,22 @@ bool CGMLInstallerDlg::InstallPythonModule(char* installPath)
 			CloseHandle(hFile);
 			
 			//copie fisierul in fiecare python
-			if(!GetRegistryPythonPaths(pythonPaths,&nrPythonPaths,KEY_WOW64_32KEY))
+			if(GetRegistryPythonPaths(pythonPaths,&nrPythonPaths,KEY_WOW64_32KEY))
+			{
+				//return false;
+				noRegistryPython = false;
+			}
+			
+			if(GetRegistryPythonPaths(pythonPaths,&nrPythonPaths,KEY_WOW64_64KEY))
+			{
+				//return false;
+				noRegistryPython = false;
+			}
+			if(noRegistryPython)
+			{
+				MessageBox("Failed to find python in registry. Please install python first, or unselect Python Module");
 				return false;
-			if(!GetRegistryPythonPaths(pythonPaths,&nrPythonPaths,KEY_WOW64_64KEY))
-				return false;
+			}
 			//copie fisierul in pathul python
 			for(int i=0;i< nrPythonPaths;i++)
 			{
@@ -774,7 +791,9 @@ bool CGMLInstallerDlg::InstallPythonModule(char* installPath)
 				temp.PathJoinName(gmlPackage.GetFileName(tr));
 
 				if(!CopyFile(fileName.GetText(),temp.GetText(),false))
+				{
 					return false;
+				}
 			}
 	
 			DeleteFile(fileName);
@@ -952,7 +971,7 @@ void CGMLInstallerDlg::OnBnClickedNext()
 		if(!InstallPythonModule(installPath))
 		{
 			SetInstallComponentStatus(COMPONENT_PYTHON,"Failed");
-			ShowErrorAndUpdateGlobalStatus("Failed to add insatll python module");	
+			ShowErrorAndUpdateGlobalStatus("Failed to install python module");	
 			return;
 		}
 		
