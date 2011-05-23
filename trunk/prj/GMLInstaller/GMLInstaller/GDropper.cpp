@@ -264,6 +264,7 @@ bool GDropper::PathExists(char *path)
 {
 	HANDLE				hFile;
 	WIN32_FIND_DATAA	dt;
+	
 
 	if (path==NULL)
 		return false;
@@ -282,7 +283,7 @@ bool GDropper::CreatePath(char *path)
 		return false;
 	if (temp.Create(2048)==false)
 	{
-		Error.SetFormated("Unable to create: %s",path);
+		Error.SetFormated("Unable to create1: %s",path);
 		return false;
 	}
 
@@ -290,18 +291,21 @@ bool GDropper::CreatePath(char *path)
 	{
 		if ((path[tr]=='\\') || (path[tr]=='/'))
 		{
-			if (PathExists(temp.GetText())==false)
+			if(tr > 2)
 			{
-				if (CreateDirectoryA(temp.GetText(),NULL)==FALSE)
+				if (PathExists(temp.GetText())==false)
 				{
-					Error.SetFormated("Unable to create: %s",temp.GetText());
-					return false;
+					if (CreateDirectoryA(temp.GetText(),NULL)==FALSE)
+					{
+						Error.SetFormated("Unable to create2: %s",temp.GetText());
+						return false;
+					}
 				}
 			}
 		}
 		if (temp.AddChar(path[tr])==false)
 		{
-			Error.SetFormated("Unable to create: %s",path);
+			Error.SetFormated("Unable to create3: %s",path);
 			return false;
 		}
 	}
