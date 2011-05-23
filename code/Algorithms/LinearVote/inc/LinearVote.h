@@ -70,7 +70,7 @@ class LinearVote: public GML::Algorithm::IMLAlgorithm
 
 public:
 	GML::Utils::GTVector<PerceptronVector>		pVectors;
-	GML::Utils::BitSet							RecordsStatus;
+	GML::Utils::GTFVector<UInt8>				RecordsStatus;
 	GML::Utils::Indexes							indexes;
 
 protected:

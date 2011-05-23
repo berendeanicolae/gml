@@ -153,10 +153,7 @@ bool OneSidePerceptron::TestAndReduce(PerceptronVector &pv,GML::ML::MLRecord &Re
 			return false;
 		}
 
-		if (usePolinomialFunction)
-			trained = GML::ML::VectorOp::IsPerceptronWithAbsPolinomialFncTrained(Record.Features,pv.Weight,nrFeatures,pv.Bias,Record.Label,power);
-		else
-			trained = GML::ML::VectorOp::IsPerceptronTrained(Record.Features,pv.Weight,nrFeatures,pv.Bias,Record.Label);
+		trained = GML::ML::VectorOp::IsPerceptronTrained(Record.Features,pv.Weight,nrFeatures,pv.Bias,Record.Label);
 
 		if (trained)
 		{

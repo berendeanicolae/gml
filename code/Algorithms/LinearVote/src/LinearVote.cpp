@@ -309,10 +309,15 @@ bool LinearVote::Init()
 	{
 		if (RecordsStatus.Create(con->GetRecordCount())==false)
 		{
-			notif->Error("[%s] -> Unable to create RecordsStatus object !",ObjectName);
+			notif->Error("[%s] -> Unable to create Status Record for %d records ",ObjectName,con->GetRecordCount());
 			return false;
 		}
-		RecordsStatus.SetAll(false);
+		if (RecordsStatus.Resize(con->GetRecordCount())==false)
+		{
+			notif->Error("[%s] -> Unable to alloc Status Record for %d records ",ObjectName,con->GetRecordCount());
+			return false;
+		}
+		memset(RecordsStatus.GetVector(),0,RecordsStatus.Len());
 	}
 
 
@@ -326,6 +331,7 @@ bool LinearVote::PerformTest(GML::Algorithm::MLThreadData &td)
 	double					scorPozitive,scorNegative,result;
 	double					*scor;
 	bool					corectelyClasified;
+	UInt8					*rStatus = RecordsStatus.GetVector();
 	
 	ltd = (LinearVoteThreadData *)td.Context;
 	index = td.Range.Start;
@@ -395,39 +401,39 @@ bool LinearVote::PerformTest(GML::Algorithm::MLThreadData &td)
 			case HASH_SELECT_NONE:
 				break;
 			case HASH_SELECT_ALL:
-				RecordsStatus.Set(index,true);
+				rStatus[index] = 1;
 				break;
 			case HASH_SELECT_CORECTELY_CLASIFY:
 				if (corectelyClasified)
-					RecordsStatus.Set(index,true);
+					rStatus[index] = 1;
 				break;
 			case HASH_SELECT_INCORECTELY_CLASIFY:
 				if (corectelyClasified==false)
-					RecordsStatus.Set(index,true);
+					rStatus[index] = 1;
 				break;
 			case HASH_SELECT_POSITIVE:
 				if (td.Record.Label==1)
-					RecordsStatus.Set(index,true);
+					rStatus[index] = 1;
 				break;
 			case HASH_SELECT_NEGATIVE:
 				if (td.Record.Label!=1)
-					RecordsStatus.Set(index,true);
+					rStatus[index] = 1;
 				break;
 			case HASH_SELECT_POSITIVE_CORECTELY_CLASIFY:
 				if ((td.Record.Label==1) && (corectelyClasified))
-					RecordsStatus.Set(index,true);
+					rStatus[index] = 1;
 				break;
 			case HASH_SELECT_POSITIVE_INCORECTELY_CLASIFY:
 				if ((td.Record.Label==1) && (corectelyClasified==false))
-					RecordsStatus.Set(index,true);
+					rStatus[index] = 1;
 				break;
 			case HASH_SELECT_NEGATIVE_CORECTELY_CLASIFY:
 				if ((td.Record.Label!=1) && (corectelyClasified))
-					RecordsStatus.Set(index,true);
+					rStatus[index] = 1;
 				break;
 			case HASH_SELECT_NEGATIVE_INCORECTELY_CLASIFY:
 				if ((td.Record.Label!=1) && (corectelyClasified==false))
-					RecordsStatus.Set(index,true);
+					rStatus[index] = 1;
 				break;
 		};
 		index++;
