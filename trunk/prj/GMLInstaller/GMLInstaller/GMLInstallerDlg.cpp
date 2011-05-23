@@ -751,7 +751,7 @@ bool CGMLInstallerDlg::InstallPythonModule(char* installPath)
 			if(!pythonFile.LoadFromFile(fileName)) return false;
 			temp.SetFormated("GML_PATH = r\"%s\"",installPath);
 			pythonFile.Replace("GML_PATH = r\"E:\\lucru\\GML\\gml\\prj\\gml\\Release\"",temp,true);
-			hFile = CreateFile(fileName.GetText(),GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+			hFile = CreateFile(fileName.GetText(),GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 			if( hFile == INVALID_HANDLE_VALUE)
 				return false;
 			if(!WriteFile(hFile,pythonFile.GetText(),pythonFile.GetSize(),&nrBytesWritten,NULL) || nrBytesWritten !=pythonFile.GetSize())
