@@ -283,7 +283,7 @@ bool GDropper::CreatePath(char *path)
 		return false;
 	if (temp.Create(2048)==false)
 	{
-		Error.SetFormated("Unable to create1: %s",path);
+		Error.SetFormated("Unable to create: %s",path);
 		return false;
 	}
 
@@ -297,7 +297,7 @@ bool GDropper::CreatePath(char *path)
 				{
 					if (CreateDirectoryA(temp.GetText(),NULL)==FALSE)
 					{
-						Error.SetFormated("Unable to create2: %s",temp.GetText());
+						Error.SetFormated("Unable to create: %s",temp.GetText());
 						return false;
 					}
 				}
@@ -305,7 +305,7 @@ bool GDropper::CreatePath(char *path)
 		}
 		if (temp.AddChar(path[tr])==false)
 		{
-			Error.SetFormated("Unable to create3: %s",path);
+			Error.SetFormated("Unable to create: %s",path);
 			return false;
 		}
 	}

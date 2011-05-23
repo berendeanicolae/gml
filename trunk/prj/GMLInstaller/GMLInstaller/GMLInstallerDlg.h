@@ -74,7 +74,9 @@ public:
 	DWORD GetNecesaryBytesForGUIComponent();
 	DWORD GetNecesaryBytesForSDKComponent();
 	bool AddGmlToSystemPath(char* installPath);
-	bool InstallPythonModule(char* installPath);
+	char InstallPythonModule(char* installPath); //0 in caz de eroare
+												//1 in caz de succes
+												//2 daca nu este instalat python
 	bool SetInstallComponentStatus(unsigned char component, char* str);
 	bool AddInstallKeyForGML(char* installPath);
 	unsigned char GetPackage(char* fileName);
