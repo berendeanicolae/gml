@@ -192,8 +192,9 @@ bool   HashFilterConnector::OnInitConnectionToConnector()
 	}
 
 	// sortare
-	notifier->Info("[%s] -> Sorting ... ",ObjectName);
+	notifier->StartProcent("[%s] -> Sorting %d elements ... ",ObjectName,HashList.Len());
 	HashList.Sort(HashCompareFunction);
+	notifier->EndProcent();
 	// bag in list
 	notifier->StartProcent("[%s] -> Filtering ",ObjectName);
 	conCount = conector->GetRecordCount();

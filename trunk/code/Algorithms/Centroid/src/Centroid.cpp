@@ -585,7 +585,6 @@ bool Centroid::PerformSimpleTest(GML::Algorithm::MLThreadData &td)
 			else
 				testLabel = 1;
 		}
-		td.Res.Update(td.Record.Label==1,(bool)(td.Record.Label==testLabel));	
 		corectelyClasified = (bool)(td.Record.Label==testLabel);
 		td.Res.Update(td.Record.Label==1,corectelyClasified);	
 		switch (HashSelectMethod)
