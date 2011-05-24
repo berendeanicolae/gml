@@ -1704,6 +1704,9 @@ namespace GML
 			static double	EuclideanDistance(double *p1,double *p2,UInt32 elements);
 			static double	EuclideanDistanceSquared(double *p1,double *p2,UInt32 elements);
 			static double	EuclideanDistance(double *p1,double *p2,UInt32 elements,double *pWeight);
+			static double	ProcDistance(double *p1,double *p2,UInt32 elements);
+			static double	ProcDistance(double *p1,double *p2,UInt32 elements,double *pWeight);
+
 			static double	BinomialDistance(double *p1,double *p2,UInt32 elements,double power,double bias=0.0);
 			static double	RadialDistance(double *p1,double *p2,UInt32 elements,double sigma);
 			static double	SigmoidDistance(double *p1,double *p2,UInt32 elements,double k=1);
@@ -2012,10 +2015,26 @@ namespace GML
 {
 	namespace Algorithm
 	{
+		namespace Metrics
+		{
+			enum {
+				Manhattan = 0,
+				Euclidean,
+				Euclidean_Square,
+				Minkowski,
+				ProcDifference,
+				Binomial,
+				Radial,
+				Sigmoid,
+				HyperbolicTangent
+			};
+		};
+
 		enum {
 			HASH_FILE_TEXT = 0,
 			HASH_FILE_BINARY		
 		};
+
 		struct  MLThreadData
 		{
 			UInt32							ThreadID;
@@ -2033,6 +2052,13 @@ namespace GML
 			// properties
 			UInt32							threadsCount;
 			UInt32							HashFileType;
+
+			UInt32							DistanceFunction;
+			double							DistancePower;
+			double							DistanceSigma;
+			double							DistanceBias;
+			double							DistanceK;
+
 			GML::Utils::GString				Conector;
 			GML::Utils::GString				DataBase;
 			GML::Utils::GString				Notifier;
@@ -2044,7 +2070,10 @@ namespace GML
 			GML::Utils::ThreadParalelUnit	*tpu;
 			
 
-			void							AddHashSavePropery();
+			void							AddHashSaveProperties();
+			void							AddDistanceProperties();
+
+			double							GetDistance(GML::ML::MLRecord &r1,GML::ML::MLRecord &r2,double *featWeight=NULL);
 
 			bool							InitConnections();
 			bool							InitThreads();

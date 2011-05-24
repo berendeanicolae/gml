@@ -52,6 +52,7 @@ class Centroid: public GML::Algorithm::IMLAlgorithm
 		LOAD_CENTROIDS_FROMLIST = 0,
 		LOAD_CENTROIDS_FROMWEIGHTPATH,
 	};
+
 	enum {
 		HASH_SELECT_NONE = 0,
 		HASH_SELECT_ALL,

@@ -22,10 +22,18 @@ GML::Algorithm::IMLAlgorithm::IMLAlgorithm()
 	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1,"Number of threads to be used for parallel computations.");
 
 }
-void GML::Algorithm::IMLAlgorithm::AddHashSavePropery()
+void GML::Algorithm::IMLAlgorithm::AddHashSaveProperties()
 {
 	LinkPropertyToString("HashFileName"				,HashFileName			,"","Name of the file with the record hash list result.");
 	LinkPropertyToUInt32("HashFileType"				,HashFileType			,0,"!!LIST:Text=0,Binary!!");
+}
+void GML::Algorithm::IMLAlgorithm::AddDistanceProperties()
+{
+	LinkPropertyToUInt32("DistanceFunction"			,DistanceFunction		,GML::Algorithm::Metrics::Manhattan,"!!LIST:Manhattan=0,Euclidean,EuclideanSquared,Minkowski,ProcDifference,Binomial,Radial,Sigmoid,HyperbolicTangent!!");	
+	LinkPropertyToDouble("DistancePower"			,DistancePower			,1,"Power parameter for distance functions");
+	LinkPropertyToDouble("DistanceSigma"			,DistanceSigma			,1,"Sigma parameter for radial function");
+	LinkPropertyToDouble("DistanceBias"				,DistanceBias			,0,"Bias parameter for radial function");
+	LinkPropertyToDouble("DistanceK"				,DistanceK				,0,"K parameter for hyperbolic function");
 }
 bool GML::Algorithm::IMLAlgorithm::InitConnections()
 {
@@ -387,4 +395,49 @@ bool GML::Algorithm::IMLAlgorithm::SaveHashResult(char *fname,UInt32 method,GML:
 	DeleteFileA(fname);
 	notif->Error("[%s] -> Unable to write hashes to %s",ObjectName,fname);
 	return false;
+}
+double GML::Algorithm::IMLAlgorithm::GetDistance(GML::ML::MLRecord &r1,GML::ML::MLRecord &r2,double *featWeight)
+{
+	if (featWeight!=NULL)
+	{
+		switch (DistanceFunction)
+		{
+			case GML::Algorithm::Metrics::Manhattan:
+				return GML::ML::VectorOp::ManhattanDistance(r1.Features,r2.Features,r1.FeatCount,featWeight);
+			case GML::Algorithm::Metrics::Euclidean:
+				return GML::ML::VectorOp::EuclideanDistance(r1.Features,r2.Features,r1.FeatCount,featWeight);
+			case GML::Algorithm::Metrics::Euclidean_Square:
+				return pow(GML::ML::VectorOp::EuclideanDistance(r1.Features,r2.Features,r1.FeatCount,featWeight),2);
+			case GML::Algorithm::Metrics::Minkowski:
+				return GML::ML::VectorOp::MinkowskiDistance(r1.Features,r2.Features,r1.FeatCount,DistancePower,featWeight);
+			case GML::Algorithm::Metrics::ProcDifference:
+				return GML::ML::VectorOp::ProcDistance(r1.Features,r2.Features,r1.FeatCount,featWeight);
+		}
+	} else {
+		switch (DistanceFunction)
+		{
+			case GML::Algorithm::Metrics::Manhattan:
+				return GML::ML::VectorOp::ManhattanDistance(r1.Features,r2.Features,r1.FeatCount);
+			case GML::Algorithm::Metrics::Euclidean:
+				return GML::ML::VectorOp::EuclideanDistance(r1.Features,r2.Features,r1.FeatCount);
+			case GML::Algorithm::Metrics::Euclidean_Square:
+				return GML::ML::VectorOp::EuclideanDistanceSquared(r1.Features,r2.Features,r1.FeatCount);
+			case GML::Algorithm::Metrics::Minkowski:
+				return GML::ML::VectorOp::MinkowskiDistance(r1.Features,r2.Features,r1.FeatCount,DistancePower);
+			case GML::Algorithm::Metrics::ProcDifference:
+				return GML::ML::VectorOp::ProcDistance(r1.Features,r2.Features,r1.FeatCount);
+		}
+	}
+	// altfel verific functiile kernel
+	switch (DistanceFunction)
+	{
+		case GML::Algorithm::Metrics::Binomial:
+			return GML::ML::VectorOp::BinomialDistance(r1.Features,r2.Features,r1.FeatCount,DistancePower,DistanceBias);
+		case GML::Algorithm::Metrics::Radial:
+			return GML::ML::VectorOp::RadialDistance(r1.Features,r2.Features,r1.FeatCount,DistanceSigma);
+		case GML::Algorithm::Metrics::Sigmoid:
+			return GML::ML::VectorOp::SigmoidDistance(r1.Features,r2.Features,r1.FeatCount,DistancePower);
+		case GML::Algorithm::Metrics::HyperbolicTangent:
+			return GML::ML::VectorOp::HyperbolicTangentDistance(r1.Features,r2.Features,r1.FeatCount,DistanceK,DistanceBias);	}
+	return 0;
 }

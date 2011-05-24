@@ -1,38 +1,6 @@
 #include "Distances.h"
 
-double	ProcDistance(double *p1,double *p2,UInt32 elements)
-{
-	double sum=0.0;;
-	double total=0.0;
-	while (elements>0)
-	{
-		if ((*p1)!=(*p2))
-			sum+=1;
-		if (((*p1)!=0.0) || ((*p2)!=0.0))
-			total+=1;
-		p1++;
-		p2++;
-		elements--;
-	}
-	return (double)(sum/total);
-}
-double	ProcDistance(double *p1,double *p2,UInt32 elements,double *pWeight)
-{
-	double sum=0.0;;
-	double total=0.0;
-	while (elements>0)
-	{
-		if ((*p1)!=(*p2))
-			sum+=(*pWeight);
-		if (((*p1)!=0.0) || ((*p2)!=0.0))
-			total+=(*pWeight);
-		p1++;
-		p2++;
-		pWeight++;
-		elements--;
-	}
-	return (double)(sum/total);
-}
+
 //===============================================================================
 Distances::Distances()
 {
@@ -42,11 +10,11 @@ Distances::Distances()
 	LinkPropertyToUInt32("Method",Method,0,"!!LIST:PositiveToNegativeDistance=0,DistanceTablePositiveToNegative,DistanceTablePositiveToPositive,DistanceTableNegativeToNegative,DistanceTableNegativeToPositive,DistanceToPlan!!");
 	LinkPropertyToDouble("MinDistance",MinDist,0,"Minimal distance");
 	LinkPropertyToDouble("MaxDistance",MaxDist,1,"Maximal distance");
-	LinkPropertyToDouble("Power",Power,1,"Power parameter in Minkowski distance");
+	
 	LinkPropertyToString("DistanceTableFileName",DistanceTableFileName,"","Name of the file names where the distance will be written");
 	LinkPropertyToBool  ("MergeDistanceTableFiles",MergeDistanceTableFiles,true,"If set all of the distance table files will be merge into one");
 	LinkPropertyToBool  ("UseWeightsForFeatures",UseWeightsForFeatures,false,"Specifyes if weights for features should be used.");
-	LinkPropertyToUInt32("DistanceFunction",DistanceFunction,DIST_FUNC_Euclidean,"!!LIST:Manhattan=0,Euclidean,EuclideanSquared,Minkowski,ProcDifference!!");
+	
 	LinkPropertyToString("FeaturesWeightFile",FeaturesWeightFile,"","Name of the file that contains the weights for features!");
 	LinkPropertyToString("PlanFile",PlanFile,"","Name of the file that contains the informations about the plan");
 
@@ -54,36 +22,9 @@ Distances::Distances()
 double Distances::GetDistance(GML::ML::MLRecord &r1,GML::ML::MLRecord &r2)
 {
 	if (UseWeightsForFeatures)
-	{
-		switch (DistanceFunction)
-		{
-			case DIST_FUNC_Manhattan:
-				return GML::ML::VectorOp::ManhattanDistance(r1.Features,r2.Features,r1.FeatCount,featWeight);
-			case DIST_FUNC_Euclidean:
-				return GML::ML::VectorOp::EuclideanDistance(r1.Features,r2.Features,r1.FeatCount,featWeight);
-			case DIST_FUNC_Euclidean_Square:
-				return pow(GML::ML::VectorOp::EuclideanDistance(r1.Features,r2.Features,r1.FeatCount,featWeight),2);
-			case DIST_FUNC_Minkowski:
-				return GML::ML::VectorOp::MinkowskiDistance(r1.Features,r2.Features,r1.FeatCount,Power,featWeight);
-			case DIST_FUNC_ProcDifference:
-				return ProcDistance(r1.Features,r2.Features,r1.FeatCount,featWeight);
-		}
-	} else {
-		switch (DistanceFunction)
-		{
-			case DIST_FUNC_Manhattan:
-				return GML::ML::VectorOp::ManhattanDistance(r1.Features,r2.Features,r1.FeatCount);
-			case DIST_FUNC_Euclidean:
-				return GML::ML::VectorOp::EuclideanDistance(r1.Features,r2.Features,r1.FeatCount);
-			case DIST_FUNC_Euclidean_Square:
-				return GML::ML::VectorOp::EuclideanDistanceSquared(r1.Features,r2.Features,r1.FeatCount);
-			case DIST_FUNC_Minkowski:
-				return GML::ML::VectorOp::MinkowskiDistance(r1.Features,r2.Features,r1.FeatCount,Power);
-			case DIST_FUNC_ProcDifference:
-				return ProcDistance(r1.Features,r2.Features,r1.FeatCount);
-		}
-	}
-	return 0;
+		return GML::Algorithm::IMLAlgorithm::GetDistance(r1,r2,featWeight);
+	else
+		return GML::Algorithm::IMLAlgorithm::GetDistance(r1,r2);
 }
 bool Distances::LoadPlan(char *fileName,Plan &pv)
 {

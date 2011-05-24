@@ -7,7 +7,7 @@ GenericDistAlgorithm::GenericDistAlgorithm()
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
 
-	AddHashSavePropery();
+	AddHashSaveProperties();
 }
 bool	GenericDistAlgorithm::CreatePozitiveAndNegativeIndexes()
 {

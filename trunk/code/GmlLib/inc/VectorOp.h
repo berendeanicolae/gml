@@ -37,6 +37,9 @@ namespace GML
 			static double	EuclideanDistance(double *p1,double *p2,UInt32 elements);
 			static double	EuclideanDistanceSquared(double *p1,double *p2,UInt32 elements);
 			static double	EuclideanDistance(double *p1,double *p2,UInt32 elements,double *pWeight);
+			static double	ProcDistance(double *p1,double *p2,UInt32 elements);
+			static double	ProcDistance(double *p1,double *p2,UInt32 elements,double *pWeight);
+
 			static double	BinomialDistance(double *p1,double *p2,UInt32 elements,double power,double bias=0.0);
 			static double	RadialDistance(double *p1,double *p2,UInt32 elements,double sigma);
 			static double	SigmoidDistance(double *p1,double *p2,UInt32 elements,double k=1);

@@ -101,7 +101,8 @@ Centroid::Centroid()
 	LinkPropertyToUInt32("CentroidsLoadingMethod"	,CentroidsLoadingMethod	,0,"!!LIST:FromList=0,FromPath!!");
 	
 	LinkPropertyToUInt32("HashSelectMethod"			,HashSelectMethod		,HASH_SELECT_NONE,"!!LIST:None=0,All,CorectelyClasify,IncorectelyClasify,Positive,Negative,PositiveCorectelyClasify,PositiveInCorectelyClasify,NegativeCorectelyClasify,NegativeInCorectelyClasify!!");
-	AddHashSavePropery();
+	AddHashSaveProperties();
+	AddDistanceProperties();
 		
 }
 bool Centroid::Create(CentroidData &pv,char *fileName)
@@ -478,6 +479,8 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 
 	featuresCount = con->GetFeatureCount();
 	workCount = indexWork.Len();
+	
+
 
 	if (thData.ThreadID==0)
 		notif->StartProcent("[%s] -> Computing ... ",ObjectName);
@@ -511,7 +514,7 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 				notif->Error("[%s] -> Unable to read record #%d",ObjectName,idx);
 				return false;
 			}
-			dist = GML::ML::VectorOp::EuclideanDistanceSquared(thData.Record.Features,dt->SecRec.Features,featuresCount);
+			dist = GetDistance(thData.Record,dt->SecRec);
 			if (dist<maxDiffDist)
 				maxDiffDist = dist;
 		}
@@ -527,7 +530,7 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 				notif->Error("[%s] -> Unable to read record #%d",ObjectName,idx);
 				return false;
 			}
-			dist = GML::ML::VectorOp::EuclideanDistanceSquared(thData.Record.Features,dt->SecRec.Features,featuresCount);
+			dist = GetDistance(thData.Record,dt->SecRec);
 			if (dist<maxDiffDist)
 			{
 				countClasified++;
@@ -555,11 +558,13 @@ bool Centroid::PerformSimpleTest(GML::Algorithm::MLThreadData &td)
 	double					testLabel;
 	bool					corectelyClasified;
 	UInt8					*rStatus = RecordsStatus.GetVector();
+	GML::ML::MLRecord		tempMLRec;
 	
 	index = td.Range.Start;
 	td.Res.Clear();
 	nrFeatures = con->GetFeatureCount();
 	nrVectors = cVectors.Len();
+	tempMLRec.FeatCount = nrFeatures;
 
 	while (index<td.Range.End)
 	{
@@ -571,7 +576,8 @@ bool Centroid::PerformSimpleTest(GML::Algorithm::MLThreadData &td)
 		for (tr=0;tr<nrVectors;tr++)
 		{
 			cv = cVectors.GetPtrToObject(tr);
-			if (GML::ML::VectorOp::EuclideanDistanceSquared(td.Record.Features,cv->Center,nrFeatures)<=cv->Ray)
+			tempMLRec.Features = cv->Center;
+			if (GetDistance(td.Record,tempMLRec)<=cv->Ray)			
 			{
 				testLabel = cv->Label;
 				break;
