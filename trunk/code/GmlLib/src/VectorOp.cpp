@@ -236,9 +236,9 @@ double  GML::ML::VectorOp::EuclideanDistanceSquared(double *p1,double *p2,UInt32
 	}
 	return sum;
 }
-double  GML::ML::VectorOp::BinomialDistance(double *p1,double *p2,UInt32 elements,double power)
+double  GML::ML::VectorOp::BinomialDistance(double *p1,double *p2,UInt32 elements,double power,double bias)
 {
-	double sum=0.0;
+	double sum=bias;
 	while (elements>0)
 	{
 		sum+= ((*p1)*(*p2));
@@ -277,6 +277,19 @@ double  GML::ML::VectorOp::SigmoidDistance(double *p1,double *p2,UInt32 elements
 		elements--;
 	}
 	return 1.0/(1+pow(2.71828182845904523536,-k*sum));
+}
+double  GML::ML::VectorOp::HyperbolicTangentDistance(double *p1,double *p2,UInt32 elements,double k,double c)
+{
+	double sum=c;
+
+	while (elements>0)
+	{
+		sum  += ((*p1)*(*p2)*k);
+		p1++;
+		p2++;
+		elements--;
+	}
+	return tanh(sum);
 }
 double  GML::ML::VectorOp::Average(double *v,UInt32 elements)
 {
