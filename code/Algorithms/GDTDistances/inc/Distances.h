@@ -20,13 +20,7 @@ class Distances: public GenericDistAlgorithm
 		METHOD_DistanceTableNegativeToPositive,
 		METHOD_DistanceToPlan,
 	};
-	enum {
-		DIST_FUNC_Manhattan = 0,
-		DIST_FUNC_Euclidean,
-		DIST_FUNC_Euclidean_Square,
-		DIST_FUNC_Minkowski,
-		DIST_FUNC_ProcDifference,
-	};
+
 	UInt32							Method;
 	double							MinDist,MaxDist,Power;
 	GML::Utils::GString				DistanceTableFileName;
