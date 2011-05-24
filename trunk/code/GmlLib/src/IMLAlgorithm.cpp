@@ -438,6 +438,7 @@ double GML::Algorithm::IMLAlgorithm::GetDistance(GML::ML::MLRecord &r1,GML::ML::
 		case GML::Algorithm::Metrics::Sigmoid:
 			return GML::ML::VectorOp::SigmoidDistance(r1.Features,r2.Features,r1.FeatCount,DistancePower);
 		case GML::Algorithm::Metrics::HyperbolicTangent:
-			return GML::ML::VectorOp::HyperbolicTangentDistance(r1.Features,r2.Features,r1.FeatCount,DistanceK,DistanceBias);	}
+			return GML::ML::VectorOp::HyperbolicTangentDistance(r1.Features,r2.Features,r1.FeatCount,DistanceK,DistanceBias);	
+	}
 	return 0;
 }
