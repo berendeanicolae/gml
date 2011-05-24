@@ -265,7 +265,19 @@ double  GML::ML::VectorOp::RadialDistance(double *p1,double *p2,UInt32 elements,
 	}
 	return exp((-(sum1+sum2-sum*2))/(2*sigma*sigma));
 }
+double  GML::ML::VectorOp::SigmoidDistance(double *p1,double *p2,UInt32 elements,double k)
+{
+	double sum=0.0;
 
+	while (elements>0)
+	{
+		sum  += ((*p1)*(*p2));
+		p1++;
+		p2++;
+		elements--;
+	}
+	return 1.0/(1+pow(2.71828182845904523536,-k*sum));
+}
 double  GML::ML::VectorOp::Average(double *v,UInt32 elements)
 {
 	double sum = 0;
