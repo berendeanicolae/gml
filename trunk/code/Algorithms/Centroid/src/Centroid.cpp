@@ -518,7 +518,7 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 			if (dist<maxDiffDist)
 				maxDiffDist = dist;
 		}
-
+		//printf("(1) dist = %lf  maxDiffDist = %lf\n",dist,maxDiffDist);
 		// numar sa vad dintre cele similare cate sunt apropiate de el
 		countClasified = 0;
 		centroidRay = 0.0;
@@ -540,6 +540,7 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 		}
 
 		// salvez datele
+		//printf("%d - dist = %lf  maxDiffDist = %lf\n",countClasified,dist,maxDiffDist);
 		cd[idxWork].corectelyClasify = countClasified;
 		cd[idxWork].ClosestDifferentDistance = maxDiffDist;
 		cd[idxWork].MostDistantSimilarDistance = centroidRay;

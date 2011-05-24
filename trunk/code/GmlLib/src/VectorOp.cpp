@@ -246,6 +246,7 @@ double  GML::ML::VectorOp::BinomialDistance(double *p1,double *p2,UInt32 element
 		p2++;
 		elements--;
 	}
+	//printf("%lf\n",pow(sum,power));
 	return pow(sum,power);
 }
 double  GML::ML::VectorOp::RadialDistance(double *p1,double *p2,UInt32 elements,double sigma)
