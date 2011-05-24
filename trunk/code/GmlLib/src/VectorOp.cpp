@@ -236,6 +236,35 @@ double  GML::ML::VectorOp::EuclideanDistanceSquared(double *p1,double *p2,UInt32
 	}
 	return sum;
 }
+double  GML::ML::VectorOp::BinomialDistance(double *p1,double *p2,UInt32 elements,double power)
+{
+	double sum=0.0;
+	while (elements>0)
+	{
+		sum+= ((*p1)*(*p2));
+		p1++;
+		p2++;
+		elements--;
+	}
+	return pow(sum,power);
+}
+double  GML::ML::VectorOp::RadialDistance(double *p1,double *p2,UInt32 elements,double sigma)
+{
+	double sum=0.0;
+	double sum1=0.0;
+	double sum2=0.0;
+
+	while (elements>0)
+	{
+		sum  += ((*p1)*(*p2));
+		sum1 += ((*p1)*(*p1));
+		sum2 += ((*p2)*(*p2));
+		p1++;
+		p2++;
+		elements--;
+	}
+	return exp((-(sum1+sum2-sum*2))/(2*sigma*sigma));
+}
 
 double  GML::ML::VectorOp::Average(double *v,UInt32 elements)
 {
