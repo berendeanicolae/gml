@@ -291,6 +291,40 @@ double  GML::ML::VectorOp::HyperbolicTangentDistance(double *p1,double *p2,UInt3
 	}
 	return tanh(sum);
 }
+double	GML::ML::VectorOp::ProcDistance(double *p1,double *p2,UInt32 elements)
+{
+	double sum=0.0;;
+	double total=0.0;
+	while (elements>0)
+	{
+		if ((*p1)!=(*p2))
+			sum+=1;
+		if (((*p1)!=0.0) || ((*p2)!=0.0))
+			total+=1;
+		p1++;
+		p2++;
+		elements--;
+	}
+	return (double)(sum/total);
+}
+double	GML::ML::VectorOp::ProcDistance(double *p1,double *p2,UInt32 elements,double *pWeight)
+{
+	double sum=0.0;;
+	double total=0.0;
+	while (elements>0)
+	{
+		if ((*p1)!=(*p2))
+			sum+=(*pWeight);
+		if (((*p1)!=0.0) || ((*p2)!=0.0))
+			total+=(*pWeight);
+		p1++;
+		p2++;
+		pWeight++;
+		elements--;
+	}
+	return (double)(sum/total);
+}
+
 double  GML::ML::VectorOp::Average(double *v,UInt32 elements)
 {
 	double sum = 0;

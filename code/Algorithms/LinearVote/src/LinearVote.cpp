@@ -76,7 +76,7 @@ LinearVote::LinearVote()
 
 	// Hash-uri
 	LinkPropertyToUInt32("HashSelectMethod"			,HashSelectMethod		,HASH_SELECT_NONE,"!!LIST:None=0,All,CorectelyClasify,IncorectelyClasify,Positive,Negative,PositiveCorectelyClasify,PositiveInCorectelyClasify,NegativeCorectelyClasify,NegativeInCorectelyClasify!!");
-	AddHashSavePropery();
+	AddHashSaveProperties();
 }
 bool LinearVote::Create(PerceptronVector &pv,char *fileName)
 {

@@ -10,15 +10,32 @@
 #include "AlgorithmResult.h"
 #include "Indexes.h"
 #include "BitSet.h"
+#include "VectorOp.h"
 
 namespace GML
 {
 	namespace Algorithm
 	{
+		namespace Metrics
+		{
+			enum {
+				Manhattan = 0,
+				Euclidean,
+				Euclidean_Square,
+				Minkowski,
+				ProcDifference,
+				Binomial,
+				Radial,
+				Sigmoid,
+				HyperbolicTangent
+			};
+		};
+
 		enum {
 			HASH_FILE_TEXT = 0,
 			HASH_FILE_BINARY		
 		};
+
 		struct EXPORT MLThreadData
 		{
 			UInt32							ThreadID;
@@ -36,6 +53,13 @@ namespace GML
 			// properties
 			UInt32							threadsCount;
 			UInt32							HashFileType;
+
+			UInt32							DistanceFunction;
+			double							DistancePower;
+			double							DistanceSigma;
+			double							DistanceBias;
+			double							DistanceK;
+
 			GML::Utils::GString				Conector;
 			GML::Utils::GString				DataBase;
 			GML::Utils::GString				Notifier;
@@ -47,7 +71,10 @@ namespace GML
 			GML::Utils::ThreadParalelUnit	*tpu;
 			
 
-			void							AddHashSavePropery();
+			void							AddHashSaveProperties();
+			void							AddDistanceProperties();
+
+			double							GetDistance(GML::ML::MLRecord &r1,GML::ML::MLRecord &r2,double *featWeight=NULL);
 
 			bool							InitConnections();
 			bool							InitThreads();
