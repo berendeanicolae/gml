@@ -518,7 +518,7 @@ bool Centroid::FindCentroid(GML::Algorithm::MLThreadData &thData,GML::Utils::Ind
 			if (dist<maxDiffDist)
 				maxDiffDist = dist;
 		}
-		//printf("(1) dist = %lf  maxDiffDist = %lf\n",dist,maxDiffDist);
+		//printf("(1) dist = %lf  maxDiffDist = %lf\n",dist,maxDiffDist); 
 		// numar sa vad dintre cele similare cate sunt apropiate de el
 		countClasified = 0;
 		centroidRay = 0.0;
