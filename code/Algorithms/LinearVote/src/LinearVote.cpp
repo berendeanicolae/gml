@@ -6,32 +6,33 @@ PerceptronVector::PerceptronVector()
 	Weight = NULL;
 	Bias = 0;
 	Count = 0;
-	Vote = 0;
+	PositiveVote = NegativeVote = 0;
 }
 PerceptronVector::PerceptronVector(PerceptronVector &ref)
 {
 	Weight = NULL;
 	Bias = 0;
 	Count = 0;
-	Vote = 0;
+	PositiveVote = NegativeVote = 0;
 
 	if (Create(ref.Count))
 	{
 		Bias = ref.Bias;
 		memcpy(Weight,ref.Weight,sizeof(double)*ref.Count);
 		Count = ref.Count;
-		Vote = ref.Vote;
+		PositiveVote = ref.PositiveVote;
+		NegativeVote = ref.NegativeVote;
 		FileName.Set(&ref.FileName);
 	}	
 }
-bool PerceptronVector::operator > (PerceptronVector &r)
-{
-	return (bool)(Vote>r.Vote);
-}
-bool PerceptronVector::operator < (PerceptronVector &r)
-{
-	return (bool)(Vote<r.Vote);
-}
+//bool PerceptronVector::operator > (PerceptronVector &r)
+//{
+//	return (bool)(Vote>r.Vote);
+//}
+//bool PerceptronVector::operator < (PerceptronVector &r)
+//{
+//	return (bool)(Vote<r.Vote);
+//}
 PerceptronVector::~PerceptronVector()
 {
 	Destroy();
@@ -44,7 +45,7 @@ void PerceptronVector::Destroy()
 	Weight = NULL;
 	Bias = NULL;
 	Count = 0;
-	Vote = 0;
+	PositiveVote = NegativeVote = 0;
 }
 bool PerceptronVector::Create(UInt32 count)
 {
@@ -53,7 +54,7 @@ bool PerceptronVector::Create(UInt32 count)
 		return false;
 	Bias = 0.0;
 	memset(Weight,0,sizeof(double)*count);
-	Vote = 0;
+	PositiveVote = NegativeVote = 0;
 	Count = count;
 
 	return true;
@@ -65,7 +66,8 @@ LinearVote::LinearVote()
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Test!!");
 	LinkPropertyToString("WeightFileList"			,WeightFiles			,"","A list of weight files to be loaded separated by a comma.");
-	LinkPropertyToString("VotePropertyName"			,VotePropertyName		,"Vote","The name of the property that contains the vote. It has to be a numeric property.");
+	LinkPropertyToString("PositiveVotePropertyName"	,PositiveVotePropertyName,"Vote","The name of the property that contains the positive vote. It has to be a numeric property.");
+	LinkPropertyToString("NegativeVotePropertyName"	,NegativeVotePropertyName,"Vote","The name of the property that contains the positive vote. It has to be a numeric property.");
 	LinkPropertyToUInt32("VotesLoadingMethod"		,VotesLoadingMethod		,0,"!!LIST:FromList=0,FromPath!!");
 	LinkPropertyToUInt32("VoteComputeMethod"		,VoteComputeMethod		,VOTE_COMPUTE_ADDITION,"!!LIST:Add=0,Multiply,Count!!");
 	LinkPropertyToUInt32("OnEqualVotes"				,VoteOnEqual			,VOTE_NEGATIVE,"!!LIST:VoteNegative=0,VotePositive!!\nSets the vote that will be considered in case of equal votes");
@@ -108,46 +110,88 @@ bool LinearVote::Create(PerceptronVector &pv,char *fileName)
 		notif->Error("[%s] -> Unable to set FileName property for PeceptronVector",ObjectName);
 		return false;
 	}
-	// vote
-	if ((a = attr.Get(VotePropertyName.GetText()))==NULL)
+	// positive
+	if ((a = attr.Get(PositiveVotePropertyName.GetText()))==NULL)
 	{
-		notif->Error("[%s] -> Missing '%s' property in %s",ObjectName,VotePropertyName.GetText(),fileName);
+		notif->Error("[%s] -> Missing '%s' property in %s",ObjectName,PositiveVotePropertyName.GetText(),fileName);
 		return false;
 	}
 	switch (a->AttributeType)
 	{
 		case GML::Utils::AttributeList::DOUBLE:
-			pv.Vote = (double)(*(double *)a->Data);
+			pv.PositiveVote = (double)(*(double *)a->Data);
 			break;
 		case GML::Utils::AttributeList::FLOAT:
-			pv.Vote = (double)(*(float *)a->Data);
+			pv.PositiveVote = (double)(*(float *)a->Data);
 			break;
 		case GML::Utils::AttributeList::UINT8:
-			pv.Vote = (double)(*(UInt8 *)a->Data);
+			pv.PositiveVote = (double)(*(UInt8 *)a->Data);
 			break;
 		case GML::Utils::AttributeList::INT8:
-			pv.Vote = (double)(*(Int8 *)a->Data);
+			pv.PositiveVote = (double)(*(Int8 *)a->Data);
 			break;
 		case GML::Utils::AttributeList::UINT16:
-			pv.Vote = (double)(*(UInt16 *)a->Data);
+			pv.PositiveVote = (double)(*(UInt16 *)a->Data);
 			break;
 		case GML::Utils::AttributeList::INT16:
-			pv.Vote = (double)(*(Int16 *)a->Data);
+			pv.PositiveVote = (double)(*(Int16 *)a->Data);
 			break;
 		case GML::Utils::AttributeList::UINT32:
-			pv.Vote = (double)(*(UInt32 *)a->Data);
+			pv.PositiveVote = (double)(*(UInt32 *)a->Data);
 			break;
 		case GML::Utils::AttributeList::INT32:
-			pv.Vote = (double)(*(Int32 *)a->Data);
+			pv.PositiveVote = (double)(*(Int32 *)a->Data);
 			break;
 		case GML::Utils::AttributeList::UINT64:
-			pv.Vote = (double)(*(UInt64 *)a->Data);
+			pv.PositiveVote = (double)(*(UInt64 *)a->Data);
 			break;
 		case GML::Utils::AttributeList::INT64:
-			pv.Vote = (double)(*(Int64 *)a->Data);
+			pv.PositiveVote = (double)(*(Int64 *)a->Data);
 			break;
 		default:
-			notif->Error("[%s] -> Property '%s' should be a numeric type (in %s)",ObjectName,VotePropertyName.GetText(),fileName);
+			notif->Error("[%s] -> Property '%s' should be a numeric type (in %s)",ObjectName,PositiveVotePropertyName.GetText(),fileName);
+			return false;
+	}
+	// negative
+	if ((a = attr.Get(NegativeVotePropertyName.GetText()))==NULL)
+	{
+		notif->Error("[%s] -> Missing '%s' property in %s",ObjectName,NegativeVotePropertyName.GetText(),fileName);
+		return false;
+	}
+	switch (a->AttributeType)
+	{
+		case GML::Utils::AttributeList::DOUBLE:
+			pv.NegativeVote = (double)(*(double *)a->Data);
+			break;
+		case GML::Utils::AttributeList::FLOAT:
+			pv.NegativeVote = (double)(*(float *)a->Data);
+			break;
+		case GML::Utils::AttributeList::UINT8:
+			pv.NegativeVote = (double)(*(UInt8 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::INT8:
+			pv.NegativeVote = (double)(*(Int8 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::UINT16:
+			pv.NegativeVote = (double)(*(UInt16 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::INT16:
+			pv.NegativeVote = (double)(*(Int16 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::UINT32:
+			pv.NegativeVote = (double)(*(UInt32 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::INT32:
+			pv.NegativeVote = (double)(*(Int32 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::UINT64:
+			pv.NegativeVote = (double)(*(UInt64 *)a->Data);
+			break;
+		case GML::Utils::AttributeList::INT64:
+			pv.NegativeVote = (double)(*(Int64 *)a->Data);
+			break;
+		default:
+			notif->Error("[%s] -> Property '%s' should be a numeric type (in %s)",ObjectName,NegativeVotePropertyName.GetText(),fileName);
 			return false;
 	}
 	return true;
@@ -247,7 +291,7 @@ bool LinearVote::CheckValidVotes()
 		PerceptronVector *pv = pVectors.GetPtrToObject(indexes.Get(tr));
 		if (pv==NULL)
 			continue;
-		if ((pv->Vote==0) && (VoteComputeMethod == VOTE_COMPUTE_MULTIPLY))
+		if (((pv->PositiveVote==0) || (pv->NegativeVote==0)) && (VoteComputeMethod == VOTE_COMPUTE_MULTIPLY))
 		{
 			notif->Error("[%s] -> Invalid Vote value (0.0) for Multiply method on %s",ObjectName,pv->FileName.GetText());
 			return false;
@@ -330,6 +374,7 @@ bool LinearVote::PerformTest(GML::Algorithm::MLThreadData &td)
 	LinearVoteThreadData	*ltd;
 	double					scorPozitive,scorNegative,result;
 	double					*scor;
+	double					*vVote;
 	bool					corectelyClasified;
 	UInt8					*rStatus = RecordsStatus.GetVector();
 	
@@ -362,21 +407,25 @@ bool LinearVote::PerformTest(GML::Algorithm::MLThreadData &td)
 		{
 			pv = pVectors.GetPtrToObject(tr);
 			if ((GML::ML::VectorOp::ComputeVectorsSum(td.Record.Features,pv->Weight,nrFeatures)+pv->Bias)>0)
+			{
 				scor = &scorPozitive;				
-			else
+				vVote = &pv->PositiveVote;
+			} else {
 				scor = &scorNegative;
+				vVote = &pv->NegativeVote;
+			}
 			
 			// ajustez votul
 			switch (VoteComputeMethod)
 			{
 				case VOTE_COMPUTE_ADDITION:
-					(*scor)+=pv->Vote;
+					(*scor)+=(*vVote);
 					break;
 				case VOTE_COMPUTE_COUNT:
 					(*scor)+=1;
 					break;
 				case VOTE_COMPUTE_MULTIPLY:
-					(*scor)*=pv->Vote;
+					(*scor)*=(*vVote);
 					break;
 			};
 		}
