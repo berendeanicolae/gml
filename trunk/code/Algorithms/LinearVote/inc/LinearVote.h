@@ -9,15 +9,16 @@ public:
 	double				Bias;
 	double				*Weight;
 	UInt32				Count;
-	double				Vote;
+	double				PositiveVote;
+	double				NegativeVote;
 	GML::Utils::GString	FileName;
 public:
 	PerceptronVector();
 	PerceptronVector(PerceptronVector &r);
 	~PerceptronVector();
 
-	bool operator > (PerceptronVector &r);
-	bool operator < (PerceptronVector &r);
+	//bool operator > (PerceptronVector &r);
+	//bool operator < (PerceptronVector &r);
 
 	void	Destroy();
 	bool	Create(UInt32 count);
@@ -60,7 +61,8 @@ class LinearVote: public GML::Algorithm::IMLAlgorithm
 
 	GML::Utils::GString							WeightFiles;
 	GML::Utils::GString							WeightPath;
-	GML::Utils::GString							VotePropertyName;
+	GML::Utils::GString							PositiveVotePropertyName;
+	GML::Utils::GString							NegativeVotePropertyName;
 	UInt32										VotesLoadingMethod;
 	UInt32										VoteComputeMethod;
 	UInt32										VoteOnEqual;
