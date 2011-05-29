@@ -169,7 +169,7 @@ def Run(dictionar):
 		dictionar = dictionar._attr;
 	if CreateTemplateFile(dictionar,fname,True)==False:
 		return False
-	os.system(os.path.join(GML_PATH,"gml.exe")+" run "+fname)
+	os.system("\""+os.path.join(GML_PATH,"gml.exe")+"\" run \""+fname+"\"")
 	try:
 		os.unlink(fname)
 	except:

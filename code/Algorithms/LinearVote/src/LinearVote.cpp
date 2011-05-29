@@ -64,7 +64,7 @@ LinearVote::LinearVote()
 {
 	ObjectName = "LinearVote";
 
-	SetPropertyMetaData("Command","!!LIST:None=0,Test!!");
+	SetPropertyMetaData("Command","!!LIST:None=0,Test,Train!!");
 	LinkPropertyToString("WeightFileList"			,WeightFiles			,"","A list of weight files to be loaded separated by a comma.");
 	LinkPropertyToString("PositiveVotePropertyName"	,PositiveVotePropertyName,"Vote","The name of the property that contains the positive vote. It has to be a numeric property.");
 	LinkPropertyToString("NegativeVotePropertyName"	,NegativeVotePropertyName,"Vote","The name of the property that contains the positive vote. It has to be a numeric property.");
@@ -74,6 +74,9 @@ LinearVote::LinearVote()
 	LinkPropertyToString("WeightPath"				,WeightPath				,"*.txt","The path where the weigh files are");
 	LinkPropertyToDouble("PositiveVoteFactor"		,PositiveVoteFactor		,1.0,"Factor used to multiply the positive votes");
 	LinkPropertyToDouble("NegativeVoteFactor"		,NegativeVoteFactor		,1.0,"Factor used to multiply the negative votes");
+	LinkPropertyToDouble("PositiveLearningRate"		,pozitiveLearningRate	,1);
+	LinkPropertyToDouble("NegativeLearningRate"		,negativeLearningRate	,1);
+	LinkPropertyToUInt32("MaxIterations"			,maxIterations			,10);
 
 
 	// Hash-uri
@@ -282,6 +285,9 @@ void LinearVote::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 
 		case PARALLEL_CMD_TEST:
 			PerformTest(thData);
 			break;
+		case PARALLEL_CMD_TRAIN:
+			PerformTrain(thData);
+			break;
 	}
 }
 bool LinearVote::CheckValidVotes()
@@ -301,10 +307,16 @@ bool LinearVote::CheckValidVotes()
 }
 bool LinearVote::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
 {
-	if ((thData.Context = new LinearVoteThreadData())==NULL)
+	LinearVoteThreadData *lt = new LinearVoteThreadData();
+	lt->eqVotes = 0;
+	if ((lt->VectorNegativeDelta = new double[pVectors.Len()])==NULL)
 		return false;
-
-	((LinearVoteThreadData *)thData.Context)->eqVotes = 0;
+	if ((lt->VectorPositiveDelta = new double[pVectors.Len()])==NULL)
+		return false;
+	if ((lt->VoteType = new bool[pVectors.Len()])==NULL)
+		return false;
+	
+	thData.Context = lt;	
 	return true;
 }
 bool LinearVote::Init()
@@ -490,6 +502,112 @@ bool LinearVote::PerformTest(GML::Algorithm::MLThreadData &td)
 
 	return true;
 }
+bool LinearVote::PerformTrain(GML::Algorithm::MLThreadData &td)
+{
+	UInt32					index,tr,nrFeatures,nrVectors;
+	PerceptronVector		*pv;
+	LinearVoteThreadData	*ltd;
+	double					scorPozitive,scorNegative,result;
+	double					*scor;
+	double					*vVote;
+	bool					corectelyClasified;
+	UInt8					*rStatus = RecordsStatus.GetVector();
+	
+	ltd = (LinearVoteThreadData *)td.Context;
+	index = td.Range.Start;
+	td.Res.Clear();
+	ltd->eqVotes = 0;
+	nrFeatures = con->GetFeatureCount();
+	nrVectors = indexes.Len();
+	scorPozitive = scorNegative = 0;
+
+	//resetez delta
+	memset(ltd->VectorNegativeDelta,0,sizeof(double)*pVectors.Len());
+	memset(ltd->VectorPositiveDelta,0,sizeof(double)*pVectors.Len());
+
+	while (index<td.Range.End)
+	{
+		if (con->GetRecord(td.Record,index)==false)
+		{
+			notif->Error("[%s] -> Unable to read record %d",ObjectName,index);
+			return false;
+		}
+		switch (VoteComputeMethod)
+		{
+			case VOTE_COMPUTE_ADDITION:
+			case VOTE_COMPUTE_COUNT:
+				scorPozitive = scorNegative = 0;
+				break;
+			case VOTE_COMPUTE_MULTIPLY:
+				scorPozitive = scorNegative = 1;
+				break;
+		};		
+		for (tr=0;tr<nrVectors;tr++)
+		{
+			pv = pVectors.GetPtrToObject(tr);
+			if ((GML::ML::VectorOp::ComputeVectorsSum(td.Record.Features,pv->Weight,nrFeatures)+pv->Bias)>0)
+			{
+				scor = &scorPozitive;				
+				vVote = &pv->PositiveVote;			
+				ltd->VoteType[tr] = true;
+			} else {
+				scor = &scorNegative;
+				vVote = &pv->NegativeVote;
+				ltd->VoteType[tr] = false;
+			}
+			// ajustez votul
+			switch (VoteComputeMethod)
+			{
+				case VOTE_COMPUTE_ADDITION:
+					(*scor)+=(*vVote);
+					break;
+				case VOTE_COMPUTE_COUNT:
+					(*scor)+=1;
+					break;
+				case VOTE_COMPUTE_MULTIPLY:
+					(*scor)*=(*vVote);
+					break;
+			};
+		}
+		scorPozitive *= PositiveVoteFactor;
+		scorNegative *= NegativeVoteFactor;
+		if (scorPozitive==scorNegative)
+		{
+			ltd->eqVotes++;
+			if (VoteOnEqual==VOTE_POZITIVE)
+				scorNegative++;
+			else
+				scorPozitive++;
+		}
+		if (scorPozitive>scorNegative)
+			result = 1;
+		else 
+			result = -1;
+		corectelyClasified = (bool)((result * td.Record.Label)>0);
+		if (!corectelyClasified)
+		{
+			// ajustez delta
+			for (tr=0;tr<nrVectors;tr++)
+			{
+				if ((ltd->VoteType[tr]==true) && (td.Record.Label<0))
+				{
+					// a votat positiv , rezultatul e negativ , scad
+					ltd->VectorPositiveDelta[tr]-=pozitiveLearningRate;
+					ltd->VectorNegativeDelta[tr]+=negativeLearningRate;
+				} 
+				if ((ltd->VoteType[tr]==false) && (td.Record.Label>0))
+				{
+					// a votat negatic , rezultatul e pozitiv
+					ltd->VectorPositiveDelta[tr]+=pozitiveLearningRate;
+					ltd->VectorNegativeDelta[tr]-=negativeLearningRate;
+				} 			
+			}
+		}
+		index++;
+	}
+
+	return true;
+}
 void LinearVote::DoTest()
 {
 	GML::Utils::AlgorithmResult		res;
@@ -510,11 +628,45 @@ void LinearVote::DoTest()
 	if (HashSelectMethod!=HASH_SELECT_NONE)
 		SaveHashResult(HashFileName.GetText(),HashFileType,RecordsStatus);
 }
+void LinearVote::DoTrain()
+{
+	GML::Utils::AlgorithmResult		res;
+	UInt32							tr,gr,hr;
+
+	for (tr=0;tr<maxIterations;tr++)
+	{
+		res.Clear();
+		res.time.Start();
+		res.Iteration = tr+1;
+		ExecuteParalelCommand(PARALLEL_CMD_TRAIN);
+		// adauga delta
+		for (gr=0;gr<pVectors.Len();gr++)
+		{
+			for (hr=0;hr<threadsCount;hr++)
+			{
+				pVectors[gr].PositiveVote+=((LinearVoteThreadData *)ThData[hr].Context)->VectorPositiveDelta[gr];
+				pVectors[gr].NegativeVote+=((LinearVoteThreadData *)ThData[hr].Context)->VectorNegativeDelta[gr];
+			}
+		}
+		// testez sa vad rezultatele
+		ExecuteParalelCommand(PARALLEL_CMD_TEST);
+		for (gr=0;gr<threadsCount;gr++)
+			res.Add(&ThData[gr].Res);
+		res.Compute();
+		res.time.Stop();
+		notif->Result(res);
+	}
+}
 void LinearVote::OnExecute()
 {
-	if (Command==1)	//CreateCache
+	if (Command==1)	//test
 	{
 		DoTest();
+		return;
+	}
+	if (Command==2)	//train
+	{
+		DoTrain();
 		return;
 	}
 	notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);

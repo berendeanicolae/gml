@@ -25,12 +25,16 @@ public:
 };
 struct LinearVoteThreadData
 {
-	UInt32	eqVotes;
+	UInt32		eqVotes;
+	double*		VectorPositiveDelta;
+	double*		VectorNegativeDelta;
+	bool*		VoteType;
 };
 class LinearVote: public GML::Algorithm::IMLAlgorithm
 {	
 	enum {
 		PARALLEL_CMD_TEST = 0,
+		PARALLEL_CMD_TRAIN
 	};
 
 	enum {
@@ -67,9 +71,11 @@ class LinearVote: public GML::Algorithm::IMLAlgorithm
 	UInt32										VoteComputeMethod;
 	UInt32										VoteOnEqual;
 	UInt32										HashSelectMethod;
+	UInt32										maxIterations;
 	double										PositiveVoteFactor;
 	double										NegativeVoteFactor;
-
+	double										pozitiveLearningRate;
+	double										negativeLearningRate;
 public:
 	GML::Utils::GTVector<PerceptronVector>		pVectors;
 	GML::Utils::GTFVector<UInt8>				RecordsStatus;
@@ -80,7 +86,9 @@ protected:
 	bool					LoadVotesFromWeightPath();
 	bool					LoadVotesFromList();
 	bool					PerformTest(GML::Algorithm::MLThreadData &td);
+	bool					PerformTrain(GML::Algorithm::MLThreadData &td);
 	void					DoTest();
+	void					DoTrain();
 	bool					CheckValidVotes();	
 public:
 	LinearVote();
