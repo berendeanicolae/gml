@@ -323,21 +323,6 @@ bool LinearVote::Init()
 {
 	if (InitConnections()==false)
 		return false;
-	if (InitThreads()==false)
-		return false;
-	if (SplitMLThreadDataRange(con->GetRecordCount())==false)
-		return false;
-	if (PositiveVoteFactor<=0)
-	{
-		notif->Error("[%s] -> 'PositiveVoteFactor' shoulb be bigger than 0.0");
-		return false;
-	}
-	if (NegativeVoteFactor<=0)
-	{
-		notif->Error("[%s] -> 'NegativeVoteFactor' shoulb be bigger than 0.0");
-		return false;
-	}
-
 	if (VotesLoadingMethod==LOAD_VOTES_FROMLIST)
 	{
 		if (LoadVotesFromList()==false)
@@ -375,7 +360,21 @@ bool LinearVote::Init()
 		}
 		memset(RecordsStatus.GetVector(),0,RecordsStatus.Len());
 	}
-
+	// creez firele
+	if (InitThreads()==false)
+		return false;
+	if (SplitMLThreadDataRange(con->GetRecordCount())==false)
+		return false;
+	if (PositiveVoteFactor<=0)
+	{
+		notif->Error("[%s] -> 'PositiveVoteFactor' shoulb be bigger than 0.0");
+		return false;
+	}
+	if (NegativeVoteFactor<=0)
+	{
+		notif->Error("[%s] -> 'NegativeVoteFactor' shoulb be bigger than 0.0");
+		return false;
+	}
 
 	return true;
 }
