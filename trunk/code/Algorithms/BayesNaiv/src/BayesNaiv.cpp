@@ -74,9 +74,10 @@ unsigned int mulPlusTrunc(unsigned int a, unsigned int b, unsigned int &exponent
 
 bool BayesNaiv::BuildRecordsClassif(GML::Algorithm::MLThreadData &thData)
 {
-	GML::ML::MLRecord			currentRecord;
+	GML::ML::MLRecord			currentRecord;	
 	int							i,j;
 	int							clasif;
+	BayesNaivThreadData			*bntd = (BayesNaivThreadData*)thData.Context;
 
 	if(!(con->CreateMlRecord(currentRecord)))
 		return false;	
@@ -95,8 +96,8 @@ bool BayesNaiv::BuildRecordsClassif(GML::Algorithm::MLThreadData &thData)
 		for(j=0; j<currentRecord.FeatCount; j++)
 			if((unsigned int)currentRecord.Features[j])
 			{								
-				pInf *= pFeatCondInf[j];
-				pClean *= pFeatCondClean[j];
+				pInf *= bntd->pFeatCondInf[j];
+				pClean *= bntd->pFeatCondClean[j];
 			}
 
 		clasif = -1;		
@@ -132,7 +133,14 @@ bool BayesNaiv::PerformTestClassicMul(bool toLoad, bool alloc, int iterNumber)
 	if(alloc)
 		recordsClassif = new UInt8[con->GetRecordCount()];
 
-	memset(recordsClassif, 0, sizeof(UInt8)*(con->GetRecordCount()));	
+	memset(recordsClassif, 0, sizeof(UInt8)*(con->GetRecordCount()));
+	
+	for(int i=0; i<threadsCount; i++)
+	{
+		((BayesNaivThreadData*)ThData[i].Context)->pFeatCondClean = pFeatCondClean;
+		((BayesNaivThreadData*)ThData[i].Context)->pFeatCondInf = pFeatCondInf;
+	}
+
 	ExecuteParalelCommand(Command);
 
 	result.Compute();	
@@ -243,25 +251,39 @@ bool BayesNaiv::InitTrain()
 	memset(vcInf, 0, sizeof(unsigned int)*con->GetFeatureCount());
 	memset(vcClean, 0, sizeof(unsigned int)*con->GetFeatureCount());
 
+	for(int i=0; i<threadsCount; i++)
+	{
+		((BayesNaivThreadData*)ThData[i].Context)->vcClean = new unsigned int[con->GetFeatureCount()];
+		((BayesNaivThreadData*)ThData[i].Context)->vcInf = new unsigned int[con->GetFeatureCount()];
+	}
+
 	return true;
 }
 
-bool BayesNaiv::PerformTrain()
+void BayesNaiv::MergeThreadsResults()
 {
-	unsigned int totalInf,totalClean;
-	InitTrain();
-	ExecuteParalelCommand(Command);
+	totalInf = totalClean = 0;
+	
 	//GDT: stiu ca am calculele pt. totalInf si totalClean facute pt. fiecare fir in parte
 	//GDT: le adun
-
-	totalInf = totalClean = 0;
 	for (int tr=0;tr<threadsCount;tr++)
 	{
 		totalInf+=((BayesNaivThreadData *)ThData[tr].Context)->totalInf;
 		totalClean+=((BayesNaivThreadData *)ThData[tr].Context)->totalClean;
-	}
 
-	notif->Info("[%s] -> totalClean=%d totalInf=%d totalRecords=%d", ObjectName, totalClean, totalInf, con->GetRecordCount());
+		for(int j=0; j<con->GetFeatureCount(); j++)
+		{
+			vcInf[j] += ((BayesNaivThreadData *)ThData[tr].Context)->vcInf[j];
+			vcClean[j] += ((BayesNaivThreadData *)ThData[tr].Context)->vcClean[j];
+		}
+	}
+}
+
+bool BayesNaiv::PerformTrain()
+{	
+	InitTrain();
+	ExecuteParalelCommand(Command);
+	MergeThreadsResults();
 	BuildInitialProbabilities();	
 
 	pFileInf = (double)totalInf/(totalInf + totalClean);
@@ -295,6 +317,14 @@ bool BayesNaiv::PerformTrain()
 
 		Command = COMMAND_COMPUTE_NEW_PROBS;
 		ExecuteParalelCommand(Command);
+		for (int tr=0;tr<threadsCount;tr++)
+		{
+			for(int j=0; j<con->GetFeatureCount(); j++)
+			{
+				vcFNs[j] += ((BayesNaivThreadData *)ThData[tr].Context)->vcInf[j];
+				vcFPs[j] += ((BayesNaivThreadData *)ThData[tr].Context)->vcClean[j];
+			}
+		}
 
 		int maxApFPs		= 0;		
 		int maxApFPsIndex	= 0;		
@@ -382,9 +412,13 @@ bool BayesNaiv::ComputeWrongFeaturesFreq(GML::Algorithm::MLThreadData &thData)
 {
 	GML::ML::MLRecord			currentRecord;
 	int							i,j;
+	BayesNaivThreadData			*bntd = (BayesNaivThreadData*)thData.Context;
 
 	if(!(con->CreateMlRecord(currentRecord)))
 		return false;	
+
+	memset(bntd->vcInf, 0, sizeof(unsigned int)*con->GetFeatureCount());
+	memset(bntd->vcClean, 0, sizeof(unsigned int)*con->GetFeatureCount());
 
 	for(i=thData.ThreadID; i<con->GetRecordCount(); i+=threadsCount)
 	{
@@ -398,7 +432,7 @@ bool BayesNaiv::ComputeWrongFeaturesFreq(GML::Algorithm::MLThreadData &thData)
 
 			for(j=0; j<currentRecord.FeatCount; j++)					
 				if((unsigned int)currentRecord.Features[j])
-					vcClean[j]++;
+					bntd->vcClean[j]++;
 		} else if(recordsClassif[i] == FALSE_NEGATIVE)
 		{
 			if(!(con->GetRecord(currentRecord, i)))
@@ -409,7 +443,7 @@ bool BayesNaiv::ComputeWrongFeaturesFreq(GML::Algorithm::MLThreadData &thData)
 
 			for(j=0; j<currentRecord.FeatCount; j++)					
 				if((unsigned int)currentRecord.Features[j])
-					vcInf[j]++;
+					bntd->vcInf[j]++;
 		}
 	}
 
@@ -424,8 +458,11 @@ bool BayesNaiv::ComputeFeaturesFreq(GML::Algorithm::MLThreadData &thData)
 	GML::ML::MLRecord currentRecord;
 
 	//GDT: initializam la 0 totalClean si totalInf
+	//BTM: si vcInf si vcClean
 	bntd->totalClean = 0;
 	bntd->totalInf = 0;
+	memset(bntd->vcInf, 0, sizeof(unsigned int)*con->GetFeatureCount());
+	memset(bntd->vcClean, 0, sizeof(unsigned int)*con->GetFeatureCount());
 	
 	if(!(con->CreateMlRecord(currentRecord)))
 		return false;
@@ -447,7 +484,7 @@ bool BayesNaiv::ComputeFeaturesFreq(GML::Algorithm::MLThreadData &thData)
 
 			for(j=0; j<currentRecord.FeatCount; j++)			
 				if((unsigned int)(currentRecord.Features[j]))	
-					vcClean[j]++;							
+					bntd->vcClean[j]++;							
 		}
 		else if(currentRecord.Label == 1)	//infected
 		{		
@@ -455,7 +492,7 @@ bool BayesNaiv::ComputeFeaturesFreq(GML::Algorithm::MLThreadData &thData)
 
 			for(j=0; j<currentRecord.FeatCount; j++)
 				if((unsigned int)(currentRecord.Features[j]))	
-					vcInf[j]++;							
+					bntd->vcInf[j]++;							
 		} 
 
 		if (thData.ThreadID==0)
@@ -468,7 +505,7 @@ bool BayesNaiv::ComputeFeaturesFreq(GML::Algorithm::MLThreadData &thData)
 	return true;
 }
 
-void BayesNaiv::SaveProbsToFile(char* filePath)
+bool BayesNaiv::SaveProbsToFile(char* filePath)
 {
 	GML::Utils::AttributeList	a;
 
@@ -480,7 +517,7 @@ void BayesNaiv::SaveProbsToFile(char* filePath)
 	a.AddDouble("Sp", result.sp, "Sp");
 	a.AddDouble("Acc", result.acc, "Acc");
 
-	a.Save(filePath);	
+	return a.Save(filePath);	
 }
 
 bool BayesNaiv::LoadProbsFromFile()
@@ -510,13 +547,21 @@ bool BayesNaiv::BuildInitialProbabilities()
 {
 	unsigned int		i;
 	unsigned int		nTotal;
+	unsigned int		nInf;
+	unsigned int		nCln;
 	
 	nTotal = 0;
+	nInf = 0;
+	nCln = 0;
 
 	for(i=0; i<con->GetFeatureCount(); i++)
 	{		
 		if(vcClean[i] || vcInf[i])	
 			nTotal++;				
+		if(vcClean[i])
+			nCln++;
+		if(vcInf[i])
+			nInf++;
 	}
 	UInt32	flagValueToIgnore = (con->GetRecordCount()*procIgnoreFeature)/100;
 	for(i=0; i<con->GetFeatureCount(); i++)
@@ -526,8 +571,12 @@ bool BayesNaiv::BuildInitialProbabilities()
 		{			
 			if(vcClean[i] + vcInf[i] <  flagValueToIgnore)
 			{				
-				pFeatCondClean[i] = (vcClean[i] + 1.0)/(con->GetFeatureCount() + nTotal);
-				pFeatCondInf[i] = (vcInf[i] + 1.0)/(con->GetFeatureCount() + nTotal);		
+				pFeatCondClean[i] = (vcClean[i] + 1.0)/(totalClean + nTotal);
+				pFeatCondInf[i] = (vcInf[i] + 1.0)/(totalInf + nTotal);		
+				//pFeatCondClean[i] = (vcClean[i] + 1.0)/(totalClean + nCln);
+				//pFeatCondInf[i] = (vcInf[i] + 1.0)/(totalInf + nInf);		
+				//pFeatCondClean[i] = (vcClean[i] + 1.0)/(nInf+ nTotal);
+				//pFeatCondInf[i] = (vcInf[i] + 1.0)/(nCln+ nTotal);		
 			}
 		}		
 	}
