@@ -5,7 +5,11 @@
 struct BayesNaivThreadData
 {
 	unsigned int			totalClean;
-	unsigned int			totalInf;	
+	unsigned int			totalInf;
+	unsigned int			*vcInf;
+	unsigned int			*vcClean;	
+	double					*pFeatCondInf;
+	double					*pFeatCondClean;
 };
 
 class BayesNaiv: public GML::Algorithm::IMLAlgorithm
@@ -46,7 +50,9 @@ class BayesNaiv: public GML::Algorithm::IMLAlgorithm
 	double					*pFeatCondClean;
 	double					pFileInf,pFileClean;
 	unsigned int			*vcInf;
-	unsigned int			*vcClean;		
+	unsigned int			*vcClean;	
+	unsigned int			totalInf;
+	unsigned int			totalClean;
 
 	UInt8					*recordsClassif;
 	UInt8					*vcFNsC;	
@@ -59,10 +65,11 @@ public:
 
 	bool	Init();
 
-	void	SaveProbsToFile(char* filePath);
+	void	MergeThreadsResults();
 	bool	LoadProbsFromFile();	
 	void	SaveProbsIfBetter(double *best);
 
+	bool	SaveProbsToFile(char* filePath);
 	bool	ComputeFeaturesFreq(GML::Algorithm::MLThreadData &thData);
 	bool	ComputeWrongFeaturesFreq(GML::Algorithm::MLThreadData &thData);
 	bool	BuildRecordsClassif(GML::Algorithm::MLThreadData &thData);
