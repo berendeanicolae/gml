@@ -13,6 +13,12 @@
 					(*((tip *)link->LocalAddress)) = (tip)int64Value; \
 					break; \
 				}
+#define TEST_SETBITSET_PROP(tip) \
+				if (AttributeToBitSet(attr,link,&uint64Value)) \
+				{ \
+					(*((tip *)link->LocalAddress)) = (tip)uint64Value; \
+					break; \
+				}
 
 bool AttributeToListIndex(GML::Utils::Attribute *attr,GML::Utils::AttributeLink	*link,Int64 *intValue)
 {
@@ -46,6 +52,34 @@ bool AttributeToListIndex(GML::Utils::Attribute *attr,GML::Utils::AttributeLink	
 		cValue++;
 	}
 	return false;
+}
+bool AttributeToBitSet(GML::Utils::Attribute *attr,GML::Utils::AttributeLink *link,UInt64 *uintValue)
+{
+	GML::Utils::GString		list,item,value;
+	int						poz,p_eq;
+	TYPE_UINT64				cValue;
+
+	if (GML::Utils::GString::StartsWith(link->MetaData,"!!BITSET:",true)==false)
+		return false;
+	if ((poz=GML::Utils::GString::Find(&link->MetaData[9],"!!"))==-1)
+		return false;
+	if (list.Set(&link->MetaData[9],poz)==false)
+		return false;
+	poz = 0;
+	cValue = 0;
+	while (list.CopyNext(&item,",",&poz))
+	{
+		if ((p_eq=item.FindLast("="))==-1)
+			return false;
+		if (value.Set(&item.GetText()[p_eq+1])==false)
+			return false;
+		item.Truncate(p_eq);
+		if (value.ConvertToUInt64(&cValue)==false)
+			return false;
+		if (item.Equals((char *)attr->Data,true))
+			(*uintValue) |= cValue;
+	}
+	return true;
 }
 bool ListIndexToAttribute(GML::Utils::AttributeLink	*link,Int64 intValue,GML::Utils::GString *name)
 {
@@ -194,6 +228,7 @@ bool GML::Utils::GMLObject::SetProperty(GML::Utils::AttributeList &config)
 	GML::Utils::AttributeLink	*link;
 	GML::Utils::Attribute		*attr;
 	Int64						int64Value;	
+	UInt64						uint64Value;
 
 	// caut in linkuri daca am ceva similar
 	for (tr=0;tr<AttrLinks.Len();tr++)
@@ -247,7 +282,8 @@ bool GML::Utils::GMLObject::SetProperty(GML::Utils::AttributeList &config)
 				TEST_SET_PROP(GML::Utils::AttributeList::UINT32,UInt32,UInt32);
 				TEST_SET_PROP(GML::Utils::AttributeList::INT32,UInt32,Int32);
 				TEST_SETLIST_PROP(UInt32);
-				DEBUGMSG("Expecting a numerical value (uint32,int32 or list) for %s ",link->Name);
+				TEST_SETBITSET_PROP(UInt32);
+				DEBUGMSG("Expecting a numerical value (uint32,int32,list or bitset) for %s ",link->Name);
 				return false;
 			case GML::Utils::AttributeList::INT32:
 				TEST_SET_PROP(GML::Utils::AttributeList::INT32,Int32,Int32);
