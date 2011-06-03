@@ -19,8 +19,29 @@
 					(*((tip *)link->LocalAddress)) = (tip)uint64Value; \
 					break; \
 				}
+UInt32 ComputeTextHash(UInt8 *str,UInt32 size)
+{
+   UInt32	a    = 63689;
+   UInt32	hash = 0;
+   UInt32	i;
+   UInt8	ch;
 
-bool AttributeToListIndex(GML::Utils::Attribute *attr,GML::Utils::AttributeLink	*link,Int64 *intValue)
+	for(i = 0; i < size; str++, i++)
+	{
+		ch = (UInt8)(*str);
+		if ((ch>='A') && (ch<='Z'))
+			ch++;
+		if ((ch<=32) || (ch>=127))
+			continue;
+		if ((ch==',') || (ch==0))
+			break;
+		hash = hash * a + ch;
+		a    = a * 378551;
+	}
+
+   return hash;
+}
+bool  AttributeToListIndex(GML::Utils::Attribute *attr,GML::Utils::AttributeLink	*link,Int64 *intValue)
 {
 	GML::Utils::GString		list,item,value;
 	int						poz,p_eq;
@@ -53,11 +74,15 @@ bool AttributeToListIndex(GML::Utils::Attribute *attr,GML::Utils::AttributeLink	
 	}
 	return false;
 }
-bool AttributeToBitSet(GML::Utils::Attribute *attr,GML::Utils::AttributeLink *link,UInt64 *uintValue)
+bool  AttributeToBitSet(GML::Utils::Attribute *attr,GML::Utils::AttributeLink *link,UInt64 *uintValue)
 {
 	GML::Utils::GString		list,item,value;
-	int						poz,p_eq;
+	int						poz,p_eq,tr;
+	char*					text = (char *)attr->Data;
 	TYPE_UINT64				cValue;
+	UINT32					Hashes[256];
+	UInt32					HashesCount=0;
+	UInt32					cHash;
 
 	if (GML::Utils::GString::StartsWith(link->MetaData,"!!BITSET:",true)==false)
 		return false;
@@ -65,8 +90,30 @@ bool AttributeToBitSet(GML::Utils::Attribute *attr,GML::Utils::AttributeLink *li
 		return false;
 	if (list.Set(&link->MetaData[9],poz)==false)
 		return false;
+	//GDT: ToDo -> attr->Data e de forma val1,val2,val3,....
+	//GDT: Trebuiesc separate si verificat exact care au fost setate
 	poz = 0;
-	cValue = 0;
+	for (tr=0;text[tr]!=0;tr++)
+	{
+		if (text[tr]==',')
+		{
+			Hashes[HashesCount] = ComputeTextHash((UInt8 *)&text[poz],tr-poz);
+			if (Hashes[HashesCount]!=0)
+				HashesCount++;
+			if (HashesCount==256)
+				return false;
+			poz = tr+1;
+		}
+	}
+	if (tr>poz)
+	{
+		Hashes[HashesCount] = ComputeTextHash((UInt8 *)&text[poz],tr-poz);
+		if (Hashes[HashesCount]!=0)
+			HashesCount++;
+	}
+	//
+	poz = 0;
+	(*uintValue) = 0;
 	while (list.CopyNext(&item,",",&poz))
 	{
 		if ((p_eq=item.FindLast("="))==-1)
@@ -76,8 +123,10 @@ bool AttributeToBitSet(GML::Utils::Attribute *attr,GML::Utils::AttributeLink *li
 		item.Truncate(p_eq);
 		if (value.ConvertToUInt64(&cValue)==false)
 			return false;
-		if (item.Equals((char *)attr->Data,true))
-			(*uintValue) |= cValue;
+		cHash = ComputeTextHash((UInt8 *)item.GetText(),item.Len());
+		for (tr=0;tr<HashesCount;tr++)
+			if (Hashes[tr]==cHash)		
+				(*uintValue) |= cValue;
 	}
 	return true;
 }
