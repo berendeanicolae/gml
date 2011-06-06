@@ -14,12 +14,14 @@
     <ProjectGuid>{A267261D-B7B7-4250-97E9-ECD251467DA7}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Projectron</RootNamespace>
+    <ProjectName>PCA</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -40,6 +42,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <TargetExt>.alg</TargetExt>
+    <OutDir>$(SolutionDir)$(Configuration)\Algorithms\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -49,15 +53,17 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PROJECTRON_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\lib;$(SolutionDir)..\..\Code\Algorithms\BTXPerceptrons\inc</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>$(SolutionDir)..\..\lib\gmllib.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -79,12 +85,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\code\Algorithms\BTXPerceptrons\inc\Projectron.h" />
-    <ClInclude Include="..\..\..\..\code\Algorithms\GDTPerceptrons\inc\GenericPerceptron.h" />
+    <ClInclude Include="..\..\..\..\code\Algorithms\BTXPerceptrons\inc\PCA.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\code\Algorithms\BTXPerceptrons\src\Projectron.cpp" />
-    <ClCompile Include="..\..\..\..\code\Algorithms\GDTPerceptrons\src\GenericPerceptron.cpp" />
+    <ClCompile Include="..\..\..\..\code\Algorithms\BTXPerceptrons\src\PCA.cpp" />
     <ClCompile Include="dllmain.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
