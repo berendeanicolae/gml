@@ -1,3 +1,5 @@
-#include "Projectron.h"
+// dllmain.cpp : Defines the entry point for the DLL application.
 
-LIB_INTERFACE(Projectron,"BTX",1,"Perceptron algorithm");
+#include "PCA.h"
+
+LIB_INTERFACE(PCA,"BTX",1,"Computes the pca of data");
