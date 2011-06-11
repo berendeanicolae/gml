@@ -7,8 +7,8 @@ PCA::PCA(){
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
 
 	LinkPropertyToUInt32("PcaNr",pca_nr,0,"The number of principal components");
-	LinkPropertyToDouble("Thereshold",thereshold,0.001,"Convergence check ....");
-	
+	LinkPropertyToDouble("Thereshold",thereshold,0.001,"Convergence check");
+	LinkPropertyToString("Output",filePath,"pca.txt","Where to save the pca");	
 }
 
 bool PCA::Init(){
@@ -43,10 +43,7 @@ bool PCA::Init(){
 		}
 		t.Insert(ob.Features[0],idx_r);
 	}
-	if(filePath.SetFormated("PCA.txt") == false){
-		notif->Error("[%s] Can't set formated PCA.txt",ObjectName);
-		return false;
-	}
+	
 	notif->Info("[%s] Initializarea a avut loc cu succes.",ObjectName);
 	return true;
 }
