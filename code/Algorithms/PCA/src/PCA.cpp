@@ -3,9 +3,12 @@
 PCA::PCA(){
 	
 	ObjectName = "PCA";
+	
+	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
+
 	LinkPropertyToUInt32("PcaNr",pca_nr,0,"The number of principal components");
 	LinkPropertyToDouble("Thereshold",thereshold,0.001,"Convergence check ....");
-	//SetPropertyMetaData("Command","!!LIST:None=0,Test!!");
+	
 }
 
 bool PCA::Init(){
