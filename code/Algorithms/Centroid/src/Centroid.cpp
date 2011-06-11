@@ -587,6 +587,8 @@ bool Centroid::PerformSimpleTest(GML::Algorithm::MLThreadData &td)
 		// daca nu a fost clasificat de nimeni -> ii pun label-ul exact invers
 		if (tr==nrVectors)
 		{
+			index++;
+			continue;
 			if (td.Record.Label==1)
 				testLabel = -1;
 			else
@@ -634,6 +636,7 @@ bool Centroid::PerformSimpleTest(GML::Algorithm::MLThreadData &td)
 					rStatus[index] = 1;
 				break;
 		};
+		
 		index++;
 	}
 
