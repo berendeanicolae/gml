@@ -65,6 +65,13 @@ class Centroid: public GML::Algorithm::IMLAlgorithm
 		HASH_SELECT_NEGATIVE_CORECTELY_CLASIFY,
 		HASH_SELECT_NEGATIVE_INCORECTELY_CLASIFY,
 	};
+	enum {
+		UNCLASIFIED_IGNORE = 0,
+		UNCLASIFIED_CONSIDER_POSITIVE,
+		UNCLASIFIED_CONSIDER_NEGATIVE,
+		UNCLASIFIED_CONSIDER_CORECTELY_CLASIFY,
+		UNCLASIFIED_CONSIDER_INCORECTELY_CLASIFY,
+	};
 protected:
 	GML::Utils::Indexes							indexesPozitive,indexesNegative;
 	GML::Utils::GTFVector<CentroidDistances>	distInfo;
@@ -72,6 +79,7 @@ protected:
 	GML::Utils::GTFVector<UInt8>				RecordsStatus;
 
 	UInt32					ClassType;
+	UInt32					UnclasifyRecords;
 	UInt32					SaveResults;
 	bool					SortResults;
 	UInt32					HashSelectMethod;

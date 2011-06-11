@@ -93,6 +93,7 @@ Centroid::Centroid()
 	LinkPropertyToBool  ("SortResults",SortResults,false,"Specify if the results should be sorted before saving");
 	LinkPropertyToUInt32("MinimPositiveElements",minPositiveElements,0,"Specify the minimum number of positive elemens in a centroid");
 	LinkPropertyToUInt32("MinimNegativeElements",minNegativeElements,0,"Specify the minimum number of negative elemens in a centroid");
+	LinkPropertyToUInt32("UnaclasifyRecords",UnclasifyRecords,UNCLASIFIED_IGNORE,"!!LIST:Ignore=0,Positive,Negative,CorectelyClasify,IncorectelyClasify!!");
 
 	LinkPropertyToString("CentroidsFileList"		,CentroidsFileList		,"","A list of weight files to be loaded separated by a comma.");
 	LinkPropertyToString("CentroidsPath"			,CentroidsPath			,"*.txt","The path where the weigh files are");
@@ -587,12 +588,29 @@ bool Centroid::PerformSimpleTest(GML::Algorithm::MLThreadData &td)
 		// daca nu a fost clasificat de nimeni -> ii pun label-ul exact invers
 		if (tr==nrVectors)
 		{
-			index++;
-			continue;
-			if (td.Record.Label==1)
-				testLabel = -1;
-			else
-				testLabel = 1;
+			if (UnclasifyRecords==UNCLASIFIED_IGNORE)
+			{
+				index++;
+				continue;
+			}
+			switch (UnclasifyRecords)
+			{
+				case UNCLASIFIED_CONSIDER_POSITIVE:
+					testLabel = 1;
+					break;
+				case UNCLASIFIED_CONSIDER_NEGATIVE:
+					testLabel = -1;
+					break;
+				case UNCLASIFIED_CONSIDER_CORECTELY_CLASIFY:
+					testLabel = td.Record.Label;
+					break;
+				case UNCLASIFIED_CONSIDER_INCORECTELY_CLASIFY:
+					if (td.Record.Label==1)
+						testLabel = -1;
+					else
+						testLabel = 1;
+					break;
+			};
 		}
 		corectelyClasified = (bool)(td.Record.Label==testLabel);
 		td.Res.Update(td.Record.Label==1,corectelyClasified);	
