@@ -320,7 +320,7 @@ bool CGMLGuiDlg::AddString(GML::Utils::Attribute* attr,char* value,unsigned char
 
 
 	
-	attr->GetListItem(objectMetadataList);
+	attr->GetListItems(objectMetadataList);
 	if(objectMetadataList.GetSize() > 0)
 	{
 		
