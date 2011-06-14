@@ -300,8 +300,9 @@ bool CGMLGuiDlg::AddBool(GML::Utils::Attribute* attr, bool boolValue,unsigned ch
 
 	
 	checkBox->SetCheck(boolValue);
-	if(!checkBox->SetDescription(objectDescription.GetText()))
-		return false;
+	wndContainer.AddDescription(checkBox,objectDescription.GetText());
+	//if(!checkBox->SetDescription(objectDescription.GetText()))
+		//return false;
 	if(!checkBox->SetMetaData(attr->MetaData))
 		return false;
 	return true;
@@ -347,6 +348,7 @@ bool CGMLGuiDlg::AddString(GML::Utils::Attribute* attr,char* value,unsigned char
 		comboBox->SetSelectedItem(selectedItem);
 		comboBox->elementType = TYPE_COMBO;
 		comboBox->SetMetaData(attr->MetaData);
+		wndContainer.AddDescription(comboBox,objectDescription.GetText());
 		return true;
 	
 	}
@@ -354,8 +356,9 @@ bool CGMLGuiDlg::AddString(GML::Utils::Attribute* attr,char* value,unsigned char
 	{
 		fileTxt = wndContainer.AddFile(attr->Name,offset,0,(attr->GetFlags() & GML::Utils::AttributeFlags::FL_FOLDER)!=0);
 		fileTxt->SetText(value);
-		if(!fileTxt->SetDescription(objectDescription.GetText()))
-			return false;
+		//if(!fileTxt->SetDescription(objectDescription.GetText()))
+			//return false;
+		wndContainer.AddDescription(fileTxt,objectDescription.GetText());
 		fileTxt->elementType =  TYPE_FILE;
 		return true;
 	}
@@ -369,8 +372,9 @@ bool CGMLGuiDlg::AddString(GML::Utils::Attribute* attr,char* value,unsigned char
 	editBox->SetText(value);
 	editBox->elementType =  valueType;
 	
-	if(!editBox->SetDescription(objectDescription.GetText()))
-		return false;
+	//if(!editBox->SetDescription(objectDescription.GetText()))
+		//return false;
+	wndContainer.AddDescription(editBox,objectDescription.GetText());
 
 
 	if(!editBox->SetMetaData(attr->MetaData))
@@ -984,8 +988,9 @@ bool CGMLGuiDlg::AddSelectionCombo(char* comboName,char* btnStr, char* extension
 		return false;
 	if(!attr->GetDescription(objectDescription))
 		return false;
-	if(!currentSelection->SetDescription(objectDescription.GetText()))
-		return false;
+	//if(!currentSelection->SetDescription(objectDescription.GetText()))
+		//return false;
+	wndContainer.AddDescription(currentSelection,objectDescription.GetText());
 
 	if(!AddFilesFromDirToCombo(comboName,extension,currentSelection))
 	{
@@ -1048,8 +1053,10 @@ bool CGMLGuiDlg::AddSpecialCombo(char* comboName,char* extension,GML::Utils::Att
 	if(!attr->GetDescription(objectDescription))
 		return false;
 
-	if(!currentCombo->SetDescription(objectDescription.GetText()))
-		return false;
+	wndContainer.AddDescription(currentCombo,objectDescription.GetText());
+
+	//if(!currentCombo->SetDescription(objectDescription.GetText()))
+		//return false;
 
 	
 	if(!AddFilesFromDirToCombo(comboName,extension,currentCombo))
