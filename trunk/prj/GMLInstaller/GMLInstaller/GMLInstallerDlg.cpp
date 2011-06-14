@@ -624,6 +624,10 @@ unsigned char CGMLInstallerDlg::GetPackage(char* fileName)
 	{
 		return COMPONENT_SDK;
 	}
+	if(temp.Contains("GUI",true))
+	{
+		return COMPONENT_GUI;
+	}
 
 	return COMPONENT_GML;
 
@@ -915,25 +919,34 @@ void CGMLInstallerDlg::OnBnClickedNext()
 	
 		destinationPath.Set(installPath);
 		destinationPath.PathJoinName(gmlPackage.GetFileName(tr));
-		if (gmlPackage.Extract(tr,destinationPath.GetText())==false)
-		{
-			
-			ShowErrorAndUpdateGlobalStatus(gmlPackage.GetError());	
-			return;
-		}
-		temp.SetFormated("Copying: %s",gmlPackage.GetFileName(tr));
-		groupBoxProgress.ShowWindow(SW_SHOW);
 		component = GetPackage(gmlPackage.GetFileName(tr));
 		if(intallComponents[component])
 		{
+			if(component == COMPONENT_GUI)
+			{
+				destinationPath.Replace("GUI/","",false);
+			}
 			SetInstallComponentStatus(component,"Copying files...");
+			if (gmlPackage.Extract(tr,destinationPath.GetText())==false)
+			{
+			
+				ShowErrorAndUpdateGlobalStatus(gmlPackage.GetError());	
+				return;
+			}
+			temp.SetFormated("Copying: %s",gmlPackage.GetFileName(tr));
 			staticProgressStatus.SetWindowText(temp);
+			
 			for(int j=0;j<gmlPackage.Header->Files[tr].UncompressedSize / 0x0fff;j++)
 			{
 				if(progressBar.GetPos() != up)
 					progressBar.StepIt();
 			}
 		}
+		
+		
+		
+		//groupBoxProgress.ShowWindow(SW_SHOW);
+		
 		
 	}
 	
