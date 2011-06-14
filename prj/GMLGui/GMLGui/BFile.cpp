@@ -45,6 +45,19 @@ bool BFile::Create(char* strLabel,unsigned char offset,CWnd* parent, UINT ID,boo
 
 }
 
+bool	BFile::SetText(char* txt)
+{
+	if(txt == NULL)
+		return false;
+	filePath.SetWindowText(txt);
+	return true;
+}
+
+void BFile::GetText(CString& str)
+{
+	this->filePath.GetWindowText(str);
+}
+
 
 
 void BFile::UpdatePosition()

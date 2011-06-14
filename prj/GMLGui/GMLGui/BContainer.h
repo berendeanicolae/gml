@@ -17,6 +17,7 @@
 #define TYPE_COMBO 100
 #define TYPE_HEADER 101
 #define TYPE_ELEMENT_HEADER 102
+#define TYPE_FILE 103
 
 class BContainer :
 	public CWnd

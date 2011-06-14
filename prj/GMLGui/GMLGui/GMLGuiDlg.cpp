@@ -9,7 +9,7 @@
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
-#endif
+#endif	
 
 //
 // ++++ CALLBACKS
@@ -315,12 +315,17 @@ bool CGMLGuiDlg::AddString(GML::Utils::Attribute* attr,char* value,unsigned char
 	GML::Utils::GString			objectMetadataList,textItem;
 	BEdit*						editBox;
 	BCombo*						comboBox;
+	BFile*						fileTxt;
 	int							currentPos = 0,selectedItem = 0, numberOfItems = 0;
 
 
 
 	
 	attr->GetListItems(objectMetadataList);
+	
+	if(!attr->GetDescription(objectDescription))
+		return false;
+
 	if(objectMetadataList.GetSize() > 0)
 	{
 		
@@ -345,17 +350,29 @@ bool CGMLGuiDlg::AddString(GML::Utils::Attribute* attr,char* value,unsigned char
 		return true;
 	
 	}
+	if(attr->GetFlags() & GML::Utils::AttributeFlags::FL_FILEPATH || attr->GetFlags() & GML::Utils::AttributeFlags::FL_FOLDER)
+	{
+		fileTxt = wndContainer.AddFile(attr->Name,offset,0,(attr->GetFlags() & GML::Utils::AttributeFlags::FL_FOLDER)!=0);
+		fileTxt->SetText(value);
+		if(!fileTxt->SetDescription(objectDescription.GetText()))
+			return false;
+		fileTxt->elementType =  TYPE_FILE;
+		return true;
+	}
 	
+		
 	editBox = wndContainer.AddEditBox(attr->Name,offset,0);
+	
 	if(editBox== NULL)
-		return false;
-	if(!attr->GetDescription(objectDescription))
 		return false;
 
 	editBox->SetText(value);
 	editBox->elementType =  valueType;
+	
 	if(!editBox->SetDescription(objectDescription.GetText()))
 		return false;
+
+
 	if(!editBox->SetMetaData(attr->MetaData))
 		return false;
 	return true;

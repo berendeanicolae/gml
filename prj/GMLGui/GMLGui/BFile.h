@@ -19,6 +19,8 @@ public:
 	
 	bool Create(char* strLabel,unsigned char offset,CWnd* parent, UINT ID,bool isFolder = false);
 	void	UpdatePosition();
+	bool	SetText(char* txt);
+	void	GetText(CString& str);
 
 	afx_msg void OnBnClickedBrowse();
 	DECLARE_MESSAGE_MAP()

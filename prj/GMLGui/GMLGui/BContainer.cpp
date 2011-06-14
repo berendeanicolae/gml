@@ -857,6 +857,7 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 	BCheckBox* boolItem;
 	BButton* buttonValue;
 	BItem* item;
+	BFile* fileItem;
 
 
 	for(int i=0;i<vElements.GetSize();i++)
@@ -913,6 +914,12 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 		case TYPE_COMBO:
 			comboValue = (BCombo*)element;
 			comboValue->GetSelectedItem(temp);
+			objectValue = (char*)temp.GetString();
+			objectType = GML::Utils::AttributeList::STRING;
+			break;
+		case TYPE_FILE:
+			fileItem = (BFile*) element;
+			fileItem->GetText(temp);
 			objectValue = (char*)temp.GetString();
 			objectType = GML::Utils::AttributeList::STRING;
 			break;
