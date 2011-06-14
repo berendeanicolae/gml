@@ -10,7 +10,7 @@
 #include "BCheckBox.h"
 #include "BSelection.h"
 #include "BButton.h"
-#include "gml\gmllib.h"
+#include "gmllib.h"
 
 
 

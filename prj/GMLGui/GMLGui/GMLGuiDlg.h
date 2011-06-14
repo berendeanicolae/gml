@@ -6,7 +6,7 @@
 
 #include "BContainer.h"
 #include "afxwin.h"
-#include "gml\gmllib.h"
+#include "gmllib.h"
 #include "GraphicNotifierContainer.h"
 
 #define MAX_CONNECTORS	50
