@@ -29,6 +29,7 @@ private:
 	DWORD lastId;;
 	CString algorithmName;
 	DWORD lastYpos;
+	CToolTipCtrl tooltipCtrl;
 
 public:
 	
@@ -62,6 +63,7 @@ public:
 	bool GetComplexElement(int* i, CString* str);
 	bool GetConnectorStr(int* i,CString* tempConnector);
 	bool GetElementStr(BItem* element,CString* str);
+	bool AddDescription(BItem* element,char* str);
 	
 	
 	
@@ -73,6 +75,7 @@ public:
 	afx_msg void OnPaint();
 	afx_msg void OnVScroll(UINT nSBCode,UINT nPos, CScrollBar* pScrollBar);
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+	afx_msg BOOL PreTranslateMessage(MSG* pMsg);
 	
 
 	DECLARE_MESSAGE_MAP();

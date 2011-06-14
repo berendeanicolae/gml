@@ -24,6 +24,16 @@ bool BContainer::Create(unsigned int x, unsigned int y, unsigned int width, unsi
 	
 	if(parent == NULL)	return false;
 	if(!CWnd::Create(NULL,NULL,WS_CHILD | WS_VISIBLE | WS_VSCROLL, CRect(x,y,x+width, y+height),parent,ID))	return false;
+	tooltipCtrl.Create(this,TTS_ALWAYSTIP | TTF_TRACK | TTF_ABSOLUTE);
+	
+	
+	tooltipCtrl.SetDelayTime(TTDT_INITIAL, 0);
+	tooltipCtrl.SetDelayTime(TTDT_AUTOPOP, 120*1000);
+	tooltipCtrl.Activate(true);
+	tooltipCtrl.SetFont(&simpleFont);
+	tooltipCtrl.SetTipBkColor(RGB(255,255,255));
+	
+	tooltipCtrl.SetTipTextColor(RGB(255,0,0));
 	ResetScrollBar();
 
 	return true;
@@ -193,11 +203,23 @@ bool BContainer::AddElement(BItem* element)
 			element->ShowWindow(SW_HIDE);
 		}
 	}
+
+	if(element->description!=NULL)
+		tooltipCtrl.AddTool(element,element->description);
 	ResetScrollBar();
 
 	return true;
 }
 
+bool BContainer::AddDescription(BItem* element,char* str)
+{
+	if(element == NULL)
+		return false;
+	if(str == NULL)
+		return false;
+	element->SetDescription(str);
+	tooltipCtrl.AddTool(element,str);
+}
 BContainer::~BContainer(void)
 {
 
@@ -1010,4 +1032,11 @@ bool BContainer::SaveConfiguration(char* algorithmName,char* fileName,GML::Utils
 
 	return true;
 
+}
+
+BOOL BContainer::PreTranslateMessage(MSG* pMsg)
+{
+	tooltipCtrl.RelayEvent(pMsg);
+
+    return CWnd::PreTranslateMessage(pMsg);
 }
