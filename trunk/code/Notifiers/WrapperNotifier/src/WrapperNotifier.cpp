@@ -11,7 +11,7 @@ WrapperNotifier::WrapperNotifier()
 	fnUninit = NULL;
 	Context = NULL;
 
-	LinkPropertyToString("Plugin",PluginPath,"","Specifies the name of the dll plugin that will receive the messages !");	
+	LinkPropertyToString("Plugin",PluginPath,"","!!FILEPATH!!\nSpecifies the name of the dll plugin that will receive the messages !");	
 }
 
 bool WrapperNotifier::OnInit()
