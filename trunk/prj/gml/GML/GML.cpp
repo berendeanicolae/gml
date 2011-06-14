@@ -181,7 +181,7 @@ int  Template(char *objectName,char *templateName)
 		desc.Set("");
 		if (((a->GetFlags() & GML::Utils::FL_LIST)!=0) && (a->AttributeType==GML::Utils::AttributeList::STRING))
 		{
-			if (a->GetListItem(desc))
+			if (a->GetListItems(desc))
 				result.AddFormated(";one of [%s]\n",desc.GetText());
 		}
 		result.AddFormated("%s\n\n",tmp.GetText());		
@@ -327,7 +327,7 @@ int  Info(char *objectName)
 				tmp.AddFormated("'%s'",(char *)a->Data);
 				if ((a->GetFlags() & GML::Utils::FL_LIST)!=0)
 				{
-					if (a->GetListItem(list))
+					if (a->GetListItems(list))
 						tmp.AddFormated(" one of [%s]",list.GetText());
 				}
 				break;
@@ -400,7 +400,7 @@ int  Desc(char *objectName,char *prop)
 	if ((a->GetFlags() & GML::Utils::FL_LIST)!=0)
 	{
 		
-		if (a->GetListItem(list))
+		if (a->GetListItems(list))
 		{
 			SetColor(14,0);	
 			printf("one of [%s]\n",list.GetText());
