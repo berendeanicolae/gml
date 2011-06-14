@@ -60,6 +60,8 @@ def main():
 	AddFileToarchList(os.path.join(ia_base_folder,"gml.exe"),"gml.exe")	
 	#gmlpy
 	AddFileToarchList("gmlpy.py","gmlpy.py")		
+	AddFileToarchList("gmlgui.exe","gmlgui.exe")
+	AddFileToarchList("interfaceNotifier.dll","interfaceNotifier.dll")
 	#curat alte chestii
 	open("arcList.txt","wt").write(arcList);
 	shutil.copy("../prj/GMLInstaller/Release/GMLInstaller.exe",zname)
