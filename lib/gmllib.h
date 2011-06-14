@@ -1515,6 +1515,8 @@ namespace GML
 		{
 			FL_LIST = 1,
 			FL_FILEPATH = 2,
+			FL_FOLDER = 4,
+			FL_BITSET = 8,
 		};
 		struct  Attribute
 		{
@@ -1528,7 +1530,8 @@ namespace GML
 			bool operator < (Attribute &a1);
 			bool operator > (Attribute &a1);
 
-			bool			GetListItem(GML::Utils::GString &str);
+			bool			GetListItems(GML::Utils::GString &str);
+			bool			GetBitSetItems(GML::Utils::GString &str);
 			bool			GetDescription(GML::Utils::GString &str);
 			UInt32			GetFlags();
 		};
