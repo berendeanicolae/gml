@@ -1,6 +1,6 @@
 #pragma once
 #include "afxwin.h"
-#include "gml\gmllib.h"
+#include "gmllib.h"
 
 
 #define TAB_CONTROL	0x1000
