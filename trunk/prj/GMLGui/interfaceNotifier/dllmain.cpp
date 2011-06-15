@@ -1,6 +1,7 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
 #include "GraphicNotifier.h"
+#include "GString.h"
 
 HWND parent = NULL;
 DWORD nrWindows = 0;
@@ -70,12 +71,13 @@ DWORD WINAPI run_thread_window(LPVOID lpThreadParameter)
 				parent = NULL;
 			}
 
+			
+
 			if(parent == NULL)
 			{
 				parent = topWindow;
-				//GetWindowText(parent,temp,100);
-				//AfxMessageBox(temp);
 			}
+			
 			::GetClientRect(parent,&tabSize);
 			tabSize.left=+15;
 			GraphicNotifier* newGraphicNotifier = new GraphicNotifier();
@@ -90,9 +92,6 @@ DWORD WINAPI run_thread_window(LPVOID lpThreadParameter)
 	}else
 		if (strcmp(temp,"ConsoleWindowClass") == 0)
 		{
-			
-
-
 			
 			GraphicNotifier* newGraphicNotifier = new GraphicNotifier();
 			HANDLE hthread;
@@ -117,29 +116,48 @@ DWORD WINAPI run_thread_window(LPVOID lpThreadParameter)
 
 	currentGraphicNotifier= (GraphicNotifier*)context;
 	GML::Utils::AlgorithmResult	*res = (GML::Utils::AlgorithmResult *)Data;	
-	
+	GString temp;
+	GString elements[2];
 	
 	char *text = (char *)Data;
 
 	if(currentGraphicNotifier == NULL)
 		return false;
 	if(!IsWindow(currentGraphicNotifier->GetSafeHwnd()))
-		return false;
+		return false;		
 	if(currentGraphicNotifier->windowDestroyed == true)
 		return false;
 	
 	// pentru AlgResult
 	switch(messageID)
 	{
-	case 100:
-		currentGraphicNotifier->InsertStatistics(res);
-		
-		//	printf("%4d|TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|%s\n",(res->Iteration+1),(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc,res->time.GetPeriodAsString(tempStr));
-		return true;
+	case GML::Utils::INotifier::NOTIFY_RESULT:
+		//currentGraphicNotifier->InsertStatistics(res);
 		break;
 	case GML::Utils::INotifier::NOTIFY_ERROR:
+		currentGraphicNotifier->InsertError(text);
+		break;
 	case GML::Utils::INotifier::NOTIFY_INFO:
-		currentGraphicNotifier->InsertMessage(text,DataSize,messageID);
+		temp.Set(text);
+		if(temp.Find("->"))
+		{
+			temp.Split("->",elements,2);
+		}
+		else
+		{
+			elements[0].Set("Info");
+			elements[1].Set(text);
+		}
+
+		currentGraphicNotifier->InsertMessage(elements[0].GetText(),elements[1].GetText());
+		break;
+	case GML::Utils::INotifier::NOTIFY_START_PROCENT:
+		currentGraphicNotifier->InsertProgressControl(text);
+		break;
+	case GML::Utils::INotifier::NOTIFY_PROCENT:
+		double a = *((double*)Data);
+		a*=100;
+		currentGraphicNotifier->SetProgress(a);
 		break;
 	}
 	return true;
