@@ -189,7 +189,7 @@ bool GML::Utils::INotifier::CreateObject(char *name,char *attributes)
 	} else {
 		Size = 32;
 	}
-	Data[Size]=0;
+	Data[Size++]=0;
 	return Notify(NOTIFY_CREATEOBJECT,Data,Size);
 }
 bool GML::Utils::INotifier::SendDataToObject(char *objName,char *attributes)
@@ -209,7 +209,7 @@ bool GML::Utils::INotifier::SendDataToObject(char *objName,char *attributes)
 	} else {
 		Size = 32;
 	}
-	Data[Size]=0;
+	Data[Size++]=0;
 	return Notify(NOTIFY_SENDOBJECTCOMMAND,Data,Size);
 }
 bool GML::Utils::INotifier::SuportsObjects()
