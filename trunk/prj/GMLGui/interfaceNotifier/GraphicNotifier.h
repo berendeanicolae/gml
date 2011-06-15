@@ -41,6 +41,7 @@ class GraphicNotifier :
 	tabOwner		tabControlObjects[MAX_CONTROLS];
 	int 			lastProgressBar;
 	unsigned int	nrObjects;
+	bool			statisticsCreated;
 	
 
 public:
