@@ -212,3 +212,7 @@ bool GML::Utils::INotifier::SendDataToObject(char *objName,char *attributes)
 	Data[Size]=0;
 	return Notify(NOTIFY_SENDOBJECTCOMMAND,Data,Size);
 }
+bool GML::Utils::INotifier::SuportObjects()
+{
+	return false;
+}
