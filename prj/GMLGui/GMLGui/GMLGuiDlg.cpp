@@ -681,7 +681,6 @@ bool CGMLGuiDlg::AddChildrenForSelectionObject(BSelection* selectionObj,char* st
 {
 	GML::Utils::AttributeList	attrList;
 	GML::Utils::AttributeList	finalList;
-	GML::Utils::Attribute* currentAttribute,*testAttribute;
 	BButton* btnElement;
 	CString selectedString;
 	DWORD elementPos;
@@ -735,7 +734,6 @@ bool CGMLGuiDlg::AddChildrenFromObject(BItem* currentProperty,int* pNewValue,GML
 	BCombo* objectCombo;
 	GML::Utils::AttributeList	attrList;
 	GML::Utils::AttributeList	finalList;
-	GML::Utils::Attribute* currentAttribute,*testAttribute;
 	CString selectedString;
 	unsigned int offset;
 
@@ -887,7 +885,6 @@ bool CGMLGuiDlg::AddFilesFromDirToCombo(char* dirName,char* extension, BCombo* c
 
 void CGMLGuiDlg::AddConnector()
 {
-	int selectedSelectionElement;
 	CString sel;
 	
 	//bool CGMLGuiDlg::AddChildrenFromObject(BItem* currentProperty,int* pNewValue,GML::Utils::AttributeList* newAttrList)
@@ -904,7 +901,6 @@ void CGMLGuiDlg::AddConnector()
 
 void CGMLGuiDlg::RemoveConnector()
 {
-	int selectedSelectionElement;
 	
 	//bool CGMLGuiDlg::AddChildrenFromObject(BItem* currentProperty,int* pNewValue,GML::Utils::AttributeList* newAttrList)
 	BItem* selElement = wndContainer.GetSelectedElement();
@@ -960,18 +956,15 @@ bool CGMLGuiDlg::AddSelectionCombo(char* comboName,char* btnStr, char* extension
 	GML::Utils::GString			selectedObject;
 	GML::Utils::GString			propertyName;
 	GML::Utils::GString			propData[2];
-	int							selectedIndex;
 	GML::Utils::AttributeList	objectProperties;
 	BSelection*					currentSelection;
 	CString						el;
 	GString						parser;
 	GString						connectors[MAX_CONNECTORS]; //maxim 50 de conectori
-	GML::Utils::Attribute		connectorsAttr[MAX_CONNECTORS];
 	
 	GString						temp;
 	GString						connectorName;
 	int							nrConnectors = 0;
-	int pos;
 	
 
 	if(comboName == NULL)
@@ -1216,12 +1209,10 @@ void CGMLGuiDlg::OnFileLoadConfiguration()
 
 bool CGMLGuiDlg::StartGmlExec(char* algorithmName,GML::Utils::AttributeList*	attrList)
 {
-	WIN32_FIND_DATA lpFindData;
 	TCHAR currentPath[MAX_PATH];
 	TCHAR tempFileName[MAX_PATH];
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
-	HANDLE hFind;
 	DWORD size;
 	unsigned int lastSlash = 0;
 	CString parameters;
