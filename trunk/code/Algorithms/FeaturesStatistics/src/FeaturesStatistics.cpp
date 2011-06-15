@@ -312,6 +312,14 @@ bool FeaturesStatistics::CreateHeaders(GML::Utils::GString &str)
 	UInt32				tr;
 	GML::Utils::GString	tmp;
 
+	if (notif->SuportsObjects())
+	{
+		tmp.Set("Type=List;Column_0=FeatureName;Column_1=Positive;Column_2=Negative;");
+		for (tr=0;tr<StatsData.Len();tr++)
+			tmp.AddFormated("Column_%d=%s;",tr+3,StatsData[tr].Name.GetText());
+		notif->CreateObject("FeatTable",tmp.GetText());
+	}
+	tmp.Set("");
 	if (featureColumnWidth==0)
 	{
 		if (showFeatureName)
@@ -361,8 +369,9 @@ bool FeaturesStatistics::CreateHeaders(GML::Utils::GString &str)
 bool FeaturesStatistics::CreateRecordInfo(FeaturesInformations &finf,GML::Utils::GString &str)
 {
 	UInt32				tr;
-	GML::Utils::GString	tmp;
+	GML::Utils::GString	tmp,fName;
 
+	tmp.Set("");
 	if (featureColumnWidth==0)
 	{
 		if (showFeatureName)
@@ -423,8 +432,14 @@ void FeaturesStatistics::PrintStats()
 	line.Set("");
 	while (line.Len()<str.Len())
 		line.AddChar('-');
-	notif->Info(str.GetText());
-	notif->Info(line.GetText());
+	if (notif->SuportsObjects())
+	{
+		str.Insert("Insert:",0);
+		notif->SendDataToObject("FeatTable",str.GetText());
+	} else {
+		notif->Info(str.GetText());
+		notif->Info(line.GetText());
+	}
 	for (tr=0;tr<con->GetFeatureCount();tr++)
 	{
 		if (CreateRecordInfo(ComputedData[tr],str)==false)
@@ -432,9 +447,16 @@ void FeaturesStatistics::PrintStats()
 			notif->Error("[%s] -> Unable to create record line !",ObjectName);
 			return;
 		}
-		notif->Info(str.GetText());
+		if (notif->SuportsObjects())
+		{
+			str.Insert("Insert:",0);
+			notif->SendDataToObject("FeatTable",str.GetText());
+		} else {
+			notif->Info(str.GetText());
+		}
 	}
-	notif->Info(line.GetText());
+	if (notif->SuportsObjects()==false)
+		notif->Info(line.GetText());
 }
 void FeaturesStatistics::SaveToFile()
 {
