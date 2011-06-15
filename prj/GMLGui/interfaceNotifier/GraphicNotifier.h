@@ -1,6 +1,7 @@
 #pragma once
 #include "afxwin.h"
 #include "gmllib.h"
+#include "BListCtrl.h"
 
 
 #define TAB_CONTROL	0x1000
@@ -34,8 +35,10 @@ class GraphicNotifier :
 	
 	CTabCtrl		tabControl;
 	CStatic			temp;
-	CListCtrl		lstAlgResult;
+	//CListCtrl		lstAlgResult;
+	BListCtrl		lstAlgResult;
 	tabOwner		tabControlObjects[MAX_CONTROLS];
+	int 			lastProgressBar;
 	unsigned int	nrObjects;
 	
 
@@ -48,7 +51,10 @@ public:
 	bool AddObject(CWnd* object, unsigned int tabId);
 	void OnTcnSelchange(NMHDR *pNMHDR, LRESULT *pResult);
 	bool InsertStatistics(GML::Utils::AlgorithmResult	*res );
-	bool InsertMessage(char* message, int DataSize,int MessageID);
+	bool InsertMessage(char* title,char* message);
+	bool InsertError(char* text);
+	bool InsertProgressControl(char* text);
+	bool SetProgress(double procent);
 
 
 

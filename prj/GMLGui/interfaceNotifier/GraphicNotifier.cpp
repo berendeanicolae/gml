@@ -6,6 +6,8 @@ GraphicNotifier::GraphicNotifier(void)
 {
 	nrObjects = 0;
 	windowDestroyed = false;
+	lastProgressBar = 0;
+
 }
 
 
@@ -35,8 +37,6 @@ void GraphicNotifier::Create(TCHAR* text,CRect& rect,HWND parent)
 		CWnd::CreateEx(NULL,NULL,"Graphical Notifier",windowStyle,rect.left,rect.top,rect.Width(),rect.Height(),parent, NULL);
 	}
 
-
-	
 	someBrush.CreateSolidBrush(RGB(100,195,195));  
 	fnt.CreateFont(12,0,0,0,FW_THIN,FALSE,FALSE,FALSE,ANSI_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,PROOF_QUALITY,DEFAULT_PITCH+FF_DONTCARE,TEXT("Arial"));
 
@@ -61,7 +61,8 @@ void GraphicNotifier::Create(TCHAR* text,CRect& rect,HWND parent)
 
 
 
-	lstAlgResult.CreateEx(LVS_EX_GRIDLINES|WS_EX_STATICEDGE,WS_BORDER| LVS_REPORT  | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_VISIBLE,CRect(TAB_LEFT,TAB_TOP,TAB_RIGHT,TAB_BOTTOM-100),this,ID_RESULT_LIST);
+	
+	lstAlgResult.CreateEx(LVS_EX_GRIDLINES|WS_EX_STATICEDGE,WS_BORDER| LVS_REPORT  | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_VISIBLE | LVS_OWNERDRAWFIXED ,CRect(TAB_LEFT,TAB_TOP,TAB_RIGHT,TAB_BOTTOM-100),this,ID_RESULT_LIST);
 	
 
 	
@@ -69,9 +70,11 @@ void GraphicNotifier::Create(TCHAR* text,CRect& rect,HWND parent)
 
 	//	printf("%4d|TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|%s\n",(res->Iteration+1),(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc,res->time.GetPeriodAsString(tempStr));
 	int count = 0;
-	int nrColomns=9;
+	int nrColomns=2;
 
-
+	lstAlgResult.InsertColumn(count++,"Tile",LVCFMT_LEFT,200);
+	lstAlgResult.InsertColumn(count++,"Details",LVCFMT_LEFT,TAB_WIDTH -220);
+	/*
 	lstAlgResult.InsertColumn(count++,"Nr",LVCFMT_CENTER,(TAB_WIDTH /nrColomns)/2);
 	lstAlgResult.InsertColumn(count++,"TP",LVCFMT_CENTER,TAB_WIDTH /nrColomns);
 	lstAlgResult.InsertColumn(count++,"TN",LVCFMT_CENTER,TAB_WIDTH /nrColomns);
@@ -81,15 +84,15 @@ void GraphicNotifier::Create(TCHAR* text,CRect& rect,HWND parent)
 	lstAlgResult.InsertColumn(count++,"Sp",LVCFMT_CENTER,TAB_WIDTH /nrColomns);
 	lstAlgResult.InsertColumn(count++,"Acc",LVCFMT_CENTER,TAB_WIDTH /nrColomns);
 	lstAlgResult.InsertColumn(count++,"Time",LVCFMT_LEFT,(TAB_WIDTH /nrColomns)*1.5);
-
+	*/
 	AddObject(&lstAlgResult,0);
 	
 
 
-	edtAlgOutput.Create(WS_VISIBLE| SS_SUNKEN | WS_BORDER| ES_AUTOVSCROLL |ES_AUTOHSCROLL | ES_LEFT|ES_MULTILINE |ES_NOHIDESEL  |ES_READONLY  |ES_WANTRETURN , CRect(TAB_LEFT,TAB_BOTTOM-90, TAB_RIGHT,TAB_BOTTOM),this,ID_RESULT_EDIT);
+//	edtAlgOutput.Create(WS_VISIBLE| SS_SUNKEN | WS_BORDER| ES_AUTOVSCROLL |ES_AUTOHSCROLL | ES_LEFT|ES_MULTILINE |ES_NOHIDESEL  |ES_READONLY  |ES_WANTRETURN , CRect(TAB_LEFT,TAB_BOTTOM-90, TAB_RIGHT,TAB_BOTTOM),this,ID_RESULT_EDIT);
 	
-	edtAlgOutput.SetFont(&fnt);
-	AddObject(&edtAlgOutput,0);
+//	edtAlgOutput.SetFont(&fnt);
+//	AddObject(&edtAlgOutput,0);
 	//fortez redesenarea
 	OnTcnSelchange(NULL,NULL);
 
@@ -118,6 +121,14 @@ GraphicNotifier::~GraphicNotifier(void)
 }
 
 
+
+bool GraphicNotifier::SetProgress(double procent)
+{
+	
+	
+	lstAlgResult.SetControlItemData(lastProgressBar,1,(int)(procent));
+	return true;
+}
 bool GraphicNotifier::InsertStatistics(GML::Utils::AlgorithmResult	*res )
 {
 	GML::Utils::GString		tempStr;
@@ -163,6 +174,43 @@ bool GraphicNotifier::InsertStatistics(GML::Utils::AlgorithmResult	*res )
 //	|Se:|Sp|Acc:%3.2lf|%s\n",(res->Iteration+1),(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc,res->time.GetPeriodAsString(tempStr));
 }
 
+bool GraphicNotifier::InsertMessage(char* title,char* message)
+{
+	if ((title!=NULL) && (message!=NULL))
+	{
+		
+		lstAlgResult.InsertItem(lstAlgResult.GetItemCount(), title);
+		lstAlgResult.SetItemText(lstAlgResult.GetItemCount()-1,1,message); 
+		return true;
+	}
+	return false;
+}
+
+bool GraphicNotifier::InsertError(char* text)
+{
+	if ((text!=NULL))
+	{
+		return InsertMessage("Error",text);
+	}
+	
+	return false;
+}
+
+bool GraphicNotifier::InsertProgressControl(char* text)
+{
+	if(text==NULL)
+		return false;
+
+	if(!lstAlgResult.InsertItem(lstAlgResult.GetItemCount(), text))
+		return false;
+	if(!lstAlgResult.AddControlToItem(lstAlgResult.GetItemCount()-1,1,TYPE_PROGRESS_BAR,0))
+		return false;
+	lstAlgResult.RedrawItems(lstAlgResult.GetItemCount()-1,lstAlgResult.GetItemCount()-1);
+	lastProgressBar = lstAlgResult.GetItemCount()-1;
+	return true;
+}
+
+/*
 bool GraphicNotifier::InsertMessage(char* text, int DataSize, int MessageID)
 {
 	CString temp,outStr,windowStr;
@@ -193,6 +241,7 @@ bool GraphicNotifier::InsertMessage(char* text, int DataSize, int MessageID)
 
 	return true;
 }
+*/
 
 bool GraphicNotifier::AddObject(CWnd* object, unsigned int tabId)
 {
