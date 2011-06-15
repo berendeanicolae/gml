@@ -89,7 +89,7 @@ void GraphicNotifierContainer::OnClose()
 
 }
 
-CWnd* GraphicNotifierContainer::AddAlgorithm(char* algorithmName)
+bool GraphicNotifierContainer::AddAlgorithm(char* algorithmName)
 {
 	TCITEM tcItem;
 	int currentTabId;
@@ -98,14 +98,14 @@ CWnd* GraphicNotifierContainer::AddAlgorithm(char* algorithmName)
 
 
 	if(nrAlgorithms == MAX_ALGORITHMS)
-		return NULL;
+		return false;
 
 	tcItem.mask = TCIF_TEXT;
 	tcItem.pszText = algorithmName;
 
 	currentTabId = currentTabControl.InsertItem(nrAlgorithms,&tcItem);
 	if (currentTabId ==-1)
-		return NULL;
+		return false;
 	
 	nrAlgorithms+=1;
 	
@@ -121,7 +121,7 @@ CWnd* GraphicNotifierContainer::AddAlgorithm(char* algorithmName)
 	temp();
 //- temporar
 */
-
+	return true;
 
 
 }

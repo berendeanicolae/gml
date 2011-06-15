@@ -219,6 +219,7 @@ bool BContainer::AddDescription(BItem* element,char* str)
 		return false;
 	element->SetDescription(str);
 	tooltipCtrl.AddTool(element,str);
+	return true;
 }
 BContainer::~BContainer(void)
 {
@@ -432,7 +433,7 @@ int BContainer::GetLastChildPos(BItem* someEl)
 	UINT parentOffset = 0;
 	UINT offset;
 	bool found = false;
-	int i,j;
+	int i;
 
 	for(i = 0;i <vElements.GetSize();i++)
 	{
@@ -678,6 +679,7 @@ bool BContainer::GetElementStr(BItem* element,CString* str)
 	BCheckBox* boolItem;
 	BEdit*	editItem;
 	BCombo* comboItem;
+	BFile* fileItem;
 	BButton* buttonItem;
 	CString temp;
 	GString gStrTemp;
@@ -737,6 +739,11 @@ bool BContainer::GetElementStr(BItem* element,CString* str)
 		comboItem = (BCombo*)element;
 		comboItem->GetSelectedItem(temp);
 		str->Format("%s=%s;",comboItem->label,temp);
+		return true;
+	case TYPE_FILE:
+		fileItem = (BFile*)element;
+		fileItem->GetText(temp);
+		str->Format("%s=%s;",fileItem->label,temp);
 		return true;
 	case TYPE_ELEMENT_HEADER:
 		buttonItem = (BButton*)element;
@@ -813,7 +820,7 @@ bool BContainer::GetComplexElement(int* i, CString* str)
 			return false;
 		if(!GetElementStr(element,&temp))
 		{
-			i++;
+			*i+=1;
 			element = (BItem*)vElements.GetPointer(*i);
 		}				
 		str->Append(temp);
@@ -856,8 +863,7 @@ bool BContainer::GetConnectorsSaveString(int* i,CString* str)
 }
 bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils::AttributeList*	attrList)
 {
-	BItem* element,*currentProperty;
-	BCombo* combo;
+	BItem* element;
 	char* objectName;
 	GString gStrTemp;
 	CString temp,tempStr;
@@ -865,9 +871,7 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 	CString tempValue;
 	CString connectorStr;
 	bool	foundComplex;
-	char* complexMetaData;
 	void* objectValue;
-	unsigned char complexDataType;
 	unsigned char objectType;
 	bool someBoolValue;
 	GML::Utils::Attribute*	attr;
@@ -877,12 +881,11 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 	BEdit* editValue;
 	BCombo* comboValue;
 	BCheckBox* boolItem;
-	BButton* buttonValue;
-	BItem* item;
 	BFile* fileItem;
+	int i;
 
 
-	for(int i=0;i<vElements.GetSize();i++)
+	for(i=0;i<vElements.GetSize();i++)
 	{
 		
 		element = (BItem*)vElements.GetPointer(i);
@@ -894,6 +897,7 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 
 		if(strcmp(objectName,"DataBases") == 0)
 		{
+			
 			if(!GetComplexElement(&i,&temp))
 				return false;
 			if(!attrList->AddAttribute("DataBase",(char*)temp.GetString(),GML::Utils::AttributeList::STRING,1,NULL))
@@ -904,6 +908,7 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 		}
 		if(strcmp(objectName,"Notifiers") == 0)
 		{
+			
 			if(!GetComplexElement(&i,&temp))
 				return false;
 			if(!attrList->AddAttribute("Notifier",(char*)temp.GetString(),GML::Utils::AttributeList::STRING,1,NULL))
@@ -914,6 +919,7 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 		}
 		if(strcmp(objectName,"Connectors")==0)
 		{
+			
 			if(!GetConnectorsSaveString(&i,&temp))
 				return false;
 			if(!attrList->AddAttribute("Connector",(char*)temp.GetString(),GML::Utils::AttributeList::STRING,1,NULL))
@@ -928,24 +934,28 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 		case TYPE_HEADER:
 			continue;
 		case GML::Utils::AttributeList::STRING:
+			
 			editValue = (BEdit*)element;
 			editValue->GetText(temp);
 			objectValue = (char*)temp.GetString();
 			objectType = GML::Utils::AttributeList::STRING;
 			break;
 		case TYPE_COMBO:
+			
 			comboValue = (BCombo*)element;
 			comboValue->GetSelectedItem(temp);
 			objectValue = (char*)temp.GetString();
 			objectType = GML::Utils::AttributeList::STRING;
 			break;
 		case TYPE_FILE:
+			
 			fileItem = (BFile*) element;
 			fileItem->GetText(temp);
 			objectValue = (char*)temp.GetString();
 			objectType = GML::Utils::AttributeList::STRING;
 			break;
 		case GML::Utils::AttributeList::BOOLEAN:
+			
 			boolItem = (BCheckBox*)element;
 			someBoolValue = boolItem->IsChecked();
 			objectValue = &someBoolValue;
@@ -953,6 +963,7 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 			break;
 
 		case GML::Utils::AttributeList::UINT32:
+			
 			editValue = (BEdit*)element;
 			editValue->GetText(temp);
 			gStrTemp.Set(temp.GetBuffer());
@@ -961,6 +972,7 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 			objectValue = &someUIntValue;
 			objectType = element->elementType;
 		case GML::Utils::AttributeList::INT32:
+			
 			editValue = (BEdit*)element;
 			editValue->GetText(temp);
 			gStrTemp.Set(temp.GetBuffer());
@@ -972,6 +984,7 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 			
 	
 		case GML::Utils::AttributeList::DOUBLE:
+			
 			editValue = (BEdit*)element;
 			editValue->GetText(temp);
 			gStrTemp.Set(temp.GetBuffer());
@@ -985,10 +998,13 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 			
 
 		}
+		
 		if(!attrList->AddAttribute(objectName,objectValue,objectType,1,NULL))
 		{
+			
 			return false;
 		}
+		
 				
 	}
 

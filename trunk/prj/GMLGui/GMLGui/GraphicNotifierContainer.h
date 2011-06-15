@@ -29,7 +29,7 @@ public:
 	~GraphicNotifierContainer(void);
 
 	void Create(TCHAR* text,int x,int y,int width,int height,CWnd *parent, UINT ID=NULL);
-	CWnd* AddAlgorithm(char* algorithmName);
+	bool AddAlgorithm(char* algorithmName);
 	void OnTcnSelchange(NMHDR *pNMHDR, LRESULT *pResult);
 	LRESULT OnNewAlgorithm(WPARAM p1, LPARAM p2);
 	LRESULT OnCloseAlgorithm(WPARAM p1, LPARAM p2);
