@@ -7,7 +7,7 @@ GraphicNotifier::GraphicNotifier(void)
 	nrObjects = 0;
 	windowDestroyed = false;
 	lastProgressBar = 0;
-
+	statisticsCreated = false;
 }
 
 
@@ -114,6 +114,7 @@ bool GraphicNotifier::CreateStatisticsTab()
 	tabControl.UpdateWindow();
 	if(!lstAlgResult.CreateEx(LVS_EX_GRIDLINES|WS_EX_STATICEDGE,WS_BORDER | LVS_REPORT  | LVS_SINGLESEL | LVS_SHOWSELALWAYS  ,CRect(TAB_LEFT,TAB_TOP,TAB_RIGHT,TAB_BOTTOM-10),&tabControl,ID_RESULT_LIST))
 		return false;
+	statisticsCreated = true;
 	lstAlgResult.SetFont(&fnt);
 	tabControl.UpdateWindow();
 	lstAlgResult.UpdateWindow();
@@ -131,7 +132,7 @@ bool GraphicNotifier::CreateStatisticsTab()
 	lstAlgResult.InsertColumn(count++,"Acc",LVCFMT_CENTER,TAB_WIDTH /nrColomns);
 	lstAlgResult.InsertColumn(count++,"Time",LVCFMT_LEFT,(TAB_WIDTH /nrColomns)*1.5);
 	
-
+	
 	AddObject(&lstAlgResult,1);
 	this->RedrawWindow();
 	return true;
@@ -146,7 +147,7 @@ bool GraphicNotifier::InsertStatistics(GML::Utils::AlgorithmResult	*res )
 	bool visibile;
 
 	
-	if(!IsWindow(lstAlgResult.GetSafeHwnd()))
+	if(!statisticsCreated)
 		CreateStatisticsTab();
 	sprintf(temp,"%d",res->Iteration+1);
 	
