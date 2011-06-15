@@ -1663,7 +1663,7 @@ namespace GML
 			virtual bool	OnInit() = 0;
 			virtual bool	Uninit() = 0;
 			virtual bool	Notify(UInt32 messageID,void *Data,UInt32 DataSize) = 0;
-			virtual bool	SuportObjects();
+			virtual bool	SuportsObjects();
 
 			bool			NotifyString(UInt32 messageID,char* format,...);
 			bool			Info(char *format,...);
