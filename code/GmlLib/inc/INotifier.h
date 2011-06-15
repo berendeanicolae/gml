@@ -9,6 +9,11 @@ namespace GML
 {
 	namespace Utils
 	{
+		struct EXPORT NotifierObject
+		{
+			char	ObjectName[32];
+			char	Attributes[1];
+		};
 		class EXPORT INotifier: public GMLObject
 		{
 
@@ -18,7 +23,9 @@ namespace GML
 				NOTIFY_INFO,
 				NOTIFY_START_PROCENT,
 				NOTIFY_END_PROCENT,
-				NOTIFY_PROCENT,		
+				NOTIFY_PROCENT,	
+				NOTIFY_CREATEOBJECT,
+				NOTIFY_SENDOBJECTCOMMAND,
 				NOTIFY_RESULT = 100,
 			};
 			bool			Init(char *attributeString);
@@ -35,6 +42,8 @@ namespace GML
 			bool			SetProcent(double procValue,double maxValue);
 			bool			EndProcent();
 			bool			Result(GML::Utils::AlgorithmResult &ar);
+			bool			CreateObject(char *name,char *attributes);
+			bool			SendDataToObject(char *objName,char *attributes);
 		};
 	}
 }
