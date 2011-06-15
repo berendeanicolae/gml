@@ -1,7 +1,7 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
 #include "GraphicNotifier.h"
-#include "GString.h"
+
 
 HWND parent = NULL;
 DWORD nrWindows = 0;
@@ -116,8 +116,8 @@ DWORD WINAPI run_thread_window(LPVOID lpThreadParameter)
 
 	currentGraphicNotifier= (GraphicNotifier*)context;
 	GML::Utils::AlgorithmResult	*res = (GML::Utils::AlgorithmResult *)Data;	
-	GString temp;
-	GString elements[2];
+	GML::Utils::GString temp;
+	GML::Utils::GString elements[2];
 	
 	char *text = (char *)Data;
 
