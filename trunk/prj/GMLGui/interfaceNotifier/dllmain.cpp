@@ -132,7 +132,7 @@ DWORD WINAPI run_thread_window(LPVOID lpThreadParameter)
 	switch(messageID)
 	{
 	case GML::Utils::INotifier::NOTIFY_RESULT:
-		//currentGraphicNotifier->InsertStatistics(res);
+		currentGraphicNotifier->InsertStatistics(res);
 		break;
 	case GML::Utils::INotifier::NOTIFY_ERROR:
 		currentGraphicNotifier->InsertError(text);
