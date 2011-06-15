@@ -924,12 +924,12 @@ void CGMLGuiDlg::ComboCallBack()
 
 }
 
-bool CGMLGuiDlg::AddConnector(BSelection* currentSelection,GString& connectorStr)
+bool CGMLGuiDlg::AddConnector(BSelection* currentSelection,GML::Utils::GString& connectorStr)
 {
 	int pos,nrItems;
-	GString connectorName;
-	GString temp;
-	GString						connectorValue[2];
+	GML::Utils::GString connectorName;
+	GML::Utils::GString temp;
+	GML::Utils::GString						connectorValue[2];
 	GML::Utils::AttributeList	loadedAtrList;
 	
 	
@@ -959,11 +959,11 @@ bool CGMLGuiDlg::AddSelectionCombo(char* comboName,char* btnStr, char* extension
 	GML::Utils::AttributeList	objectProperties;
 	BSelection*					currentSelection;
 	CString						el;
-	GString						parser;
-	GString						connectors[MAX_CONNECTORS]; //maxim 50 de conectori
+	GML::Utils::GString						parser;
+	GML::Utils::GString						connectors[MAX_CONNECTORS]; //maxim 50 de conectori
 	
-	GString						temp;
-	GString						connectorName;
+	GML::Utils::GString						temp;
+	GML::Utils::GString						connectorName;
 	int							nrConnectors = 0;
 	
 
