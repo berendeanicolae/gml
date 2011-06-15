@@ -172,3 +172,43 @@ bool GML::Utils::INotifier::Result(GML::Utils::AlgorithmResult &ar)
 {
 	return Notify(NOTIFY_RESULT,&ar,sizeof(ar));
 }
+bool GML::Utils::INotifier::CreateObject(char *name,char *attributes)
+{
+	unsigned char Data[TEMP_STACK_BUFFER_SIZE];
+	unsigned int  Size;
+
+	if (name==NULL)
+		return false;
+	if (GML::Utils::GString::Set((char *)Data,name,31)==false)
+		return false;
+	Data[31]=0;
+	if (attributes!=NULL)
+	{
+		for (Size=32;(Size<TEMP_STACK_BUFFER_SIZE-1) && ((*attributes)!=0);Size++,attributes++)
+			Data[Size] = (*attributes);		
+	} else {
+		Size = 32;
+	}
+	Data[Size]=0;
+	return Notify(NOTIFY_CREATEOBJECT,Data,Size);
+}
+bool GML::Utils::INotifier::SendDataToObject(char *objName,char *attributes)
+{
+	unsigned char Data[TEMP_STACK_BUFFER_SIZE];
+	unsigned int  Size;
+
+	if (objName==NULL)
+		return false;
+	if (GML::Utils::GString::Set((char *)Data,objName,31)==false)
+		return false;
+	Data[31]=0;
+	if (attributes!=NULL)
+	{
+		for (Size=32;(Size<TEMP_STACK_BUFFER_SIZE-1) && ((*attributes)!=0);Size++,attributes++)
+			Data[Size] = (*attributes);		
+	} else {
+		Size = 32;
+	}
+	Data[Size]=0;
+	return Notify(NOTIFY_SENDOBJECTCOMMAND,Data,Size);
+}
