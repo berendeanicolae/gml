@@ -63,9 +63,6 @@
     <ClInclude Include="BItem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GString.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -78,10 +75,13 @@
     <ClInclude Include="BButton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicNotifier.h">
+    <ClInclude Include="GraphicNotifierContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicNotifierContainer.h">
+    <ClInclude Include="..\interfaceNotifier\GraphicNotifier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\interfaceNotifier\BListCtrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -116,9 +116,6 @@
     <ClCompile Include="BItem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GString.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Vector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -128,10 +125,13 @@
     <ClCompile Include="BButton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GraphicNotifier.cpp">
+    <ClCompile Include="GraphicNotifierContainer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GraphicNotifierContainer.cpp">
+    <ClCompile Include="..\interfaceNotifier\GraphicNotifier.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\interfaceNotifier\BListCtrl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

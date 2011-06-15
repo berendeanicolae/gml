@@ -682,7 +682,7 @@ bool BContainer::GetElementStr(BItem* element,CString* str)
 	BFile* fileItem;
 	BButton* buttonItem;
 	CString temp;
-	GString gStrTemp;
+	GML::Utils::GString gStrTemp;
 	
 
 	UINT someUIntValue;
@@ -865,7 +865,7 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 {
 	BItem* element;
 	char* objectName;
-	GString gStrTemp;
+	GML::Utils::GString gStrTemp;
 	CString temp,tempStr;
 	CString complexValue;
 	CString tempValue;

@@ -61,7 +61,7 @@ protected:
 	bool AddString(GML::Utils::Attribute* attr,char* value,unsigned char offset = 1,char valueType=GML::Utils::AttributeList::STRING);
 	bool AddSpecialCombo(char* comboName,char* extension,GML::Utils::Attribute* attr,GML::Utils::GString& str,unsigned char offset = 1);
 	bool AddSelectionCombo(char* comboName,char* btnStr, char* extension,GML::Utils::Attribute* attr,GML::Utils::GString& str,unsigned char offset = 1);
-	bool AddConnector(BSelection* currentSelection,GString& connectorStr);
+	bool AddConnector(BSelection* currentSelection,GML::Utils::GString& connectorStr);
 	bool AddFilesFromDirToCombo(char* dirName,char* extension, BCombo* currentCombo);
 	bool AddChildrenFromObject(BItem* currentProperty,int* pNewValue,GML::Utils::AttributeList* newAttrList);
 	bool CreateChildren(BItem* currentProperty,GML::Utils::AttributeList&	attrList);
