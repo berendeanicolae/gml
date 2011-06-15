@@ -18,6 +18,7 @@ public:
 	bool	OnInit();
 	bool	Uninit();
 	bool	Notify(UInt32 messageID,void *Data,UInt32 DataSize);
+	bool	SuportObjects() { return true; }
 };
  
 
