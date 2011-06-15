@@ -1332,11 +1332,55 @@ void CGMLGuiDlg::OnFileRun()
 
 }
 
+DWORD WINAPI InitAndExecuteAlgorithm(LPVOID lpThreadParameter)
+{
+	GML::Algorithm::IAlgorithm	*alg;
+	CString temp;
+	algorithmRunConfig* config;
+	//alg = (GML::Algorithm::IAlgorithm	*)lpThreadParameter;
+	
+	config = (algorithmRunConfig*)lpThreadParameter;
+
+	if ((alg=GML::Builder::CreateAlgorithm(config->algorithmName))==NULL)
+	{
+		temp.Format("[ERROR] -> Error creating '%s'",config->algorithmName);
+		AfxMessageBox(temp);
+		return false;
+	}
+	if (alg->SetProperty(*config->attrList)==false)
+	{
+		temp.Format("[ERROR] -> Error updateing configuration to '%s'",config->algorithmName);
+		AfxMessageBox(temp);
+		return false;
+	}
+	
+	if (alg->Init()==false)
+	{
+		temp.Format("[ERROR] -> Error on initialization of '%s'",alg->GetObjectName());
+		AfxMessageBox(temp);
+		return 0;
+	}
+	if (alg->Execute()==false)
+	{
+		temp.Format("[ERROR] -> Error on execution of '%s'",alg->GetObjectName());
+		AfxMessageBox(temp);
+		return 0;
+	}
+
+	return 1;
+
+}
 
 bool CGMLGuiDlg::AlgorithmRun(char* algorithmName, GML::Utils::AttributeList*	attrList)
 {
 	GML::Algorithm::IAlgorithm	*alg;
 	CString temp;
+	HANDLE hThread;
+
+	algorithmRunConfig config;
+
+	config.algorithmName = algorithmName;
+	config.attrList = attrList;
 	
 	if ((alg=GML::Builder::CreateAlgorithm(algorithmName))==NULL)
 	{
@@ -1350,18 +1394,26 @@ bool CGMLGuiDlg::AlgorithmRun(char* algorithmName, GML::Utils::AttributeList*	at
 		AfxMessageBox(temp);
 		return false;
 	}
+	
+	
+
+//	hThread = CreateThread(NULL,NULL,InitAndExecuteAlgorithm,&config,NULL,NULL);
+//	WaitForSingleObject(hThread,INFINITE);
+	
+	
 	if (alg->Init()==false)
 	{
-		temp.Format("[ERROR] -> Error on initialization of '%s'",algorithmName);
+		temp.Format("[ERROR] -> Error on initialization of '%s'",alg->GetObjectName());
 		AfxMessageBox(temp);
-		return false;
+		return 0;
 	}
 	if (alg->Execute()==false)
 	{
-		temp.Format("[ERROR] -> Error on execution of '%s'",algorithmName);
+		temp.Format("[ERROR] -> Error on execution of '%s'",alg->GetObjectName());
 		AfxMessageBox(temp);
-		return false;
+		return 0;
 	}
+
 	//alg->Wait();
 	//printf("Algorithm '%s' done !\n",currentAlgorithm->algorithmName);
 	return true;

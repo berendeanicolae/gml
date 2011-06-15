@@ -1,6 +1,7 @@
 #pragma once
 #include "afxwin.h"
 
+#include "BContainer.h"
 
 #define TAB_CONTROL	0x1000
 #define ID_RESULT_LIST 0x1001
@@ -30,6 +31,7 @@ class GraphicNotifier :
 	
 	CTabCtrl		tabControl;
 	CStatic			temp;
+	
 	CListCtrl		lstAlgResult;
 	tabOwner		tabControlObjects[MAX_CONTROLS];
 	unsigned int	nrObjects;
