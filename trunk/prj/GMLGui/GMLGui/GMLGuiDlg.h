@@ -14,6 +14,13 @@
 #define ID_ALGORITHM_CONTAINER 0x1000
 
 // CGMLGuiDlg dialog
+
+struct algorithmRunConfig
+{
+	char* algorithmName;
+	GML::Utils::AttributeList* attrList;
+};
+
 class CGMLGuiDlg : public CDialogEx
 {
 // Construction

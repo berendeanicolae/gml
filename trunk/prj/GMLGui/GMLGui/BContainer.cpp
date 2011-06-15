@@ -885,6 +885,8 @@ bool BContainer::SaveConfigurationToAttributeList(char* algorithmName,GML::Utils
 	int i;
 
 
+	
+
 	for(i=0;i<vElements.GetSize();i++)
 	{
 		
