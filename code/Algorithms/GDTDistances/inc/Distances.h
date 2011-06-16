@@ -10,6 +10,18 @@ struct Plan
 	double	Bias;
 	UInt32	Count;
 };
+struct NodPoint
+{
+	int index;
+	NodPoint *urm;
+};
+struct ClosestPoints
+{
+	double		dist;
+	int			firstPoints[2];
+	NodPoint	*prim;
+	int			count;
+};
 class Distances: public GenericDistAlgorithm
 {
 	enum {
@@ -19,6 +31,7 @@ class Distances: public GenericDistAlgorithm
 		METHOD_DistanceTableNegativeToNegative,
 		METHOD_DistanceTableNegativeToPositive,
 		METHOD_DistanceToPlan,
+		METHOD_ClosestNegativePositive,
 	};
 
 	UInt32							Method;
@@ -29,8 +42,12 @@ class Distances: public GenericDistAlgorithm
 	bool							MergeDistanceTableFiles;
 	bool							UseWeightsForFeatures;
 	UInt32							DistanceFunction;
-	
+	GML::ML::MLRecord				MainRecord;
+
 	Plan							plan;
+	ClosestPoints					*negativePoints;
+	ClosestPoints					*positivePoints;	
+	UInt32							FeatCount;
 	GML::Utils::GTFVector<double>	planDist;
 	double							*featWeight;
 
@@ -39,9 +56,14 @@ class Distances: public GenericDistAlgorithm
 	bool							ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &thData);
 	bool							ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::Utils::Indexes &i1,GML::Utils::Indexes &i2,char *Type);
 	bool							ComputeDistanceToPlan(GML::Algorithm::MLThreadData &thData);
+	bool							ComputeClosestPositiveNegative(GML::Algorithm::MLThreadData &thData);
+	bool							MergeDistancesClosestPositiveNegative();
+	bool							UpdateNegativePositive(UINT32 malId, UINT32 cleanId, double dist);
+	bool							SaveNegativePositive(char *fileName);
+	bool							ExportNewPair(GML::Utils::File *f, char *fileName, UInt32 posId, UInt32 negID, double dist);
 	bool							MergeDistances();
 	bool							LoadPlan(char *fileName,Plan &p);
-	bool							SavePlanDistances();
+	bool							SavePlanDistances();		
 public:
 	Distances();
 	bool							OnInitThreadData(GML::Algorithm::MLThreadData &thData);

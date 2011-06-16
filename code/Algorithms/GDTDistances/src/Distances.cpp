@@ -1,5 +1,39 @@
 #include "Distances.h"
 
+void removeAllNodPoints(NodPoint **prim)
+{
+	if (*prim == NULL)
+		return;
+
+	if ((*prim)->urm != NULL)
+		removeAllNodPoints(&((*prim)->urm));	
+	delete (*prim);
+	*prim = NULL;	
+}
+
+bool addNewNodPoint(NodPoint **prim, int value)
+{
+	if(*prim == NULL)  
+	{		
+		*prim = new NodPoint;
+		if(*prim == NULL)
+			return false;  
+		(*prim)->index = value;
+		(*prim)->urm = NULL;
+		return true;
+	}
+	
+	NodPoint *it = *prim;
+	while(it->urm != NULL)
+		it = it->urm;
+	it->urm = new NodPoint;
+	it = it->urm;
+	if(it == NULL)
+		return false;
+	it->index = value;
+	it->urm = NULL;	
+	return true;
+}
 
 //===============================================================================
 Distances::Distances()
@@ -7,16 +41,18 @@ Distances::Distances()
 	ObjectName = "Distances";
 	featWeight = NULL;
 
-	LinkPropertyToUInt32("Method",Method,0,"!!LIST:PositiveToNegativeDistance=0,DistanceTablePositiveToNegative,DistanceTablePositiveToPositive,DistanceTableNegativeToNegative,DistanceTableNegativeToPositive,DistanceToPlan!!");
+	LinkPropertyToUInt32("Method",Method,0,"!!LIST:PositiveToNegativeDistance=0,DistanceTablePositiveToNegative,DistanceTablePositiveToPositive,DistanceTableNegativeToNegative,DistanceTableNegativeToPositive,DistanceToPlan,ClosestMalwareClean!!");
 	LinkPropertyToDouble("MinDistance",MinDist,0,"Minimal distance");
 	LinkPropertyToDouble("MaxDistance",MaxDist,1,"Maximal distance");
 	
-	LinkPropertyToString("DistanceTableFileName",DistanceTableFileName,"","Name of the file names where the distance will be written");
+	LinkPropertyToString("DistanceTableFileName",DistanceTableFileName,"","Name of the file names where the distances will be written");
 	LinkPropertyToBool  ("MergeDistanceTableFiles",MergeDistanceTableFiles,true,"If set all of the distance table files will be merge into one");
 	LinkPropertyToBool  ("UseWeightsForFeatures",UseWeightsForFeatures,false,"Specifyes if weights for features should be used.");
 	
 	LinkPropertyToString("FeaturesWeightFile",FeaturesWeightFile,"","Name of the file that contains the weights for features!");
 	LinkPropertyToString("PlanFile",PlanFile,"","Name of the file that contains the informations about the plan");
+
+	AddDistanceProperties();
 
 }
 double Distances::GetDistance(GML::ML::MLRecord &r1,GML::ML::MLRecord &r2)
@@ -122,6 +158,14 @@ bool Distances::OnInit()
 		if (LoadPlan(PlanFile.GetText(),plan)==false)
 			return false;
 	}
+
+	if(!(con->CreateMlRecord(MainRecord)))
+	{
+		notif->Error("[%s] -> Unable to create MainRecord",ObjectName);
+		return false;
+	}
+	FeatCount = con->GetFeatureCount();
+
 	return true;
 }
 bool Distances::ComputePositiveToNegativeDistance(GML::Algorithm::MLThreadData &thData)
@@ -309,6 +353,210 @@ bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::U
 	f.Close();
 	return true;
 }
+bool Distances::ComputeClosestPositiveNegative(GML::Algorithm::MLThreadData &thData)
+{	
+	UInt32				positiveCount, negativeCount, i, j, idxPoz, idxNeg;
+	DistThreadData*		dt = (DistThreadData *)thData.Context;
+	double				dist;
+
+	positiveCount = indexesPozitive.Len();
+	negativeCount = indexesNegative.Len();
+	if (thData.ThreadID==0)
+		notif->StartProcent("[%s] -> Computing ... ",ObjectName);
+	for (i=thData.ThreadID; i<positiveCount; i+=threadsCount)
+	{						
+		negativePoints[i].dist = con->GetFeatureCount();
+		negativePoints[i].count = 0;
+		idxPoz = indexesPozitive.Get(i);
+		if (con->GetRecord(thData.Record,idxPoz)==false)
+		{
+			notif->Error("[%s] -> Unable to read record #%d",ObjectName,idxPoz);
+			return false;
+		}
+		for (j=0; j<negativeCount; j++)
+		{
+			idxNeg = indexesNegative.Get(j);
+			if (con->GetRecord(dt->SetRec,idxNeg)==false)
+			{
+				notif->Error("[%s] -> Unable to read record #%d",ObjectName,idxNeg);
+				return false;
+			}
+			dist = GetDistance(thData.Record,dt->SetRec);
+			if (dist < negativePoints[i].dist)		
+			{
+				negativePoints[i].dist = dist;
+				negativePoints[i].firstPoints[0] = j;
+				negativePoints[i].firstPoints[1] = -1;				
+				if (negativePoints[i].count > 2)								
+					removeAllNodPoints(&(negativePoints[i].prim));					
+				negativePoints[i].count = 1;
+			}else if (dist == negativePoints[i].dist)
+			{
+				if (negativePoints[i].count < 2)				
+					negativePoints[i].firstPoints[negativePoints[i].count++] = j;
+				else
+				{								
+					if (!addNewNodPoint(&(negativePoints[i].prim), j))
+					{
+						notif->Error("[%s] -> Unable to append to closest points for record:#%d",ObjectName,i);
+						return false;
+					}
+					negativePoints[i].count++;
+				}
+			}  
+			if (thData.ThreadID==0)
+				notif->SetProcent(i,positiveCount);
+		}
+	}
+	if (thData.ThreadID==0)
+		notif->EndProcent();
+
+	return true;
+}
+
+bool Distances::ExportNewPair(GML::Utils::File *f, char *fileName, UInt32 cleanId, UInt32 malID, double dist)
+{
+	GML::Utils::GString		temp, hashTmp;
+
+	if (con->GetRecord(MainRecord,indexesNegative.Get(cleanId),GML::ML::RECORD_STORE_HASH)==false)
+	{
+		notif->Error("[%s] -> Unable to read record #%d",ObjectName,indexesNegative.Get(cleanId));
+		return false;
+	}
+	if (MainRecord.Hash.ToString(hashTmp)==false)
+	{
+		notif->Error("[%s] -> Unable to convert hash to string",ObjectName);
+		return false;
+	}			
+	if (temp.SetFormated("NP|%s|",hashTmp.GetText())==false)
+	{
+		notif->Error("[%s] -> Unable to add data to string",ObjectName);
+		return false;
+	}
+	if (con->GetRecord(MainRecord,indexesPozitive.Get(malID),GML::ML::RECORD_STORE_HASH)==false)
+	{
+		notif->Error("[%s] -> Unable to read record #%d",ObjectName,indexesPozitive.Get(malID));
+		return false;
+	}
+	if (MainRecord.Hash.ToString(hashTmp)==false)
+	{
+		notif->Error("[%s] -> Unable to convert hash to string",ObjectName);
+		return false;
+	}
+	if (temp.AddFormated("%s|%lf\n",hashTmp.GetText(),dist)==false)
+	{
+		notif->Error("[%s] -> Unable to add data to string",ObjectName);
+		return false;
+	}	
+	if ((*f).Write(temp.GetText(), temp.Len()) == false)
+	{
+		notif->Error("[%s] -> Unable to write to file %s",ObjectName, fileName);
+		return false;
+	}
+
+	return true;
+}
+bool Distances::UpdateNegativePositive(UINT32 malId, UINT32 cleanId, double dist)
+{
+	if (dist < positivePoints[cleanId].dist)
+	{
+		positivePoints[cleanId].dist = dist;
+		positivePoints[cleanId].firstPoints[0] = malId;
+		positivePoints[cleanId].firstPoints[1] = -1;
+		if (positivePoints[cleanId].count > 2)								
+			removeAllNodPoints(&(positivePoints[cleanId].prim));									
+		positivePoints[cleanId].count = 1;
+		return true;
+	} else if (dist == positivePoints[cleanId].dist)
+	{
+		if (positivePoints[cleanId].count <2)
+		{
+			positivePoints[cleanId].firstPoints[positivePoints[cleanId].count++] = malId;
+			return true;
+		} else
+		{
+			if (!addNewNodPoint(&(positivePoints[cleanId].prim), malId))
+			{
+				notif->Error("[%s] -> Unable to append to closest points for record:#%d",ObjectName,cleanId);
+				return false;
+			}
+			positivePoints[cleanId].count++;
+			return true;
+		}
+	}
+	return true;	
+}
+bool Distances::MergeDistancesClosestPositiveNegative()
+{
+	UInt32	i, j, positiveCount;
+
+	positiveCount = indexesPozitive.Len();
+	for (i=0; i<positiveCount; i++)
+	{
+		for (j=0; j<2; j++)
+			if (negativePoints[i].firstPoints[j] != -1)
+				if (!UpdateNegativePositive(i, negativePoints[i].firstPoints[j], negativePoints[i].dist))
+				{
+					notif->Error("[%s] -> Unable to append to set closest malware for clean:#%d",ObjectName,indexesNegative.Get(negativePoints[i].firstPoints[j]));
+					return false;
+				}
+
+		NodPoint *p = negativePoints[i].prim;
+		while(p!=NULL)
+		{
+			if (!UpdateNegativePositive(i, p->index, negativePoints[i].dist))
+				{
+					notif->Error("[%s] -> Unable to append to set closest malware for clean:#%d",ObjectName,indexesNegative.Get(p->index));
+					return false;
+				}
+			p = p->urm;
+		}
+	}
+
+	return true;
+}
+bool Distances::SaveNegativePositive(char *fileName)
+{
+	GML::Utils::File		f;
+	UInt32					i, j, negativeCount;
+	UInt8					*ptr = RecordsStatus.GetVector();
+	
+
+	if (f.Create(fileName) == false)		
+		return false;
+
+	negativeCount = indexesNegative.Len();	
+	for (i=0; i<negativeCount; i++)
+	{
+		if(positivePoints[i].count == -1)
+			continue;
+		for (j=0; j<2 && j<positivePoints[i].count; j++)
+		{
+			if (ExportNewPair(&f, fileName, i, positivePoints[i].firstPoints[j], positivePoints[i].dist) == false)
+			{				
+				notif->Error("[%s] -> Unable to write new pair to file %s",ObjectName, fileName);
+				return false;
+			}
+			ptr[indexesNegative.Get(i)] = 1;
+			ptr[indexesPozitive.Get(positivePoints[i].firstPoints[j])] = 1;
+		}
+		NodPoint *p = positivePoints[i].prim;
+		while(p!=NULL)
+		{
+			if (ExportNewPair(&f, fileName, i, p->index, positivePoints[i].dist) == false)
+			{
+				notif->Error("[%s] -> Unable to write new pair to file %s",ObjectName, fileName);
+				return false;
+			}
+			ptr[indexesNegative.Get(i)] = 1;
+			ptr[indexesPozitive.Get(positivePoints[i].firstPoints[j])] = 1;
+			p = p->urm;
+		}
+	}
+	f.Close();
+
+	return true;
+}
 bool Distances::MergeDistances()
 {
 	GML::Utils::GString		fName,rName;
@@ -391,6 +639,9 @@ void Distances::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 t
 			break;
 		case METHOD_DistanceToPlan:
 			ComputeDistanceToPlan(thData);
+			break;
+		case METHOD_ClosestNegativePositive:
+			ComputeClosestPositiveNegative(thData);
 			break;
 	}
 }
@@ -523,6 +774,22 @@ bool Distances::OnCompute()
 					return false;
 			}
 			return true;
+		case METHOD_ClosestNegativePositive:
+			negativePoints = new ClosestPoints[indexesPozitive.Len()];
+			memset(negativePoints, -1, indexesPozitive.Len()*sizeof(ClosestPoints));
+			for (int i=0; i<indexesPozitive.Len(); i++)
+				negativePoints[i].prim = NULL;
+			ExecuteParalelCommand(Method);
+			positivePoints = new ClosestPoints[indexesNegative.Len()];
+			memset(positivePoints, -1, indexesNegative.Len()*sizeof(ClosestPoints));
+			for (int i=0; i<indexesNegative.Len(); i++)
+			{ 
+				positivePoints[i].prim = NULL;
+				positivePoints[i].dist = FeatCount;
+			}			
+			MergeDistancesClosestPositiveNegative();			
+			SaveNegativePositive(DistanceTableFileName.GetText());
+			SaveHashResult(HashFileName.GetText(),HashFileType,RecordsStatus);
 	}
 	return false;
 }
