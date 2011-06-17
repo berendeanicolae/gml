@@ -1083,7 +1083,10 @@ bool CGMLGuiDlg::AddSpecialCombo(char* comboName,char* extension,GML::Utils::Att
 				//construieste lista de atribute
 				
 				if(str.GetText()[str.GetSize()-1] == '}')
-					str.ReplaceOnPos(str.GetSize()-2,str.GetSize()-1,";");
+					if(str.GetText()[str.GetSize()-2] == ';')
+						str.DeleteChar(str.GetSize()-1);
+					else
+						str.ReplaceOnPos(str.GetSize()-1,str.GetSize()-1,";");
 
 				//
 				currentCombo->SetSelectedItem(selectedIndex);
