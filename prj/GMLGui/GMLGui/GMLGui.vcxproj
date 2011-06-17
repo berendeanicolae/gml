@@ -49,6 +49,8 @@
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
     <OutDir>$(SolutionDir)..\gml\$(Configuration)\</OutDir>
+    <IncludePath>..\interfaceNotifier;$(IncludePath)</IncludePath>
+    <SourcePath>..\interfaceNotifier;$(IncludePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
