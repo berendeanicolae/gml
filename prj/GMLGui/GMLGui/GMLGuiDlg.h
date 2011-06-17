@@ -15,10 +15,11 @@
 
 // CGMLGuiDlg dialog
 
-struct algorithmRunConfig
+struct AlgorithmRunConfig
 {
-	char* algorithmName;
+	CString algorithmName;
 	GML::Utils::AttributeList* attrList;
+	void* container;
 };
 
 class CGMLGuiDlg : public CDialogEx
@@ -44,9 +45,11 @@ public:
 	void AddConnector();
 	void RemoveConnector();
 	bool StartGmlExec(char* algorithmName,GML::Utils::AttributeList*	attrList);
+	
+	bool AlgorithmExecute(char* algorithmName,GML::Utils::AttributeList*	attrList );
 protected:
 	HICON m_hIcon;
-
+	
 	
 	
 	
@@ -69,6 +72,7 @@ protected:
 	//bool AddChildrenForSelectionObject(BSelection* selectionObj,int* pNewValue,GML::Utils::AttributeList* newAttrList);
 	bool AddChildrenForSelectionObject(BSelection* selectionObj,char* str,GML::Utils::AttributeList* newAttrList);
 	bool AlgorithmRun(char* algorithmName, GML::Utils::AttributeList*	attrList);
+	
 	
 	//bool MoveElement(UINT newPos);
 

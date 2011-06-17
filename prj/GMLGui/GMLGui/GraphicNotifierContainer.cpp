@@ -149,7 +149,20 @@ void GraphicNotifierContainer::OnTcnSelchange(NMHDR *pNMHDR, LRESULT *pResult)
 
 LRESULT GraphicNotifierContainer::OnNewAlgorithm(WPARAM p1, LPARAM p2)
 {
-	algorithmObjects[nrAlgorithms-1] = (GraphicNotifier*)p2;
+	HWND parent = (HWND)p2;
+	CRect tabSize;
+	GraphicNotifier** returnNotifier = (GraphicNotifier**) p1;
+	
+
+	
+	::GetClientRect(parent,&tabSize);
+	tabSize.left=+15;
+	GraphicNotifier* newGraphicNotifier = new GraphicNotifier();
+	newGraphicNotifier->Create("",tabSize,parent);
+	*returnNotifier = newGraphicNotifier;
+	
+	algorithmObjects[nrAlgorithms-1] = newGraphicNotifier;
+	
 
 	return NULL;
 }
