@@ -1284,7 +1284,7 @@ bool CGMLGuiDlg::StartGmlExec(char* algorithmName,GML::Utils::AttributeList*	att
 
 void CGMLGuiDlg::OnFileRun()
 {
-	GML::Utils::AttributeList	attrList;
+	GML::Utils::AttributeList	*attrList = new GML::Utils::AttributeList();
 	GML::Utils::Attribute* notifier;
 	CString	selectedAlgorithm;
 	int i;
@@ -1296,13 +1296,13 @@ void CGMLGuiDlg::OnFileRun()
 	cmbAlgorithms.GetLBText(i,selectedAlgorithm);
 
 	
-	if(!wndContainer.SaveConfigurationToAttributeList(selectedAlgorithm.GetBuffer(),&attrList))
+	if(!wndContainer.SaveConfigurationToAttributeList(selectedAlgorithm.GetBuffer(),attrList))
 	{
 		AfxMessageBox("Failed to save the configuration. Can not start running the algorithm");
 		return;
 	}
 
-	notifier = attrList.Get("Notifier");
+	notifier = attrList->Get("Notifier");
 	if(notifier == NULL)
 	{
 		AfxMessageBox("Failed to find notifier. Can not start running the algorithm");
@@ -1312,7 +1312,7 @@ void CGMLGuiDlg::OnFileRun()
 
 	if(strnicmp((char*)notifier->Data,"ConsoleNotifier",15)==0)
 	{
-		StartGmlExec(selectedAlgorithm.GetBuffer(),&attrList);
+		StartGmlExec(selectedAlgorithm.GetBuffer(),attrList);
 	}
 	else if (strnicmp((char*)notifier->Data,"WrapperNotifier",15)==0)
 	{
@@ -1326,7 +1326,7 @@ void CGMLGuiDlg::OnFileRun()
 		}	
 
 		graphicResultWindow->AddAlgorithm(selectedAlgorithm.GetBuffer());
-		AlgorithmRun(selectedAlgorithm.GetBuffer(),&attrList);
+		AlgorithmRun(selectedAlgorithm.GetBuffer(),attrList);
 	}
 	
 
@@ -1334,53 +1334,41 @@ void CGMLGuiDlg::OnFileRun()
 
 DWORD WINAPI InitAndExecuteAlgorithm(LPVOID lpThreadParameter)
 {
-	GML::Algorithm::IAlgorithm	*alg;
-	CString temp;
-	algorithmRunConfig* config;
-	//alg = (GML::Algorithm::IAlgorithm	*)lpThreadParameter;
-	
-	config = (algorithmRunConfig*)lpThreadParameter;
+	AlgorithmRunConfig* config =  (AlgorithmRunConfig*)lpThreadParameter;
+	((CGMLGuiDlg*)config->container)->AlgorithmExecute(config->algorithmName.GetBuffer(), config->attrList);
 
-	if ((alg=GML::Builder::CreateAlgorithm(config->algorithmName))==NULL)
-	{
-		temp.Format("[ERROR] -> Error creating '%s'",config->algorithmName);
-		AfxMessageBox(temp);
-		return false;
-	}
-	if (alg->SetProperty(*config->attrList)==false)
-	{
-		temp.Format("[ERROR] -> Error updateing configuration to '%s'",config->algorithmName);
-		AfxMessageBox(temp);
-		return false;
-	}
-	
-	if (alg->Init()==false)
-	{
-		temp.Format("[ERROR] -> Error on initialization of '%s'",alg->GetObjectName());
-		AfxMessageBox(temp);
-		return 0;
-	}
-	if (alg->Execute()==false)
-	{
-		temp.Format("[ERROR] -> Error on execution of '%s'",alg->GetObjectName());
-		AfxMessageBox(temp);
-		return 0;
-	}
-
+	delete(config->attrList);
+	delete(config);
 	return 1;
+
 
 }
 
 bool CGMLGuiDlg::AlgorithmRun(char* algorithmName, GML::Utils::AttributeList*	attrList)
 {
-	GML::Algorithm::IAlgorithm	*alg;
 	CString temp;
 	HANDLE hThread;
+	AlgorithmRunConfig* config = new AlgorithmRunConfig();
 
-	algorithmRunConfig config;
+	config->algorithmName = algorithmName;
 
-	config.algorithmName = algorithmName;
-	config.attrList = attrList;
+	config->attrList = attrList;
+	config->container = this;
+	
+		
+	hThread = CreateThread(NULL,NULL,InitAndExecuteAlgorithm,config,NULL,NULL);
+
+
+
+	return true;
+}
+
+
+bool CGMLGuiDlg::AlgorithmExecute(char* algorithmName,GML::Utils::AttributeList*	attrList )
+{
+	CString temp;
+	GML::Algorithm::IAlgorithm* alg;
+	
 	
 	if ((alg=GML::Builder::CreateAlgorithm(algorithmName))==NULL)
 	{
@@ -1394,12 +1382,24 @@ bool CGMLGuiDlg::AlgorithmRun(char* algorithmName, GML::Utils::AttributeList*	at
 		AfxMessageBox(temp);
 		return false;
 	}
-	
+
+	if (alg->Init()==false)
+	{
+		temp.Format("[ERROR] -> Error on initialization of '%s'",alg->GetObjectName());
+		AfxMessageBox(temp);
+		return false;
+	}
+	if (alg->Execute()==false)
+	{
+		temp.Format("[ERROR] -> Error on execution of '%s'",alg->GetObjectName());
+		AfxMessageBox(temp);
+		return false;
+	}
+	return true;
+}
 	
 
-//	hThread = CreateThread(NULL,NULL,InitAndExecuteAlgorithm,&config,NULL,NULL);
-//	WaitForSingleObject(hThread,INFINITE);
-	
+/*	
 	
 	if (alg->Init()==false)
 	{
@@ -1417,4 +1417,5 @@ bool CGMLGuiDlg::AlgorithmRun(char* algorithmName, GML::Utils::AttributeList*	at
 	//alg->Wait();
 	//printf("Algorithm '%s' done !\n",currentAlgorithm->algorithmName);
 	return true;
-}
+*/
+

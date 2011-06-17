@@ -78,10 +78,10 @@
     <ClInclude Include="GraphicNotifierContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\interfaceNotifier\GraphicNotifier.h">
+    <ClInclude Include="..\interfaceNotifier\BListCtrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\interfaceNotifier\BListCtrl.h">
+    <ClInclude Include="..\interfaceNotifier\GraphicNotifier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
