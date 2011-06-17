@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "GraphicNotifier.h"
+#include "..\interfaceNotifier\GraphicNotifier.h"
 
 
 GraphicNotifier::GraphicNotifier(void)
@@ -84,6 +84,7 @@ BEGIN_MESSAGE_MAP(GraphicNotifier, CWnd)
 
 	ON_WM_CLOSE()
 	ON_NOTIFY(TCN_SELCHANGE, TAB_CONTROL, OnTcnSelchange)
+	ON_MESSAGE(WM_ALGORITHM_NOTIFY_RESULT,&GraphicNotifier::OnNotifyResult)
 END_MESSAGE_MAP()
 
 
@@ -109,16 +110,19 @@ bool GraphicNotifier::CreateStatisticsTab()
 	
 	tcItem.mask = TCIF_TEXT;
 	tcItem.pszText = _T("Statistics");
-	tabControl.InsertItem(1, &tcItem);
+	if(tabControl.InsertItem(1, &tcItem)==-1)
+		return false;
 	this->UpdateWindow();
 	tabControl.UpdateWindow();
-	if(!lstAlgResult.CreateEx(LVS_EX_GRIDLINES|WS_EX_STATICEDGE,WS_BORDER | LVS_REPORT  | LVS_SINGLESEL | LVS_SHOWSELALWAYS  ,CRect(TAB_LEFT,TAB_TOP,TAB_RIGHT,TAB_BOTTOM-10),&tabControl,ID_RESULT_LIST))
+	
+	if(!lstAlgResult.CreateEx(LVS_EX_GRIDLINES|WS_EX_STATICEDGE,WS_BORDER | LVS_REPORT  | LVS_SINGLESEL | LVS_SHOWSELALWAYS  ,CRect(TAB_LEFT,TAB_TOP,TAB_RIGHT,TAB_BOTTOM-10),this,ID_RESULT_LIST))
 		return false;
 	statisticsCreated = true;
 	lstAlgResult.SetFont(&fnt);
 	tabControl.UpdateWindow();
 	lstAlgResult.UpdateWindow();
 
+	
 	lstAlgResult.InsertColumn(count++,"Tile",LVCFMT_LEFT,TAB_WIDTH /nrColomns);
 	lstAlgResult.InsertColumn(count++,"Details",LVCFMT_LEFT,TAB_WIDTH /nrColomns);
 	
@@ -134,9 +138,21 @@ bool GraphicNotifier::CreateStatisticsTab()
 	
 	
 	AddObject(&lstAlgResult,1);
+	//lstAlgResult.
+	//lstAlgResult.InitControlContainer
 	this->RedrawWindow();
+
 	return true;
 
+}
+
+LRESULT GraphicNotifier::OnNotifyResult(WPARAM p1, LPARAM p2)
+{
+	GML::Utils::AlgorithmResult	*res = (GML::Utils::AlgorithmResult *)p1;	
+
+	GraphicNotifier* currentGraphicNotifier = (GraphicNotifier* )p2;
+	currentGraphicNotifier->InsertStatistics(res);
+	return 1;
 }
 bool GraphicNotifier::InsertStatistics(GML::Utils::AlgorithmResult	*res )
 {
@@ -149,6 +165,7 @@ bool GraphicNotifier::InsertStatistics(GML::Utils::AlgorithmResult	*res )
 	
 	if(!statisticsCreated)
 		CreateStatisticsTab();
+	
 	sprintf(temp,"%d",res->Iteration+1);
 	
 	visibile = lstAlgResult.IsWindowVisible();
@@ -299,5 +316,7 @@ void GraphicNotifier::OnTcnSelchange(NMHDR *pNMHDR, LRESULT *pResult)
 				tabControlObjects[i].object->ShowWindow(SW_HIDE);
 			}
 	}
+
+	this->UpdateWindow();
 
 }

@@ -14,6 +14,7 @@ HANDLE hEvent;
 
 #define WM_NEW_ALGORITHM (WM_USER+2)
 #define WM_DELETE_ALGORITHM (WM_USER+3)
+//#define WM_ALGORITHM_NOTIFY_RESULT ( WM_USER+100)
 
 
 bool CreateMainWindow(GraphicNotifier* newGraphicNotifier)
@@ -70,6 +71,7 @@ DWORD WINAPI run_thread_window(LPVOID lpThreadParameter)
 			{
 				parent = NULL;
 			}
+			GraphicNotifier* newNotifier;
 
 			
 
@@ -78,14 +80,16 @@ DWORD WINAPI run_thread_window(LPVOID lpThreadParameter)
 				parent = topWindow;
 			}
 			
-			::GetClientRect(parent,&tabSize);
-			tabSize.left=+15;
-			GraphicNotifier* newGraphicNotifier = new GraphicNotifier();
-			newGraphicNotifier->Create("",tabSize,parent);
+			//::GetClientRect(parent,&tabSize);
+			//tabSize.left=+15;
+			//GraphicNotifier* newGraphicNotifier = new GraphicNotifier();
+			//newGraphicNotifier->Create("",tabSize,parent);
+			//nrWindows+=1;
+			SendMessageA(parent,WM_NEW_ALGORITHM,(WPARAM)&newNotifier,(LPARAM)parent);
 			nrWindows+=1;
-			SendMessageA(parent,WM_NEW_ALGORITHM,NULL,(LPARAM)newGraphicNotifier);
+			//SendMessageA(parent,WM_NEW_ALGORITHM,NULL,(LPARAM)newGraphicNotifier);
 			
-			return newGraphicNotifier;
+			return newNotifier;
 			//AfxMessageBox("message sent");
 
 			
@@ -115,7 +119,6 @@ DWORD WINAPI run_thread_window(LPVOID lpThreadParameter)
 	GraphicNotifier* currentGraphicNotifier;
 
 	currentGraphicNotifier= (GraphicNotifier*)context;
-	GML::Utils::AlgorithmResult	*res = (GML::Utils::AlgorithmResult *)Data;	
 	GML::Utils::GString temp;
 	GML::Utils::GString elements[2];
 	
@@ -132,7 +135,9 @@ DWORD WINAPI run_thread_window(LPVOID lpThreadParameter)
 	switch(messageID)
 	{
 	case GML::Utils::INotifier::NOTIFY_RESULT:
-		currentGraphicNotifier->InsertStatistics(res);
+		SendMessage(currentGraphicNotifier->GetSafeHwnd(),WM_ALGORITHM_NOTIFY_RESULT,WPARAM(Data),(LPARAM)context);
+		//SendMessage(newGraphicNotifier,WM_ALGORITHM_NOTIFY_RESULT,
+		//currentGraphicNotifier->InsertStatistics(res);
 		break;
 	case GML::Utils::INotifier::NOTIFY_ERROR:
 		currentGraphicNotifier->InsertError(text);

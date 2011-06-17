@@ -18,6 +18,8 @@
 #define TAB_BOTTOM 460
 #define TAB_WIDTH (TAB_RIGHT - TAB_LEFT)
 #define TAB_HEIGHT (TAB_BOTTOM - TAB_TOP)
+#define WM_ALGORITHM_NOTIFY_RESULT (WM_USER+100)
+
 
 typedef struct  
 {
@@ -57,7 +59,8 @@ public:
 	bool InsertError(char* text);
 	bool InsertProgressControl(char* text);
 	bool SetProgress(double procent);
-	bool GraphicNotifier::CreateStatisticsTab();
+	bool CreateStatisticsTab();
+	LRESULT OnNotifyResult(WPARAM p1, LPARAM p2);
 
 
 
