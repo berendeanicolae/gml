@@ -98,14 +98,14 @@ bool GraphicNotifier::SetProgress(double procent)
 {
 	
 	
-	lstStatus.SetControlItemData(lastProgressBar,1,(int)(procent));
-	return true;
+	return  lstStatus.SetProgress(lastProgressBar,(int)(procent));
+	
 }
 
 bool GraphicNotifier::CreateStatisticsTab()
 {
 	int count = 0;
-	int nrColomns=11;
+	int nrColomns=9;
 	TCITEM tcItem;
 	
 	tcItem.mask = TCIF_TEXT;
@@ -121,10 +121,6 @@ bool GraphicNotifier::CreateStatisticsTab()
 	lstAlgResult.SetFont(&fnt);
 	tabControl.UpdateWindow();
 	lstAlgResult.UpdateWindow();
-
-	
-	lstAlgResult.InsertColumn(count++,"Tile",LVCFMT_LEFT,TAB_WIDTH /nrColomns);
-	lstAlgResult.InsertColumn(count++,"Details",LVCFMT_LEFT,TAB_WIDTH /nrColomns);
 	
 	lstAlgResult.InsertColumn(count++,"Nr",LVCFMT_CENTER,(TAB_WIDTH /nrColomns)/2);
 	lstAlgResult.InsertColumn(count++,"TP",LVCFMT_CENTER,TAB_WIDTH /nrColomns);
@@ -136,7 +132,7 @@ bool GraphicNotifier::CreateStatisticsTab()
 	lstAlgResult.InsertColumn(count++,"Acc",LVCFMT_CENTER,TAB_WIDTH /nrColomns);
 	lstAlgResult.InsertColumn(count++,"Time",LVCFMT_LEFT,(TAB_WIDTH /nrColomns)*1.5);
 	
-	
+	//printf("%4d|TP:%5d |TN:%5d |FN:%5d |FP:%5d |Se:%3.2lf|Sp:%3.2lf|Acc:%3.2lf|Med:%3.2lf|%s\n",(res->Iteration+1),(int)res->tp,(int)res->tn,(int)res->fn,(int)res->fp,res->se,res->sp,res->acc,res->med,res->time.GetPeriodAsString(tempStr));
 	AddObject(&lstAlgResult,1);
 	//lstAlgResult.
 	//lstAlgResult.InitControlContainer
@@ -221,7 +217,10 @@ bool GraphicNotifier::InsertError(char* text)
 {
 	if ((text!=NULL))
 	{
-		return InsertMessage("Error",text);
+		if(!InsertMessage("Error",text))
+			return false;
+		if(!lstStatus.SetItemData(lstStatus.GetItemCount()-1,CREATE_ITEM_STATUS(ITEM_TYPE_ERROR,0,0)))
+			return false;
 	}
 	
 	return false;
@@ -234,45 +233,15 @@ bool GraphicNotifier::InsertProgressControl(char* text)
 
 	if(!lstStatus.InsertItem(lstStatus.GetItemCount(), text))
 		return false;
-	if(!lstStatus.AddControlToItem(lstStatus.GetItemCount()-1,1,TYPE_PROGRESS_BAR,0))
+	
+	if(!lstStatus.SetItemData(lstStatus.GetItemCount()-1,CREATE_ITEM_STATUS(ITEM_TYPE_STATUS,0,ITEM_CONTROLTYPE_PROGRESS_BAR)))
 		return false;
+
 	lstStatus.RedrawItems(lstStatus.GetItemCount()-1,lstStatus.GetItemCount()-1);
 	lastProgressBar = lstStatus.GetItemCount()-1;
 	return true;
 }
 
-/*
-bool GraphicNotifier::InsertMessage(char* text, int DataSize, int MessageID)
-{
-	CString temp,outStr,windowStr;
-
-	outStr = "";
-
-	if ((text!=NULL) && (DataSize>0))
-	{
-		for (UInt32 tr =0;tr<DataSize;tr++)
-		{
-			if ((text[tr]>=' ') && (text[tr]<=128))
-				outStr+=text[tr];
-			else
-			{
-				temp.Format("{\\x%02X}",(unsigned char)text[tr]);
-				outStr+=temp;
-
-			}
-				
-		}
-	}
-	
-	
-	edtAlgOutput.GetWindowTextA(windowStr);
-	windowStr+="\r\n";
-	windowStr+=outStr;
-	edtAlgOutput.SetWindowTextA(windowStr);
-
-	return true;
-}
-*/
 
 bool GraphicNotifier::AddObject(CWnd* object, unsigned int tabId)
 {
