@@ -1,11 +1,19 @@
-#include "MapTemplate.h"
+#include "KNNStatistics.h"
 
+int RecDistCompare(RecDist &r1,RecDist &r2)
+{
+	if (r1.Dist>r2.Dist)
+		return 1;
+	if (r1.Dist<r2.Dist)
+		return -1;
+	return 0;
+}
 //================================================================================
 
 
-MapTemplate::MapTemplate()
+KNNStatistics::KNNStatistics()
 {
-	ObjectName = "MapTemplate";
+	ObjectName = "KNNStatistics";
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
 	
@@ -14,138 +22,106 @@ MapTemplate::MapTemplate()
 	//LinkPropertyToUInt32("ClassType",ClassType,0,"!!LIST:Positive=0,Negative,Both!!");
 	//LinkPropertyToUInt32("SaveResults",SaveResults,SAVE_RESULTS_NONE,"!!LIST:None=0,Text,Parsable!!");
 	//LinkPropertyToString("ResultFileName",ResultFileName,"","The name of the file where the results will be saved !");
-	//LinkPropertyToString("MapTemplateFileName",MapTemplateFileName,"","The name of the file that will be use as a pattern for centroid saving !");
+	//LinkPropertyToString("KNNStatisticsFileName",KNNStatisticsFileName,"","The name of the file that will be use as a pattern for centroid saving !");
 	//LinkPropertyToBool  ("SortResults",SortResults,false,"Specify if the results should be sorted before saving");
 	//LinkPropertyToUInt32("MinimPositiveElements",minPositiveElements,0,"Specify the minimum number of positive elemens in a centroid");
 	//LinkPropertyToUInt32("MinimNegativeElements",minNegativeElements,0,"Specify the minimum number of negative elemens in a centroid");
 
-	//LinkPropertyToString("MapTemplatesFileList"		,MapTemplatesFileList		,"","A list of weight files to be loaded separated by a comma.");
-	//LinkPropertyToString("MapTemplatesPath"			,MapTemplatesPath			,"*.txt","The path where the weigh files are");
+	//LinkPropertyToString("KNNStatisticssFileList"		,KNNStatisticssFileList		,"","A list of weight files to be loaded separated by a comma.");
+	//LinkPropertyToString("KNNStatisticssPath"			,KNNStatisticssPath			,"*.txt","The path where the weigh files are");
 	//LinkPropertyToString("RayPropertyName"			,RayPropertyName		,"ray","The name of the property that contains the ray of the centroid. It has to be a numeric property.");
 	//LinkPropertyToString("VotePropertyName"			,VotePropertyName		,"vote","The name of the property that contains the vote of the centroid. It has to be a numeric property.");
-	//LinkPropertyToUInt32("MapTemplatesLoadingMethod"	,MapTemplatesLoadingMethod	,0,"!!LIST:FromList=0,FromPath!!");
+	//LinkPropertyToUInt32("KNNStatisticssLoadingMethod"	,KNNStatisticssLoadingMethod	,0,"!!LIST:FromList=0,FromPath!!");
 	
 
 		
 }
 
 
-void MapTemplate::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand)
+void KNNStatistics::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand)
 {
-	switch (threadCommand)
-	{
-		case OP_AND_2:
-		case OP_XOR_2:
-			Compute2LevelOps(thData,threadCommand);
-			return;
-	};
+	ComputeDist(thData);
 }
-bool MapTemplate::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
+bool KNNStatistics::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
 {
-	GML::Utils::GTFVector<MapTemplateOp>	*op = new GML::Utils::GTFVector<MapTemplateOp>();
-
-	if (op->Create(con->GetFeatureCount())==0)
+	KNNStatThData	*kst = new KNNStatThData();
+	if (kst==NULL)
 		return false;
-
-	thData.Context = op;
+	if (kst->Dist.Create(con->GetRecordCount())==false)
+		return false;
+	if (con->CreateMlRecord(kst->SecRec)==false)
+		return false;
+	thData.Context = kst;
 	return true;
 }
-bool MapTemplate::Init()
+bool KNNStatistics::Init()
 {
 	if (InitConnections()==false)
 		return false;
 	if (InitThreads()==false)
 		return false;
-
+	if ((rInfo = new RecInfo[con->GetRecordCount()])==false)
+	{
+		notif->Error("[%s] -> Unable to create RecInfo object with %d records !",ObjectName,con->GetRecordCount());
+		return false;
+	}
 	return true;
 }
-bool MapTemplate::Compute2LevelOps(GML::Algorithm::MLThreadData &thData,unsigned int op)
+bool KNNStatistics::ComputeDist(GML::Algorithm::MLThreadData &thData)
 {
-	GML::Utils::GTFVector<MapTemplateOp>	*listOp = (GML::Utils::GTFVector<MapTemplateOp> *)thData.Context;
-	UInt32									tr,gr,cntFlags,nrRecords;
-	UInt32									indexRec;
-	UInt32									result;
-	MapTemplateOp							mtop;
+	KNNStatThData	*kst = (KNNStatThData *)thData.Context;
+	UInt32			tr,gr,cntFlags,nrRecords;
+	RecDist			rDist;
 
 	cntFlags = con->GetFeatureCount();
 	nrRecords = con->GetRecordCount();
 
-	nrRecords = 500;
-
-	mtop.Op = op;
 
 	if (thData.ThreadID==0)
 		notif->StartProcent("[%s] -> Computing ... ",ObjectName);
 
-	for (tr=thData.ThreadID;tr<cntFlags;tr+=threadsCount)
+	for (tr=thData.ThreadID;tr<nrRecords;tr+=threadsCount)
 	{
-		for (gr=tr+1;gr<cntFlags;gr++)
+		if (con->GetRecord(thData.Record,tr)==false)
 		{
-			mtop.countNegative = mtop.countPositive = 0;
-			// citesc fiecare record
-			for (indexRec = 0;indexRec<nrRecords;indexRec++)
+			notif->Error("[%s] -> Unable to read record #%d",ObjectName,tr);
+			return false;
+		}
+		kst->Dist.DeleteAll();
+		for (gr=0;gr<nrRecords;gr++)
+		{
+			if (gr==tr)
+				continue;
+			if (con->GetRecord(kst->SecRec,gr)==false)
 			{
-				if (con->GetRecord(thData.Record,indexRec)==false)
-				{
-					notif->Error("[%s] -> Unable to read record #%d",ObjectName,indexRec);
-					return false;
-				}
-				// contorizez operatia
-				switch (op)
-				{
-					case OP_AND_2:
-						result = (UInt32)(thData.Record.Features[tr]) & (UInt32)(thData.Record.Features[gr]);
-						break;
-					case OP_XOR_2:
-						result = (UInt32)(thData.Record.Features[tr]) ^ (UInt32)(thData.Record.Features[gr]);
-						break;
-					default:
-						result=0;
-						break;
-				}
-				if (result!=0)
-				{
-					if (thData.Record.Label==1)
-						mtop.countPositive++;
-					else
-						mtop.countNegative++;
-				}
+				notif->Error("[%s] -> Unable to read record #%d",ObjectName,gr);
+				return false;
 			}
-			// adaug la lista
-			if (mtop.countNegative+mtop.countPositive>0)
+			rDist.Index = gr;
+			rDist.Dist = GML::ML::VectorOp::EuclideanDistanceSquared(thData.Record.Features,kst->SecRec.Features,cntFlags);
+			if (kst->Dist.PushByRef(rDist)==false)
 			{
-				mtop.Data.FeatureIndex[0] = tr;
-				mtop.Data.FeatureIndex[1] = gr;
-				if (listOp->PushByRef(mtop)==false)
-				{
-					notif->Error("[%s] -> Unable to add map method to list ",ObjectName);
-					return false;
-				}
+				notif->Error("[%s] -> Unable to add record #%d",ObjectName,gr);
+				return false;
 			}
 		}
+		// sortez
+		kst->Dist.Sort(RecDistCompare);
+		// fac calculele
 		if (thData.ThreadID==0)
-			notif->SetProcent(tr,cntFlags);
+			notif->SetProcent(tr,nrRecords);
 	}
 	if (thData.ThreadID==0)
 		notif->EndProcent();
 	return true;
 }
 
-void MapTemplate::Compute()
+void KNNStatistics::Compute()
 {
-	UInt32	tr,count=0;
-	GML::Utils::GTFVector<MapTemplateOp>	*listOp;
-
-	ExecuteParalelCommand(OP_XOR_2);
-	for (tr=0;tr<threadsCount;tr++)
-	{
-		listOp = (GML::Utils::GTFVector<MapTemplateOp> *)ThData[tr].Context;
-		count+= listOp->Len();
-	}
-	notif->Info("Result = %d",count);
+	ExecuteParalelCommand(0);
 }
 
-void MapTemplate::OnExecute()
+void KNNStatistics::OnExecute()
 {
 	if (Command==1)	//Compute
 	{
