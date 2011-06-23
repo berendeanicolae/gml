@@ -17,7 +17,7 @@ KNNStatistics::KNNStatistics()
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
 	
-	
+	LinkPropertyToUInt32("K",K,3,"K parameter from KNN algorithm");
 
 	//LinkPropertyToUInt32("ClassType",ClassType,0,"!!LIST:Positive=0,Negative,Both!!");
 	//LinkPropertyToUInt32("SaveResults",SaveResults,SAVE_RESULTS_NONE,"!!LIST:None=0,Text,Parsable!!");
@@ -65,7 +65,42 @@ bool KNNStatistics::Init()
 		notif->Error("[%s] -> Unable to create RecInfo object with %d records !",ObjectName,con->GetRecordCount());
 		return false;
 	}
+	if (con->CreateMlRecord(MainRecord)==false)
+	{
+		notif->Error("[%s] -> Unable to create MainRecords",ObjectName);
+		return false;
+	}
+	notif->Info("[%s] -> Listing labels ...",ObjectName);
+	for (UInt32 tr=0;tr<con->GetRecordCount();tr++)
+	{
+		if (con->GetRecordLabel(rInfo[tr].Label,tr)==false)
+		{
+			notif->Error("[%s] -> Unable to read label for record #%d !",ObjectName,tr);
+			return false;
+		}
+	}
 	return true;
+}
+void KNNStatistics::ComputeParts(ComputePartsInfo &cpi,GML::Utils::GTFVector<RecDist>	&Dist,UInt32 start,UInt32 end,double label,bool reset)
+{
+	double c_label;
+	if (reset)
+	{
+		cpi.CountDiff = cpi.CountSame = 0;
+		cpi.SumDiff = cpi.SumSame = 0;
+	}
+	for (;start<end;start++)
+	{
+		c_label = rInfo[Dist[start].Index].Label;
+		if (c_label==label)
+		{
+			cpi.CountSame++;
+			cpi.SumSame+=Dist[start].Dist;
+		} else {
+			cpi.CountDiff++;
+			cpi.SumDiff+=Dist[start].Dist;
+		}
+	}
 }
 bool KNNStatistics::ComputeDist(GML::Algorithm::MLThreadData &thData)
 {
