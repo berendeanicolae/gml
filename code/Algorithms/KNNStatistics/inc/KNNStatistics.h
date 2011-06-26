@@ -6,10 +6,10 @@
 struct RecInfo
 {
 	double	Label;
-	double	MinDistSimilar;
-	double	MinDistNotSimilar;
-	double	MaxDistSimilar;
-	double	MaxDistNotSimilar;
+	UInt32	SimCount;
+	UInt32	NotSimCount;
+	double	SimAverageDist;
+	double	NotSimAverageDist;	
 	UInt16	ProcAdd;
 	UInt16	ProcCount;
 };
