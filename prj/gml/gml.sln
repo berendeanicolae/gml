@@ -169,8 +169,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BinaryKMeans", "Algorithms\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PCA", "Algorithms\PCA\PCA.vcxproj", "{5F961823-6C97-4669-9074-29E1BF59EEE4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KNNStatistics", "Algorithms\KNNStatistics\KNNStatistics.vcxproj", "{4BE50ABA-A3B8-472B-B59C-6565B1582CB2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

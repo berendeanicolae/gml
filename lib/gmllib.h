@@ -1302,6 +1302,7 @@ namespace GML
 
 			bool			Add(TCHAR *ss,int size=-1);
 			bool			AddChar(char ch);
+			bool			AddChars(char ch,int count);
 			bool			Add(GString *ss,int size=-1);
 
 			bool			Set(TCHAR *ss,int size=-1);
@@ -1309,6 +1310,9 @@ namespace GML
 
 			bool			SetFormated(TCHAR *format,...);
 			bool			AddFormated(TCHAR *format,...);
+
+			//bool			SetFormatedEx(TCHAR *format,...);
+			bool			AddFormatedEx(TCHAR *format,...);
 
 			bool			Create(int initialSize=64);
 			bool			LoadFromFile(TCHAR *fileName,int start=0,int end=-1);
@@ -1336,6 +1340,7 @@ namespace GML
 			bool			DeleteChar(int pos);
 			bool			Insert(TCHAR *ss,int pos);
 			bool			InsertChar(TCHAR ch,int pos);
+			bool			InsertChars(TCHAR ch,int pos,int count);
 			bool			Insert(GString *ss,int pos);
 			bool			ReplaceOnPos(int start,int end,TCHAR *newText,int newTextSize=-1);
 			bool			ReplaceOnPos(int start,int end,GString *ss);
