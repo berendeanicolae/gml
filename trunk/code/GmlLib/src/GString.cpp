@@ -3,14 +3,150 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-static char *convert_array={"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"};
+static char *convert_array_upper={"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"};
+static char *convert_array_lower={"0123456789abcdefghijklmnopqrstuvwxyz"};
+
 #define GSTRING_TEST_AND_INIT { if (Text==NULL) { if (Create(64)==false) return false; } }
 #define GSTRING_GROW_WITH(x) { 	if (x+Size+1>=MaxSize) {	if (Grow(x+Size+32)==false)	return false; }  }
 #define LOWER_CHAR(x) (((x>='A') && (x<='Z'))?x|0x20:x)
 #define CONVERT_TO_COMPARE(x,ignore) (((ignore) && (x>='A') && (x<='Z'))?x|0x20:x)
 #define MEMMOVE	memmove
 #define MEMCOPY	memcpy
+#define MAX_FORMATED_EX_TEMP_BUF	512
+#define MAX_EXTVALUE				32
 
+struct DataConvertInfo
+{
+	enum {
+		TYPE_None = 0,
+		TYPE_Bool,
+		TYPE_Char,
+		TYPE_WChar,
+		TYPE_UInt8,
+		TYPE_UInt16,
+		TYPE_UInt32,
+		TYPE_UInt64,
+		TYPE_Int8,
+		TYPE_Int16,
+		TYPE_Int32,
+		TYPE_Int64,
+		TYPE_Ascii,
+		TYPE_Unicode,
+		TYPE_Float,
+		TYPE_Double,		
+	};
+	enum {
+		ALIGN_LEFT,
+		ALIGN_RIGHT,
+		ALIGN_CENTER
+	};
+	enum {
+		FLAG_UPPER = 1,
+		FLAG_TRUNCATE = 2,
+	};
+	enum {
+		EXTVALUE_AlignSize = 0,
+		EXTVALUE_Base,
+		EXTVALUE_Zecimals,
+		EXTVALUE_GROUP,
+		EXTVALUE_FillChar
+	};
+	unsigned int	DataType;
+	unsigned int	AlignSize;
+	unsigned char	Align;
+	unsigned int	Base;
+	unsigned int	Flags;
+	unsigned int	Zecimals;
+	unsigned int	Group;
+	char			FillChar;
+	unsigned int	ExternalValue[MAX_EXTVALUE];
+	unsigned int	ExternalValuesCount;
+};
+union DataValueUnion
+{
+	unsigned char	vUInt8;
+	unsigned short	vUInt16;
+	unsigned int	vUInt32;
+	TYPE_UINT64		vUInt64;
+
+	char			vInt8;
+	short			vInt16;
+	int				vInt32;
+	TYPE_UINT64		vInt64;
+
+	char			vChar;
+	short			vWChar;
+
+	char*			vAscii;
+	bool			vBool;
+
+	float			vFloat;
+	double			vDouble;
+};
+// tipuri
+struct StructTypeName
+{
+	char			*Name;
+	unsigned int	Id;
+};
+static StructTypeName __TypeNames[] = {
+	{"b",			DataConvertInfo::TYPE_Bool},
+	{"bool",		DataConvertInfo::TYPE_Bool},
+
+	{"i8",			DataConvertInfo::TYPE_Int8},
+	{"int8",		DataConvertInfo::TYPE_Int8},
+	{"char",		DataConvertInfo::TYPE_Int8},
+
+	{"c",			DataConvertInfo::TYPE_Char},
+	
+	{"uc",			DataConvertInfo::TYPE_WChar},
+	{"wchar",		DataConvertInfo::TYPE_WChar},
+
+	{"i16",			DataConvertInfo::TYPE_Int16},
+	{"int16",		DataConvertInfo::TYPE_Int16},
+	{"short",		DataConvertInfo::TYPE_Int16},
+
+	{"i32",			DataConvertInfo::TYPE_Int32},
+	{"int32",		DataConvertInfo::TYPE_Int32},
+	{"int",			DataConvertInfo::TYPE_Int32},
+
+	{"i64",			DataConvertInfo::TYPE_Int64},
+	{"int64",		DataConvertInfo::TYPE_Int64},
+
+	{"ui8",			DataConvertInfo::TYPE_UInt8},
+	{"uint8",		DataConvertInfo::TYPE_UInt8},
+	{"byte",		DataConvertInfo::TYPE_UInt8},
+
+	{"ui16",		DataConvertInfo::TYPE_UInt16},
+	{"uint16",		DataConvertInfo::TYPE_UInt16},
+	{"w",			DataConvertInfo::TYPE_UInt16},
+
+	{"ui32",		DataConvertInfo::TYPE_UInt32},
+	{"uint32",		DataConvertInfo::TYPE_UInt32},
+	{"uint",		DataConvertInfo::TYPE_UInt32},
+	{"dw",			DataConvertInfo::TYPE_UInt32},
+
+	{"ui64",		DataConvertInfo::TYPE_UInt64},
+	{"uint64",		DataConvertInfo::TYPE_UInt64},
+	{"qw",			DataConvertInfo::TYPE_UInt64},
+
+	{"s",			DataConvertInfo::TYPE_Ascii},
+	{"str",			DataConvertInfo::TYPE_Ascii},
+	{"string",		DataConvertInfo::TYPE_Ascii},
+	{"a",			DataConvertInfo::TYPE_Ascii},
+	{"ascii",		DataConvertInfo::TYPE_Ascii},
+
+	{"u",			DataConvertInfo::TYPE_Unicode},
+	{"unicode",		DataConvertInfo::TYPE_Unicode},
+
+	{"f",			DataConvertInfo::TYPE_Float},
+	{"float",		DataConvertInfo::TYPE_Float},
+
+	{"r",			DataConvertInfo::TYPE_Double},
+	{"dbl",			DataConvertInfo::TYPE_Double},
+	{"double",		DataConvertInfo::TYPE_Double},
+
+};
 
 
 bool Simple_IsCharMatching(TCHAR ct,TCHAR cm,bool IgnoreCase)
@@ -152,6 +288,325 @@ bool ConvertStringToNumber(TCHAR *text,TYPE_UINT64 *value,unsigned int base,int 
 	if (_isSigned)
 		(*_isSigned) = isSigned;
 	return true;
+}
+
+bool __StrEq(char *s1,int s1Size,char *s2,bool ignoreCase=false)
+{
+	int		tr;
+	char	c1,c2;
+
+	for (tr=0;(s2[tr]!=0) && (tr<s1Size);tr++)
+	{
+		c1=CONVERT_TO_COMPARE(s1[tr],ignoreCase);
+		c2=CONVERT_TO_COMPARE(s2[tr],ignoreCase);
+		if (c1!=c2)
+			return false;
+	}
+	if ((s2[tr]==0) && (tr==s1Size))
+		return true;
+	return false;
+}
+bool __StrToUInt32(char *s1,int s1Size,unsigned int *value)
+{
+	(*value)=0;
+	if (s1Size<1)
+		return false;
+	for (int tr=0;tr<s1Size;tr++)
+	{
+		if ((s1[tr]>='0') && (s1[tr]<='9'))
+		{
+			(*value) = (*value) * 10 + s1[tr]-'0';
+		} else {
+			return false;
+		}
+	}
+	return true;
+}
+void ResetDataConvertInfo(DataConvertInfo *dci)
+{
+	if (dci==NULL)
+		return;
+	dci->Align = DataConvertInfo::ALIGN_LEFT;
+	dci->Base = 10;
+	dci->Flags = 0;
+	dci->DataType = DataConvertInfo::TYPE_None;
+	dci->Zecimals = 0;
+	dci->AlignSize = 0;
+	dci->Group = 0xFFFFFFFF;
+	dci->FillChar = ' ';
+	dci->ExternalValuesCount = 0;
+}
+bool UpdateDataConvertInfo(DataConvertInfo *dci,char *info,int infoSize)
+{
+	unsigned int	tr;
+	
+	if ((info==NULL) || (info[0]==0) || (dci==NULL))
+		return false;
+	// tipul
+	if ((info[0]>='a') && (info[0]<='z'))
+	{
+		for (tr=0;tr<sizeof(__TypeNames)/sizeof(StructTypeName);tr++)
+		{
+			if (__StrEq(info,infoSize,__TypeNames[tr].Name,false))
+			{
+				dci->DataType = __TypeNames[tr].Id;
+				return true;
+			}
+		}
+	}
+	// verific daca nu e o baza cunoscuta
+	if (__StrEq(info,infoSize,"hex",true))
+	{
+		dci->Base = 16;
+		if (info[0]=='H') 
+			dci->Flags |= DataConvertInfo::FLAG_UPPER;
+		return true;
+	}
+	if (__StrEq(info,infoSize,"oct",true))
+	{
+		dci->Base = 8;
+		if (info[0]=='O') 
+			dci->Flags |= DataConvertInfo::FLAG_UPPER;
+		return true;
+	}
+	if (__StrEq(info,infoSize,"bin",true))
+	{
+		dci->Base = 2;
+		if (info[0]=='B') 
+			dci->Flags |= DataConvertInfo::FLAG_UPPER;
+		return true;
+	}
+	if (__StrEq(info,infoSize,"dec",true))
+	{
+		dci->Base = 10;
+		if (info[0]=='D') 
+			dci->Flags |= DataConvertInfo::FLAG_UPPER;
+		return true;
+	}
+	if ((info[0]|0x20)=='b')
+	{
+		if ((infoSize==3) && (info[1]=='%') && (info[2]=='%'))
+		{
+			dci->ExternalValue[dci->ExternalValuesCount++] = DataConvertInfo::EXTVALUE_Base;
+			if (dci->ExternalValuesCount == MAX_EXTVALUE)
+				return false;
+		} else {
+			if (__StrToUInt32(&info[1],infoSize-1,&dci->Base)==false)
+				return false;
+			if ((dci->Base<2) || (dci->Base>=36))
+				return false;
+		}
+		if (info[0]=='B') 
+			dci->Flags |= DataConvertInfo::FLAG_UPPER;
+		return true;
+	}
+	// verific alignamentul
+	if (info[0]=='L')
+	{
+		if ((infoSize==3) && (info[1]=='%') && (info[2]=='%'))
+		{
+			dci->ExternalValue[dci->ExternalValuesCount++] = DataConvertInfo::EXTVALUE_AlignSize;
+			if (dci->ExternalValuesCount == MAX_EXTVALUE)
+				return false;
+		} else {
+			if (info[1]!=0)
+			{
+				if (__StrToUInt32(&info[1],infoSize-1,&dci->AlignSize)==false)
+					return false;
+			}
+		}
+		dci->Align = DataConvertInfo::ALIGN_LEFT;		
+		return true;
+	}
+	if (info[0]=='R')
+	{
+		if ((infoSize==3) && (info[1]=='%') && (info[2]=='%'))
+		{
+			dci->ExternalValue[dci->ExternalValuesCount++] = DataConvertInfo::EXTVALUE_AlignSize;
+			if (dci->ExternalValuesCount == MAX_EXTVALUE)
+				return false;
+		} else {
+			if (info[1]!=0)
+			{
+				if (__StrToUInt32(&info[1],infoSize-1,&dci->AlignSize)==false)
+					return false;
+			}
+		}
+		dci->Align = DataConvertInfo::ALIGN_RIGHT;
+		return true;
+	}
+	if (info[0]=='C')
+	{
+		if ((infoSize==3) && (info[1]=='%') && (info[2]=='%'))
+		{
+			dci->ExternalValue[dci->ExternalValuesCount++] = DataConvertInfo::EXTVALUE_AlignSize;
+			if (dci->ExternalValuesCount == MAX_EXTVALUE)
+				return false;
+		} else {
+			if (info[1]!=0)
+			{
+				if (__StrToUInt32(&info[1],infoSize-1,&dci->AlignSize)==false)
+					return false;
+			}
+		}
+		dci->Align = DataConvertInfo::ALIGN_CENTER;
+		return true;
+	}
+	// flag de trunchiere
+	if (__StrEq(info,infoSize,"trunc",true))
+	{
+		dci->Flags |= DataConvertInfo::FLAG_TRUNCATE;
+		return true;
+	}
+	if (info[0]=='Z')
+	{
+		if ((infoSize==3) && (info[1]=='%') && (info[2]=='%'))
+		{
+			dci->ExternalValue[dci->ExternalValuesCount++] = DataConvertInfo::EXTVALUE_Zecimals;
+			if (dci->ExternalValuesCount == MAX_EXTVALUE)
+				return false;
+		} else {
+			if (__StrToUInt32(&info[1],infoSize-1,&dci->Zecimals)==false)
+				return false;
+		}
+		return true;
+	}
+	if (info[0]=='F')
+	{
+		if ((infoSize==3) && (info[1]=='%') && (info[2]=='%'))
+		{
+			dci->ExternalValue[dci->ExternalValuesCount++] = DataConvertInfo::EXTVALUE_FillChar;
+			if (dci->ExternalValuesCount == MAX_EXTVALUE)
+				return false;
+		} else {
+			if (infoSize!=2)
+				return false;
+			dci->FillChar = info[1];
+		}
+		return true;
+	}
+	if (info[0]=='G')
+	{
+		if ((infoSize==3) && (info[1]=='%') && (info[2]=='%'))
+		{
+			dci->ExternalValue[dci->ExternalValuesCount++] = DataConvertInfo::EXTVALUE_GROUP;
+			if (dci->ExternalValuesCount == MAX_EXTVALUE)
+				return false;
+		} else {
+			if (__StrToUInt32(&info[1],infoSize-1,&dci->Group)==false)
+				return false;
+			if (dci->Group==0)
+				return false;
+		}
+		return true;
+	}
+	return false;
+}
+TCHAR* ConvertIntegerNumberToString(DataConvertInfo *dci,TYPE_INT64 data,TCHAR *tempBuffer,int tempBufferSize,int *resultSize)
+{
+	bool			negativ = false;
+	TCHAR*			letters = convert_array_lower;
+	int				poz = tempBufferSize-1;
+	unsigned int	gPoz=0;
+	
+	tempBuffer[poz]=0;
+	poz--;
+
+	if (dci->Flags & DataConvertInfo::FLAG_UPPER)
+		letters = convert_array_upper;
+
+	if (data<0)
+	{
+		data = -data;
+		negativ = true;
+	}
+	do
+	{
+		tempBuffer[poz--] = letters[data % dci->Base];
+		data = data / dci->Base;
+		gPoz++;
+		if ((gPoz==dci->Group) && (data>0))
+		{
+			tempBuffer[poz--]=',';
+			gPoz=0;
+		}		
+	} while ((data>0) && (poz>=2));
+	if (data!=0)
+		return NULL;
+	if (negativ)
+		tempBuffer[poz--] = '-';
+	// totul e ok
+	poz++;
+	(*resultSize) = (tempBufferSize-1)-poz;
+	return &tempBuffer[poz];
+}
+TCHAR* ConvertUIntegerNumberToString(DataConvertInfo *dci,TYPE_UINT64 data,TCHAR *tempBuffer,int tempBufferSize,int *resultSize)
+{
+	TCHAR*			letters = convert_array_lower;
+	int				poz = tempBufferSize-1;
+	unsigned int	gPoz=0;
+	
+	tempBuffer[poz]=0;
+	poz--;
+
+	if (dci->Flags & DataConvertInfo::FLAG_UPPER)
+		letters = convert_array_upper;
+
+	do
+	{
+		tempBuffer[poz--] = letters[data % dci->Base];
+		data = data / dci->Base;
+		gPoz++;
+		if ((gPoz==dci->Group) && (data>0))
+		{
+			tempBuffer[poz--]=',';
+			gPoz=0;
+		}		
+	} while ((data>0) && (poz>=2));
+	if (data!=0)
+		return NULL;
+	// totul e ok
+	poz++;
+	(*resultSize) = (tempBufferSize-1)-poz;
+	return &tempBuffer[poz];
+}
+TCHAR* ConvertDoubleNumberToString(DataConvertInfo *dci,double data,TCHAR *tempBuffer,int tempBufferSize,int *resultSize)
+{
+	int		pctPoz,size,countZecimals;
+	TCHAR*	ptr;
+
+	size = sprintf_s(tempBuffer,tempBufferSize-1,"%lf",data);
+	if ((size<0) || (size>=tempBufferSize))
+		return NULL;	
+	// caut punctul
+	ptr = tempBuffer;
+	for (pctPoz = 0;((*ptr)!=0) && ((*ptr)!='.');ptr++,pctPoz++);
+	if ((*ptr)==0)
+	{
+		(*ptr)='.';
+		size++;
+	}
+	if (dci->Zecimals==0)
+	{
+		(*resultSize)=pctPoz;
+		return tempBuffer;
+	}
+	countZecimals = (size-1)-pctPoz;
+	if (countZecimals>=(int)dci->Zecimals)
+	{
+		(*resultSize)=pctPoz+dci->Zecimals+1;
+		return tempBuffer;
+	}
+	ptr = &tempBuffer[size];
+	while ((size<tempBufferSize) && (countZecimals<dci->Zecimals))
+	{
+		(*ptr)='0';
+		ptr++;
+		size++;
+		countZecimals++;
+	}
+	(*resultSize) = size;
+	return tempBuffer;
 }
 //-------------------------------------------------- FUNCTII STATICE ---------------------------------------------------------------------
 int	 GML::Utils::GString::Len(TCHAR *string)
@@ -551,6 +1006,11 @@ bool GML::Utils::GString::AddChar(TCHAR ch)
 	temp[1]=0;
 	return Add(temp);
 }
+bool GML::Utils::GString::AddChars(TCHAR ch,int count)
+{
+	GSTRING_TEST_AND_INIT;
+	return InsertChars(ch,Size,count);
+}
 bool GML::Utils::GString::Add(GString *ss,int txSize)
 {
 	GSTRING_TEST_AND_INIT;
@@ -697,6 +1157,20 @@ bool GML::Utils::GString::InsertChar(TCHAR ch,int pos)
 	t[1]=0;
 
 	return Insert(t,pos);
+}
+bool GML::Utils::GString::InsertChars(TCHAR ch,int pos,int count)
+{
+	if (count<1)
+		return false;
+
+	GSTRING_TEST_AND_INIT;
+	GSTRING_GROW_WITH(count+1);
+	MEMMOVE(&Text[pos+count],&Text[pos],(Size-pos)*sizeof(TCHAR));
+	for (int tr=0;tr<count;tr++,pos++)
+		Text[pos]=ch;	
+	Size+=count;
+	Text[Size]=0;
+	return true;
 }
 bool GML::Utils::GString::Insert(GString *ss,int pos)
 {
@@ -991,7 +1465,7 @@ bool GML::Utils::GString::SetFormated(TCHAR *format, ...)
     va_start( args, format );
 	if ((len = _vscprintf( format, args ))<0)
 		return false;
-	GSTRING_GROW_WITH((unsigned int)len+1);
+	GSTRING_GROW_WITH(len+1);
     if ((len = vsprintf_s( Text, len+1, format, args ))<0)
 		return false;
 	Text[len]=0;
@@ -1007,11 +1481,262 @@ bool GML::Utils::GString::AddFormated(TCHAR *format, ...)
     va_start( args, format );
 	if ((len = _vscprintf( format, args ))<0)
 		return false;
-	GSTRING_GROW_WITH((unsigned int)len+1+Size);
+	GSTRING_GROW_WITH(len+1+Size);
     if ((len = vsprintf_s( &Text[Size], len+1, format, args ))<0)
 		return false;
 	Text[len+Size]=0;
 	Size+=(len);
+	return true;
+}
+bool GML::Utils::GString::AddFormatedEx(TCHAR *format, ...)
+{
+    va_list				args;
+    TCHAR*				start;
+	DataConvertInfo		dci;
+	DataValueUnion		val;
+	TCHAR				temp[MAX_FORMATED_EX_TEMP_BUF];
+	TCHAR				*toAdd;
+	int					toAddSize;
+	int					extraAdd;
+	unsigned int		tr;
+
+
+	GSTRING_TEST_AND_INIT;
+    va_start( args, format );
+	
+	start = format;
+	while (true)
+	{		
+		while (((*format)!=0) && ((*format)!='%'))
+			format++;
+		// adaug ce am gasit pana acuma
+		if (Add(start,(int)(format-start))==false)
+			return false;
+		if ((*format)==0)
+			return true;
+		if (((*format)=='%') && (format[1]=='{'))
+		{
+			//procesez datele %{...}
+			format+=2;
+			ResetDataConvertInfo(&dci);			
+			while (((*format)!=0) && ((*format)!='}'))
+			{
+				start = format;
+				while (((*format)!=0) && ((*format)!=',') && ((*format)!='}'))
+					format++;
+				if (UpdateDataConvertInfo(&dci,start,(int)(format-start))==false)
+					return false;
+				if ((*format)==',')
+					format++;
+			}
+			// format invalid
+			if ((*format)==0)
+				return false;
+			// sunt pe o acolada
+			format++;
+			start = format;
+			// citesc valoarea
+			switch (dci.DataType)
+			{
+				case DataConvertInfo::TYPE_Int8:
+					val.vInt8 = va_arg(args,char);
+					break;
+				case DataConvertInfo::TYPE_Int16:
+					val.vInt16 = va_arg(args,short);
+					break;
+				case DataConvertInfo::TYPE_Int32:
+					val.vInt32 = va_arg(args,int);
+					break;
+				case DataConvertInfo::TYPE_Int64:
+					val.vInt64 = va_arg(args,TYPE_INT64);
+					break;
+
+				case DataConvertInfo::TYPE_UInt8:
+					val.vUInt8 = va_arg(args,unsigned char);
+					break;
+				case DataConvertInfo::TYPE_UInt16:
+					val.vUInt16 = va_arg(args,unsigned short);
+					break;
+				case DataConvertInfo::TYPE_UInt32:
+					val.vUInt32 = va_arg(args,unsigned int);
+					break;
+				case DataConvertInfo::TYPE_UInt64:
+					val.vUInt64 = va_arg(args,TYPE_UINT64);
+					break;
+
+				case DataConvertInfo::TYPE_Char:
+					val.vChar = va_arg(args,char);
+					break;
+				case DataConvertInfo::TYPE_WChar:
+					val.vWChar = va_arg(args,short);
+					break;
+
+				case DataConvertInfo::TYPE_Bool:
+					val.vBool = va_arg(args,bool);
+					break;
+
+				case DataConvertInfo::TYPE_Ascii:
+					val.vAscii = va_arg(args,char*);
+					break;
+				case DataConvertInfo::TYPE_Unicode:
+					//val.vUnicode = va_arg(args,short*);
+					return false;
+					break;
+
+				case DataConvertInfo::TYPE_Float:
+					val.vFloat= va_arg(args,float);
+					break;
+				case DataConvertInfo::TYPE_Double:
+					val.vDouble= va_arg(args,double);
+					break;
+
+				default:
+					return false;
+			};
+			// citesc si valorile externe
+			for (tr=0;tr<dci.ExternalValuesCount;tr++)
+			{
+				switch (dci.ExternalValue[tr])
+				{
+					case DataConvertInfo::EXTVALUE_Base:
+						dci.Base = va_arg(args,unsigned int);
+						if ((dci.Base<2) ||  (dci.Base>36))
+							return false;
+						break;
+					case DataConvertInfo::EXTVALUE_AlignSize:
+						dci.AlignSize = va_arg(args,unsigned int);
+						break;
+					case DataConvertInfo::EXTVALUE_FillChar:
+						dci.FillChar = va_arg(args,char);
+						if (dci.FillChar == 0)
+							return false;
+						break;
+					case DataConvertInfo::EXTVALUE_GROUP:
+						dci.Group = va_arg(args,unsigned int);
+						if (dci.Group==0)
+							return false;
+						break;
+					case DataConvertInfo::EXTVALUE_Zecimals:
+						dci.Zecimals = va_arg(args,unsigned int);
+						break;
+					default:
+						return false;
+				};
+			}
+			// adaug conversia
+			switch (dci.DataType)
+			{
+				case DataConvertInfo::TYPE_Int8:
+					toAdd = ConvertIntegerNumberToString(&dci,(TYPE_INT64)val.vInt8,temp,MAX_FORMATED_EX_TEMP_BUF,&toAddSize);
+					break;
+				case DataConvertInfo::TYPE_Int16:
+					toAdd = ConvertIntegerNumberToString(&dci,(TYPE_INT64)val.vInt16,temp,MAX_FORMATED_EX_TEMP_BUF,&toAddSize);
+					break;
+				case DataConvertInfo::TYPE_Int32:
+					toAdd = ConvertIntegerNumberToString(&dci,(TYPE_INT64)val.vInt32,temp,MAX_FORMATED_EX_TEMP_BUF,&toAddSize);
+					break;
+				case DataConvertInfo::TYPE_Int64:
+					toAdd = ConvertIntegerNumberToString(&dci,(TYPE_INT64)val.vInt64,temp,MAX_FORMATED_EX_TEMP_BUF,&toAddSize);
+					break;
+
+				case DataConvertInfo::TYPE_UInt8:
+					toAdd = ConvertUIntegerNumberToString(&dci,(TYPE_UINT64)val.vUInt8,temp,MAX_FORMATED_EX_TEMP_BUF,&toAddSize);
+					break;
+				case DataConvertInfo::TYPE_UInt16:
+					toAdd = ConvertUIntegerNumberToString(&dci,(TYPE_UINT64)val.vUInt16,temp,MAX_FORMATED_EX_TEMP_BUF,&toAddSize);
+					break;
+				case DataConvertInfo::TYPE_UInt32:
+					toAdd = ConvertUIntegerNumberToString(&dci,(TYPE_UINT64)val.vUInt32,temp,MAX_FORMATED_EX_TEMP_BUF,&toAddSize);
+					break;
+				case DataConvertInfo::TYPE_UInt64:
+					toAdd = ConvertUIntegerNumberToString(&dci,(TYPE_UINT64)val.vUInt64,temp,MAX_FORMATED_EX_TEMP_BUF,&toAddSize);
+					break;
+				case DataConvertInfo::TYPE_Char:
+					toAdd = temp;
+					temp[0] = val.vChar;
+					toAddSize = 1;
+					break;
+				case DataConvertInfo::TYPE_WChar:
+					toAdd = temp;
+					temp[0] = (TCHAR)val.vWChar;
+					toAddSize = 1;
+					break;
+				case DataConvertInfo::TYPE_Bool:
+					if (val.vBool)
+					{
+						toAdd = "True";
+						toAddSize = 4;
+					} else {
+						toAdd = "False";
+						toAddSize = 5;
+					}
+					break;
+				case DataConvertInfo::TYPE_Ascii:
+					toAdd = val.vAscii;
+					toAddSize = Len(toAdd);
+					break;
+				case DataConvertInfo::TYPE_Float:
+					toAdd = ConvertDoubleNumberToString(&dci,(double)val.vFloat,temp,MAX_FORMATED_EX_TEMP_BUF,&toAddSize);
+					break;
+				case DataConvertInfo::TYPE_Double:
+					toAdd = ConvertDoubleNumberToString(&dci,(double)val.vDouble,temp,MAX_FORMATED_EX_TEMP_BUF,&toAddSize);
+					break;
+				default:
+					return false;
+			};
+			// citire align si align size
+			if (dci.AlignSize==0) // fara aliniere
+			{
+				extraAdd = 0;
+			} else {
+				extraAdd = dci.AlignSize - toAddSize;
+				if ((extraAdd<=0) && (dci.Flags & DataConvertInfo::FLAG_TRUNCATE))
+				{
+					extraAdd = 0;
+					toAddSize = dci.AlignSize;
+				}
+			}
+			switch (dci.Align)
+			{
+				case DataConvertInfo::ALIGN_LEFT:
+					if (Add(toAdd,toAddSize)==false)
+						return false;
+					if (extraAdd>0)
+					{
+						if (AddChars(dci.FillChar,extraAdd)==false)
+							return false;
+					}
+					break;
+				case DataConvertInfo::ALIGN_RIGHT:
+					if (extraAdd>0)
+					{
+						if (AddChars(dci.FillChar,extraAdd)==false)
+							return false;
+					}
+					if (Add(toAdd,toAddSize)==false)
+						return false;
+					break;
+				case DataConvertInfo::ALIGN_CENTER:
+					if ((extraAdd/2)>0)
+					{
+						if (AddChars(dci.FillChar,extraAdd/2)==false)
+							return false;
+					}
+					if (Add(toAdd,toAddSize)==false)
+						return false;
+					if ((extraAdd - extraAdd/2)>0)
+					{
+						if (AddChars(dci.FillChar,extraAdd - extraAdd/2)==false)
+							return false;
+					}
+					break;
+			};
+		} else {
+			// trec la urmatorul element
+			start = format;
+			format++;
+		}
+	}
 	return true;
 }
 bool GML::Utils::GString::MatchSimple(TCHAR *mask,bool ignoreCase)
@@ -1078,7 +1803,7 @@ void GML::Utils::GString::NumberToString(TYPE_UINT64 number, unsigned int base, 
 	do
 	{
 		rest=(unsigned char)(number%base);
-		Text[max_size--]=convert_array[rest];
+		Text[max_size--]=convert_array_upper[rest];
 		number/=base;
 	} while ((max_size>=0) && (number>0));
 	// nu s-a convertit complet

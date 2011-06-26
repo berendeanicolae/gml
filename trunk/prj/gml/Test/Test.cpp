@@ -39,7 +39,16 @@ int my_fnc(UInt32 &e1,UInt32 &e2)
 }
 int _tmain(int argc, _TCHAR* argv[])
 {
+	GML::Utils::GString	tmp;
+	
 
+	tmp.Set("Salut");
+	//tmp.AddChars('-',10);
+	//tmp.InsertChars('-',0,10);
+	//tmp.InsertChars('x',3,4);
+
+	//tmp.AddFormatedEx(".Result [%{uint8,L%%,G%%,F%%,B%%}] sal %{int} %{s,R20,F%%} value=[%{dbl,Z%%}]",1000,20,2,'-',2,10,"testare",'.',5.2,0);
+	return 1;
 	GML::Utils::GTFVector<UInt32> v;
 	v.Create(100);
 	for (int tr=0;tr<100;tr++)

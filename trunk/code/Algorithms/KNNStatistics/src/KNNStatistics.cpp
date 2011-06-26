@@ -17,11 +17,13 @@ KNNStatistics::KNNStatistics()
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
 	
-	LinkPropertyToUInt32("K",K,3,"K parameter from KNN algorithm");
-
+	LinkPropertyToUInt32("K"			,K,				3			,"K parameter from KNN algorithm");
+	LinkPropertyToUInt32("Method"		,Method,		Method_UseK	,"!!LIST:UseK=0!!");
+	LinkPropertyToString("ResultFileName",ResultFileName,"","The name of the file where the results will be saved !");
+	//LinkPropertyToUInt32("ColumnWidth"	,columnWidth,	12			,"Sets the column width (0 for no aligniation)");
 	//LinkPropertyToUInt32("ClassType",ClassType,0,"!!LIST:Positive=0,Negative,Both!!");
 	//LinkPropertyToUInt32("SaveResults",SaveResults,SAVE_RESULTS_NONE,"!!LIST:None=0,Text,Parsable!!");
-	//LinkPropertyToString("ResultFileName",ResultFileName,"","The name of the file where the results will be saved !");
+	//
 	//LinkPropertyToString("KNNStatisticsFileName",KNNStatisticsFileName,"","The name of the file that will be use as a pattern for centroid saving !");
 	//LinkPropertyToBool  ("SortResults",SortResults,false,"Specify if the results should be sorted before saving");
 	//LinkPropertyToUInt32("MinimPositiveElements",minPositiveElements,0,"Specify the minimum number of positive elemens in a centroid");
@@ -104,9 +106,10 @@ void KNNStatistics::ComputeParts(ComputePartsInfo &cpi,GML::Utils::GTFVector<Rec
 }
 bool KNNStatistics::ComputeDist(GML::Algorithm::MLThreadData &thData)
 {
-	KNNStatThData	*kst = (KNNStatThData *)thData.Context;
-	UInt32			tr,gr,cntFlags,nrRecords;
-	RecDist			rDist;
+	KNNStatThData		*kst = (KNNStatThData *)thData.Context;
+	UInt32				tr,gr,cntFlags,nrRecords;
+	RecDist				rDist;
+	ComputePartsInfo	cpi;
 
 	cntFlags = con->GetFeatureCount();
 	nrRecords = con->GetRecordCount();
@@ -143,6 +146,15 @@ bool KNNStatistics::ComputeDist(GML::Algorithm::MLThreadData &thData)
 		// sortez
 		kst->Dist.Sort(RecDistCompare);
 		// fac calculele
+		switch (Method)
+		{
+			case Method_UseK:
+				ComputeParts(cpi,kst->Dist,0,K,thData.Record.Label,true);
+				rInfo[tr].ProcCount = (UInt16)((cpi.CountSame/(cpi.CountDiff+cpi.CountSame))*65535);
+				//rInfo[tr].ProcAdd = (UInt16)((cpi.SumDiff/(cpi.SumDiff+cpi.SumSame))*65535);
+				//rInfo[tr].ProcAdd = (UInt16)((cpi.AddDiff/(cpi.SumDiff+cpi.SumSame))*65535);
+				break;
+		}
 		if (thData.ThreadID==0)
 			notif->SetProcent(tr,nrRecords);
 	}
@@ -150,10 +162,100 @@ bool KNNStatistics::ComputeDist(GML::Algorithm::MLThreadData &thData)
 		notif->EndProcent();
 	return true;
 }
+bool KNNStatistics::CreateHeaders(GML::Utils::GString &str)
+{
+	if (notif->SuportsObjects())
+		notif->CreateObject("ResultTable","Type=List;Column_0=Hash/ID;Column_0=MinDistanceSimilar;Column_1=Label;Column_2=MaxDistancesSimilar;Column_3=MinDistanceDifferent;Column_4=MaxDistanceDifferent;Column_5=Count raport");
+	if (str.Set("Hash                            |Label   |MinDistSim|MaxDistSim|MinDistDif|MaxDistDif| Count rap. |\n")==false)
+		return false;
+	return true;
+}
+bool KNNStatistics::CreateRecordInfo(UInt32 index,GML::Utils::GString &str)
+{
+	GML::Utils::GString		hash;
+	GML::DB::RecordHash		rHash;
+
+	if (con->GetRecordHash(rHash,index)==false)
+	{
+		notif->Error("[%s] -> Unable to read record hash for #%d",ObjectName,index);
+		return false;
+	}
+	if (rHash.ToString(hash)==false)
+	{
+		notif->Error("[%s] -> Unable to convert record hash for #%d",ObjectName,index);
+		return false;
+	}
+	str.Set("");
+	str.AddFormatedEx("%{str,L32}|%{dbl,Z3,R8}|%{dbl,Z3,R10}|%{dbl,Z3,R10}|%{dbl,Z3,R10}|%{dbl,Z3,R10}|%{dbl,Z3,R12}|\n",
+						hash.GetText(),
+						rInfo[index].Label,
+						rInfo[index].MinDistSimilar,
+						rInfo[index].MaxDistSimilar,
+						rInfo[index].MinDistNotSimilar,
+						rInfo[index].MaxDistNotSimilar,
+						(double)rInfo[index].ProcCount/655.35);
+
+	return true;
+}
+bool KNNStatistics::SaveData()
+{
+	GML::Utils::File	f;
+	GML::Utils::GString	temp;
+	int					sz;
+
+	if (f.Create(ResultFileName.GetText())==false)
+	{
+		notif->Error("[%s] -> Unable to create: %s",ObjectName,ResultFileName.GetText());
+		return false;
+	}
+	if (CreateHeaders(temp)==false)
+	{
+		notif->Error("[%s] -> Unable to create table headers in %s",ObjectName,ResultFileName.GetText());
+		return false;
+	}
+	if (f.Write(temp.GetText(),temp.Len())==false)
+	{
+		notif->Error("[%s] -> Unable to write table headers in %s",ObjectName,ResultFileName.GetText());
+		return false;
+	}
+	sz = temp.Len();
+	temp.Set("");
+	temp.AddFormatedEx("%{c,L%%,F%%}\n",'=',sz,'=');
+	if (f.Write(temp.GetText(),temp.Len())==false)
+	{
+		notif->Error("[%s] -> Unable to write table headers in %s",ObjectName,ResultFileName.GetText());
+		return false;
+	}
+	// scriu fiecare element
+	for (UInt32 tr=0;tr<con->GetRecordCount();tr++)
+	{
+		if (CreateRecordInfo(tr,temp)==false)
+		{
+			notif->Error("[%s] -> Unable to create record info in %s",ObjectName,ResultFileName.GetText());
+			return false;
+		}
+		if (f.Write(temp.GetText(),temp.Len())==false)
+		{
+			notif->Error("[%s] -> Unable to write record info in %s",ObjectName,ResultFileName.GetText());
+			return false;
+		}
+	}
+	temp.Set("");
+	temp.AddFormatedEx("%{c,L%%,F%%}\n",'=',sz,'=');
+	if (f.Write(temp.GetText(),temp.Len())==false)
+	{
+		notif->Error("[%s] -> Unable to write end table headers in %s",ObjectName,ResultFileName.GetText());
+		return false;
+	}
+	f.Close();
+	notif->Info("[%s] -> %s created ok !",ObjectName,ResultFileName.GetText());
+	return true;
+}
 
 void KNNStatistics::Compute()
 {
 	ExecuteParalelCommand(0);
+	SaveData();
 }
 
 void KNNStatistics::OnExecute()
