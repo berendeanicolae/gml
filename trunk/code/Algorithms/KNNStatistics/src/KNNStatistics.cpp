@@ -85,7 +85,7 @@ bool KNNStatistics::Init()
 }
 void KNNStatistics::ComputeParts(ComputePartsInfo &cpi,GML::Utils::GTFVector<RecDist>	&Dist,UInt32 start,UInt32 end,double label,bool reset)
 {
-	double c_label;
+	double c_label,d;
 	if (reset)
 	{
 		cpi.CountDiff = cpi.CountSame = 0;
@@ -94,13 +94,14 @@ void KNNStatistics::ComputeParts(ComputePartsInfo &cpi,GML::Utils::GTFVector<Rec
 	for (;start<end;start++)
 	{
 		c_label = rInfo[Dist[start].Index].Label;
+		d = Dist[start].Dist;
 		if (c_label==label)
 		{
 			cpi.CountSame++;
-			cpi.SumSame+=Dist[start].Dist;
+			cpi.SumSame+=d;
 		} else {
 			cpi.CountDiff++;
-			cpi.SumDiff+=Dist[start].Dist;
+			cpi.SumDiff+=d;
 		}
 	}
 }
@@ -151,8 +152,16 @@ bool KNNStatistics::ComputeDist(GML::Algorithm::MLThreadData &thData)
 			case Method_UseK:
 				ComputeParts(cpi,kst->Dist,0,K,thData.Record.Label,true);
 				rInfo[tr].ProcCount = (UInt16)((cpi.CountSame/(cpi.CountDiff+cpi.CountSame))*65535);
-				//rInfo[tr].ProcAdd = (UInt16)((cpi.SumDiff/(cpi.SumDiff+cpi.SumSame))*65535);
-				//rInfo[tr].ProcAdd = (UInt16)((cpi.AddDiff/(cpi.SumDiff+cpi.SumSame))*65535);
+				rInfo[tr].SimCount = (UInt32)cpi.CountSame;
+				rInfo[tr].NotSimCount = (UInt32)cpi.CountDiff;
+				rInfo[tr].SimAverageDist = cpi.SumSame/cpi.CountSame;
+				rInfo[tr].NotSimAverageDist = cpi.SumDiff/cpi.CountDiff;
+				if (cpi.SumDiff==0)
+					rInfo[tr].ProcAdd = 65535;
+				else if (cpi.SumSame==0)
+					rInfo[tr].ProcAdd = 0;
+				else
+					rInfo[tr].ProcAdd = (UInt16)((rInfo[tr].NotSimAverageDist/(rInfo[tr].NotSimAverageDist+rInfo[tr].SimAverageDist))*65535);				
 				break;
 		}
 		if (thData.ThreadID==0)
@@ -166,7 +175,7 @@ bool KNNStatistics::CreateHeaders(GML::Utils::GString &str)
 {
 	if (notif->SuportsObjects())
 		notif->CreateObject("ResultTable","Type=List;Column_0=Hash/ID;Column_0=MinDistanceSimilar;Column_1=Label;Column_2=MaxDistancesSimilar;Column_3=MinDistanceDifferent;Column_4=MaxDistanceDifferent;Column_5=Count raport");
-	if (str.Set("Hash                            |Label   |MinDistSim|MaxDistSim|MinDistDif|MaxDistDif| Count rap. |\n")==false)
+	if (str.Set("Hash                            |Label   |   SimCount|NotSimCount| SimAverage|NotSimAvera| Count rap. | Count add. |\n")==false)
 		return false;
 	return true;
 }
@@ -186,14 +195,15 @@ bool KNNStatistics::CreateRecordInfo(UInt32 index,GML::Utils::GString &str)
 		return false;
 	}
 	str.Set("");
-	str.AddFormatedEx("%{str,L32}|%{dbl,Z3,R8}|%{dbl,Z3,R10}|%{dbl,Z3,R10}|%{dbl,Z3,R10}|%{dbl,Z3,R10}|%{dbl,Z3,R12}|\n",
+	str.AddFormatedEx("%{str,L32}|%{dbl,Z3,R8}|%{uint32,R11}|%{uint32,R11}|%{dbl,Z3,R11}|%{dbl,Z3,R11}|%{dbl,Z3,R12}|%{dbl,Z3,R12}|\n",
 						hash.GetText(),
 						rInfo[index].Label,
-						rInfo[index].MinDistSimilar,
-						rInfo[index].MaxDistSimilar,
-						rInfo[index].MinDistNotSimilar,
-						rInfo[index].MaxDistNotSimilar,
-						(double)rInfo[index].ProcCount/655.35);
+						rInfo[index].SimCount,
+						rInfo[index].NotSimCount,
+						rInfo[index].SimAverageDist,
+						rInfo[index].NotSimAverageDist,
+						(double)rInfo[index].ProcCount/655.35,
+						(double)rInfo[index].ProcAdd/655.35);
 
 	return true;
 }
