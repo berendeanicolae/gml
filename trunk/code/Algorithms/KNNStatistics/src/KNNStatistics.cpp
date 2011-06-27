@@ -307,7 +307,7 @@ bool KNNStatistics::SaveData()
 void KNNStatistics::Compute()
 {
 	ExecuteParalelCommand(0);
-	notif->Info("[%s] -> Sorting (%d) ...",ObjectName,Sort);
+	notif->Info("[%s] -> Sorting (%d) ... (Dir=%d)",ObjectName,Sort,SortDirection);
 	switch (Sort)
 	{
 		case Sort_SimilarCount:
