@@ -5,9 +5,10 @@
 
 struct RecInfo
 {
-	double	Label;
+	UInt32	Index;
 	UInt32	SimCount;
 	UInt32	NotSimCount;
+	double	Label;
 	double	SimAverageDist;
 	double	NotSimAverageDist;	
 	UInt16	ProcAdd;
@@ -35,14 +36,35 @@ class KNNStatistics: public GML::Algorithm::IMLAlgorithm
 		Method_UseK = 0,
 
 	};
+	enum
+	{
+		Interval_None = 0,
+		Interval_SimilarCount,
+		Interval_NotSimilarCount
+	};
+	enum
+	{
+		SortDirection_Ascendent=0,
+		SortDirection_Descendent,
+	};
+	enum
+	{
+		Sort_None = 0,
+		Sort_SimilarCount,
+		Sort_NotSimilarCount
+	};
 protected:
-	RecInfo					*rInfo;
+	GML::Utils::GTFVector<RecInfo>	rInfo;
 
-	UInt32					K;
-	UInt32					Method;
-	//UInt32					columnWidth;
-	GML::ML::MLRecord		MainRecord;
-	GML::Utils::GString		ResultFileName;
+	UInt32							K;
+	UInt32							Method;
+	UInt32							Interval;
+	double							MinInterval,MaxInterval;
+	UInt32							Sort;
+	UInt32							SortDirection;
+	//UInt32						columnWidth;
+	GML::ML::MLRecord				MainRecord;
+	GML::Utils::GString				ResultFileName;
 
 	void					OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
 	bool					OnInitThreadData(GML::Algorithm::MLThreadData &thData);

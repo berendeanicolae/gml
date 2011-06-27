@@ -8,6 +8,22 @@ int RecDistCompare(RecDist &r1,RecDist &r2)
 		return -1;
 	return 0;
 }
+int Sort_SimilarCountCmpFunc(RecInfo &r1,RecInfo &r2)
+{
+	if (r1.SimCount>r2.SimCount)
+		return 1;
+	if (r1.SimCount<r2.SimCount)
+		return -1;
+	return 0;
+}
+int Sort_NotSimilarCountCmpFunc(RecInfo &r1,RecInfo &r2)
+{
+	if (r1.NotSimCount>r2.NotSimCount)
+		return 1;
+	if (r1.NotSimCount<r2.NotSimCount)
+		return -1;
+	return 0;
+}
 //================================================================================
 
 
@@ -17,9 +33,14 @@ KNNStatistics::KNNStatistics()
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
 	
-	LinkPropertyToUInt32("K"			,K,				3			,"K parameter from KNN algorithm");
-	LinkPropertyToUInt32("Method"		,Method,		Method_UseK	,"!!LIST:UseK=0!!");
-	LinkPropertyToString("ResultFileName",ResultFileName,"","The name of the file where the results will be saved !");
+	LinkPropertyToUInt32("K"			,K,				3,				"K parameter from KNN algorithm");
+	LinkPropertyToUInt32("Method"		,Method,		Method_UseK	,	"!!LIST:UseK=0!!");
+	LinkPropertyToString("ResultFileName",ResultFileName,"",			"The name of the file where the results will be saved !");
+	LinkPropertyToDouble("MinInterval"	,MinInterval,	0.0,			"Minim value for interval used to filter the records by!");
+	LinkPropertyToDouble("MaxInterval"	,MaxInterval,	100.0,			"Maxim value for interval used to filter the records by!");
+	LinkPropertyToUInt32("Interval"		,Interval,		Interval_None,	"!!LIST::None=0,SimilarCount,NotSimilarCount!!");
+	LinkPropertyToUInt32("Sort"			,Sort,			Sort_None,		"!!LIST::None=0,SimilarCount,NotSimilarCount!!");
+	LinkPropertyToUInt32("SortDirection",SortDirection, SortDirection_Descendent,"!!LIST:Ascendent=0,Descendent!!");
 	//LinkPropertyToUInt32("ColumnWidth"	,columnWidth,	12			,"Sets the column width (0 for no aligniation)");
 	//LinkPropertyToUInt32("ClassType",ClassType,0,"!!LIST:Positive=0,Negative,Both!!");
 	//LinkPropertyToUInt32("SaveResults",SaveResults,SAVE_RESULTS_NONE,"!!LIST:None=0,Text,Parsable!!");
@@ -62,19 +83,21 @@ bool KNNStatistics::Init()
 		return false;
 	if (InitThreads()==false)
 		return false;
-	if ((rInfo = new RecInfo[con->GetRecordCount()])==false)
-	{
-		notif->Error("[%s] -> Unable to create RecInfo object with %d records !",ObjectName,con->GetRecordCount());
-		return false;
-	}
 	if (con->CreateMlRecord(MainRecord)==false)
 	{
 		notif->Error("[%s] -> Unable to create MainRecords",ObjectName);
 		return false;
 	}
 	notif->Info("[%s] -> Listing labels ...",ObjectName);
+	if (rInfo.Create(con->GetRecordCount())==false)	
+	{
+		notif->Error("[%s] -> Unable to create RecInfo object with %d records !",ObjectName,con->GetRecordCount());
+		return false;
+	}
+	rInfo.Resize(con->GetRecordCount());
 	for (UInt32 tr=0;tr<con->GetRecordCount();tr++)
 	{
+		rInfo[tr].Index = tr;
 		if (con->GetRecordLabel(rInfo[tr].Label,tr)==false)
 		{
 			notif->Error("[%s] -> Unable to read label for record #%d !",ObjectName,tr);
@@ -184,14 +207,14 @@ bool KNNStatistics::CreateRecordInfo(UInt32 index,GML::Utils::GString &str)
 	GML::Utils::GString		hash;
 	GML::DB::RecordHash		rHash;
 
-	if (con->GetRecordHash(rHash,index)==false)
+	if (con->GetRecordHash(rHash,rInfo[index].Index)==false)
 	{
-		notif->Error("[%s] -> Unable to read record hash for #%d",ObjectName,index);
+		notif->Error("[%s] -> Unable to read record hash for #%d",ObjectName,rInfo[index].Index);
 		return false;
 	}
 	if (rHash.ToString(hash)==false)
 	{
-		notif->Error("[%s] -> Unable to convert record hash for #%d",ObjectName,index);
+		notif->Error("[%s] -> Unable to convert record hash for #%d",ObjectName,rInfo[index].Index);
 		return false;
 	}
 	str.Set("");
@@ -211,8 +234,10 @@ bool KNNStatistics::SaveData()
 {
 	GML::Utils::File	f;
 	GML::Utils::GString	temp;
-	int					sz;
+	bool				keep;
+	int					sz,count=0;
 
+	notif->Info("[%s] -> Filtering after interval [%lf - %lf]",ObjectName,MinInterval,MaxInterval);
 	if (f.Create(ResultFileName.GetText())==false)
 	{
 		notif->Error("[%s] -> Unable to create: %s",ObjectName,ResultFileName.GetText());
@@ -239,6 +264,22 @@ bool KNNStatistics::SaveData()
 	// scriu fiecare element
 	for (UInt32 tr=0;tr<con->GetRecordCount();tr++)
 	{
+		keep = true;
+		switch (Interval)
+		{
+			case Interval_None:				
+				break;
+			case Interval_SimilarCount:
+				if ((rInfo[tr].SimCount<MinInterval) || (rInfo[tr].SimCount>MaxInterval))
+					keep = false;
+				break;
+			case Interval_NotSimilarCount:
+				if ((rInfo[tr].NotSimCount<MinInterval) || (rInfo[tr].NotSimCount>MaxInterval))
+					keep = false;
+				break;
+		};
+		if (!keep)
+			continue;
 		if (CreateRecordInfo(tr,temp)==false)
 		{
 			notif->Error("[%s] -> Unable to create record info in %s",ObjectName,ResultFileName.GetText());
@@ -249,6 +290,7 @@ bool KNNStatistics::SaveData()
 			notif->Error("[%s] -> Unable to write record info in %s",ObjectName,ResultFileName.GetText());
 			return false;
 		}
+		count++;
 	}
 	temp.Set("");
 	temp.AddFormatedEx("%{c,L%%,F%%}\n",'=',sz,'=');
@@ -258,13 +300,23 @@ bool KNNStatistics::SaveData()
 		return false;
 	}
 	f.Close();
-	notif->Info("[%s] -> %s created ok !",ObjectName,ResultFileName.GetText());
+	notif->Info("[%s] -> %s created ok (%d records written)!",ObjectName,ResultFileName.GetText(),count);
 	return true;
 }
 
 void KNNStatistics::Compute()
 {
 	ExecuteParalelCommand(0);
+	notif->Info("[%s] -> Sorting (%d) ...",ObjectName,Sort);
+	switch (Sort)
+	{
+		case Sort_SimilarCount:
+			rInfo.Sort(Sort_SimilarCountCmpFunc,SortDirection==SortDirection_Ascendent);
+			break;
+		case Sort_NotSimilarCount:
+			rInfo.Sort(Sort_NotSimilarCountCmpFunc,SortDirection==SortDirection_Ascendent);
+			break;
+	};
 	SaveData();
 }
 
