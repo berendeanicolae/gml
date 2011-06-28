@@ -107,6 +107,9 @@ namespace GML
 			bool			Split(TCHAR *separator,GString *arrayList,int arrayListCount,int *elements=NULL,int separatorSize=-1);
 			bool			Split(GString *separator,GString *arrayList,int arrayListCount,int *elements=NULL);
 
+			bool			SplitInTwo(TCHAR *separator,GString *leftPart,GString *rightPart,int separatorIndex = 1,bool ignoreCase=false);
+			bool			SplitInTwo(GString *separator,GString *leftPart,GString *rightPart,int separatorIndex = 1,bool ignoreCase=false);
+
 			bool			CopyNextLine(GString *line,int *position);
 			bool			CopyNext(GString *token,TCHAR *separator,int *position,bool ignoreCase=false);
 		
@@ -131,9 +134,8 @@ namespace GML
 			bool			ConvertToDouble(double *value);
 			bool			ConvertToFloat(float *value);
 
-			void			NumberToString(TYPE_UINT64 number,unsigned int base,int max_size=-1,int fill=-1);
-
-
+			bool			ConvertToLower();
+			bool			ConvertToUpper();
 		};
 	}
 }

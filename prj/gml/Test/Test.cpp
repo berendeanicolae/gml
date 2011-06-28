@@ -39,10 +39,13 @@ int my_fnc(UInt32 &e1,UInt32 &e2)
 }
 int _tmain(int argc, _TCHAR* argv[])
 {
-	GML::Utils::GString	tmp;
+	GML::Utils::GString	tmp,l,r;
 	
 
-	tmp.Set("Salut");
+	tmp.Set("Salut = Value = 100 = 200 = 300");
+	tmp.SplitInTwo("=",&l,&r,-2);
+	tmp.ConvertToLower();
+	tmp.ConvertToUpper();
 	//tmp.AddChars('-',10);
 	//tmp.InsertChars('-',0,10);
 	//tmp.InsertChars('x',3,4);
