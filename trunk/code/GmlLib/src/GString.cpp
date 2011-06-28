@@ -1299,6 +1299,40 @@ bool GML::Utils::GString::Split(GString *separator,GString *arrayList,int arrayL
 		return false;
 	return Split(separator->GetText(),arrayList,arrayListCount,elements,separator->GetSize());
 }
+bool GML::Utils::GString::SplitInTwo(TCHAR *separator,GString *leftPart,GString *rightPart,int separatorIndex,bool ignoreCase)
+{
+	int		poz = -1;
+	if ((separator==NULL) || (leftPart==NULL) || (rightPart==NULL))
+		return false;
+	if (separatorIndex>0)
+	{
+		poz = -1;
+		do
+		{
+			poz = Find(separator,ignoreCase,poz+1,true);
+			separatorIndex--;
+		} while ((separatorIndex>0) && (poz!=-1));
+	} else {
+		poz = Size;
+		do
+		{
+			poz = Find(separator,ignoreCase,poz-1,false);
+			separatorIndex++;
+		} while ((separatorIndex<0) && (poz!=-1));
+	}
+	if (poz<0)
+		return false;
+	leftPart->Set(Text,poz);
+	rightPart->Set(&Text[poz+Len(separator)]);
+	return true;
+}
+bool GML::Utils::GString::SplitInTwo(GString *separator,GString *leftPart,GString *rightPart,int separatorIndex,bool ignoreCase)
+{
+	if (separator==NULL)
+		return false;
+	return SplitInTwo(separator->GetText(),leftPart,rightPart,separatorIndex,separator->Len());
+}
+
 bool GML::Utils::GString::LoadFromFile(TCHAR *fileName,int start,int end)
 {
 	GML::Utils::File	f;
@@ -1791,27 +1825,21 @@ bool GML::Utils::GString::ConvertToFloat(float *value)
 {
 	return ConvertToFloat(Text,value,Size);
 }
-//------------------------------- OLD -----------------------------
-void GML::Utils::GString::NumberToString(TYPE_UINT64 number, unsigned int base, int max_size , int fill)
+bool GML::Utils::GString::ConvertToLower()
 {
-	unsigned char	rest;
-	int				initialSize;
-
-	if ((max_size<0) || (max_size>=MaxSize)) max_size=MaxSize-1;
-	Size=initialSize=max_size;
-	Text[max_size--]=0;
-	do
+	for (int tr=0;tr<Size;tr++)
 	{
-		rest=(unsigned char)(number%base);
-		Text[max_size--]=convert_array_upper[rest];
-		number/=base;
-	} while ((max_size>=0) && (number>0));
-	// nu s-a convertit complet
-	if (number>0) { Text[0]=Text[1]='.'; return; }
-	// s-a convertiti complet
-	if (fill>0) { memset(Text,fill,max_size+1); return; }
-	// mut datele
-	memmove(Text,&Text[max_size+1],initialSize-max_size);
-	Size=initialSize-max_size;
-	Size--;
+		if ((Text[tr]>='A') && (Text[tr]<='Z'))
+			Text[tr]|=0x20;
+	}
+	return true;
+}
+bool GML::Utils::GString::ConvertToUpper()
+{
+	for (int tr=0;tr<Size;tr++)
+	{
+		if ((Text[tr]>='a') && (Text[tr]<='z'))
+			Text[tr]-=0x20;
+	}
+	return true;
 }
