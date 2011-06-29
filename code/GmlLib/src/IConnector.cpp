@@ -10,6 +10,7 @@ GML::ML::IConnector::IConnector()
 	columns.indexFeature = NULL;
 	ClearColumnIndexes();
 	nrRecords = 0;
+	dataMemorySize = 0;
 	
 	LinkPropertyToBool  ("StoreRecordHash",StoreRecordHash,false,"Specify if the connector should store records hash or not");
 	LinkPropertyToBool  ("StoreFeatureName",StoreFeaturesName,false,"Specify if the connector should store features name or not");
@@ -393,6 +394,7 @@ bool GML::ML::IConnector::OnInitConnectionToCache()
 bool GML::ML::IConnector::OnInit()
 {
 	GML::Utils::GString		temp;
+	dataMemorySize = 0;
 	if (notifier==NULL)
 	{
 		DEBUGMSG("[%s] Notifier should be set first before executing this function !",ObjectName);
@@ -423,7 +425,7 @@ bool GML::ML::IConnector::OnInit()
 	if (notifier)
 	{
 		temp.Set("");
-		temp.AddFormatedEx("[%{str}] -> Init ok (Records = %{uint32,dec,G3}, Features = %{uint32,dec,G3})",ObjectName,nrRecords,columns.nrFeatures);
+		temp.AddFormatedEx("[%{str}] -> Init ok (Records = %{uint32,dec,G3}, Features = %{uint32,dec,G3}, DataSize = %{uint64,dex,G3} bytes)",ObjectName,nrRecords,columns.nrFeatures,dataMemorySize);
 		notifier->Info("%s",temp.GetText());
 
 		temp.Set("");

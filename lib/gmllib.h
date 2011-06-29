@@ -1935,6 +1935,7 @@ namespace GML
 			TableColumnIndexes							columns;
 			UInt32										CachedRecords;
 			UInt32										nrRecords;
+			UInt64										dataMemorySize;
 			bool										StoreRecordHash;
 			bool										StoreFeaturesName;
 			GML::Utils::GTFVector<GML::DB::RecordHash>	Hashes;
