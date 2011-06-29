@@ -3,7 +3,7 @@
 #include "compat.h"
 #include "INotifier.h"
 #include "IDataBase.h"
-#include "MLInterface.h"
+#include "IConnector.h"
 #include "IAlgorithm.h"
 #include "GString.h"
 

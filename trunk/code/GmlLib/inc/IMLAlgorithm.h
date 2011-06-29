@@ -4,7 +4,7 @@
 #include "IAlgorithm.h"
 #include "GString.h"
 #include "IDataBase.h"
-#include "MLInterface.h"
+#include "IConnector.h"
 #include "Builder.h"
 #include "ThreadParalelUnit.h"
 #include "AlgorithmResult.h"
