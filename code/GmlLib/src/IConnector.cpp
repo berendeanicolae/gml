@@ -446,6 +446,10 @@ UInt32 GML::ML::IConnector::GetRecordCount()
 {
 	return nrRecords;
 }
+UInt32 GML::ML::IConnector::GetTotalRecordCount()
+{
+	return nrRecords;
+}
 UInt32 GML::ML::IConnector::GetFeatureCount()
 {
 	return columns.nrFeatures;
@@ -557,6 +561,9 @@ void GML::ML::IConnector::CloseCacheFile()
 }
 bool GML::ML::IConnector::SaveRecordHashes()
 {
+	// daca nu trebuie sa salvez astea , ies cu true
+	if (StoreRecordHash==false)
+		return true;
 	if (Hashes.Len() != nrRecords)
 	{
 		if (notifier)
@@ -590,6 +597,10 @@ bool GML::ML::IConnector::LoadRecordHashes()
 bool GML::ML::IConnector::SaveFeatureNames()
 {
 	UInt32	sz;
+
+	// daca nu trebuie sa salvez astea , ies cu true
+	if (StoreFeaturesName==false)
+		return true;
 
 	if (indexFeatureNames.Len() != columns.nrFeatures)
 	{

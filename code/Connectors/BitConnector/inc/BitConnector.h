@@ -1,5 +1,10 @@
 #include "gmllib.h"
 
+struct BitConnectorHeader: public GML::ML::CacheHeader
+{
+	UInt32		Align8Size;
+};
+
 class BitConnector: public GML::ML::IConnector
 {
 	UInt8				*Data;	
@@ -19,9 +24,6 @@ public:
 	bool		GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask=0);
 	bool		FreeMLRecord(GML::ML::MLRecord &record);
 	bool		GetRecordLabel(double &label,UInt32 index);
-	bool		GetFeatureName(GML::Utils::GString &str,UInt32 index);
-	UInt32		GetFeatureCount();
-	UInt32		GetRecordCount();
-	UInt32		GetTotalRecordCount();
-	
+
+
 };

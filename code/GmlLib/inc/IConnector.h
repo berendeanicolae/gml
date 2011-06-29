@@ -103,9 +103,7 @@ namespace GML
 
 			virtual UInt32				GetFeatureCount();
 			virtual UInt32				GetRecordCount();	
-			virtual UInt32				GetTotalRecordCount()=0;
-
-			virtual bool				SetRecordInterval(UInt32 start, UInt32 end)=0;
+			virtual UInt32				GetTotalRecordCount();
 		};
 
 	}
