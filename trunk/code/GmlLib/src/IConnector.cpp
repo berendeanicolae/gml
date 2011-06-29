@@ -560,6 +560,13 @@ void GML::ML::IConnector::CloseCacheFile()
 {
 	file.Close();
 }
+bool GML::ML::IConnector::SkipRecordHashes()
+{
+	UInt32	cPoz;
+	cPoz = file.GetFilePos();
+	cPoz += nrRecords*sizeof(GML::DB::RecordHash);
+	return file.SetFilePos(cPoz);
+}
 bool GML::ML::IConnector::SaveRecordHashes()
 {
 	// daca nu trebuie sa salvez astea , ies cu true

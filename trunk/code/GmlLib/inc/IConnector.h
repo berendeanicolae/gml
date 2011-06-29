@@ -68,6 +68,7 @@ namespace GML
 			bool						CreateCacheFile(char *fileName,char *sigName,CacheHeader *header,UInt32 headerSize,UInt32 extraFlags=0);
 			bool						OpeanCacheFile(char *fileName,char *sigName,CacheHeader *header,UInt32 headerSize);
 			void						CloseCacheFile();
+			bool						SkipRecordHashes();
 			bool						SaveRecordHashes();
 			bool						LoadRecordHashes();
 			bool						SaveFeatureNames();
