@@ -11,7 +11,7 @@
 #include "IDataBase.h"
 #include "INotifier.h"
 #include "md5.h"
-#include "MLInterface.h"
+#include "IConnector.h"
 #include "MLRecord.h"
 #include "ThreadParalelUnit.h"
 #include "Timer.h"

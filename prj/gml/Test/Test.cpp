@@ -40,7 +40,12 @@ int my_fnc(UInt32 &e1,UInt32 &e2)
 int _tmain(int argc, _TCHAR* argv[])
 {
 	GML::Utils::GString	tmp,l,r;
-	
+
+	double *d;
+
+	d = new(0) double[100000000];
+	if (d==NULL)
+		printf("Test");
 
 	tmp.Set("Salut = Value = 100 = 200 = 300");
 	tmp.SplitInTwo("=",&l,&r,-2);

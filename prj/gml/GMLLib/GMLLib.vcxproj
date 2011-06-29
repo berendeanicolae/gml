@@ -189,6 +189,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClInclude Include="..\..\..\code\GmlLib\inc\GMLObject.h" />
     <ClInclude Include="..\..\..\code\GmlLib\inc\GTFVector.h" />
     <ClInclude Include="..\..\..\code\GmlLib\inc\IAlgorithm.h" />
+    <ClInclude Include="..\..\..\code\GmlLib\inc\IConnector.h" />
     <ClInclude Include="..\..\..\code\GmlLib\inc\IMLAlgorithm.h" />
     <ClInclude Include="..\..\..\code\GmlLib\inc\Indexes.h" />
     <ClInclude Include="..\..\..\code\GmlLib\inc\INotifier.h" />
@@ -199,7 +200,6 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClInclude Include="..\..\..\Code\GmlLib\inc\IDataBase.h" />
     <ClInclude Include="..\..\..\code\GmlLib\inc\Matrix.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\md5.h" />
-    <ClInclude Include="..\..\..\Code\GmlLib\inc\MLInterface.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\MLRecord.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\ThreadParalelUnit.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\Timer.h" />
@@ -216,6 +216,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClCompile Include="..\..\..\Code\GmlLib\src\File.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\GMLObject.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\IAlgorithm.cpp" />
+    <ClCompile Include="..\..\..\code\GmlLib\src\IConnector.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\IDataBase.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\IMLAlgorithm.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\Indexes.cpp" />
@@ -223,7 +224,6 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClCompile Include="..\..\..\Code\GmlLib\src\IParalelUnit.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\GString.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\md5.cpp" />
-    <ClCompile Include="..\..\..\code\GmlLib\src\MLInterface.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\ThreadParalelUnit.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\Timer.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\vector.cpp" />
