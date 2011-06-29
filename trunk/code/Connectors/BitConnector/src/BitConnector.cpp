@@ -1,5 +1,7 @@
 #include "BitConnector.h"
 
+#define CACHE_SIG_NAME "BitConnectorV3"
+
 BitConnector::BitConnector()
 {
 	Data = NULL;
@@ -58,7 +60,7 @@ bool	BitConnector::OnInitConnectionToConnector()
 	cPoz = Data;
 	recMask = 0;
 	if (StoreRecordHash)
-		recMask |= GML::ML::RecordMask::RECORD_STORE_HASH;
+		recMask |= GML::ML::ConnectorFlags::STORE_HASH;
 
 	notifier->StartProcent("[%s] -> Loading Data : ",ObjectName);
 
@@ -201,74 +203,39 @@ bool	BitConnector::Close()
 }
 bool	BitConnector::Save(char *fileName)
 {
-	GML::Utils::File	f;
-	UInt32				flags;
+	BitConnectorHeader	h;
 
-	if (f.Create(fileName)==false)
-	{
-		notifier->Error("[%s] Unable to create : %s",ObjectName,fileName);
-		return false;
-	}
 	while (true)
 	{
-		flags = 0;
-		if (StoreRecordHash)
-			flags |= GML::ML::RECORD_STORE_HASH;
-
-
-		if (f.Write("BitConnectorCacheV2",19)==false)
+		if (CreateCacheFile(fileName,CACHE_SIG_NAME,&h,sizeof(h))==false)
 			break;
-		if (f.Write(&nrRecords,sizeof(UInt32))==false)
+		h.Align8Size = Align8Size;
+		if (file.Write(&h,sizeof(h))==false)
 			break;
-		if (f.Write(&Align8Size,sizeof(UInt32))==false)
+		if (file.Write(Data,nrRecords*Align8Size)==false)
 			break;
-		if (f.Write(&columns.nrFeatures,sizeof(UInt32))==false)
+		if (SaveRecordHashes()==false)
 			break;
-		if (f.Write(&flags,sizeof(UInt32))==false)
+		if (SaveFeatureNames()==false)
 			break;
-
-		if (f.Write(Data,nrRecords*Align8Size)==false)
-			break;
-		if (StoreRecordHash)
-			if (f.Write(Hashes.GetPtrToObject(0),Hashes.Len()*sizeof(GML::DB::RecordHash))==false)
-				break;
-		f.Close();
+		CloseCacheFile();
 		return true;
 	}
 	notifier->Error("[%s] Unable to write into %s",ObjectName,fileName);
-	f.Close();
+	CloseCacheFile();
 	DeleteFileA(fileName);
 	return false;
 }
 bool	BitConnector::Load(char *fileName)
 {
-	GML::Utils::File	f;
-	char				temp[20];
-	UInt32				flags;
-
-	notifier->Info("[%s] -> Loading %s",ObjectName,fileName);
-	if (f.OpenRead(fileName)==false)
-	{
-		notifier->Error("[%s] -> Unable to open : %s",ObjectName,fileName);
-		return false;
-	}
+	BitConnectorHeader	h;
 	while (true)
 	{
-		if (f.Read(temp,19)==false)
+		if (OpeanCacheFile(fileName,CACHE_SIG_NAME,&h,sizeof(h))==false)
 			break;
-		if (memcmp(temp,"BitConnectorCacheV2",19)!=0)
-		{
-			notifier->Error("[%s] -> Invalid file format : %s",ObjectName,fileName);
+		if (h.Align8Size==0)
 			break;
-		}
-		if (f.Read(&nrRecords,sizeof(UInt32))==false)
-			break;
-		if (f.Read(&Align8Size,sizeof(UInt32))==false)
-			break;
-		if (f.Read(&columns.nrFeatures,sizeof(UInt32))==false)
-			break;
-		if (f.Read(&flags,sizeof(UInt32))==false)
-			break;
+		Align8Size = h.Align8Size;
 		if (Data!=NULL)
 			delete Data;
 		if ((Data = new UInt8[nrRecords*Align8Size])==NULL)
@@ -276,32 +243,35 @@ bool	BitConnector::Load(char *fileName)
 			notifier->Error("[%s] -> Unable to allocate %ud bytes for data indexes !",ObjectName,nrRecords*Align8Size);
 			break;
 		}
-		if (f.Read(Data,nrRecords*Align8Size)==false)
+		if (file.Read(Data,nrRecords*Align8Size)==false)
 			break;
-		if ((StoreRecordHash) && (flags & GML::ML::RECORD_STORE_HASH))
+		if (h.StoreFlags & GML::ML::ConnectorFlags::STORE_HASH)
 		{
-			if (Hashes.Create(nrRecords)==false)
-				break;
-			if (f.Read(Hashes.GetVector(),nrRecords * sizeof(GML::DB::RecordHash))==false)
-				break;
-			if (Hashes.Resize(nrRecords)==false)
-				break;
+			if (StoreRecordHash)
+			{
+				if (LoadRecordHashes()==false)
+					break;
+			} else {
+				// skip record hash
+			}
 		}
-		f.Close();
-		notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d,RecordsSize=%d",ObjectName,nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
-		if (StoreRecordHash)
-			notifier->Info("[%s] -> Hash Memory Size = %d",ObjectName,Hashes.Len()*sizeof(GML::DB::RecordHash));
-		return true;
+		// numele de la date
+		if (h.StoreFlags & GML::ML::ConnectorFlags::STORE_FEATURE_NAME)
+		{
+			if (StoreFeaturesName)
+			{
+				if (LoadFeatureNames()==false)
+					break;
+			} else {
+				// skip record hash
+			}
+		}
+		CloseCacheFile();
+		return true;		
 	}
-	if (Data)
-		delete Data;
-	Data = NULL;
-	nrRecords = 0;
-	Align8Size = 0;
-	columns.nrFeatures = 0;
-
+	ClearColumnIndexes();
+	CloseCacheFile();
 	notifier->Error("[%s] -> Error read data from %s",ObjectName,fileName);
-	f.Close();	
 	return false;
 }
 
@@ -331,7 +301,7 @@ bool	BitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recor
 	else
 		record.Label = -1.0;
 
-	if (recordMask & GML::ML::RECORD_STORE_HASH)
+	if (recordMask & GML::ML::ConnectorFlags::STORE_HASH)
 	{
 		if (StoreRecordHash)
 			record.Hash.Copy(*Hashes.GetPtrToObject(index));
@@ -364,13 +334,4 @@ bool	BitConnector::FreeMLRecord(GML::ML::MLRecord &record)
 		record.Features = NULL;
 	}
 	return true;
-}
-bool	BitConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
-{
-	if (database!=NULL)
-		return IConnector::GetFeatureName(str,index);
-	if (conector!=NULL)
-		return conector->GetFeatureName(str,index);
-	notifier->Error("[%s] -> Unable to read feature name for cache data",ObjectName);
-	return false;
 }
