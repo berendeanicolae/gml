@@ -274,7 +274,7 @@ void GML::Utils::Vector::Free()
 	NrElemente=ElementSize=AlocatedElements=0;	
 	Data=NULL;
 }
-bool GML::Utils::Vector::Create(unsigned int alocElements,unsigned int ElemSize)
+bool GML::Utils::Vector::Create(unsigned int alocElements,unsigned int ElemSize,bool resizeToAllocElements)
 {
 	Free();
 	if ((alocElements<1) || (ElemSize==0)) 
@@ -287,6 +287,8 @@ bool GML::Utils::Vector::Create(unsigned int alocElements,unsigned int ElemSize)
 		Free();
 		return false;
 	}
+	if (resizeToAllocElements)
+		NrElemente = AlocatedElements;
 	return true;
 }
 bool GML::Utils::Vector::Push(void *Element)
