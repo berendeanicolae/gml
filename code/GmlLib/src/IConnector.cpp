@@ -392,19 +392,50 @@ bool GML::ML::IConnector::OnInitConnectionToCache()
 }
 bool GML::ML::IConnector::OnInit()
 {
+	GML::Utils::GString		temp;
 	if (notifier==NULL)
 	{
 		DEBUGMSG("[%s] Notifier should be set first before executing this function !",ObjectName);
 		return false;
 	}
-	// daca exista o baza de date , incerc conectarea la ea
-	if (database!=NULL)
-		return OnInitConnectionToDataBase();
-	// daca exista un connector ma conectez la el
-	if (conector!=NULL)
-		return OnInitConnectionToConnector();
-	// altfel incerc si cu cache-ul
-	return OnInitConnectionToCache();
+	while (true)
+	{
+		// daca exista o baza de date , incerc conectarea la ea
+		if (database!=NULL)
+		{
+			if (OnInitConnectionToDataBase()==false)
+				return false;
+			break;
+		}
+		// daca exista un connector ma conectez la el
+		if (conector!=NULL)
+		{
+			if (OnInitConnectionToConnector()==false)
+				return false;
+			break;
+		}
+		// altfel incerc si cu cache-ul
+		if (OnInitConnectionToCache()==false)
+			return false;
+		break;
+	}
+	// afisez si datele
+	if (notifier)
+	{
+		temp.Set("");
+		temp.AddFormatedEx("[%{str}] -> Init ok (Records = %{uint32,dec,G3}, Features = %{uint32,dec,G3})",ObjectName,nrRecords,columns.nrFeatures);
+		notifier->Info("%s",temp.GetText());
+
+		temp.Set("");
+		temp.AddFormatedEx("[%{str}] -> Hashes memory: {%uint32,dec,G3} bytes",ObjectName,Hashes.Len()*sizeof(GML::DB::RecordHash));
+		notifier->Info("%s",temp.GetText());
+
+		temp.Set("");
+		temp.AddFormatedEx("[%{str}] -> Features name memory: {%uint32,dec,G3} bytes",ObjectName,dataFeaturesNames.Len());
+		notifier->Info("%s",temp.GetText());
+
+	}
+	return true;
 }
 bool GML::ML::IConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 {
