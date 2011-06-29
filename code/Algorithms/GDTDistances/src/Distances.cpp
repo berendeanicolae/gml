@@ -283,7 +283,7 @@ bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::U
 	for (tr=thData.ThreadID;tr<i1Count;tr+=threadsCount)
 	{
 		i1Poz = i1.Get(tr);
-		if (con->GetRecord(thData.Record,i1Poz,GML::ML::RECORD_STORE_HASH)==false)
+		if (con->GetRecord(thData.Record,i1Poz,GML::ML::ConnectorFlags::STORE_HASH)==false)
 		{
 			notif->Error("[%s] -> Unable to read record #%d",ObjectName,i1Poz);
 			return false;
@@ -291,7 +291,7 @@ bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::U
 		for (gr=0;gr<i2Count;gr++)
 		{
 			i2Poz = i2.Get(gr);
-			if (con->GetRecord(dt->SetRec,i2Poz,GML::ML::RECORD_STORE_HASH)==false)
+			if (con->GetRecord(dt->SetRec,i2Poz,GML::ML::ConnectorFlags::STORE_HASH)==false)
 			{
 				notif->Error("[%s] -> Unable to read record #%d",ObjectName,i2Poz);
 				return false;
@@ -418,7 +418,7 @@ bool Distances::ExportNewPair(GML::Utils::File *f, char *fileName, UInt32 cleanI
 {
 	GML::Utils::GString		temp, hashTmp;
 
-	if (con->GetRecord(MainRecord,indexesNegative.Get(cleanId),GML::ML::RECORD_STORE_HASH)==false)
+	if (con->GetRecord(MainRecord,indexesNegative.Get(cleanId),GML::ML::ConnectorFlags::STORE_HASH)==false)
 	{
 		notif->Error("[%s] -> Unable to read record #%d",ObjectName,indexesNegative.Get(cleanId));
 		return false;
@@ -433,7 +433,7 @@ bool Distances::ExportNewPair(GML::Utils::File *f, char *fileName, UInt32 cleanI
 		notif->Error("[%s] -> Unable to add data to string",ObjectName);
 		return false;
 	}
-	if (con->GetRecord(MainRecord,indexesPozitive.Get(malID),GML::ML::RECORD_STORE_HASH)==false)
+	if (con->GetRecord(MainRecord,indexesPozitive.Get(malID),GML::ML::ConnectorFlags::STORE_HASH)==false)
 	{
 		notif->Error("[%s] -> Unable to read record #%d",ObjectName,indexesPozitive.Get(malID));
 		return false;
