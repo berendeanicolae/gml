@@ -32,6 +32,8 @@ bool	BitConnector::AllocMemory()
 			notifier->Error("[%s] -> Unable to allocate %ud bytes for hashes !",ObjectName,nrRecords*sizeof(GML::DB::RecordHash));
 			return false;
 		}
+	} else {
+		Hashes.DeleteAll();
 	}
 	return true;
 }
@@ -252,7 +254,8 @@ bool	BitConnector::Load(char *fileName)
 				if (LoadRecordHashes()==false)
 					break;
 			} else {
-				// skip record hash
+				if (SkipRecordHashes()==false)
+					break;
 			}
 		}
 		// numele de la date
@@ -262,8 +265,6 @@ bool	BitConnector::Load(char *fileName)
 			{
 				if (LoadFeatureNames()==false)
 					break;
-			} else {
-				// skip record hash
 			}
 		}
 		CloseCacheFile();
