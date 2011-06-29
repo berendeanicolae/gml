@@ -449,6 +449,8 @@ bool GML::ML::IConnector::CreateCacheFile(char *fileName,char *sigName,CacheHead
 			notifier->Error("[%s] -> Null pointer for fileName or header field !",ObjectName);
 		return false;
 	}
+	if (notifier)
+		notifier->Info("[%s] -> Saving cache to: %s",ObjectName,fileName);
 	if (headerSize<sizeof(CacheHeader))
 	{
 		if (notifier)
@@ -487,6 +489,8 @@ bool GML::ML::IConnector::OpeanCacheFile(char *fileName,char *sigName,CacheHeade
 			notifier->Error("[%s] -> Null pointer for fileName or header field !",ObjectName);
 		return false;
 	}
+	if (notifier)
+		notifier->Info("[%s] -> Loading cache to: %s",ObjectName,fileName);
 	if (headerSize<sizeof(CacheHeader))
 	{
 		if (notifier)
