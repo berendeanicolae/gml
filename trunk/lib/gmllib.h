@@ -1956,6 +1956,8 @@ namespace GML
 			void						CloseCacheFile();
 			bool						SaveRecordHashes();
 			bool						LoadRecordHashes();
+			bool						SaveFeatureNames();
+			bool						LoadFeatureNames();
 
 
 			void						AddDataBaseProperties();
