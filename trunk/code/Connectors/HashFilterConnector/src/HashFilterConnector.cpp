@@ -7,7 +7,6 @@ int HashCompareFunction(GML::DB::RecordHash &h1,GML::DB::RecordHash &h2)
 //========================================================
 HashFilterConnector::HashFilterConnector()
 {
-	FeatureCount = RecordCount = 0;
 	ObjectName = "HashFilterConnector";
 
 	LinkPropertyToString("HashFileName"				,HashFileName			,"","Name of the file with the record hash list result.");
@@ -113,28 +112,22 @@ bool   HashFilterConnector::LoadTextHashFile()
 	notifier->Info("[%s] -> %s loaded ok (%d hashes)",ObjectName,HashFileName.GetText(),HashList.Len());
 	return true;
 }
-UInt32 HashFilterConnector::GetRecordCount() 
-{
-	return RecordCount;	
-}
+
 bool   HashFilterConnector::GetRecordLabel( double &label,UInt32 index )
 {
-	if (index >= RecordCount)
+	if (index >= nrRecords)
 	{
-		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,RecordCount-1);
+		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,nrRecords-1);
 		return false;
 	}
 	return conector->GetRecordLabel(label, (UInt32)Indexes.Get(index));
 }
-UInt32 HashFilterConnector::GetFeatureCount()
-{
-	return FeatureCount;
-}
+
 bool   HashFilterConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMask ) 
 {
-	if (index >= RecordCount)
+	if (index >= nrRecords)
 	{
-		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,RecordCount-1);
+		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,nrRecords-1);
 		return false;
 	}
 
@@ -142,28 +135,22 @@ bool   HashFilterConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 reco
 }
 bool   HashFilterConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 {
-	if (index >= RecordCount)
+	if (index >= nrRecords)
 	{
-		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,RecordCount-1);
+		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,nrRecords-1);
 		return false;
 	}
 
 	return conector->GetRecordHash(recHash,(UInt32)Indexes.Get(index));
 }
-bool   HashFilterConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
-{
-	return conector->GetFeatureName(str,index);
-}
+
 bool   HashFilterConnector::CreateMlRecord( MLRecord &record )
 {
 	if (this->conector)
 		return this->conector->CreateMlRecord(record);
 	return false;
 }
-bool   HashFilterConnector::SetRecordInterval( UInt32 start, UInt32 end )
-{
-	return false;
-}
+
 bool   HashFilterConnector::OnInitConnectionToConnector() 
 {
 	UInt32					tr,conCount;
@@ -223,11 +210,11 @@ bool   HashFilterConnector::OnInitConnectionToConnector()
 			notifier->SetProcent(tr,conCount);
 	}
 	notifier->EndProcent();
+	HashList.Free();
 
-
-	RecordCount = Indexes.Len();
-	FeatureCount = conector->GetFeatureCount();
-	notifier->Info("[%s] -> Done. Total records = %d , Total Features = %d ",ObjectName,RecordCount,FeatureCount);
+	nrRecords = Indexes.Len();
+	columns.nrFeatures = conector->GetFeatureCount();
+	dataMemorySize = nrRecords*sizeof(UInt32);
 	return true;
 }
 bool   HashFilterConnector::FreeMLRecord( MLRecord &record )
@@ -241,10 +228,4 @@ bool   HashFilterConnector::Close()
 	if (this->conector)
 		return this->conector->Close();	 
 	return false;
-}
-UInt32 HashFilterConnector::GetTotalRecordCount()
-{
-	if (conector)
-		return conector->GetTotalRecordCount();
-	return 0;
 }

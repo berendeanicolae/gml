@@ -4,7 +4,6 @@
 //========================================================
 ShuffleConnector::ShuffleConnector()
 {
-	FeatureCount = RecordCount = 0;
 	ObjectName = "ShuffleConnector";
 
 	LinkPropertyToUInt32("Method"				,Method			,SHUFFLE_METHOD_RANDOM,"!!LIST:PozitiveFirst,NegativeFirst,Random,Uniform!!");
@@ -14,28 +13,21 @@ ShuffleConnector::~ShuffleConnector()
 	Indexes.Destroy();
 }
 
-UInt32 ShuffleConnector::GetRecordCount() 
-{
-	return RecordCount;	
-}
+
 bool   ShuffleConnector::GetRecordLabel( double &label,UInt32 index )
 {
-	if (index >= RecordCount)
+	if (index >= nrRecords)
 	{
-		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,RecordCount-1);
+		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,nrRecords-1);
 		return false;
 	}
 	return conector->GetRecordLabel(label, (UInt32)Indexes.Get(index));
 }
-UInt32 ShuffleConnector::GetFeatureCount()
-{
-	return FeatureCount;
-}
 bool   ShuffleConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMask ) 
 {
-	if (index >= RecordCount)
+	if (index >= nrRecords)
 	{
-		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,RecordCount-1);
+		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,nrRecords-1);
 		return false;
 	}
 
@@ -43,28 +35,22 @@ bool   ShuffleConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordM
 }
 bool   ShuffleConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 {
-	if (index >= RecordCount)
+	if (index >= nrRecords)
 	{
-		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,RecordCount-1);
+		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,nrRecords-1);
 		return false;
 	}
 
 	return conector->GetRecordHash(recHash,(UInt32)Indexes.Get(index));
 }
-bool   ShuffleConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
-{
-	return conector->GetFeatureName(str,index);
-}
+
 bool   ShuffleConnector::CreateMlRecord( MLRecord &record )
 {
 	if (this->conector)
 		return this->conector->CreateMlRecord(record);
 	return false;
 }
-bool   ShuffleConnector::SetRecordInterval( UInt32 start, UInt32 end )
-{
-	return false;
-}
+
 bool   ShuffleConnector::ShufflePozitiveFirst()
 {
 	UInt32	tr;
@@ -249,9 +235,9 @@ bool   ShuffleConnector::OnInitConnectionToConnector()
 	}
 
 
-	RecordCount = Indexes.Len();
-	FeatureCount = conector->GetFeatureCount();
-	notifier->Info("[%s] -> Done. Total records = %d , Total Features = %d ",ObjectName,RecordCount,FeatureCount);
+	nrRecords = Indexes.Len();
+	columns.nrFeatures = conector->GetFeatureCount();
+	dataMemorySize = nrRecords*sizeof(UInt32);
 	return true;
 }
 bool   ShuffleConnector::FreeMLRecord( MLRecord &record )
@@ -265,10 +251,4 @@ bool   ShuffleConnector::Close()
 	if (this->conector)
 		return this->conector->Close();	 
 	return false;
-}
-UInt32 ShuffleConnector::GetTotalRecordCount()
-{
-	if (conector)
-		return conector->GetTotalRecordCount();
-	return 0;
 }

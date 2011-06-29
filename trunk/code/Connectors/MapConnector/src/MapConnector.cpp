@@ -15,7 +15,7 @@ MapConnector::MapConnector()
 
 bool	MapConnector::OnInitConnectionToConnector()
 {
-	featuresCount = 0;
+	columns.nrFeatures = 0;
 	// calculez cate feature-uri o sa am in functie de metoda
 	switch (mapMethod)
 	{
@@ -24,33 +24,32 @@ bool	MapConnector::OnInitConnectionToConnector()
 		case UseOR:
 		case UseMultiply:
 		case UseAddition:
-			featuresCount = (conector->GetFeatureCount() * (conector->GetFeatureCount()+1))>>1;
+			columns.nrFeatures = (conector->GetFeatureCount() * (conector->GetFeatureCount()+1))>>1;
 			break;
 		case UseAnd_Or:
-			featuresCount = (conector->GetFeatureCount() * (conector->GetFeatureCount()+1));
+			columns.nrFeatures = (conector->GetFeatureCount() * (conector->GetFeatureCount()+1));
 			break;
 		case UseFeatAverage:
-			featuresCount = conector->GetFeatureCount()+1;
+			columns.nrFeatures = conector->GetFeatureCount()+1;
 			break;
 		case Negate:
 		case Interval:
-			featuresCount = conector->GetFeatureCount();
+			columns.nrFeatures = conector->GetFeatureCount();
 			break;
 		default:
 			notifier->Error("[%s] -> Unknown method ID = %d",ObjectName,mapMethod);
 			return false;
 	};
-	notifier->Info("[%s] -> Mapping %d features to %d features ",ObjectName,conector->GetFeatureCount(),featuresCount);
+	notifier->Info("[%s] -> Mapping %d features to %d features ",ObjectName,conector->GetFeatureCount(),columns.nrFeatures);
+	nrRecords = conector->GetRecordCount();
+	
 	return true;
 }
 bool	MapConnector::Close()
 {
 	return true;
 }
-bool	MapConnector::SetRecordInterval(UInt32 start, UInt32 end)
-{
-	return true;
-}
+
 bool	MapConnector::CreateMlRecord (GML::ML::MLRecord &record)
 {
 	if ((record.Parent = new GML::ML::MLRecord())==NULL)
@@ -63,8 +62,8 @@ bool	MapConnector::CreateMlRecord (GML::ML::MLRecord &record)
 		notifier->Error("[%s] -> Unable to create MLRecord from parent",ObjectName);
 		return false;
 	}
-	record.FeatCount = featuresCount;
-	return ((record.Features = new double[featuresCount])!=NULL);
+	record.FeatCount = columns.nrFeatures;
+	return ((record.Features = new double[columns.nrFeatures])!=NULL);
 }
 bool	MapConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask)
 {
@@ -77,8 +76,8 @@ bool	MapConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recor
 	pCount = conector->GetFeatureCount();
 	record.Weight = record.Parent->Weight;
 	record.Label = record.Parent->Label;
-	record.FeatCount = featuresCount;
-	if (recordMask & GML::ML::RECORD_STORE_HASH)
+	record.FeatCount = columns.nrFeatures;
+	if (recordMask & GML::ML::ConnectorFlags::STORE_HASH)
 		record.Hash.Copy(record.Parent->Hash);
 
 	pMap = record.Features;
@@ -180,16 +179,4 @@ bool	MapConnector::FreeMLRecord(GML::ML::MLRecord &record)
 		return false;
 	return true;
 }
-UInt32	MapConnector::GetFeatureCount()
-{
-	return featuresCount;
-}
-UInt32	MapConnector::GetRecordCount()
-{
-	return conector->GetRecordCount();
-}
-UInt32	MapConnector::GetTotalRecordCount()
-{
-	return conector->GetTotalRecordCount();
 
-}

@@ -32,8 +32,6 @@ bool	BitConnector::AllocMemory()
 			notifier->Error("[%s] -> Unable to allocate %ud bytes for hashes !",ObjectName,nrRecords*sizeof(GML::DB::RecordHash));
 			return false;
 		}
-	} else {
-		Hashes.DeleteAll();
 	}
 	return true;
 }
@@ -100,9 +98,7 @@ bool	BitConnector::OnInitConnectionToConnector()
 	}	
 	notifier->EndProcent();
 	// all ok , am incarcat datele
-	notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d,RecordsSize=%d",ObjectName,nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
-	if (StoreRecordHash)
-		notifier->Info("[%s] -> Hash Memory Size = %d",ObjectName,nrRecords*sizeof(GML::DB::RecordHash));
+	dataMemorySize = (UInt64)nrRecords * (UInt64)Align8Size;
 	conector->FreeMLRecord(cRec);
 	return true;
 
@@ -189,11 +185,8 @@ bool	BitConnector::OnInitConnectionToDataBase()
 	}	
 	notifier->EndProcent();
 	// all ok , am incarcat datele
-	notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d,RecordsSize=%d",ObjectName,nrRecords,columns.nrFeatures,nrRecords*Align8Size,Align8Size);
-	if (StoreRecordHash)
-		notifier->Info("[%s] -> Hash Memory Size = %d",ObjectName,nrRecords*sizeof(GML::DB::RecordHash));
+	dataMemorySize = (UInt64)nrRecords * (UInt64)Align8Size;
 	return true;
-
 }
 
 bool	BitConnector::Close()
