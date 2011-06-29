@@ -48,7 +48,7 @@ namespace GML
 			GML::Utils::GString							CountQuery;
 			TableColumnIndexes							columns;
 			UInt32										CachedRecords;
-			UInt32										nrRecords,nrFeatures;
+			UInt32										nrRecords;
 			bool										StoreRecordHash;
 			bool										StoreFeaturesName;
 			GML::Utils::GTFVector<GML::DB::RecordHash>	Hashes;
