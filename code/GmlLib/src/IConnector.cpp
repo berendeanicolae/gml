@@ -574,3 +574,62 @@ bool GML::ML::IConnector::LoadRecordHashes()
 	}
 	return true;
 }
+bool GML::ML::IConnector::SaveFeatureNames()
+{
+	UInt32	sz;
+
+	if (indexFeatureNames.Len() != columns.nrFeatures)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Number of elements in the indexFeatureNames array is different from total number of features !",ObjectName);
+		return false;
+	}
+	while (true)
+	{
+		sz = dataFeaturesNames.Len();
+		if (file.Write(&sz,sizeof(UInt32))==false)
+			break;
+		if (file.Write(indexFeatureNames.GetPtrToObject(0),indexFeatureNames.Len()*sizeof(UInt32))==false)
+			break;
+		if (file.Write(dataFeaturesNames.GetPtrToObject(0),dataFeaturesNames.Len())==false)
+			break;
+		return true;
+	}
+	if (notifier)
+		notifier->Error("[%s] -> Unable to write to file total number of records",ObjectName);
+	return false;
+}
+bool GML::ML::IConnector::LoadFeatureNames()
+{
+	UInt32	sz;
+	if (indexFeatureNames.Create(columns.nrFeatures,true)==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Unable to alloc %d records for features name entries !",ObjectName,columns.nrFeatures);
+		return false;
+	}
+	if (file.Read(&sz,sizeof(UInt32))==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Unable to read from file total number of features",ObjectName);
+		return false;
+	}
+	if (dataFeaturesNames.Create(sz,true)==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Unable to alloc %d bytes for features name entries !",ObjectName,sz);
+		return false;
+	}
+	// citesc
+	while (true)
+	{
+		if (file.Read(indexFeatureNames.GetPtrToObject(0),columns.nrFeatures * sizeof(UInt32))==false)
+			break;
+		if (file.Read(dataFeaturesNames.GetPtrToObject(0),sz)==false)
+			break;
+		return true;
+	}
+	if (notifier)
+		notifier->Error("[%s] -> Unable to read from file features name",ObjectName);
+	return false;
+}
