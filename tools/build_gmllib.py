@@ -22,7 +22,7 @@ list_headers = [
 	"DBRecord.h",
 	"MLRecord.h",
 	"IDataBase.h",
-	"MLInterface.h",
+	"IConnector.h",
 	"IAlgorithm.h",	
 	"Builder.h",
 	"IMLAlgorithm.h",		
