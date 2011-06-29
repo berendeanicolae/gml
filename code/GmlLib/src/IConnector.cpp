@@ -12,6 +12,7 @@ GML::ML::IConnector::IConnector()
 	nrRecords = 0;
 	
 	LinkPropertyToBool  ("StoreRecordHash",StoreRecordHash,false,"Specify if the connector should store records hash or not");
+	LinkPropertyToBool  ("StoreFeatureName",StoreFeaturesName,false,"Specify if the connector should store features name or not");
 }
 void GML::ML::IConnector::AddDataBaseProperties()
 {
