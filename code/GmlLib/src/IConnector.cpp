@@ -10,8 +10,7 @@ GML::ML::IConnector::IConnector()
 	columns.indexFeature = NULL;
 	ClearColumnIndexes();
 	nrRecords = 0;
-	nrFeatures = 0;
-
+	
 	LinkPropertyToBool  ("StoreRecordHash",StoreRecordHash,false,"Specify if the connector should store records hash or not");
 }
 void GML::ML::IConnector::AddDataBaseProperties()
@@ -440,7 +439,7 @@ UInt32 GML::ML::IConnector::GetRecordCount()
 }
 UInt32 GML::ML::IConnector::GetFeatureCount()
 {
-	return nrFeatures;
+	return columns.nrFeatures;
 }
 bool GML::ML::IConnector::CreateCacheFile(char *fileName,char *sigName,CacheHeader *header,UInt32 headerSize,UInt32 extraFlags)
 {
@@ -465,7 +464,7 @@ bool GML::ML::IConnector::CreateCacheFile(char *fileName,char *sigName,CacheHead
 		return false;
 	}
 	header->nrRecords = nrRecords;
-	header->nrFeatures = nrFeatures;
+	header->nrFeatures = columns.nrFeatures;
 	header->Flags = extraFlags;
 	if (StoreRecordHash)
 		header->StoreFlags |= GML::ML::ConnectorFlags::STORE_HASH;
@@ -534,7 +533,7 @@ bool GML::ML::IConnector::OpeanCacheFile(char *fileName,char *sigName,CacheHeade
 		return false;
 	}
 	nrRecords = header->nrRecords;
-	nrFeatures = header->nrFeatures;
+	columns.nrFeatures = header->nrFeatures;
 	// resetez unele date
 	
 	return true;

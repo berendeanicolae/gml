@@ -2,7 +2,6 @@
 
 BitConnector::BitConnector()
 {
-	nrRecords = 0;
 	Data = NULL;
 	ObjectName = "BitConnector";
 
@@ -378,14 +377,6 @@ bool	BitConnector::FreeMLRecord(GML::ML::MLRecord &record)
 		record.Features = NULL;
 	}
 	return true;
-}
-UInt32	BitConnector::GetFeatureCount()
-{
-	return columns.nrFeatures;
-}
-UInt32	BitConnector::GetRecordCount()
-{
-	return nrRecords;
 }
 UInt32	BitConnector::GetTotalRecordCount()
 {
