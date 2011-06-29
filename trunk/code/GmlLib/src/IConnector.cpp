@@ -408,6 +408,10 @@ bool GML::ML::IConnector::OnInit()
 bool GML::ML::IConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 {
 	recHash.Reset();
+
+	// daca are conectorul meu
+	if ((Hashes.Len()==0) && (conector!=NULL))
+		return conector->GetRecordHash(recHash,index);
 	if (index>=Hashes.Len())
 	{
 		notifier->Error("[%s] -> Invalid index (%d) for hash name. Should be within [0..%d]",ObjectName,index,Hashes.Len()-1);
@@ -424,6 +428,11 @@ bool GML::ML::IConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
 		notifier->Error("[%s] -> Invalid index (%d) for feature name. Should be within [0..%d]",ObjectName,index,GetFeatureCount()-1);
 		return false;
 	}
+	// daca sunt conectat la un alt 
+	if ((indexFeatureNames.Len()==0) && (conector!=NULL))
+		return conector->GetFeatureName(str,index);
+	
+	// altfel dau din lista mea
 	if (index<indexFeatureNames.Len())
 		name = (char *)dataFeaturesNames.GetPtrToObject(indexFeatureNames[index]);
 	if (str.Set(name)==false)
