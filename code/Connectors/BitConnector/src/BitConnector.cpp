@@ -304,10 +304,7 @@ bool	BitConnector::Load(char *fileName)
 	f.Close();	
 	return false;
 }
-bool	BitConnector::SetRecordInterval(UInt32 start, UInt32 end)
-{
-	return true;
-}
+
 bool	BitConnector::CreateMlRecord (GML::ML::MLRecord &record)
 {
 	record.FeatCount = columns.nrFeatures;	
@@ -359,16 +356,6 @@ bool	BitConnector::GetRecordLabel(double &Label,UInt32 index)
 
 	return true;
 }
-bool	BitConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
-{
-	if (index>=nrRecords)
-		return false;
-	if (StoreRecordHash)
-		recHash.Copy(*Hashes.GetPtrToObject(index));
-	else
-		recHash.Reset();
-	return true;
-}
 bool	BitConnector::FreeMLRecord(GML::ML::MLRecord &record)
 {
 	if (record.Features!=NULL)
@@ -377,10 +364,6 @@ bool	BitConnector::FreeMLRecord(GML::ML::MLRecord &record)
 		record.Features = NULL;
 	}
 	return true;
-}
-UInt32	BitConnector::GetTotalRecordCount()
-{
-	return nrRecords;
 }
 bool	BitConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
 {
