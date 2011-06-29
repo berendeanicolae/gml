@@ -2,10 +2,10 @@
 
 class BitConnector: public GML::ML::IConnector
 {
-	UInt32										nrRecords;
-	UInt8										*Data;
-	GML::Utils::GTFVector<GML::DB::RecordHash>	Hashes;
-	UInt32										Align8Size;
+
+	UInt8				*Data;
+	
+	UInt32				Align8Size;
 
 
 	bool				OnInitConnectionToDataBase();

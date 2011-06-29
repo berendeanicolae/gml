@@ -8,9 +8,10 @@ GML::ML::IConnector::IConnector()
 	conector = NULL;	
 	ObjectName = "IConnector";
 	columns.indexFeature = NULL;
-	columns.featName = NULL;
 	ClearColumnIndexes();
-	
+	nrRecords = 0;
+	nrFeatures = 0;
+
 	LinkPropertyToBool  ("StoreRecordHash",StoreRecordHash,false,"Specify if the connector should store records hash or not");
 }
 void GML::ML::IConnector::AddDataBaseProperties()
@@ -27,13 +28,44 @@ void GML::ML::IConnector::ClearColumnIndexes()
 {
 	if (columns.indexFeature!=NULL)
 		delete columns.indexFeature;
-	if (columns.featName!=NULL)
-		delete columns.featName;
 	columns.indexFeature = NULL;
-	columns.featName = NULL;
 	columns.nrFeatures = 0;
 	columns.indexLabel = -1;
 	columns.indexHash = -1;
+	dataFeaturesNames.DeleteAll();
+	indexFeatureNames.DeleteAll();
+}
+bool GML::ML::IConnector::AddColumnName(char *name)
+{
+	UInt32	poz = dataFeaturesNames.Len();
+	UInt8	ch;
+
+	if (name==NULL)
+	{
+		notifier->Error("[%s] -> NULL column name!",ObjectName);
+		return false;
+	}
+	if (indexFeatureNames.Push(poz)==false)
+	{
+		notifier->Error("[%s] -> Unable to allocate memory for column with name: %s !",ObjectName,name);
+		return false;
+	}
+	for (int tr=0;name[tr]!=0;tr++)
+	{
+		ch = name[tr];
+		if (dataFeaturesNames.Push(ch)==false)
+		{
+			notifier->Error("[%s] -> Unable to allocate memory for column with name: %s !",ObjectName,name);
+			return false;
+		}
+	}
+	ch = 0;
+	if (dataFeaturesNames.Push(ch)==false)
+	{
+		notifier->Error("[%s] -> Unable to allocate memory for column with name: %s !",ObjectName,name);
+		return false;
+	}
+	return true;
 }
 bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
@@ -104,11 +136,7 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 		notifier->Error("[%s] -> Unable to alloc %d features indexes ",ObjectName,columns.nrFeatures);
 		return false;
 	}
-	if ((columns.featName = new GML::Utils::GString[columns.nrFeatures])==NULL)
-	{
-		notifier->Error("[%s] -> Unable to alloc %d features names",ObjectName,columns.nrFeatures);
-		return false;
-	}
+
 	// setez si indexii
 	for (cPoz=0,tr=0;tr<VectPtr.Len();tr++)
 	{
@@ -120,7 +148,7 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 		if (GML::Utils::GString::StartsWith(rec->Name,"Ft_",true))
 		{
 			columns.indexFeature[cPoz] = tr;
-			if (columns.featName[cPoz].Set(rec->Name)==false)
+			if (AddColumnName(rec->Name)==false)			
 			{
 				notifier->Error("[%s] -> Unable to save name for feature #%d (%s)",ObjectName,tr,rec->Name);
 				return false;
@@ -380,9 +408,14 @@ bool GML::ML::IConnector::OnInit()
 }
 bool GML::ML::IConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 {
-	if (notifier)
-		notifier->Error("[%s] GetRecordHash not implemented !",ObjectName);
-	return false;
+	recHash.Reset();
+	if (index>=Hashes.Len())
+	{
+		notifier->Error("[%s] -> Invalid index (%d) for hash name. Should be within [0..%d]",ObjectName,index,Hashes.Len()-1);
+		return true;
+	}
+	recHash.Copy(Hashes[index]);
+	return true;
 }
 bool GML::ML::IConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
 {
@@ -392,15 +425,152 @@ bool GML::ML::IConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
 		notifier->Error("[%s] -> Invalid index (%d) for feature name. Should be within [0..%d]",ObjectName,index,GetFeatureCount()-1);
 		return false;
 	}
-	if (columns.featName!=NULL)
-	{
-		name = columns.featName[index].GetText();
-		if (name==NULL)
-			name = "";
-	}
+	if (index<indexFeatureNames.Len())
+		name = (char *)dataFeaturesNames.GetPtrToObject(indexFeatureNames[index]);
 	if (str.Set(name)==false)
 	{
 		notifier->Error("[%s] -> Unable to set feature name : %s",ObjectName,name);
+		return false;
+	}
+	return true;
+}
+UInt32 GML::ML::IConnector::GetRecordCount()
+{
+	return nrRecords;
+}
+UInt32 GML::ML::IConnector::GetFeatureCount()
+{
+	return nrFeatures;
+}
+bool GML::ML::IConnector::CreateCacheFile(char *fileName,char *sigName,CacheHeader *header,UInt32 headerSize,UInt32 extraFlags)
+{
+	if ((fileName==NULL) || (header==NULL))
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Null pointer for fileName or header field !",ObjectName);
+		return false;
+	}
+	if (headerSize<sizeof(CacheHeader))
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Header should be at least %d bytes!",ObjectName,sizeof(CacheHeader));
+		return false;
+	}
+	// creez hederul
+	MEMSET(header,0,headerSize);
+	if (GML::Utils::GString::Set(header->MagicName,sigName,31)==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> SigName should be at least 31 bytes",ObjectName);
+		return false;
+	}
+	header->nrRecords = nrRecords;
+	header->nrFeatures = nrFeatures;
+	header->Flags = extraFlags;
+	if (StoreRecordHash)
+		header->StoreFlags |= GML::ML::ConnectorFlags::STORE_HASH;
+	if (StoreFeaturesName)
+		header->StoreFlags |= GML::ML::ConnectorFlags::STORE_FEATURE_NAME;
+
+	if (file.Create(fileName)==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Unable to create : %s",ObjectName,fileName);
+		return false;
+	}
+	return true;
+}
+bool GML::ML::IConnector::OpeanCacheFile(char *fileName,char *sigName,CacheHeader *header,UInt32 headerSize)
+{
+	if ((fileName==NULL) || (header==NULL))
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Null pointer for fileName or header field !",ObjectName);
+		return false;
+	}
+	if (headerSize<sizeof(CacheHeader))
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Header should be at least %d bytes!",ObjectName,sizeof(CacheHeader));
+		return false;
+	}
+	if (file.OpenRead(fileName)==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Unable to open : %s",ObjectName,fileName);
+		return false;
+	}
+	if (file.Read(header,headerSize)==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Unable to read cache header from %s",ObjectName,fileName);
+		return false;
+	}
+	// creez hederul
+	MEMSET(header,0,headerSize);
+	if (GML::Utils::GString::Set(header->MagicName,sigName,31)==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> SigName should be at least 31 bytes",ObjectName);
+		return false;
+	}
+	header->MagicName[31]=0;
+	if (GML::Utils::GString::Equals(sigName,header->MagicName)==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Invalid header in %s (expecting %s , found %s)",ObjectName,fileName,sigName,header->MagicName);
+		return false;
+	}
+	if (header->nrRecords==0)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Invalid number of records(%d) in %s",ObjectName,header->nrRecords,fileName);
+		return false;
+	}
+	if (header->nrFeatures==0)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Invalid number of features(%d) in %s",ObjectName,header->nrFeatures,fileName);
+		return false;
+	}
+	nrRecords = header->nrRecords;
+	nrFeatures = header->nrFeatures;
+	// resetez unele date
+	
+	return true;
+}
+void GML::ML::IConnector::CloseCacheFile()
+{
+	file.Close();
+}
+bool GML::ML::IConnector::SaveRecordHashes()
+{
+	if (Hashes.Len() != nrRecords)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Number of elements in the Hashes array is different from total number of records !",ObjectName);
+		return false;
+	}
+	if (file.Write(Hashes.GetPtrToObject(0),nrRecords*sizeof(GML::DB::RecordHash))==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Unable to write to file total number of records",ObjectName);
+		return false;
+	}
+	return true;
+}
+bool GML::ML::IConnector::LoadRecordHashes()
+{
+	if (Hashes.Create(nrRecords,true)==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Unable to alloc %d records for hash entries !",ObjectName,nrRecords);
+		return false;
+	}
+	if (file.Read(Hashes.GetPtrToObject(0),nrRecords*sizeof(GML::DB::RecordHash))==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Unable to read from file total number of records",ObjectName);
 		return false;
 	}
 	return true;
