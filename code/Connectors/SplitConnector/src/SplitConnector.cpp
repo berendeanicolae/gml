@@ -2,7 +2,6 @@
 
 SplitConnector::SplitConnector()
 {
-	FeatureCount = RecordCount = 0;
 	ObjectName = "SplitConnector";
 	attrStart = attrEnd = 0;
 	Start = End = 0;
@@ -39,10 +38,10 @@ bool   SplitConnector::CreateIndexList()
 			Start = conector->GetRecordCount();
 		count = (conector->GetRecordCount()-Start) + End;
 	}
-	notifier->Info("[%s] Allocing %d records ",ObjectName,RecordCount);
+	notifier->Info("[%s] Allocing %d records ",ObjectName,nrRecords);
 	if (Indexes.Create(count)==false)	
 	{
-		notifier->Error("[%s] Unable to alloc %d indexes ",ObjectName,RecordCount);
+		notifier->Error("[%s] Unable to alloc %d indexes ",ObjectName,nrRecords);
 		return false;
 	}
 	return true;
@@ -183,28 +182,22 @@ bool   SplitConnector::CreateUniformPercentageIndex(UInt32 pozStart,UInt32 pozEn
 	notifier->Info("[%s] -> Added: Pozitive = %d, Negative = %d",ObjectName,_added[1],_added[0]);
 	return true;
 }
-UInt32 SplitConnector::GetRecordCount() 
-{
-	return RecordCount;	
-}
+
 bool   SplitConnector::GetRecordLabel( double &label,UInt32 index )
 {
-	if (index >= RecordCount)
+	if (index >= nrRecords)
 	{
-		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,RecordCount-1);
+		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,nrRecords-1);
 		return false;
 	}
 	return conector->GetRecordLabel(label, (UInt32)Indexes.Get(index));
 }
-UInt32 SplitConnector::GetFeatureCount()
-{
-	return FeatureCount;
-}
+
 bool   SplitConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMask ) 
 {
-	if (index >= RecordCount)
+	if (index >= nrRecords)
 	{
-		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,RecordCount-1);
+		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,nrRecords-1);
 		return false;
 	}
 
@@ -212,28 +205,22 @@ bool   SplitConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMas
 }
 bool   SplitConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 {
-	if (index >= RecordCount)
+	if (index >= nrRecords)
 	{
-		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,RecordCount-1);
+		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,nrRecords-1);
 		return false;
 	}
 
 	return conector->GetRecordHash(recHash,(UInt32)Indexes.Get(index));
 }
-bool   SplitConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
-{
-	return conector->GetFeatureName(str,index);
-}
+
 bool   SplitConnector::CreateMlRecord( MLRecord &record )
 {
 	if (this->conector)
 		return this->conector->CreateMlRecord(record);
 	return false;
 }
-bool   SplitConnector::SetRecordInterval( UInt32 start, UInt32 end )
-{
-	return false;
-}
+
 bool   SplitConnector::OnInitConnectionToConnector() 
 {
 	notifier->Info("[%s] -> Loading data (Start = %d,End = %d)",ObjectName,attrStart,attrEnd);
@@ -270,9 +257,9 @@ bool   SplitConnector::OnInitConnectionToConnector()
 			notifier->Error("[%s] -> Invalid Splitting Mode (%d)",ObjectName,SplitMode);
 			return false;
 	}
-	RecordCount = Indexes.Len();
-	FeatureCount = conector->GetFeatureCount();
-	notifier->Info("[%s] -> Done. Total records = %d , Total Features = %d ",ObjectName,RecordCount,FeatureCount);
+	nrRecords = Indexes.Len();
+	columns.nrFeatures = conector->GetFeatureCount();
+	dataMemorySize = nrRecords*sizeof(UInt32);
 	return true;
 }
 bool   SplitConnector::FreeMLRecord( MLRecord &record )
@@ -286,10 +273,4 @@ bool   SplitConnector::Close()
 	if (this->conector)
 		return this->conector->Close();	 
 	return false;
-}
-UInt32 SplitConnector::GetTotalRecordCount()
-{
-	if (conector)
-		return conector->GetTotalRecordCount();
-	return 0;
 }

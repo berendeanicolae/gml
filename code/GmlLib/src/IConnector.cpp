@@ -149,10 +149,13 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 		if (GML::Utils::GString::StartsWith(rec->Name,"Ft_",true))
 		{
 			columns.indexFeature[cPoz] = tr;
-			if (AddColumnName(rec->Name)==false)			
+			if (StoreFeaturesName)
 			{
-				notifier->Error("[%s] -> Unable to save name for feature #%d (%s)",ObjectName,tr,rec->Name);
-				return false;
+				if (AddColumnName(rec->Name)==false)			
+				{
+					notifier->Error("[%s] -> Unable to save name for feature #%d (%s)",ObjectName,tr,rec->Name);
+					return false;
+				}
 			}
 			cPoz++;			
 		}
@@ -400,6 +403,7 @@ bool GML::ML::IConnector::OnInit()
 		DEBUGMSG("[%s] Notifier should be set first before executing this function !",ObjectName);
 		return false;
 	}
+	ClearColumnIndexes();
 	while (true)
 	{
 		// daca exista o baza de date , incerc conectarea la ea
@@ -425,15 +429,15 @@ bool GML::ML::IConnector::OnInit()
 	if (notifier)
 	{
 		temp.Set("");
-		temp.AddFormatedEx("[%{str}] -> Init ok (Records = %{uint32,dec,G3}, Features = %{uint32,dec,G3}, DataSize = %{uint64,dex,G3} bytes)",ObjectName,nrRecords,columns.nrFeatures,dataMemorySize);
+		temp.AddFormatedEx("[%{str}] -> Init ok (Records = %{uint32,dec,G3} , Features = %{uint32,dec,G3} , DataSize = %{uint64,dec,G3} bytes)",ObjectName,nrRecords,columns.nrFeatures,dataMemorySize);
 		notifier->Info("%s",temp.GetText());
 
 		temp.Set("");
-		temp.AddFormatedEx("[%{str}] -> Hashes memory: {%uint32,dec,G3} bytes",ObjectName,Hashes.Len()*sizeof(GML::DB::RecordHash));
+		temp.AddFormatedEx("[%{str}] -> Hashes memory: %{uint32,dec,G3} bytes",ObjectName,Hashes.Len()*sizeof(GML::DB::RecordHash));
 		notifier->Info("%s",temp.GetText());
 
 		temp.Set("");
-		temp.AddFormatedEx("[%{str}] -> Features name memory: {%uint32,dec,G3} bytes",ObjectName,dataFeaturesNames.Len());
+		temp.AddFormatedEx("[%{str}] -> Features name memory: %{uint32,dec,G3} bytes",ObjectName,dataFeaturesNames.Len());
 		notifier->Info("%s",temp.GetText());
 
 	}

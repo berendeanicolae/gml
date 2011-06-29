@@ -2,9 +2,6 @@
 
 FullCacheConnector::FullCacheConnector()
 {
-	 nrRecords = 0;
-	 FeatureCount = 0;
-
 	 Records = NULL;
 	 Labels  = NULL;	 
 
@@ -25,14 +22,7 @@ FullCacheConnector::~FullCacheConnector()
 	Labels = NULL;
 }
 
-UInt32 FullCacheConnector::GetRecordCount()
-{
-	return nrRecords;
-}
-UInt32 FullCacheConnector::GetFeatureCount()
-{
-	return FeatureCount;		
-}
+
 bool   FullCacheConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMask )
 {
 	if (index >= nrRecords) 
@@ -40,21 +30,17 @@ bool   FullCacheConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recor
 		notifier->Error("[%s] -> index is out of range, it has to be less than %d", nrRecords);
 		return false;
 	}
-	record.Features = (double*) &Records[index*FeatureCount]; 
-	record.FeatCount = FeatureCount;
+	record.Features = (double*) &Records[index*columns.nrFeatures]; 	
 	record.Label = Labels[index];	
 	
 	return true;
 }
 bool   FullCacheConnector::CreateMlRecord( MLRecord &record )
 {	
-	record.FeatCount = FeatureCount;
+	record.FeatCount = columns.nrFeatures;
 	return true;
 }
-bool   FullCacheConnector::SetRecordInterval( UInt32 start, UInt32 end )
-{
-	return false;
-}
+
 bool   FullCacheConnector::OnInitConnectionToDataBase()
 {
 	UInt32										tr,gr;
@@ -131,8 +117,7 @@ bool   FullCacheConnector::OnInitConnectionToDataBase()
 		cPoz+=columns.nrFeatures;
 	}	
 	// all ok , am incarcat datele
-	FeatureCount = columns.nrFeatures;
-	notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d",ObjectName,nrRecords,columns.nrFeatures,(nrRecords+1)*sizeof(double)*columns.nrFeatures);
+
 	return true;
 }
 bool   FullCacheConnector::FreeMLRecord( MLRecord &record )
@@ -145,10 +130,7 @@ bool   FullCacheConnector::Close()
 		return database->Disconnect();	
 	return true;
 }
-UInt32 FullCacheConnector::GetTotalRecordCount()
-{
-	return nrRecords;
-}
+
 bool   FullCacheConnector::GetRecordLabel( double &label,UInt32 index )
 {
 	if (index >= nrRecords) 
@@ -235,8 +217,6 @@ bool   FullCacheConnector::Load(char *fileName)
 		if (f.Read(Labels,nrRecords*sizeof(double))==false)
 			break;
 		f.Close();
-		FeatureCount = columns.nrFeatures;
-		notifier->Info("[%s] -> Records=%d,Features=%d,MemSize=%d",ObjectName,nrRecords,columns.nrFeatures,(nrRecords+1)*columns.nrFeatures*sizeof(double));
 		return true;
 	}
 	if (Records!=NULL)
@@ -246,7 +226,7 @@ bool   FullCacheConnector::Load(char *fileName)
 	Records = NULL;
 	Labels = NULL;
 	nrRecords = 0;
-	columns.nrFeatures = FeatureCount = 0;
+	columns.nrFeatures = 0;
 
 	notifier->Error("[%s] -> Error reading data from %s",ObjectName,fileName);
 	f.Close();	
