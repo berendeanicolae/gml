@@ -23,7 +23,7 @@ namespace GML
 
 			void			operator =(Vector& v);
 	
-			bool			Create(unsigned int alocElements=32,unsigned int ElemSize=sizeof(void *)); 
+			bool			Create(unsigned int alocElements=32,unsigned int ElemSize=sizeof(void *),bool resizeToAllocElements=false); 
 			void			Free();
 			bool			Exists() { return (Data!=NULL); }
 

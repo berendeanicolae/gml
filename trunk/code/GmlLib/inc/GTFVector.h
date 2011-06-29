@@ -15,9 +15,9 @@ namespace GML
 			Vector	elements;
 		public:
 			GTFVector();
-			GTFVector(UInt32 initialSize);
+			GTFVector(UInt32 initialSize,bool resizeToInitialSize);
 
-			bool						Create(UInt32 initialSize);
+			bool						Create(UInt32 initialSize,bool resizeToInitialSize=false);
 			void						Free();
 
 			//------ Insert --------------------------------------------------------------------------
@@ -55,13 +55,13 @@ namespace GML
 		{
 			elements.Create(256,sizeof(TemplateObject));
 		}
-		template <class TemplateObject> GTFVector<TemplateObject>::GTFVector(UInt32 initialSize)
+		template <class TemplateObject> GTFVector<TemplateObject>::GTFVector(UInt32 initialSize,bool resizeToAllocElements)
 		{
-			elements.Create(initialSize,sizeof(TemplateObject));
+			elements.Create(initialSize,sizeof(TemplateObject),resizeToAllocElements);
 		}		
-		template <class TemplateObject> bool GTFVector<TemplateObject>::Create(UInt32 initialSize)
+		template <class TemplateObject> bool GTFVector<TemplateObject>::Create(UInt32 initialSize,bool resizeToAllocElements)
 		{
-			return elements.Create(initialSize,sizeof(TemplateObject));
+			return elements.Create(initialSize,sizeof(TemplateObject),resizeToAllocElements);
 		}
 		template <class TemplateObject> void GTFVector<TemplateObject>::Free()
 		{
