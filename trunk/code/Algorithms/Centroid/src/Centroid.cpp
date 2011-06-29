@@ -752,7 +752,7 @@ bool Centroid::SaveCentroid(CentroidDistances *cd,char *fileName)
 	GML::Utils::AttributeList	attr;
 	GML::Utils::GString			str;
 
-	if (con->GetRecord(MainRecord,cd->index,GML::ML::RECORD_STORE_HASH)==false)
+	if (con->GetRecord(MainRecord,cd->index,GML::ML::ConnectorFlags::STORE_HASH)==false)
 	{
 		notif->Error("[%s] -> Unable to read record #%d",ObjectName,cd->index);
 		return false;
