@@ -264,11 +264,20 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::Save(char *f
 
 	while (true)
 	{
-		if (CreateCacheFile(fileName,SigName,&h,sizeof(h))==false)
+		if (CreateCacheFile(fileName,SigName,&h,sizeof(h),(UInt32)LabelIsBool)==false)
 			break;
 		if (file.Write(&h,sizeof(h))==false)
 			break;
-		
+		if (LabelIsBool)
+		{
+			if (file.Write(BSLabel.GetData(),BSLabel.GetAllocated())==false)
+				break;
+		} else {
+			if (file.Write(Labels,nrRecords*sizeof(DataType))==false)
+				break;
+		}
+		if (file.Write(Data,nrRecords*sizeof(DataType)*columns.nrFeatures)==false)
+			break;
 		if (SaveRecordHashesAndFeatureNames()==false)
 			break;
 		CloseCacheFile();
@@ -286,13 +295,36 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::Load(char *f
 	{
 		if (OpeanCacheFile(fileName,SigName,&h,sizeof(h))==false)
 			break;
-
+		if (Labels!=NULL)
+			delete Labels;
 		if (Data!=NULL)
 			delete Data;
+		if (h.Flags!=0)
+			LabelIsBool = true;
+		else
+			LabelIsBool = false;
 		if ((Data = new DataType[nrRecords*columns.nrFeatures])==NULL)
 		{
 			notifier->Error("[%s] -> Unable to allocate %ud bytes for data indexes !",ObjectName,nrRecords*columns.nrFeatures);
 			break;
+		}
+		if (LabelIsBool)
+		{
+			if (BSLabel.Create(nrRecords)==false)
+			{
+				notifier->Error("[%s] -> Unable to allocate %ud indexes !",ObjectName,nrRecords);
+				break;
+			}
+			if (file.Read(BSLabel.GetData(),BSLabel.GetAllocated())==false)
+				break;
+		} else {
+			if ((Labels = new DataType[nrRecords])==NULL)
+			{
+				notifier->Error("[%s] -> Unable to allocate %ud indexes !",ObjectName,nrRecords);
+				break;
+			}
+			if (file.Read(Labels,nrRecords*sizeof(DataType))==false)
+				break;
 		}
 		if (file.Read(Data,nrRecords*columns.nrFeatures)==false)
 			break;
