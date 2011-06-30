@@ -242,6 +242,7 @@ bool	BitConnector::Load(char *fileName)
 		if (LoadRecordHashesAndFeatureNames(&h)==false)
 			break;
 		CloseCacheFile();
+		dataMemorySize = nrRecords*Align8Size;
 		return true;		
 	}
 	ClearColumnIndexes();

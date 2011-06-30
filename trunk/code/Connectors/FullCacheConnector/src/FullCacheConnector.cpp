@@ -196,6 +196,7 @@ bool   FullCacheConnector::Load(char *fileName)
 		if (LoadRecordHashesAndFeatureNames(&h)==false)
 			break;
 		CloseCacheFile();
+		dataMemorySize = nrRecords*sizeof(double);
 		return true;		
 	}
 	ClearColumnIndexes();
