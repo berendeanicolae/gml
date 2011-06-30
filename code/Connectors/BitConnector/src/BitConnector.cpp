@@ -9,6 +9,7 @@ BitConnector::BitConnector()
 
 	AddDataBaseProperties();
 	AddCacheProperties();
+	AddStoreProperties();
 }
 
 bool	BitConnector::AllocMemory()

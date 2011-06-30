@@ -80,6 +80,7 @@ namespace GML
 
 			void						AddDataBaseProperties();
 			void						AddCacheProperties();
+			void						AddStoreProperties();
 
 			virtual bool				OnInit();
 			virtual bool				OnInitConnectionToDataBase();

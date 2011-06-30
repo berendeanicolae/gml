@@ -11,6 +11,7 @@ FullCacheConnector::FullCacheConnector()
 
 	AddDataBaseProperties();
 	AddCacheProperties();
+	AddStoreProperties();
 }
 FullCacheConnector::~FullCacheConnector()
 {

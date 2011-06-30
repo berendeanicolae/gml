@@ -12,8 +12,7 @@ GML::ML::IConnector::IConnector()
 	nrRecords = 0;
 	dataMemorySize = 0;
 	
-	LinkPropertyToBool  ("StoreRecordHash",StoreRecordHash,false,"Specify if the connector should store records hash or not");
-	LinkPropertyToBool  ("StoreFeatureName",StoreFeaturesName,false,"Specify if the connector should store features name or not");
+
 }
 void GML::ML::IConnector::AddDataBaseProperties()
 {
@@ -24,6 +23,11 @@ void GML::ML::IConnector::AddDataBaseProperties()
 void GML::ML::IConnector::AddCacheProperties()
 {
 	LinkPropertyToString("DataFileName",DataFileName,"","Name of the file that contains data to be loaded");
+}
+void GML::ML::IConnector::AddStoreProperties()
+{
+	LinkPropertyToBool  ("StoreRecordHash",StoreRecordHash,false,"Specify if the connector should store records hash or not");
+	LinkPropertyToBool  ("StoreFeatureName",StoreFeaturesName,false,"Specify if the connector should store features name or not");
 }
 void GML::ML::IConnector::ClearColumnIndexes()
 {
