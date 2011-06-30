@@ -1,5 +1,7 @@
 #include "FullCacheConnector.h"
 
+#define CACHE_SIG_NAME "FullCacheConnectorV2"
+
 FullCacheConnector::FullCacheConnector()
 {
 	 Records = NULL;
@@ -145,56 +147,34 @@ bool   FullCacheConnector::GetRecordLabel( double &label,UInt32 index )
 }
 bool   FullCacheConnector::Save(char *fileName)
 {
-	GML::Utils::File	f;
+	GML::ML::CacheHeader	h;
 
-	if (f.Create(fileName)==false)
-	{
-		notifier->Error("[%s] Unable to create : %s",ObjectName,fileName);
-		return false;
-	}
 	while (true)
 	{
-		if (f.Write("FullCacheConnectorCache",23)==false)
+		if (CreateCacheFile(fileName,CACHE_SIG_NAME,&h,sizeof(h))==false)
+			break;		
+		if (file.Write(&h,sizeof(h))==false)
 			break;
-		if (f.Write(&nrRecords,sizeof(UInt32))==false)
+		if (file.Write(Records,nrRecords*columns.nrFeatures*sizeof(double))==false)
 			break;
-		if (f.Write(&columns.nrFeatures,sizeof(UInt32))==false)
+		if (file.Write(Labels,nrRecords*sizeof(double))==false)
 			break;
-		if (f.Write(Records,nrRecords*columns.nrFeatures*sizeof(double))==false)
+		if (SaveRecordHashesAndFeatureNames()==false)
 			break;
-		if (f.Write(Labels,nrRecords*sizeof(double))==false)
-			break;
-		f.Close();
+		CloseCacheFile();
 		return true;
 	}
 	notifier->Error("[%s] Unable to write into %s",ObjectName,fileName);
-	f.Close();
+	CloseCacheFile();
 	DeleteFileA(fileName);
 	return false;
 }
 bool   FullCacheConnector::Load(char *fileName)
 {
-	GML::Utils::File	f;
-	char				temp[24];
-
-	notifier->Info("[%s] -> Loading %s",ObjectName,fileName);
-	if (f.OpenRead(fileName)==false)
-	{
-		notifier->Error("[%s] -> Unable to open : %s",ObjectName,fileName);
-		return false;
-	}
+	GML::ML::CacheHeader	h;
 	while (true)
 	{
-		if (f.Read(temp,23)==false)
-			break;
-		if (memcmp(temp,"FullCacheConnectorCache",23)!=0)
-		{
-			notifier->Error("[%s] -> Invalid file format : %s",ObjectName,fileName);
-			break;
-		}
-		if (f.Read(&nrRecords,sizeof(UInt32))==false)
-			break;
-		if (f.Read(&columns.nrFeatures,sizeof(UInt32))==false)
+		if (OpeanCacheFile(fileName,CACHE_SIG_NAME,&h,sizeof(h))==false)
 			break;
 		if (Records!=NULL)
 			delete Records;
@@ -212,23 +192,19 @@ bool   FullCacheConnector::Load(char *fileName)
 			notifier->Error("[%s] -> Unable to allocate %ud bytes for labels !",ObjectName,nrRecords*sizeof(double));
 			break;
 		}
-		if (f.Read(Records,nrRecords*columns.nrFeatures*sizeof(double))==false)
+		if (LoadRecordHashesAndFeatureNames(&h)==false)
 			break;
-		if (f.Read(Labels,nrRecords*sizeof(double))==false)
-			break;
-		f.Close();
-		return true;
+		CloseCacheFile();
+		return true;		
 	}
+	ClearColumnIndexes();
+	CloseCacheFile();
 	if (Records!=NULL)
 		delete Records;
 	if (Labels!=NULL)
 		delete Labels;
 	Records = NULL;
 	Labels = NULL;
-	nrRecords = 0;
-	columns.nrFeatures = 0;
 
-	notifier->Error("[%s] -> Error reading data from %s",ObjectName,fileName);
-	f.Close();	
 	return false;
 }
