@@ -702,3 +702,46 @@ bool GML::ML::IConnector::LoadFeatureNames()
 		notifier->Error("[%s] -> Unable to read from file features name",ObjectName);
 	return false;
 }
+bool GML::ML::IConnector::SaveRecordHashesAndFeatureNames()
+{
+	if (SaveRecordHashes()==false)
+		return false;
+	if (SaveFeatureNames()==false)
+		return false;
+	return true;
+}
+bool GML::ML::IConnector::LoadRecordHashesAndFeatureNames(CacheHeader *h)
+{
+	if (h==NULL)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> NULL parameter for LoadRecordHashesAndFeatureNames function !",ObjectName);
+		return false;
+	}
+	// record hash
+	if (h->StoreFlags & GML::ML::ConnectorFlags::STORE_HASH)
+	{
+		if (StoreRecordHash)
+		{
+			if (LoadRecordHashes()==false)
+				return false;
+		} else {
+			if (SkipRecordHashes()==false)
+				return false;;
+		}
+	} else {
+		StoreRecordHash = false;
+	}
+	// numele de la date
+	if (h->StoreFlags & GML::ML::ConnectorFlags::STORE_FEATURE_NAME)
+	{
+		if (StoreFeaturesName)
+		{
+			if (LoadFeatureNames()==false)
+				return false;
+		}
+	} else {
+		StoreFeaturesName = false;
+	}
+	return true;
+}

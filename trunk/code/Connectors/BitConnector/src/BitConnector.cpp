@@ -209,9 +209,7 @@ bool	BitConnector::Save(char *fileName)
 			break;
 		if (file.Write(Data,nrRecords*Align8Size)==false)
 			break;
-		if (SaveRecordHashes()==false)
-			break;
-		if (SaveFeatureNames()==false)
+		if (SaveRecordHashesAndFeatureNames()==false)
 			break;
 		CloseCacheFile();
 		return true;
@@ -240,26 +238,8 @@ bool	BitConnector::Load(char *fileName)
 		}
 		if (file.Read(Data,nrRecords*Align8Size)==false)
 			break;
-		if (h.StoreFlags & GML::ML::ConnectorFlags::STORE_HASH)
-		{
-			if (StoreRecordHash)
-			{
-				if (LoadRecordHashes()==false)
-					break;
-			} else {
-				if (SkipRecordHashes()==false)
-					break;
-			}
-		}
-		// numele de la date
-		if (h.StoreFlags & GML::ML::ConnectorFlags::STORE_FEATURE_NAME)
-		{
-			if (StoreFeaturesName)
-			{
-				if (LoadFeatureNames()==false)
-					break;
-			}
-		}
+		if (LoadRecordHashesAndFeatureNames(&h)==false)
+			break;
 		CloseCacheFile();
 		return true;		
 	}

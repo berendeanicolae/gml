@@ -1960,6 +1960,8 @@ namespace GML
 			bool						LoadRecordHashes();
 			bool						SaveFeatureNames();
 			bool						LoadFeatureNames();
+			bool						SaveRecordHashesAndFeatureNames();
+			bool						LoadRecordHashesAndFeatureNames(CacheHeader *h);
 
 
 			void						AddDataBaseProperties();
