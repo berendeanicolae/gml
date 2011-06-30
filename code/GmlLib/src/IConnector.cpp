@@ -388,12 +388,12 @@ bool GML::ML::IConnector::OnInitConnectionToCache()
 {
 	if (notifier==NULL)
 	{
-		DEBUGMSG("[%s] Notifier should be set first before executing this function !",ObjectName);
+		DEBUGMSG("[%s] -> Notifier should be set first before executing this function !",ObjectName);
 		return false;
 	}
 	if (DataFileName.Len()==0)
 	{
-		notifier->Error("[%s] Property 'DataFileName' was not set !",ObjectName);
+		notifier->Error("[%s] -> Property 'DataFileName' was not set !",ObjectName);
 		return false;
 	}
 	return Load(DataFileName.GetText());
@@ -545,7 +545,7 @@ bool GML::ML::IConnector::OpeanCacheFile(char *fileName,char *sigName,CacheHeade
 		return false;
 	}
 	if (notifier)
-		notifier->Info("[%s] -> Loading cache to: %s",ObjectName,fileName);
+		notifier->Info("[%s] -> Loading cache from: %s",ObjectName,fileName);
 	if (headerSize<sizeof(CacheHeader))
 	{
 		if (notifier)
@@ -565,13 +565,6 @@ bool GML::ML::IConnector::OpeanCacheFile(char *fileName,char *sigName,CacheHeade
 		return false;
 	}
 	// creez hederul
-	MEMSET(header,0,headerSize);
-	if (GML::Utils::GString::Set(header->MagicName,sigName,31)==false)
-	{
-		if (notifier)
-			notifier->Error("[%s] -> SigName should be at least 31 bytes",ObjectName);
-		return false;
-	}
 	header->MagicName[31]=0;
 	if (GML::Utils::GString::Equals(sigName,header->MagicName)==false)
 	{
