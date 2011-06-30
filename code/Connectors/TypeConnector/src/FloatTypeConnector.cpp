@@ -1,4 +1,4 @@
-#include "Int8TypeConnector.h"
+#include "FloatTypeConnector.h"
 
 FloatTypeConnector::FloatTypeConnector()
 {

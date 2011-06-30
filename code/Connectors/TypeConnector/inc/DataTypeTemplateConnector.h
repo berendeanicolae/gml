@@ -221,8 +221,6 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 		} else {
 			Labels[tr] = (DataType)cValue;
 		}
-		if (cValue==1.0)
-			cPoz[columns.nrFeatures/8] |= (1<<(columns.nrFeatures%8));
 		// adaug si Hash-ul
 		if (StoreRecordHash)
 		{

@@ -1,4 +1,4 @@
-#include "Int8TypeConnector.h"
+#include "Int32TypeConnector.h"
 
 Int32TypeConnector::Int32TypeConnector()
 {
