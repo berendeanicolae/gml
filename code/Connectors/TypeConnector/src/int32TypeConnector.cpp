@@ -2,8 +2,8 @@
 
 Int32TypeConnector::Int32TypeConnector()
 {
-	SigName = "Int32TypeConnectorV1";
-	ObjectName = "Int32TypeConnector";
+	SigName = "TypeInt32ConnectorV1";
+	ObjectName = "TypeInt32Connector";
 }
 
 

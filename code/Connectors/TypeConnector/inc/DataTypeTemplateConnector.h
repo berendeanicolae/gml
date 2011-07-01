@@ -51,7 +51,7 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::AllocMemory(
 		return false;
 	}
 	memset(Data,0,nrRecords*columns.nrFeatures*sizeof(DataType));
-	if (LabelIsBool)
+	if (!LabelIsBool)
 	{
 		if ((Labels = new DataType[nrRecords])==NULL) 
 		{
@@ -184,7 +184,7 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 	notifier->StartProcent("[%s] -> Loading DataBase : ",ObjectName);
 
 	for (tr=0;tr<nrRecords;tr++)
-	{
+	{		
 		// cache
 		if ((tr % CachedRecords)==0)
 		{
@@ -204,7 +204,7 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 		{
 			notifier->Error("[%s] -> Error reading #%d record !",ObjectName,tr);
 			return false;
-		}
+		}		
 		// pentru fiecare record pun valorile
 		for (gr=0;gr<columns.nrFeatures;gr++)
 		{
@@ -212,7 +212,7 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 				return false;
 			cPoz[gr]=(DataType)cValue;
 		}
-		// pun si label-ul
+		// pun si label-ul		
 		if (UpdateDoubleValue(VectPtr,columns.indexLabel,cValue)==false)
 			return false;
 		if (LabelIsBool)
@@ -220,7 +220,7 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 			BSLabel.Set(tr,(cValue!=0));
 		} else {
 			Labels[tr] = (DataType)cValue;
-		}
+		}		
 		// adaug si Hash-ul
 		if (StoreRecordHash)
 		{
@@ -324,12 +324,16 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::Load(char *f
 			if (file.Read(Labels,nrRecords*sizeof(DataType))==false)
 				break;
 		}
-		if (file.Read(Data,nrRecords*columns.nrFeatures)==false)
+		if (file.Read(Data,nrRecords*columns.nrFeatures*sizeof(DataType))==false)
 			break;
 		if (LoadRecordHashesAndFeatureNames(&h)==false)
 			break;
 		CloseCacheFile();
-		dataMemorySize = nrRecords*columns.nrFeatures;
+		dataMemorySize = (UInt64)nrRecords * sizeof(DataType) * columns.nrFeatures;
+		if (LabelIsBool)
+			dataMemorySize += nrRecords/8;
+		else
+			dataMemorySize += nrRecords * sizeof(DataType);
 		return true;		
 	}
 	ClearColumnIndexes();
