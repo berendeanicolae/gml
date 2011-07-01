@@ -1,6 +1,6 @@
 #include "IndexBitConnector.h"
 
-#define CACHE_SIG_NAME "IndexBitConnectorV3"
+#define CACHE_SIG_NAME "IndexBitConnectorV1"
 
 IndexBitConnector::IndexBitConnector()
 {
@@ -16,7 +16,7 @@ bool	IndexBitConnector::AllocMemory(UInt64 memory)
 {
 	// aloca data :D
 	notifier->Info("[%s] -> Compressed method : %d ",ObjectName,Method);
-	if ((Data = new UInt8[memory])==NULL)
+	if ((Data = new UInt8[(UInt32)memory])==NULL)
 	{
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for data !",ObjectName,memory);
 		return false;
@@ -26,7 +26,7 @@ bool	IndexBitConnector::AllocMemory(UInt64 memory)
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for index data !",ObjectName,nrRecords);
 		return false;
 	}
-	memset(Data,0,memory);
+	memset(Data,0,(UInt32)memory);
 	memset(Indexes,0,nrRecords*sizeof(UInt32));
 
 	if (Labels.Create(nrRecords)==false)
@@ -134,8 +134,10 @@ void	IndexBitConnector::ComputeMemory(IndexBitCounter &ibt,UInt64 &memory)
 bool	IndexBitConnector::OnInitConnectionToConnector()
 {
 	UInt32										tr,gr,recMask;	
+	UInt64										cIndex;
 	UInt8										*cPoz;
 	GML::ML::MLRecord							cRec;
+	IndexBitCounter								ibc;
 
 	columns.nrFeatures = conector->GetFeatureCount();
 	nrRecords = conector->GetRecordCount();
@@ -149,9 +151,28 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 		notifier->Error("[%s] -> Unable to crea MLRecord ",ObjectName);
 		return false;
 	}
-	if (AllocMemory(0)==false)
+	memset(&ibc,0,sizeof(ibc));
+	notifier->StartProcent("[%s] -> Analizing DataBase : ",ObjectName);
+	for (tr=0;tr<nrRecords;tr++)
+	{
+		if ((tr % 1000)==0)
+			notifier->SetProcent((double)tr,(double)nrRecords);
+		
+		if (conector->GetRecord(cRec,tr)==false)		
+		{
+			notifier->Error("[%s] -> Error reading #%d record from parent connector!",ObjectName,tr);
+			return false;
+		}
+		// pentru fiecare record pun valorile
+		for (gr=0;gr<columns.nrFeatures;gr++)
+			if (cRec.Features[gr]!=0.0)
+				Update(ibc,gr);	
+	}	
+	notifier->EndProcent();	
+	ComputeMemory(ibc,MemToAlloc);
+	if (AllocMemory(MemToAlloc)==false)
 		return false;
-
+	
 	// sunt exact la inceput
 	cPoz = Data;
 	recMask = 0;
@@ -159,9 +180,10 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 		recMask |= GML::ML::ConnectorFlags::STORE_HASH;
 
 	notifier->StartProcent("[%s] -> Loading Data : ",ObjectName);
-
+	cIndex = 0;
 	for (tr=0;tr<nrRecords;tr++)
 	{
+		Indexes[tr] = (UInt32)cIndex;
 		if ((tr % 1000)==0)
 			notifier->SetProcent((double)tr,(double)nrRecords);
 		
@@ -172,11 +194,15 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 		}
 		// pentru fiecare record pun valorile
 		for (gr=0;gr<columns.nrFeatures;gr++)
-			if (cRec.Features[gr]==1.0)
-				cPoz[gr/8] |= (1<<(gr%8));
+		{
+			if (cRec.Features[gr]!=0.0)
+			{
+				if (AddIndex(gr,cIndex)==false)
+					return false;
+			}
+		}
 		// pun si label-ul
-		if (cRec.Label==1.0)
-			cPoz[columns.nrFeatures/8] |= (1<<(columns.nrFeatures%8));
+		Labels.Set(tr,(bool)(cRec.Label==1));
 		// adaug si Hash-ul
 		if (StoreRecordHash)
 		{
@@ -193,7 +219,13 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 	}	
 	notifier->EndProcent();
 	// all ok , am incarcat datele
-	dataMemorySize = (UInt64)nrRecords * (UInt64)1;
+	if (cIndex!=MemToAlloc)
+	{
+			notifier->Error("[%s] -> Internal Error computing compressed size ... (cIndex=%d,MemToAlloc=%d)",ObjectName,(UInt32)cIndex,(UInt32)MemToAlloc);
+			return false;
+	}
+	// all ok , am incarcat datele
+	dataMemorySize = (UInt64)nrRecords * sizeof(UInt32) + MemToAlloc+Labels.GetAllocated();
 	conector->FreeMLRecord(cRec);
 	return true;
 
@@ -203,7 +235,6 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 	UInt32										tr,gr;
 	UInt64										cIndex;
 	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
-	UInt8										*cPoz;
 	GML::Utils::GString							tempStr;
 	GML::DB::RecordHash							cHash;
 	double										cValue;
@@ -268,7 +299,7 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 
 	for (tr=0;tr<nrRecords;tr++)
 	{
-		Indexes[tr] = cIndex;
+		Indexes[tr] = (UInt32)cIndex;
 		if ((tr % CachedRecords)==0)
 		{
 			if (tr+CachedRecords<nrRecords)
@@ -331,21 +362,29 @@ bool	IndexBitConnector::Close()
 {
 	if (Data!=NULL)
 		delete Data;
+	if (Indexes!=NULL)
+		delete Indexes;
 	Data = NULL;
+	Indexes = NULL;
 	return true;
 }
 bool	IndexBitConnector::Save(char *fileName)
 {
-	GML::ML::CacheHeader	h;
+	IndexBitConnectorHeader		h;
 
 	while (true)
 	{
-		if (CreateCacheFile(fileName,CACHE_SIG_NAME,&h,sizeof(h))==false)
+		if (CreateCacheFile(fileName,CACHE_SIG_NAME,&h,sizeof(h),Method)==false)
 			break;
+		h.MemToAlloc = MemToAlloc;
 		if (file.Write(&h,sizeof(h))==false)
 			break;
-		//if (file.Write(Data,nrRecords*Align8Size)==false)
-		//	break;
+		if (file.Write(Data,(UInt32)MemToAlloc)==false)
+			break;
+		if (file.Write(Indexes,sizeof(UInt32)*nrRecords)==false)
+			break;
+		if (file.Write(Labels.GetData(),Labels.GetAllocated())==false)
+			break;
 		if (SaveRecordHashesAndFeatureNames()==false)
 			break;
 		CloseCacheFile();
@@ -358,24 +397,34 @@ bool	IndexBitConnector::Save(char *fileName)
 }
 bool	IndexBitConnector::Load(char *fileName)
 {
-	GML::ML::CacheHeader	h;
+	IndexBitConnectorHeader	h;
 	while (true)
 	{
 		if (OpeanCacheFile(fileName,CACHE_SIG_NAME,&h,sizeof(h))==false)
 			break;
 		if (Data!=NULL)
 			delete Data;
-		//if ((Data = new UInt8[nrRecords*Align8Size])==NULL)
-		//{
-		//	notifier->Error("[%s] -> Unable to allocate %ud bytes for data indexes !",ObjectName,nrRecords*Align8Size);
-		//	break;
-		//}
-		//if (file.Read(Data,nrRecords*Align8Size)==false)
-		//	break;
+		if (Indexes!=NULL)
+			delete Indexes;
+		Data = NULL;
+		Indexes = NULL;
+		MemToAlloc = h.MemToAlloc;
+		Method = h.Flags; 
+		if (AllocMemory(h.MemToAlloc)==false)
+		{
+			notifier->Error("[%s] -> Unable to allocate space for cache initialization",ObjectName);
+			break;
+		}
+		if (file.Read(Data,(UInt32)MemToAlloc)==false)
+			break;
+		if (file.Read(Indexes,sizeof(UInt32)*nrRecords)==false)
+			break;
+		if (file.Read(Labels.GetData(),Labels.GetAllocated())==false)
+			break;
 		if (LoadRecordHashesAndFeatureNames(&h)==false)
 			break;
 		CloseCacheFile();
-		//dataMemorySize = nrRecords*Align8Size;
+		dataMemorySize = (UInt64)nrRecords * sizeof(UInt32) + MemToAlloc+Labels.GetAllocated();
 		return true;		
 	}
 	ClearColumnIndexes();
@@ -399,7 +448,7 @@ bool	IndexBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 
 	cPoz = &Data[Indexes[index]];
 	if (index+1==nrRecords)
 	{
-		sz = MemToAlloc -Indexes[index];
+		sz = (UInt32)MemToAlloc -Indexes[index];
 	} else {
 		sz = Indexes[index+1]-Indexes[index];
 	}
