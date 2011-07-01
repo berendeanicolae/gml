@@ -686,7 +686,7 @@ bool GML::ML::IConnector::LoadFeatureNames()
 			notifier->Error("[%s] -> Unable to alloc %d bytes for features name entries !",ObjectName,sz);
 		return false;
 	}
-	// citesc
+	// citesc	
 	while (true)
 	{
 		if (file.Read(indexFeatureNames.GetPtrToObject(0),columns.nrFeatures * sizeof(UInt32))==false)

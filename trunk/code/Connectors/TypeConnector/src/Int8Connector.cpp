@@ -2,8 +2,8 @@
 
 Int8TypeConnector::Int8TypeConnector()
 {
-	SigName = "Int8TypeConnectorV1";
-	ObjectName = "Int8TypeConnector";
+	SigName = "TypeInt8ConnectorV1";
+	ObjectName = "TypeInt8Connector";
 }
 
 

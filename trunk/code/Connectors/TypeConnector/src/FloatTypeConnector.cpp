@@ -2,8 +2,8 @@
 
 FloatTypeConnector::FloatTypeConnector()
 {
-	SigName = "FloatTypeConnectorV1";
-	ObjectName = "FloatTypeConnector";
+	SigName = "TypeFloatConnectorV1";
+	ObjectName = "TypeFloatConnector";
 }
 
 
