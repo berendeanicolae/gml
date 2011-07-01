@@ -5,6 +5,7 @@
 IndexBitConnector::IndexBitConnector()
 {
 	Data = NULL;
+	Indexes = NULL;
 	ObjectName = "IndexBitConnector";
 
 	AddDataBaseProperties();
@@ -410,6 +411,7 @@ bool	IndexBitConnector::Load(char *fileName)
 		Indexes = NULL;
 		MemToAlloc = h.MemToAlloc;
 		Method = h.Flags; 
+	
 		if (AllocMemory(h.MemToAlloc)==false)
 		{
 			notifier->Error("[%s] -> Unable to allocate space for cache initialization",ObjectName);
