@@ -259,17 +259,26 @@ bool	BitConnector::CreateMlRecord (GML::ML::MLRecord &record)
 bool	BitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask)
 {
 	UInt8	*cPoz = &Data[index*Align8Size];
+	UInt8	*ptr;
 	UInt32	tr;
+	UInt8	mask;
+	double	*feat = &record.Features[0];
 
 	if (index>=nrRecords)
 		return false;
-
-	for (tr=0;tr<columns.nrFeatures;tr++)
+	
+	for (tr=0,ptr=cPoz,mask=1;tr<columns.nrFeatures;tr++,feat++)
 	{
-		if ((cPoz[tr/8] & (1<<(tr%8)))!=0)
-			record.Features[tr]=1.0;
+		if (((*ptr) & mask)!=0)
+			(*feat)=1.0;
 		else
-			record.Features[tr]=0;
+			(*feat)=0.0;
+		mask <<= 1;
+		if (mask==0)
+		{
+			mask = 1;
+			ptr++;
+		}
 	}
 	// pun si label-ul
 	if ((cPoz[columns.nrFeatures/8] & (1<<(columns.nrFeatures%8)))!=0)
