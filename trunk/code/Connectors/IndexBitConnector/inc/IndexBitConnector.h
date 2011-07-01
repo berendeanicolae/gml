@@ -11,7 +11,10 @@ struct IndexBitCounter
 	UInt32		count253BaseInt16;	
 	UInt32		maxIndex;
 };
-
+struct IndexBitConnectorHeader: public GML::ML::CacheHeader
+{
+	UInt64		MemToAlloc;
+};
 class IndexBitConnector: public GML::ML::IConnector
 {
 	enum
