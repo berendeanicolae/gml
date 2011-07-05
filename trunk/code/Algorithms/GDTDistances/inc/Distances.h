@@ -18,7 +18,8 @@ struct NodPoint
 struct ClosestPoints
 {
 	double		dist;
-	int			firstPoints[2];
+	//int			firstPoints[2];
+	int			*firstPoints;
 	NodPoint	*prim;
 	int			count;
 };
@@ -42,6 +43,7 @@ class Distances: public GenericDistAlgorithm
 	bool							MergeDistanceTableFiles;
 	bool							UseWeightsForFeatures;
 	UInt32							DistanceFunction;
+	UInt32							ClosestPointArrayLen;
 	GML::ML::MLRecord				MainRecord;
 
 	Plan							plan;
@@ -63,7 +65,8 @@ class Distances: public GenericDistAlgorithm
 	bool							ExportNewPair(GML::Utils::File *f, char *fileName, UInt32 posId, UInt32 negID, double dist);
 	bool							MergeDistances();
 	bool							LoadPlan(char *fileName,Plan &p);
-	bool							SavePlanDistances();		
+	bool							SavePlanDistances();
+	bool							InitClosestPointsArray(ClosestPoints **toInit, int len);		
 public:
 	Distances();
 	bool							OnInitThreadData(GML::Algorithm::MLThreadData &thData);
