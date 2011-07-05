@@ -361,23 +361,19 @@ bool Distances::ComputeClosestPositiveNegative(GML::Algorithm::MLThreadData &thD
 	double				dist;
 
 	positiveCount = indexesPozitive.Len();
-	//negativeCount = indexesNegative.Len();
+	negativeCount = indexesNegative.Len();
 	if (thData.ThreadID==0)
 		notif->StartProcent("[%s] -> Computing ... ",ObjectName);
 	
 	for (i=thData.ThreadID; i<positiveCount; i+=threadsCount)
-	{						
-		//negativePoints[i].dist = con->GetFeatureCount();
-		//negativePoints[i].count = 0;
-		negativeCount = indexesNegative.Len();
+	{										
 		idxPoz = indexesPozitive.Get(i);
 		if (con->GetRecord(thData.Record,idxPoz)==false)
 		{
 			notif->Error("[%s] -> Unable to read record #%d",ObjectName,idxPoz);
 			return false;
 		}
-		//for (j=0; j<negativeCount; j++)
-		for (j=0; negativeCount--; j++)
+		for (j=0; j<negativeCount; j++)		
 		{
 			idxNeg = indexesNegative.Get(j);
 			if (con->GetRecord(dt->SetRec,idxNeg)==false)
@@ -389,13 +385,11 @@ bool Distances::ComputeClosestPositiveNegative(GML::Algorithm::MLThreadData &thD
 			if (dist < negativePoints[i].dist)		
 			{
 				negativePoints[i].dist = dist;
-				negativePoints[i].firstPoints[0] = j;
-				//negativePoints[i].firstPoints[1] = -1;				
+				negativePoints[i].firstPoints[0] = j;				
 				if (negativePoints[i].count > ClosestPointArrayLen)								
 					removeAllNodPoints(&(negativePoints[i].prim));					
 				negativePoints[i].count = 1;
-			//}else if (dist == negativePoints[i].dist)
-			}else if (!(dist - negativePoints[i].dist))
+			}else if (dist == negativePoints[i].dist)			
 			{
 				if (negativePoints[i].count < ClosestPointArrayLen)				
 					negativePoints[i].firstPoints[negativePoints[i].count++] = j;
@@ -418,7 +412,6 @@ bool Distances::ComputeClosestPositiveNegative(GML::Algorithm::MLThreadData &thD
 
 	return true;
 }
-
 bool Distances::ExportNewPair(GML::Utils::File *f, char *fileName, UInt32 cleanId, UInt32 malID, double dist)
 {
 	GML::Utils::GString		temp, hashTmp;
@@ -466,14 +459,12 @@ bool Distances::UpdateNegativePositive(UINT32 malId, UINT32 cleanId, double dist
 	if (dist < positivePoints[cleanId].dist)
 	{
 		positivePoints[cleanId].dist = dist;
-		positivePoints[cleanId].firstPoints[0] = malId;
-		//positivePoints[cleanId].firstPoints[1] = -1;
+		positivePoints[cleanId].firstPoints[0] = malId;		
 		if (positivePoints[cleanId].count > ClosestPointArrayLen)								
 			removeAllNodPoints(&(positivePoints[cleanId].prim));									
 		positivePoints[cleanId].count = 1;
 		return true;
-	//} else if (dist == positivePoints[cleanId].dist)
-	} else if (!(dist - positivePoints[cleanId].dist))
+	} else if (dist == positivePoints[cleanId].dist)	
 	{
 		if (positivePoints[cleanId].count < ClosestPointArrayLen)
 		{
@@ -499,24 +490,17 @@ bool Distances::MergeDistancesClosestPositiveNegative()
 	notif->Info("[%s] -> Merging distances...",ObjectName);
 
 	positiveCount = indexesPozitive.Len();
-	//for (i=0; i<positiveCount; i++)
-	for (i=0; positiveCount--; i++)
-	{
-		//for (j=0; j<2; j++)
-		//	if (negativePoints[i].firstPoints[j] != -1)
-		for (j=0; negativePoints[i].count-- && j<ClosestPointArrayLen; j++)
+	for (i=0; i<positiveCount; i++)	
+	{		
+		for (j=0; j<negativePoints[i].count && j<ClosestPointArrayLen; j++)
 			if (!UpdateNegativePositive(i, negativePoints[i].firstPoints[j], negativePoints[i].dist))
 			{
 				notif->Error("[%s] -> Unable to append to set closest malware for clean:#%d",ObjectName,indexesNegative.Get(negativePoints[i].firstPoints[j]));
 				return false;
 			}
-		
-		//if(!negativePoints[i].count)
-		//	continue;
-
+				
 		NodPoint *p = negativePoints[i].prim;
-		while(p!=NULL)  
-		//while(negativePoints[i].count--)
+		while(p!=NULL)  		
 		{
 			if (!UpdateNegativePositive(i, p->index, negativePoints[i].dist))
 				{
@@ -543,10 +527,9 @@ bool Distances::SaveNegativePositive(char *fileName)
 	negativeCount = indexesNegative.Len();	
 	for (i=0; i<negativeCount; i++)
 	{
-		if(positivePoints[i].count == -1)
+		if(positivePoints[i].count == 0)
 			continue;
-		//for (j=0; j<ClosestPointArrayLen && j<positivePoints[i].count; j++)
-		for (j=0; j<ClosestPointArrayLen && positivePoints[i].count--; j++)
+		for (j=0; j<ClosestPointArrayLen && j<positivePoints[i].count; j++)		
 		{
 			if (ExportNewPair(&f, fileName, i, positivePoints[i].firstPoints[j], positivePoints[i].dist) == false)
 			{				
@@ -556,10 +539,7 @@ bool Distances::SaveNegativePositive(char *fileName)
 			ptr[indexesNegative.Get(i)] = 1;
 			ptr[indexesPozitive.Get(positivePoints[i].firstPoints[j])] = 1;
 		}
-
-		//if(!positivePoints[i].count)
-		//	continue;
-
+		
 		NodPoint *p = positivePoints[i].prim;
 		while(p!=NULL)
 		{
@@ -807,24 +787,10 @@ bool Distances::OnCompute()
 					return false;
 			}
 			return true;
-		case METHOD_ClosestNegativePositive:
-			/*negativePoints = new ClosestPoints[indexesPozitive.Len()];
-			memset(negativePoints, -1, indexesPozitive.Len()*sizeof(ClosestPoints));
-			for (int i=0; i<indexesPozitive.Len(); i++)
-				negativePoints[i].prim = NULL;
-			*/
+		case METHOD_ClosestNegativePositive:			
 			InitClosestPointsArray(&negativePoints, indexesPozitive.Len());
 			ExecuteParalelCommand(Method);
-			InitClosestPointsArray(&positivePoints, indexesNegative.Len());
-			/*
-			positivePoints = new ClosestPoints[indexesNegative.Len()];
-			memset(positivePoints, -1, indexesNegative.Len()*sizeof(ClosestPoints));
-			for (int i=0; i<indexesNegative.Len(); i++)
-			{ 
-				positivePoints[i].prim = NULL;
-				positivePoints[i].dist = FeatCount;
-			}
-			*/			
+			InitClosestPointsArray(&positivePoints, indexesNegative.Len());						
 			MergeDistancesClosestPositiveNegative();			
 			SaveNegativePositive(DistanceTableFileName.GetText());
 			SaveHashResult(HashFileName.GetText(),HashFileType,RecordsStatus);
