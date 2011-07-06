@@ -5,8 +5,10 @@
 
 struct FeaturesInfo
 {
-	UInt32 PozitiveCount;
-	UInt32 NegativeCount;
+	UInt32	Index;
+	UInt32	PozitiveCount;
+	UInt32	NegativeCount;
+	double	Score;
 };
 
 struct BDTThreadData
@@ -30,7 +32,7 @@ class BinaryDecisionTree: public GML::Algorithm::IMLAlgorithm
 	bool					OnInitThreadData(GML::Algorithm::MLThreadData &thData);
 
 	bool					ComputeFeatureStats(GML::Algorithm::MLThreadData &thData);
-	bool					ComputeFeaturesStatistics();
+	bool					ComputeFeaturesStatistics(GML::Utils::GTFVector<UInt32> *Indexes,BDTThreadData	&all);
 
 public:
 	BinaryDecisionTree();
