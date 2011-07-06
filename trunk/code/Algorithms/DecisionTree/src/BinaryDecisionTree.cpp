@@ -10,6 +10,8 @@ void BDTThreadData::Clear()
 	{
 		FeaturesCount[tr].NegativeCount = 0;
 		FeaturesCount[tr].PozitiveCount = 0;
+		FeaturesCount[tr].Score = 0.0;
+		FeaturesCount[tr].Index = tr;
 	}
 }
 void BDTThreadData::Add(BDTThreadData &obj)
@@ -24,6 +26,7 @@ void BDTThreadData::Add(BDTThreadData &obj)
 }
 bool BDTThreadData::Create(UInt32 nrFeatures)
 {
+	IndexRecords = NULL;
 	if (FeaturesCount.Create(nrFeatures,true)==false)
 		return false;
 	Clear();
@@ -77,7 +80,7 @@ bool BinaryDecisionTree::ComputeFeatureStats(GML::Algorithm::MLThreadData &thDat
 	BDTThreadData	*td = (BDTThreadData *)thData.Context;
 
 	nrFeat = con->GetFeatureCount();
-	nrRec = con->GetRecordCount();
+	nrRec = td->IndexRecords->Len();
 
 	// clear the data
 	td->Clear();
@@ -86,9 +89,9 @@ bool BinaryDecisionTree::ComputeFeatureStats(GML::Algorithm::MLThreadData &thDat
 		notif->StartProcent("[%s] -> Analizing features ... ",ObjectName);
 	for (tr=thData.ThreadID;(tr<nrRec) && (StopAlgorithm==false);tr+=threadsCount)
 	{
-		if (con->GetRecord(thData.Record,tr)==false)
+		if (con->GetRecord(thData.Record,(*td->IndexRecords)[tr])==false)
 		{
-			notif->Error("[%s] -> Unable to read record %d",ObjectName,tr);
+			notif->Error("[%s] -> Unable to read record %d",ObjectName,(*td->IndexRecords)[tr]);
 			return false;
 		}
 		if (thData.Record.Label==1)
@@ -114,11 +117,17 @@ bool BinaryDecisionTree::ComputeFeatureStats(GML::Algorithm::MLThreadData &thDat
 		notif->EndProcent();
 	return true;
 }
-bool BinaryDecisionTree::ComputeFeaturesStatistics()
+bool BinaryDecisionTree::ComputeFeaturesStatistics(GML::Utils::GTFVector<UInt32> *Indexes,BDTThreadData	&all)
 {
-	BDTThreadData	all;
+	
 	BDTThreadData	*curent;
+	UInt32			tr;
 
+	for (tr=0;tr<threadsCount;tr++)
+	{
+		curent = (BDTThreadData *)ThData[tr].Context;
+		curent->IndexRecords = Indexes;
+	}
 	if (all.Create(con->GetFeatureCount())==false)
 	{
 		notif->Error("[%s] -> Unable to create feature stats buffer !");
