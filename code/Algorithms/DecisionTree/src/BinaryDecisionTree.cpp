@@ -32,6 +32,14 @@ bool BDTThreadData::Create(UInt32 nrFeatures)
 	Clear();
 	return true;
 }
+int FeatureCountCompare(FeaturesInfo &f1,FeaturesInfo &f2)
+{
+	if (f1.Score>f2.Score)
+		return 1;
+	if (f1.Score<f2.Score)
+		return -1;
+	return 0;
+}
 //=============================================================================
 
 
@@ -142,7 +150,16 @@ bool BinaryDecisionTree::ComputeFeaturesStatistics(GML::Utils::GTFVector<UInt32>
 	// in all am toate
 	return true;
 }
+void BinaryDecisionTree::ComputeScore(BDTThreadData	&all,double (*fnComputeScore)(FeaturesInfo &fi,UInt32 totalPozitive,UInt32 totalNegative))
+{
+	UInt32	tr;
 
+	for (tr=0;tr<all.FeaturesCount.Len();tr++)
+	{
+		all.FeaturesCount[tr].Score = fnComputeScore(all.FeaturesCount[tr],all.totalPozitive,all.totalNegative);
+	}
+	all.FeaturesCount.Sort(FeatureCountCompare);
+}
 
 void BinaryDecisionTree::OnExecute()
 {
