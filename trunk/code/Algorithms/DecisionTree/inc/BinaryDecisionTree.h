@@ -33,6 +33,7 @@ class BinaryDecisionTree: public GML::Algorithm::IMLAlgorithm
 
 	bool					ComputeFeatureStats(GML::Algorithm::MLThreadData &thData);
 	bool					ComputeFeaturesStatistics(GML::Utils::GTFVector<UInt32> *Indexes,BDTThreadData	&all);
+	void					ComputeScore(BDTThreadData	&all,double (*fnComputeScore)(FeaturesInfo &fi,UInt32 totalPozitive,UInt32 totalNegative));
 
 public:
 	BinaryDecisionTree();
