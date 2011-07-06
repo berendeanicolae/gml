@@ -48,7 +48,7 @@ BinaryDecisionTree::BinaryDecisionTree()
 	ObjectName = "BinaryDecisionTree";
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Train!!");
-	
+	AddHashSaveProperties();	
 }
 
 void BinaryDecisionTree::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand)
@@ -80,6 +80,16 @@ bool BinaryDecisionTree::Init()
 		return false;
 	if (InitThreads()==false)
 		return false;
+	if (con->CreateMlRecord(MainRecord)==false)
+	{
+		notif->Error("[%s] -> Unable to create the main records !",ObjectName);
+		return false;
+	}
+	if (RecordsStatus.Create(con->GetRecordCount(),true)==false)
+	{
+		notif->Error("[%s] -> Unable to create vector information for records !",ObjectName);
+		return false;
+	}
 	return true;
 }
 bool BinaryDecisionTree::ComputeFeatureStats(GML::Algorithm::MLThreadData &thData)
@@ -160,7 +170,27 @@ void BinaryDecisionTree::ComputeScore(BDTThreadData	&all,double (*fnComputeScore
 	}
 	all.FeaturesCount.Sort(FeatureCountCompare);
 }
+bool BinaryDecisionTree::SaveHashesForFeature(char *fileName,GML::Utils::GTFVector<UInt32> *Indexes,UInt32 featIndex,bool featureValue)
+{
+	UInt32	idx,tr;
 
+	for (tr=0;tr<con->GetRecordCount();tr++)
+		RecordsStatus[tr]=0;
+	for (tr=0;tr<Indexes->Len();tr++)
+	{
+		idx = (*Indexes)[tr];
+		if (con->GetRecord(MainRecord,idx)==false)
+		{
+			notif->Error("[%s] -> Unable to read record %d",ObjectName,idx);
+			return false;
+		}
+		if ((MainRecord.Features[featIndex] == 1) && (featureValue))
+			RecordsStatus[idx] = 1;
+		if ((MainRecord.Features[featIndex] != 1) && (!featureValue))
+			RecordsStatus[idx] = 1;
+	}
+	return SaveHashResult(fileName,HashFileType,RecordsStatus);	
+}
 void BinaryDecisionTree::OnExecute()
 {
 	if (Command==1)	//Train
