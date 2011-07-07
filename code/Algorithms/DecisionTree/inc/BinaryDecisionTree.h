@@ -27,7 +27,8 @@ class BinaryDecisionTree: public GML::Algorithm::IMLAlgorithm
 {
 	enum {
 		COMMAND_NONE = 0,
-		COMMAND_TRAIN
+		COMMAND_TRAIN,
+		COMMAD_SPLIT_CUSTOM_FEAT
 	};
 
 	enum {
@@ -39,6 +40,7 @@ class BinaryDecisionTree: public GML::Algorithm::IMLAlgorithm
 	GML::ML::MLRecord				MainRecord;
 	GML::Utils::GTFVector<UInt8>	RecordsStatus;
 	GML::Utils::GString				HashBaseFileName;
+	GML::Utils::GString				CustomFeatName;
 	UInt32							ComputeScoreMethod;
 
 
@@ -49,8 +51,10 @@ class BinaryDecisionTree: public GML::Algorithm::IMLAlgorithm
 	bool					ComputeFeaturesStatistics(GML::Utils::GTFVector<UInt32> *Indexes,BDTThreadData	&all);
 	void					ComputeScore(BDTThreadData	&all,double (*fnComputeScore)(FeaturesInfo &fi,UInt32 totalPozitive,UInt32 totalNegative));
 	bool					SaveHashesForFeature(char *fileName,GML::Utils::GTFVector<UInt32> *Indexes,UInt32 featIndex,bool featureValue);
+	bool					CreateIndexes(GML::Utils::GTFVector<UInt32> *Indexes);
 	bool					PerformTrain();
 	void					PerformComputeScore(BDTThreadData	&all);
+	bool					PerformCustomFeatureSplit();
 
 public:
 	BinaryDecisionTree();

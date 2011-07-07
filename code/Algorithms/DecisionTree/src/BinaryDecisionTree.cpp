@@ -40,6 +40,7 @@ int FeatureCountCompare(FeaturesInfo &f1,FeaturesInfo &f2)
 		return -1;
 	return 0;
 }
+
 double log2(double x)
 {
 	if (x==0) return 0;
@@ -52,6 +53,7 @@ double entropy(double v_true,double v_false)
 	double v2=((double)v_false)/((double)(v_true+v_false));
 	return -(v1*log2(v1)) - (v2*log2(v2));
 }
+
 double Compute_InformationGain(FeaturesInfo &fi, UInt32 totalPozitive, UInt32 totalNegative)
 {
 	double e, e1, e2;
@@ -76,8 +78,9 @@ BinaryDecisionTree::BinaryDecisionTree()
 {
 	ObjectName = "BinaryDecisionTree";
 
-	SetPropertyMetaData("Command","!!LIST:None=0,Train!!");
-	LinkPropertyToString("HashBaseFileName", HashBaseFileName, "BaseName for the file the hashes will be saved in");
+	SetPropertyMetaData("Command","!!LIST:None=0,Train,CustomFeatSplit!!");
+	LinkPropertyToString("HashBaseFileName", HashBaseFileName, "", "BaseName for the file the hashes will be saved in");
+	LinkPropertyToString("CustomFeatName", CustomFeatName, "", "FeatureName to split records by (name or #index)");		
 	LinkPropertyToUInt32("ComputeScoreMethod",ComputeScoreMethod,0,"!!LIST:InformationGain=0,SumPosCountNegCount,FAQ!!");
 	AddHashSaveProperties();	
 }
@@ -227,6 +230,21 @@ bool BinaryDecisionTree::SaveHashesForFeature(char *fileName,GML::Utils::GTFVect
 	}
 	return SaveHashResult(fileName,HashFileType,RecordsStatus);	
 }
+bool BinaryDecisionTree::CreateIndexes(GML::Utils::GTFVector<UInt32> *Indexes)
+{
+	UInt32	recordsCount;	
+
+	recordsCount = con->GetRecordCount();
+	if (Indexes->Create(recordsCount)==false)
+	{
+		notif->Error("[%s] -> Unable to alloc %d entries for indexes",ObjectName, recordsCount);
+		return false;
+	}
+	for (int i=0; i<recordsCount; i++)
+		Indexes->Push(i);
+	return true;
+}
+
 void BinaryDecisionTree::PerformComputeScore(BDTThreadData	&all)
 {
 	switch(ComputeScoreMethod)
@@ -244,20 +262,16 @@ void BinaryDecisionTree::PerformComputeScore(BDTThreadData	&all)
 }
 bool BinaryDecisionTree::PerformTrain()
 {
-	GML::Utils::GTFVector<UInt32>	indexes;
-	UInt32							recordsCount;	
+	GML::Utils::GTFVector<UInt32>	indexes;	
 	BDTThreadData					bdtthreadData;
 	GML::Utils::GString				fileName;
 	GML::Utils::GString				featName;
-
-	recordsCount = con->GetRecordCount();
-	if (indexes.Create(recordsCount)==false)
+	
+	if (CreateIndexes(&indexes) == false)
 	{
-		notif->Error("[%s] -> Unable to alloc %d entries for indexes",ObjectName, recordsCount);
-		return false;
+			notif->Error("[%s] -> Something went wrong while creating indexes!!!",ObjectName);
+			return false;
 	}
-	for (int i=0; i<recordsCount; i++)
-		indexes.Push(i);
 	ComputeFeaturesStatistics(&indexes, bdtthreadData);
 	PerformComputeScore(bdtthreadData);
 
@@ -284,6 +298,80 @@ bool BinaryDecisionTree::PerformTrain()
 	SaveHashesForFeature(fileName.GetText(), &indexes, bdtthreadData.FeaturesCount[0].Index, false);
 	return true;
 }
+bool BinaryDecisionTree::PerformCustomFeatureSplit()
+{
+	GML::Utils::GTFVector<UInt32>	indexes;
+	UInt32							featIndex;
+	GML::Utils::GString				fileName;
+	GML::Utils::GString				featName;
+
+	if (CustomFeatName.Equals(""))
+	{
+		notif->Error("[%s] -> Must provide CustomFeatureName!!!",ObjectName);
+		return false;
+	}
+	if (CreateIndexes(&indexes) == false)
+	{
+			notif->Error("[%s] -> Something went wrong while creating indexes!!!",ObjectName);
+			return false;
+	}	
+	if (CustomFeatName.StartsWith("#"))	// avem indexul feature`ului
+	{
+		if (!CustomFeatName.Replace("#", ""));
+		{
+		//	notif->Error("[%s] -> Failed to extract feature`s index!!!",ObjectName);
+//			return false;
+		}
+		if (!CustomFeatName.ConvertToUInt32(&featIndex, 10)) 			
+		{
+			notif->Error("[%s] -> Failed to extract feature`s index!!!",ObjectName);
+			return false;
+		}
+		if (featIndex<0 || featIndex>=con->GetFeatureCount())
+		{
+			notif->Error("[%s] -> wrong feature`s index. Must be inside [0,%d]!!!",ObjectName, con->GetFeatureCount());
+			return false;
+		}
+		if (con->GetFeatureName(featName, featIndex) == false)
+		{
+			notif->Error("[%s] -> Unable to get feature name for feature with index: %d",ObjectName, featIndex);
+			return false;
+		}		
+		fileName.SetFormated("%s[%s][%d]_1",HashBaseFileName.GetText(),featName.GetText(), featIndex);
+		SaveHashesForFeature(fileName.GetText(), &indexes, featIndex, true);	
+		fileName.SetFormated("%s[%s][%d]_0",HashBaseFileName.GetText(),featName.GetText(), featIndex);
+		SaveHashesForFeature(fileName.GetText(), &indexes, featIndex, false);
+		return true;
+	} else 
+	{
+		for (featIndex=0; featIndex<con->GetFeatureCount(); featIndex++)
+		{
+			if (con->GetFeatureName(featName, featIndex) == false)
+			{
+				notif->Error("[%s] -> Unable to get feature name for feature with index: %d",ObjectName, featIndex);
+				return false;
+			}	
+			if (featName.Equals(CustomFeatName))	// am gasit indexul pentru feature`ul dorit
+			{
+				if (featIndex<0 || featIndex>=con->GetFeatureCount())
+				{
+					notif->Error("[%s] -> wrong feature`s index. Must be inside [0,%d]!!!",ObjectName, con->GetFeatureCount());
+					return false;
+				}				
+				fileName.SetFormated("%s[%s][%d]_1",HashBaseFileName.GetText(),featName.GetText(), featIndex);
+				SaveHashesForFeature(fileName.GetText(), &indexes, featIndex, true);	
+				fileName.SetFormated("%s[%s][%d]_0",HashBaseFileName.GetText(),featName.GetText(), featIndex);
+				SaveHashesForFeature(fileName.GetText(), &indexes, featIndex, false);
+				return true;
+			}
+		}
+		notif->Error("[%s] -> Wrong FeatureName; [%s] couldn`t be found...",ObjectName, CustomFeatName.GetText());
+		return false;
+	}
+
+	return true;
+}
+
 void BinaryDecisionTree::OnExecute()
 {
 	switch (Command)
@@ -293,6 +381,9 @@ void BinaryDecisionTree::OnExecute()
 			return;
 		case COMMAND_TRAIN:
 			PerformTrain();
+			return;
+		case COMMAD_SPLIT_CUSTOM_FEAT:
+			PerformCustomFeatureSplit();
 			return;
 	};
 	notif->Error("[%s] -> Unkwnown command ID : %d",ObjectName,Command);
