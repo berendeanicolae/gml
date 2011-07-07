@@ -62,6 +62,7 @@ namespace GML
 			bool						UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double &value);
 			bool						UpdateHashValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,GML::DB::RecordHash &recHash);
 			bool						UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
+			bool						UpdateFeaturesNameFromConnector();
 			bool						QueryRecordsCount(char *CountQueryStatement,UInt32 &recordsCount);
 			bool						UpdateColumnInformations(char *QueryStatement);
 			bool						AddColumnName(char *name);

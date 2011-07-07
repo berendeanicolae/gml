@@ -142,6 +142,8 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 
 	columns.nrFeatures = conector->GetFeatureCount();
 	nrRecords = conector->GetRecordCount();
+	if (UpdateFeaturesNameFromConnector()==false)
+		return false;
 	if (nrRecords==0) 
 	{
 		notifier->Error("[%s] -> I received 0 records from the parent connector",ObjectName);
@@ -156,7 +158,7 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 	notifier->StartProcent("[%s] -> Analizing DataBase : ",ObjectName);
 	for (tr=0;tr<nrRecords;tr++)
 	{
-		if ((tr % 1000)==0)
+		if ((tr % 10000)==0)
 			notifier->SetProcent((double)tr,(double)nrRecords);
 		
 		if (conector->GetRecord(cRec,tr)==false)		
