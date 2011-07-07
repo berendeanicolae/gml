@@ -85,6 +85,8 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 
 	columns.nrFeatures = conector->GetFeatureCount();
 	nrRecords = conector->GetRecordCount();
+	if (UpdateFeaturesNameFromConnector()==false)
+		return false;
 	if (nrRecords==0) 
 	{
 		notifier->Error("[%s] -> I received 0 records from the parent connector",ObjectName);
