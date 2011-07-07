@@ -317,10 +317,10 @@ bool BinaryDecisionTree::PerformCustomFeatureSplit()
 	}	
 	if (CustomFeatName.StartsWith("#"))	// avem indexul feature`ului
 	{
-		if (!CustomFeatName.Replace("#", ""));
+		if (!CustomFeatName.Replace("#", ""))
 		{
-		//	notif->Error("[%s] -> Failed to extract feature`s index!!!",ObjectName);
-//			return false;
+			notif->Error("[%s] -> Failed to extract feature`s index!!!",ObjectName);
+			return false;
 		}
 		if (!CustomFeatName.ConvertToUInt32(&featIndex, 10)) 			
 		{
