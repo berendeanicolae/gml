@@ -72,6 +72,41 @@ bool GML::ML::IConnector::AddColumnName(char *name)
 	}
 	return true;
 }
+bool GML::ML::IConnector::UpdateFeaturesNameFromConnector()
+{
+	UInt32					tr;
+	GML::Utils::GString		featName;
+
+	indexFeatureNames.DeleteAll();
+	dataFeaturesNames.DeleteAll();
+	if (StoreFeaturesName==false)
+		return true;
+	if (conector==NULL)
+	{
+		notifier->Error("[%s] -> NULL conector , exiting ...",ObjectName);
+		return false;
+	}
+	if (columns.nrFeatures != conector->GetFeatureCount())
+	{
+		notifier->Error("[%s] -> Invalid number of features (%d) , expecting (%d)",ObjectName,columns.nrFeatures,conector->GetFeatureCount());
+		return false;
+	}
+	
+	for (tr=0;tr<columns.nrFeatures;tr++)
+	{
+		if (conector->GetFeatureName(featName,tr)==false)
+		{
+			notifier->Error("[%s] -> Unable to read feature #%d",ObjectName,tr);
+			return false;
+		}
+		if (AddColumnName(featName.GetText())==false)			
+		{
+			notifier->Error("[%s] -> Unable to add column (%s)",ObjectName,featName.GetText());
+			return false;
+		}
+	}
+	return true;
+}
 bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
 	UInt32				tr,cPoz;
