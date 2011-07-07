@@ -2,6 +2,7 @@
 
 #include "Compat.h"
 #include "GString.h"
+#include "MD5.h"
 
 namespace GML
 {
@@ -42,6 +43,8 @@ namespace GML
 			bool	ToString(GML::Utils::GString &str);
 			void	Copy(RecordHash &rHash);
 			void	Reset();
+			bool	ComputeHashForBuffer(void *buffer,unsigned int bufferSize);
+			bool	ComputeHashForText(char *text);
 		};
 		struct EXPORT DBRecord 
 		{
