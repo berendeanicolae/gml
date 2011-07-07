@@ -40,14 +40,35 @@ int FeatureCountCompare(FeaturesInfo &f1,FeaturesInfo &f2)
 		return -1;
 	return 0;
 }
+double log2(double x)
+{
+	if (x==0) return 0;
+	return log10(x) / (log10((double)2));
+}
+double entropy(double v_true,double v_false)
+{
+	if ((v_true+v_false)==0) return 0;
+	double v1=((double)v_true)/((double)(v_true+v_false));
+	double v2=((double)v_false)/((double)(v_true+v_false));
+	return -(v1*log2(v1)) - (v2*log2(v2));
+}
+double Compute_InformationGain(FeaturesInfo &fi, UInt32 totalPozitive, UInt32 totalNegative)
+{
+	double e, e1, e2;
+	double total = totalPozitive+totalNegative;
+	e = entropy(fi.PozitiveCount + (totalNegative-fi.NegativeCount), fi.NegativeCount+ (totalNegative-fi.NegativeCount));
+	e1 = entropy(fi.PozitiveCount, fi.NegativeCount);
+	e2 = entropy(fi.PozitiveCount, (totalNegative-fi.NegativeCount));
+
+	return e - ((double)(fi.PozitiveCount + fi.NegativeCount) / total) * e1 - ((double)((totalPozitive-fi.PozitiveCount) + (totalNegative-fi.NegativeCount)) / total) * e2;
+}
 //=============================================================================
-
-
 BinaryDecisionTree::BinaryDecisionTree()
 {
 	ObjectName = "BinaryDecisionTree";
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Train!!");
+	LinkPropertyToString("HashBaseFileName", HashBaseFileName, "BaseName for the file the hashes will be saved in");
 	AddHashSaveProperties();	
 }
 
@@ -191,12 +212,49 @@ bool BinaryDecisionTree::SaveHashesForFeature(char *fileName,GML::Utils::GTFVect
 	}
 	return SaveHashResult(fileName,HashFileType,RecordsStatus);	
 }
+bool BinaryDecisionTree::PerformTrain()
+{
+	GML::Utils::GTFVector<UInt32>	indexes;
+	UInt32							recordsCount;	
+	BDTThreadData					bdtthreadData;
+	GML::Utils::GString				fileName;
+	GML::Utils::GString				featName;
+
+	recordsCount = con->GetRecordCount();
+	if (indexes.Create(recordsCount)==false)
+	{
+		notif->Error("[%s] -> Unable to alloc %d entries for indexes",ObjectName, recordsCount);
+		return false;
+	}
+	for (int i=0; i<recordsCount; i++)
+		indexes.Push(i);
+	ComputeFeaturesStatistics(&indexes, bdtthreadData);
+	ComputeScore(bdtthreadData, Compute_InformationGain);		
+	if (con->GetFeatureName(featName, bdtthreadData.FeaturesCount[0].Index) == false)
+	{
+		notif->Error("[%s] -> Unable to get feature name for feature with index: %d",ObjectName, bdtthreadData.FeaturesCount[0].Index);
+		return false;
+	}
+	fileName.SetFormated("%s",HashBaseFileName.GetText());
+	fileName.AddFormated("[%s][%d]_1",featName, bdtthreadData.FeaturesCount[0].Index);	
+	notif->Info("salvez in %s", fileName.GetText());
+	SaveHashesForFeature(fileName.GetText(), &indexes, bdtthreadData.FeaturesCount[0].Index, true);
+	fileName.SetFormated("%s",HashBaseFileName);
+	fileName.AddFormated("[%s][%d]_0",featName, bdtthreadData.FeaturesCount[0].Index);	
+	notif->Info("salvez in %s", fileName.GetText());
+	SaveHashesForFeature(fileName.GetText(), &indexes, bdtthreadData.FeaturesCount[0].Index, false);
+	return true;
+}
 void BinaryDecisionTree::OnExecute()
 {
-	if (Command==1)	//Train
+	switch (Command)
 	{
-		
-		return;
-	}
-	notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);
+		case COMMAND_NONE:
+			notif->Info("[%s] -> Nothing to do ... ",ObjectName);
+			return;
+		case COMMAND_TRAIN:
+			PerformTrain();
+			return;
+	};
+	notif->Error("[%s] -> Unkwnown command ID : %d",ObjectName,Command);
 }
