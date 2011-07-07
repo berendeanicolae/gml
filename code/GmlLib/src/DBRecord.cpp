@@ -49,3 +49,18 @@ void GML::DB::RecordHash::Reset()
 {
 	memset(Hash.bValue,0,16);
 }
+bool GML::DB::RecordHash::ComputeHashForBuffer(void *buffer,unsigned int bufferSize)
+{
+	GML::Utils::MD5		md5;
+
+	if (buffer==NULL) 
+		return false;
+	md5.Init();
+	md5.Update(buffer,bufferSize);
+	md5.Final();
+	return CreateFromText(md5.GetResult());
+}
+bool GML::DB::RecordHash::ComputeHashForText(char *text)
+{
+	return ComputeHashForBuffer(text,GML::Utils::GString::Len(text));
+}

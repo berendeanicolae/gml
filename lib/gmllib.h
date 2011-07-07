@@ -1784,6 +1784,8 @@ namespace GML
 			bool	ToString(GML::Utils::GString &str);
 			void	Copy(RecordHash &rHash);
 			void	Reset();
+			bool	ComputeHashForBuffer(void *buffer,unsigned int bufferSize);
+			bool	ComputeHashForText(char *text);
 		};
 		struct  DBRecord 
 		{
