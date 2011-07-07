@@ -10,7 +10,7 @@ FeatureFilterConnector::FeatureFilterConnector()
 	ObjectName = "FeatureFilterConnector";
 
 	LinkPropertyToString("FeatureFileName"			,FeatureFileName		,"","Name of the file with the record hash list result.");
-	LinkPropertyToUInt32("FilterMethod"				,FilterMethod			,0,"!!LIST:RemoveHash=0,KeepHash!!");
+	LinkPropertyToUInt32("FilterMethod"				,FilterMethod			,0,"!!LIST:RemoveFeature=0,KeepFeature!!");
 }
 FeatureFilterConnector::~FeatureFilterConnector()
 {
@@ -83,8 +83,8 @@ bool   FeatureFilterConnector::OnInitConnectionToConnector()
 	}
 
 	// bag in list
-	notifier->StartProcent("[%s] -> Filtering ",ObjectName);
-	conCount = conector->GetRecordCount();
+	notifier->StartProcent("[%s] -> Filtering ",ObjectName);	
+	conCount = conector->GetFeatureCount();
 	for (tr=0;tr<conCount;tr++)
 	{
 		if (conector->GetFeatureName(featName,tr)==false)
