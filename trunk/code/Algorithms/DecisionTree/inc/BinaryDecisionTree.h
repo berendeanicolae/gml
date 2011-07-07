@@ -7,7 +7,7 @@ struct FeaturesInfo
 {
 	UInt32	Index;
 	UInt32	PozitiveCount;
-	UInt32	NegativeCount;
+	UInt32	NegativeCount;	
 	double	Score;
 };
 
@@ -25,8 +25,14 @@ struct BDTThreadData
 
 class BinaryDecisionTree: public GML::Algorithm::IMLAlgorithm
 {
+	enum {
+		COMMAND_NONE = 0,
+		COMMAND_TRAIN
+	};
+
 	GML::ML::MLRecord				MainRecord;
 	GML::Utils::GTFVector<UInt8>	RecordsStatus;
+	GML::Utils::GString				HashBaseFileName;
 
 
 	void					OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
@@ -36,6 +42,7 @@ class BinaryDecisionTree: public GML::Algorithm::IMLAlgorithm
 	bool					ComputeFeaturesStatistics(GML::Utils::GTFVector<UInt32> *Indexes,BDTThreadData	&all);
 	void					ComputeScore(BDTThreadData	&all,double (*fnComputeScore)(FeaturesInfo &fi,UInt32 totalPozitive,UInt32 totalNegative));
 	bool					SaveHashesForFeature(char *fileName,GML::Utils::GTFVector<UInt32> *Indexes,UInt32 featIndex,bool featureValue);
+	bool					PerformTrain();
 
 public:
 	BinaryDecisionTree();
