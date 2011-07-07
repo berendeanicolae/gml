@@ -30,9 +30,16 @@ class BinaryDecisionTree: public GML::Algorithm::IMLAlgorithm
 		COMMAND_TRAIN
 	};
 
+	enum {
+		COMPUTE_SCORE_IG = 0,
+		COMPUTE_SCORE_SUM,
+ 		COMPUTE_SCORE_FREQ 
+	};
+
 	GML::ML::MLRecord				MainRecord;
 	GML::Utils::GTFVector<UInt8>	RecordsStatus;
 	GML::Utils::GString				HashBaseFileName;
+	UInt32							ComputeScoreMethod;
 
 
 	void					OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
@@ -43,6 +50,7 @@ class BinaryDecisionTree: public GML::Algorithm::IMLAlgorithm
 	void					ComputeScore(BDTThreadData	&all,double (*fnComputeScore)(FeaturesInfo &fi,UInt32 totalPozitive,UInt32 totalNegative));
 	bool					SaveHashesForFeature(char *fileName,GML::Utils::GTFVector<UInt32> *Indexes,UInt32 featIndex,bool featureValue);
 	bool					PerformTrain();
+	void					PerformComputeScore(BDTThreadData	&all);
 
 public:
 	BinaryDecisionTree();
