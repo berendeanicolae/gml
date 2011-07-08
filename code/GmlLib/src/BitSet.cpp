@@ -52,7 +52,7 @@ bool	GML::Utils::BitSet::Set(UInt32 poz,bool value)
 	if (value)
 		(*p) |= bit;
 	else
-		(*p) &= (!bit);
+		(*p) &= ((0xFF-bit) & 0xFF);
 
 	return true;
 }

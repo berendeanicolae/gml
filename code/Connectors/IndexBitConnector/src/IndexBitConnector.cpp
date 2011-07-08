@@ -187,7 +187,7 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 	for (tr=0;tr<nrRecords;tr++)
 	{
 		Indexes[tr] = (UInt32)cIndex;
-		if ((tr % 1000)==0)
+		if ((tr % 10000)==0)
 			notifier->SetProcent((double)tr,(double)nrRecords);
 		
 		if (conector->GetRecord(cRec,tr,recMask)==false)		
@@ -205,7 +205,11 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 			}
 		}
 		// pun si label-ul
-		Labels.Set(tr,(bool)(cRec.Label==1));
+		if (Labels.Set(tr,(bool)(cRec.Label==1.0))==false)
+		{
+			notifier->Error("[%s] -> Unable to set label for record #%d",tr);
+			return false;
+		}
 		// adaug si Hash-ul
 		if (StoreRecordHash)
 		{
