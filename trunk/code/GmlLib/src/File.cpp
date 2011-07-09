@@ -54,30 +54,45 @@ void GML::Utils::File::Close()
 	hFile = INVALID_HANDLE_VALUE;
 #endif
 }
-UInt32 GML::Utils::File::GetFileSize()
+UInt64 GML::Utils::File::GetFileSize()
 {
 #ifdef OS_WINDOWS
 	if (hFile!=INVALID_HANDLE_VALUE)
-		return (UInt32)::GetFileSize(hFile,NULL);
+	{
+		LARGE_INTEGER	li;
+		if (::GetFileSizeEx(hFile,&li)==FALSE)
+			return 0;
+		return (UInt64)li.QuadPart;
+	}
 #endif
 	return 0;
 }
-UInt32 GML::Utils::File::GetFilePos()
+bool GML::Utils::File::GetFilePos(UInt64 &pos)
 {
 #ifdef OS_WINDOWS
-	if (hFile==INVALID_HANDLE_VALUE)
-		return 0;
-	else
-		return (UInt32)SetFilePointer(hFile,0,NULL,FILE_CURRENT);
+	if (hFile!=INVALID_HANDLE_VALUE)
+	{
+		LARGE_INTEGER	li,temp;
+		temp.QuadPart = 0;
+		if (SetFilePointerEx(hFile,temp,&li,FILE_CURRENT)==FALSE)
+			return false;
+		pos = li.QuadPart;
+		return true;
+	}
 #endif
+	return false;
 }
-bool GML::Utils::File::SetFilePos(UInt32 pos)
+bool GML::Utils::File::SetFilePos(UInt64 pos)
 {
 #ifdef OS_WINDOWS
-	if (hFile==INVALID_HANDLE_VALUE)
-		return false;
-	else
-		return (SetFilePointer(hFile,(LONG)pos,NULL,FILE_BEGIN)==pos);
+	if (hFile!=INVALID_HANDLE_VALUE)
+	{
+		LARGE_INTEGER	li;
+		li.QuadPart = pos;
+		if (SetFilePointerEx(hFile,li,NULL,FILE_BEGIN)==FALSE)
+			return false;
+		return true;
+	}
 #endif
 	return false;
 }
@@ -122,12 +137,14 @@ bool GML::Utils::File::Write(void *Buffer,UInt32 size,UInt32 *writeSize)
 bool GML::Utils::File::ReadNextLine(GString &line,bool skipEmpyLines)
 {
 	char	temp[MAX_LINE_BUFFER_SIZE];
-	UInt32	cPos,sizeRead,tr;	
+	UInt64	cPos;
+	UInt32	sizeRead,tr;	
 	bool	foundEOL;
 
 	if (line.Set("")==false)
 		return false;
-	cPos = GetFilePos();
+	if (GetFilePos(cPos)==false)
+		return false;
 
 	while (true)
 	{

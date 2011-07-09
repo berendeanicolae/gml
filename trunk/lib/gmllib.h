@@ -1402,9 +1402,9 @@ namespace GML
 			bool			OpenRead(char *name,bool share=false);
 			bool			OpenReadWrite(char *name,bool append=false,bool share=false);
 			void			Close();
-			UInt32			GetFileSize();
-			UInt32			GetFilePos();
-			bool			SetFilePos(UInt32 pos);
+			UInt64			GetFileSize();
+			bool			GetFilePos(UInt64 &pos);
+			bool			SetFilePos(UInt64 pos);
 			bool			Read(void *Buffer,UInt32 size,UInt32 *readSize=NULL);
 			bool			Write(void *Buffer,UInt32 size,UInt32 *writeSize=NULL);
 			bool			ReadNextLine(GString &line,bool skipEmpyLines=true);
