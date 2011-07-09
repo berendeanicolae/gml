@@ -96,49 +96,77 @@ bool GML::Utils::File::SetFilePos(UInt64 pos)
 #endif
 	return false;
 }
-bool GML::Utils::File::Read(void *Buffer,UInt32 size,UInt32 *readSize)
+bool GML::Utils::File::Read(void *Buffer,UInt64 size,UInt64 *readSize)
 {
 #ifdef OS_WINDOWS
-	DWORD	nrRead;
+	DWORD			nrRead;
+	DWORD			toRead;
+	unsigned char*	ptr = (unsigned char *)Buffer;
+
 	if ((hFile==INVALID_HANDLE_VALUE) || (Buffer==NULL))
 		return false;
 	if (size==0)
 		return true;
-	if (!ReadFile(hFile,Buffer,size,&nrRead,NULL))
-		return false;
 	if (readSize!=NULL)
+		(*readSize) = 0;
+	while (size>0)
 	{
-		(*readSize) = (UInt32)nrRead;
-		return true;
+		if (size>0xFFFFFFFF)
+			toRead = 0xFFFFFFFF;
+		else
+			toRead = (DWORD)size;
+
+		if (!ReadFile(hFile,ptr,toRead,&nrRead,NULL))
+			return false;
+		if (readSize!=NULL)
+			(*readSize) += (UInt64)nrRead;
+		size -= (UInt64)nrRead;
+		if (nrRead!=toRead)
+			return (readSize!=NULL);
+		ptr+=nrRead;
 	}
-	return (bool)((UInt32)nrRead==size);
+	return true;
 #endif
 	return false;
 }
-bool GML::Utils::File::Write(void *Buffer,UInt32 size,UInt32 *writeSize)
+bool GML::Utils::File::Write(void *Buffer,UInt64 size,UInt64 *writeSize)
 {
 #ifdef OS_WINDOWS
-	DWORD	nrWrite;
+	DWORD			nrWrite;
+	DWORD			toWrite;
+	unsigned char*	ptr = (unsigned char *)Buffer;
+
 	if ((hFile==INVALID_HANDLE_VALUE) || (Buffer==NULL))
 		return false;
 	if (size==0)
 		return true;
-	if (!WriteFile(hFile,Buffer,size,&nrWrite,NULL))
-		return false;
 	if (writeSize!=NULL)
+		(*writeSize) = 0;
+	while (size>0)
 	{
-		(*writeSize) = (UInt32)nrWrite;
-		return true;
+		if (size>0xFFFFFFFF)
+			toWrite = 0xFFFFFFFF;
+		else
+			toWrite = (DWORD)size;
+
+		if (!WriteFile(hFile,ptr,toWrite,&nrWrite,NULL))
+			return false;
+		if (writeSize!=NULL)
+			(*writeSize) += (UInt64)nrWrite;
+		size -= (UInt64)nrWrite;
+		if (nrWrite!=toWrite)
+			return (writeSize!=NULL);
+		ptr+=nrWrite;
 	}
-	return (bool)((UInt32)nrWrite==size);
+	return true;
 #endif
 	return false;
 }
 bool GML::Utils::File::ReadNextLine(GString &line,bool skipEmpyLines)
 {
 	char	temp[MAX_LINE_BUFFER_SIZE];
-	UInt64	cPos;
-	UInt32	sizeRead,tr;	
+	UInt64	cPos,sizeRead;
+	UInt32	tr;	
 	bool	foundEOL;
 
 	if (line.Set("")==false)

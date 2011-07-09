@@ -21,8 +21,8 @@ namespace GML
 			UInt64			GetFileSize();
 			bool			GetFilePos(UInt64 &pos);
 			bool			SetFilePos(UInt64 pos);
-			bool			Read(void *Buffer,UInt32 size,UInt32 *readSize=NULL);
-			bool			Write(void *Buffer,UInt32 size,UInt32 *writeSize=NULL);
+			bool			Read(void *Buffer,UInt64 size,UInt64 *readSize=NULL);
+			bool			Write(void *Buffer,UInt64 size,UInt64 *writeSize=NULL);
 			bool			ReadNextLine(GString &line,bool skipEmpyLines=true);
 			bool			Flush();
 		};
