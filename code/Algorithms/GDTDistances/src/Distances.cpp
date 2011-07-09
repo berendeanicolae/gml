@@ -562,7 +562,8 @@ bool Distances::MergeDistances()
 	GML::Utils::GString		fName,rName;
 	GML::Utils::File		f,fr;
 	unsigned char			buf[0x10000];
-	UInt32					read,tr;
+	UInt64					read;
+	UInt32					tr;
 
 	if (fName.SetFormated("%s",DistanceTableFileName.GetText())==false)
 	{
