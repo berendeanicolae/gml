@@ -631,9 +631,10 @@ void GML::ML::IConnector::CloseCacheFile()
 }
 bool GML::ML::IConnector::SkipRecordHashes()
 {
-	UInt32	cPoz;
-	cPoz = file.GetFilePos();
-	cPoz += nrRecords*sizeof(GML::DB::RecordHash);
+	UInt64	cPoz;
+	if (file.GetFilePos(cPoz)==false)
+		return false;
+	cPoz += (UInt64)nrRecords*sizeof(GML::DB::RecordHash);
 	return file.SetFilePos(cPoz);
 }
 bool GML::ML::IConnector::SaveRecordHashes()
