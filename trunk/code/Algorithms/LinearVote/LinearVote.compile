@@ -1,0 +1,4 @@
+sources = LinearVote.cpp
+gmlplugin = yes
+libname = LinearVote
+owner = GDT 

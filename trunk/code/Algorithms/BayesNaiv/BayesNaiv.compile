@@ -1,0 +1,4 @@
+sources = BayesNaiv.cpp
+gmlplugin = yes
+libname = BayesNaiv
+owner = BTM

@@ -1,0 +1,4 @@
+sources = CacheBuilder.cpp
+gmlplugin = yes
+libname = CacheBuilder
+owner = GDT 

@@ -1,0 +1,4 @@
+sources = KNNStatistics.cpp
+gmlplugin = yes
+libname = KNNStatistics
+owner = GDT 

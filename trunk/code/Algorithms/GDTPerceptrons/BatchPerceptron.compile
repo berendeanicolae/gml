@@ -1,0 +1,4 @@
+sources = BatchPerceptron.cpp GenericPerceptron.cpp
+gmlplugin = yes
+libname = BatchPerceptron
+owner = GDT 

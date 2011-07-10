@@ -1,0 +1,4 @@
+sources = AdalinePerceptron.cpp GenericPerceptron.cpp
+gmlplugin = yes
+libname = AdalinePerceptron
+owner = GDT 

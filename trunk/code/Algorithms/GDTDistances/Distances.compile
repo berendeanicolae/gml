@@ -1,0 +1,4 @@
+sources = Distances.cpp GenericDistAlgorithm.cpp
+gmlplugin = yes
+libname = Distances
+owner = GDT 
