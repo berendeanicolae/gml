@@ -177,7 +177,7 @@ def GetWindowsCompileString(fname,x64):
 		c+= " /MACHINE:X86 "
 	return c
 def Compile(fname):
-	global compile_mode,cl_32,cl_64
+	global compile_mode
 	print("="*30+" Compile:"+os.path.basename(fname).split(".",1)[0]+" "+"="*30)
 	if compile_mode=="win32":
 		c = GetWindowsCompileString(fname,False)
@@ -188,23 +188,6 @@ def Compile(fname):
 		return False
 	if (c==None):
 		return False	
-	#try:
-	#	open("run.bat","w").write("@"+c)
-	#	if os.system("run.bat")==0:
-	#		print("Error running command : "+c)
-	#		return False
-	#except:
-	#	print("Error running command : "+c)
-	#	return False
-	
-	#print cl_32
-	#print c	
-	#if os.system(cl_32+c)!=0:
-	#if subprocess.call([cl_32+c,c])!=0:
-	#	print("Error running command : "+c)
-	#	return False
-	#p = subprocess.Popen(c,executable=cl_32, shell=True)
-	#sts = os.waitpid(p.pid, 0)[1]
 	if os.system(c)!=0:
 		print("Error running command : "+c)
 		return False
@@ -212,12 +195,18 @@ def Compile(fname):
 def CreateFolders():
 	global output_folder
 	try:	
-		for root, dirs, files in os.walk(output_folder, topdown=False):
+		for root, dirs, files in os.walk(output_folder, topdown=False):			
 		    for name in files:
-		        os.remove(os.path.join(root, name))
+				d_name = os.path.join(root, name).lower()
+				if ".svn" in d_name:
+					continue				
+				os.remove(os.path.join(root, name))
 		        #print os.path.join(root, name)
-		    for name in dirs:
-		        os.rmdir(os.path.join(root, name))
+		    for name in dirs:			
+				d_name = os.path.join(root, name).lower()
+				if ".svn" in d_name:
+					continue
+				os.rmdir(os.path.join(root, name))
 		        #print os.path.join(root, name)
 		os.mkdir(os.path.join(output_folder,"Algorithms"))
 		os.mkdir(os.path.join(output_folder,"Connectors"))
@@ -225,8 +214,9 @@ def CreateFolders():
 		os.mkdir(os.path.join(output_folder,"Notifiers"))
 		os.mkdir(os.path.join(output_folder,"SDK"))
 		return True
-	except:
+	except Exception,e:
 		print("Unable to create folder on : "+output_folder)
+		print("Exception : "+str(e))
 		return False
 def BuildFromFolder(folderName):
 	try:
@@ -257,13 +247,15 @@ def BuildGMLEXE():
 	return Compile("./GML/gml.compile")
 def help():
 	print("""
-Build.py - builder for gml core
+gml_builder.py - builder for gml core
 By Gavrilut Dragos @2011
 Usage:
-	Build.py <Platform> <OutputFolder>
-Where:
-	<Platform>       is one of the followings: Win32
-	<OutputFolder>   is the folder where gml core will be created
+	gml_builder.py options
+Where options are:
+	-platform:<platform>	Specifys the platform to be used (can be win32 or win64)
+	-out:<folder>			Output folder for result to be write
+	-full					Full rebuild. Output folder will be cleared as well.
+	-plugin:<compile_file>	Only build a specific compile file for a plugin
 """)
 def CleanUpOutputFolder():
 	global output_folder
@@ -296,13 +288,7 @@ def CleanUpCurrentFolder():
 		print("Unable to cleanup current folder ")
 		print("Exception: "+str(e))
 		return False		
-def main():
-	global output_folder,compile_mode
-	if len(sys.argv)!=3:
-		help()
-		return
-	output_folder = sys.argv[2]
-	compile_mode = sys.argv[1].lower()
+def FullBuild():
 	if CleanUpCurrentFolder()==False:
 		return
 	if CreateFolders()==False:
@@ -322,6 +308,46 @@ def main():
 	print("=============================== CLEAN UP ================================")
 	CleanUpCurrentFolder()
 	CleanUpOutputFolder()
-	print("=============================== ALL OK ==================================")		
+	print("=============================== ALL OK ==================================")	
+def main():
+	global output_folder,compile_mode
+	if len(sys.argv)<=1:
+		help()
+		return
+	fullBuild = False
+	pluginBuild = ""
+	for op in sys.argv[1:]:
+		value = ""
+		if ":" in op:
+			value = op.split(":",1)[1]							
+		if op.startswith("-platform:"):
+			compile_mode = value.lower()
+			continue
+		if op.startswith("-out:"):
+			output_folder = value
+			continue
+		if op=="-full":
+			fullBuild = True
+			continue
+		if op.startswith("-plugin:"):
+			pluginBuild = value
+			continue
+		print("Unknwon option : "+op+" => exiting ")
+		return
+	if len(output_folder)==0:
+		print("-out: option is mandatory")
+		return
+	if len(compile_mode)==0:
+		print("-platform option is mandatory")
+		return
+	if fullBuild:
+		FullBuild()
+		return
+	if len(pluginBuild)!=0:
+		Compile(pluginBuild)
+		CleanUpCurrentFolder()
+		return
+	print("Don`t know what to do. Please specify -full or -plugin options")
+
 main()
 				
