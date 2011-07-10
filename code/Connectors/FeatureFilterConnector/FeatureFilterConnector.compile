@@ -1,0 +1,4 @@
+sources = FeatureFilterConnector.cpp
+gmlplugin = yes
+libname = FeatureFilterConnector
+owner = GDT 

@@ -1,0 +1,4 @@
+sources = UInt8TypeConnector.cpp
+gmlplugin = yes
+libname = UInt8TypeConnector
+owner = GDT 

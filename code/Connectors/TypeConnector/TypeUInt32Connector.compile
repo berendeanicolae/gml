@@ -1,0 +1,4 @@
+sources = UInt32TypeConnector.cpp
+gmlplugin = yes
+libname = UInt32TypeConnector
+owner = GDT 

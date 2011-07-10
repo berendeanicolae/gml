@@ -1,0 +1,4 @@
+sources = BitConnector.cpp
+gmlplugin = yes
+libname = BitConnector
+owner = GDT 

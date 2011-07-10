@@ -1,0 +1,4 @@
+sources = FullCacheConnector.cpp
+gmlplugin = yes
+libname = FullCacheConnector
+owner = GDT 

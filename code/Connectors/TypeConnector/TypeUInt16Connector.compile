@@ -1,0 +1,4 @@
+sources = UInt16TypeConnector.cpp
+gmlplugin = yes
+libname = UInt16TypeConnector
+owner = GDT 

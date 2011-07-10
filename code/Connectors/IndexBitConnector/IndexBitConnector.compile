@@ -1,0 +1,4 @@
+sources = IndexBitConnector.cpp
+gmlplugin = yes
+libname = IndexBitConnector
+owner = GDT 
