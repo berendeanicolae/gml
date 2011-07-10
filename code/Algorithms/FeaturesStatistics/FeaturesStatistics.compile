@@ -1,0 +1,4 @@
+sources = FeaturesStatistics.cpp
+gmlplugin = yes
+libname = FeaturesStatistics
+owner = GDT 

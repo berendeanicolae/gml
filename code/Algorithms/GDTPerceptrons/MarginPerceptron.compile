@@ -1,0 +1,4 @@
+sources = MarginPerceptron.cpp GenericPerceptron.cpp
+gmlplugin = yes
+libname = MarginPerceptron
+owner = GDT 

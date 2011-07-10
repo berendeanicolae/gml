@@ -1,0 +1,4 @@
+sources = Centroid.cpp
+gmlplugin = yes
+libname = Centroid
+owner = GDT 

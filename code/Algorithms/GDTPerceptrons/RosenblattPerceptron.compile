@@ -1,0 +1,4 @@
+sources = RosenblattPerceptron.cpp GenericPerceptron.cpp
+gmlplugin = yes
+libname = RosenblattPerceptron
+owner = GDT 
