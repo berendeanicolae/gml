@@ -139,7 +139,7 @@ def GetWindowsCompileString(fname,x64):
 	if ("usegmllib" in d) and (d["usegmllib"]=="yes"):
 		usegmllib = True
 		
-	c = "cl.exe /I\""+os.path.join(dname,"Inc")+"\" /DOS_WINDOWS /EHsc /fp:precise /O2 /Ob2 /Ot "
+	c = "cl.exe /I\""+os.path.join(dname,"Inc")+"\" /DOS_WINDOWS /EHsc /fp:precise /nologo /O2 /Ob2 /Ot "
 	if gmlplugin or usegmllib:
 		c+=" /I\""+os.path.join(output_folder,"SDK")+"\" "		
 	if "extra" in d:
