@@ -131,12 +131,15 @@ def GetWindowsCompileString_x86(fname):
 		return None
 	dname = os.path.dirname(fname)
 	gmlplugin = False
+	usegmllib = False
 	if ("gmlplugin" in d) and (d["gmlplugin"]=="yes"):
 		gmlplugin = True
-	c = "cl.exe /I\""+os.path.join(dname,"Inc")+"\" /DOS_WINDOWS /EHsc "
-	if gmlplugin:
-		c+=" /I\""+os.path.join(output_folder,"SDK")+"\" "
+	if ("usegmllib" in d) and (d["usegmllib"]=="yes"):
+		usegmllib = True
 		
+	c = "cl.exe /I\""+os.path.join(dname,"Inc")+"\" /DOS_WINDOWS /EHsc /fp:precise "
+	if gmlplugin or usegmllib:
+		c+=" /I\""+os.path.join(output_folder,"SDK")+"\" "		
 	if "extra" in d:
 		c = c + d["extra"]+" "
 	if not "sources" in d:
@@ -157,9 +160,16 @@ def GetWindowsCompileString_x86(fname):
 	for i in list:
 		if len(i)!=0:
 			c+=" \""+os.path.join(dname,"Src",i)+"\" "
-	c = c+" /link /NOLOGO /DLL /MANIFEST:NO /SUBSYSTEM:WINDOWS /OUT:\""+os.path.join(output_folder,d["out"])+"\" "
-	if gmlplugin:
+	c = c+" /link /NOLOGO /MANIFEST:NO /OUT:\""+os.path.join(output_folder,d["out"])+"\" "
+	if gmlplugin or usegmllib:
 		c+=" \""+os.path.join(output_folder,"SDK","gmllib.lib")+"\" "	
+	if "libs" in d:
+		c+=" "+d["libs"]+" "		
+	if ("exe" in d) and (d["exe"]=="yes"):
+		c+=" /SUBSYSTEM:CONSOLE "
+	else:
+		c+=" /SUBSYSTEM:WINDOWS /DLL "
+
 	return c
 def Compile(fname):
 	global compile_mode
@@ -215,6 +225,8 @@ def BuildGMLLib():
 		print("Error moving "+os.path.join(output_folder,"gmllib.lib")+" to SDK folder !")
 		return False
 	return True	
+def BuildGMLEXE():
+	return Compile("./GML/gml.compile")
 def help():
 	print("""
 Build.py - builder for gml core
@@ -268,6 +280,8 @@ def main():
 	if CreateFolders()==False:
 		return			
 	if BuildGMLLib()==False:
+		return
+	if BuildGMLEXE()==False:
 		return
 	if BuildFromFolder("./Notifiers")==False:
 		return
