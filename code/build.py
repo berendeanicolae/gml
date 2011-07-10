@@ -114,7 +114,7 @@ def BuildPluginName(compileDict):
 	if "connectors" in compileDict["compilefile"].lower():
 		compileDict["out"] = os.path.join("Connectors",fname+".dbc")
 		return True	
-	if "databases" in compileDict["compilefile"].lower():
+	if "database" in compileDict["compilefile"].lower():
 		compileDict["out"] = os.path.join("Databases",fname+".db")
 		return True	
 	if "notifiers" in compileDict["compilefile"].lower():
@@ -133,7 +133,7 @@ def GetWindowsCompileString_x86(fname):
 	gmlplugin = False
 	if ("gmlplugin" in d) and (d["gmlplugin"]=="yes"):
 		gmlplugin = True
-	c = "cl.exe /I\""+os.path.join(dname,"Inc")+"\" /DOS_WINDOWS /EHsc"
+	c = "cl.exe /I\""+os.path.join(dname,"Inc")+"\" /DOS_WINDOWS /EHsc "
 	if gmlplugin:
 		c+=" /I\""+os.path.join(output_folder,"SDK")+"\" "
 		
@@ -225,6 +225,25 @@ Where:
 	<Platform>       is one of the followings: Win32
 	<OutputFolder>   is the folder where gml core will be created
 """)
+def CleanUpOutputFolder():
+	global output_folder
+	try:
+		for root, dirs, files in os.walk(output_folder):
+		    for name in files:
+				nm = name.lower()
+				fnm = os.path.join(root,name)
+				do_delete = False
+				if nm.endswith(".exp"):
+					do_delete = True
+				if (nm.endswith(".lib")) and ("gmllib.lib" not in nm):
+					do_delete = True
+				if do_delete:
+					os.unlink(fnm)				
+		return True
+	except Exception,e:
+		print("Unable to cleanup :"+output_folder)
+		print("Exception: "+str(e))
+		return False
 def CleanUpCurrentFolder():
 	try:
 		for name in os.listdir("."):
@@ -236,7 +255,7 @@ def CleanUpCurrentFolder():
 	except Exception,e:
 		print("Unable to cleanup current folder ")
 		print("Exception: "+str(e))
-		return False
+		return False		
 def main():
 	global output_folder,compile_mode
 	if len(sys.argv)!=3:
@@ -244,7 +263,8 @@ def main():
 		return
 	output_folder = sys.argv[2]
 	compile_mode = sys.argv[1].lower()
-	CleanUpCurrentFolder()	
+	if CleanUpCurrentFolder()==False:
+		return
 	if CreateFolders()==False:
 		return			
 	if BuildGMLLib()==False:
@@ -253,10 +273,13 @@ def main():
 		return
 	if BuildFromFolder("./Connectors")==False:
 		return
-	if BuildFromFolder("./DataBases")==False:
+	if BuildFromFolder("./DataBasePlugins")==False:
 		return
 	if BuildFromFolder("./Algorithms")==False:
 		return	
+	print("=============================== CLEAN UP ================================")
+	CleanUpCurrentFolder()
+	CleanUpOutputFolder()
 	print("=============================== ALL OK ==================================")		
 main()
 				
