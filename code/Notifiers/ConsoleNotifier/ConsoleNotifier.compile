@@ -1,0 +1,8 @@
+sources = ConsoleNotifier.cpp
+out = Notifiers/ConsoleNotifier.ntf
+extra = /EHsc
+gmlplugin = yes
+libname = ConsoleNotifier
+owner = GDT
+comments = A Console Notifier
+
