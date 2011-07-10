@@ -1,0 +1,4 @@
+sources = SplitConnector.cpp
+gmlplugin = yes
+libname = SplitConnector
+owner = GDT 

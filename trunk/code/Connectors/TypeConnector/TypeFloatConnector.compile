@@ -1,0 +1,4 @@
+sources = FloatTypeConnector.cpp
+gmlplugin = yes
+libname = FloatTypeConnector
+owner = GDT 

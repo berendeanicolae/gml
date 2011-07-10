@@ -1,0 +1,4 @@
+sources = UInt64TypeConnector.cpp
+gmlplugin = yes
+libname = UInt64TypeConnector
+owner = GDT 

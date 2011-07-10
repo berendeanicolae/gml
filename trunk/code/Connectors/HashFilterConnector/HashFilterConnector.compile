@@ -1,0 +1,4 @@
+sources = HashFilterConnector.cpp
+gmlplugin = yes
+libname = HashFilterConnector
+owner = GDT 

@@ -1,0 +1,4 @@
+sources = Int16TypeConnector.cpp
+gmlplugin = yes
+libname = Int16TypeConnector
+owner = GDT 

@@ -1,0 +1,4 @@
+sources = MapConnector.cpp
+gmlplugin = yes
+libname = MapConnector
+owner = GDT 

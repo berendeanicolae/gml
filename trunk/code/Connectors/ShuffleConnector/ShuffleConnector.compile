@@ -1,0 +1,4 @@
+sources = ShuffleConnector.cpp
+gmlplugin = yes
+libname = ShuffleConnector
+owner = GDT 
