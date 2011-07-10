@@ -1,6 +1,4 @@
 sources = FileNotifier.cpp
-out = Notifiers/FileNotifier.ntf
-extra = /EHsc
 gmlplugin = yes
 libname = FileNotifier
 owner = GDT

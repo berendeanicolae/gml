@@ -1,6 +1,4 @@
 sources = WrapperNotifier.cpp
-out = Notifiers/WrapperNotifier.ntf
-extra = /EHsc
 gmlplugin = yes
 libname = WrapperNotifier
 owner = GDT
