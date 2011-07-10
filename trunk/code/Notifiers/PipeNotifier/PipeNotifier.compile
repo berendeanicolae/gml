@@ -1,6 +1,4 @@
 sources = PipeNotifier.cpp
-out = Notifiers/PipeNotifier.ntf
-extra = /EHsc
 gmlplugin = yes
 libname = PipeNotifier
 owner = GDT
