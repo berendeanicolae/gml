@@ -1,0 +1,6 @@
+sources = GML.cpp
+out = gml.exe
+usegmllib = yes
+exe = yes
+libs = user32.lib
+extra = /D "_CONSOLE"  
