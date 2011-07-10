@@ -1,7 +1,9 @@
-import os,sys
+import os,sys,subprocess
 
 output_folder = ""
 compile_mode = ""
+
+#win32 , win64
 
 def BuildGmlLib_h(c_path,f_path):
 	list_headers = [	
@@ -124,8 +126,8 @@ def BuildPluginName(compileDict):
 	print("It should be located in one the following directories: Algorithms,Connectors,DataBases or Notifiers")
 	return False
 		
-def GetWindowsCompileString_x86(fname):
-	global output_folder
+def GetWindowsCompileString(fname,x64):
+	global output_folder,cl_32,cl_64
 	d = LoadCompileInfoFile(fname)
 	if d==None:
 		return None
@@ -169,14 +171,40 @@ def GetWindowsCompileString_x86(fname):
 		c+=" /SUBSYSTEM:CONSOLE "
 	else:
 		c+=" /SUBSYSTEM:WINDOWS /DLL "
-
+	if x64 == True:
+		c+= " /MACHINE:X64 "
+	else:
+		c+= " /MACHINE:X86 "
 	return c
 def Compile(fname):
-	global compile_mode
+	global compile_mode,cl_32,cl_64
 	print("="*30+" Compile:"+os.path.basename(fname).split(".",1)[0]+" "+"="*30)
-	c = GetWindowsCompileString_x86(fname);
+	if compile_mode=="win32":
+		c = GetWindowsCompileString(fname,False)
+	elif compile_mode=="win64":
+		c = GetWindowsCompileString(fname,True)
+	else:
+		print("Invalid compile mode : "+compile_mode)
+		return False
 	if (c==None):
-		return False		
+		return False	
+	#try:
+	#	open("run.bat","w").write("@"+c)
+	#	if os.system("run.bat")==0:
+	#		print("Error running command : "+c)
+	#		return False
+	#except:
+	#	print("Error running command : "+c)
+	#	return False
+	
+	#print cl_32
+	#print c	
+	#if os.system(cl_32+c)!=0:
+	#if subprocess.call([cl_32+c,c])!=0:
+	#	print("Error running command : "+c)
+	#	return False
+	#p = subprocess.Popen(c,executable=cl_32, shell=True)
+	#sts = os.waitpid(p.pid, 0)[1]
 	if os.system(c)!=0:
 		print("Error running command : "+c)
 		return False
