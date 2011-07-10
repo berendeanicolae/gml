@@ -1,0 +1,4 @@
+sources = SimpleTextFileDB.CPP
+gmlplugin = yes
+libname = SimpleTextFileDB
+owner = GDT 
