@@ -1,0 +1,4 @@
+sources = BinaryDecisionTree.cpp
+gmlplugin = yes
+libname = BinaryDecisionTree
+owner = GDT&BTM
