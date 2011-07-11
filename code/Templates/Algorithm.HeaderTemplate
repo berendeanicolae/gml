@@ -1,0 +1,33 @@
+#ifndef __$(NAME)__
+#define __$(NAME)__
+
+#include "gmllib.h"
+
+struct $(NAME)ThreadData
+{
+	// add thread specific data here
+};
+
+class $(NAME): public GML::Algorithm::IMLAlgorithm
+{
+	enum {
+		COMMAND_NONE = 0,
+		//Add extra commands here
+	};
+	enum {
+		THREAD_COMMAND_NONE = 0,
+		//Add extra thread commands here
+	};
+	GML::ML::MLRecord		MainRecord;
+
+	void				OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
+	bool				OnInitThreadData(GML::Algorithm::MLThreadData &thData);
+public:
+	$(NAME)();
+
+	bool				Init();
+	void				OnExecute();
+};
+
+#endif
+
