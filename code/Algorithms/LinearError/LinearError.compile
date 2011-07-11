@@ -1,0 +1,3 @@
+sources = LinearError.cpp
+gmlplugin = yes
+libname = LinearError
