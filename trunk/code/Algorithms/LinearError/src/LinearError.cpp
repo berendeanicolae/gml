@@ -71,6 +71,8 @@ bool LinearError::TrainIteration(GML::Algorithm::MLThreadData &thData)
 	double 	*delta = ((LinearErrorThreadData *)thData.Context)->delta;
 	double	*deltaBias = &((LinearErrorThreadData *)thData.Context)->deltaBias;
 	UInt32	*countErrors = &((LinearErrorThreadData *)thData.Context)->countErrors;
+	UInt32	*countPozitive = &((LinearErrorThreadData *)thData.Context)->countPozitive;
+	UInt32	*countNegative = &((LinearErrorThreadData *)thData.Context)->countNegative;
 	UInt32	nrRecords = con->GetRecordCount();
 	UInt32	nrFeatures = con->GetFeatureCount();
 	double	sum,error;
@@ -78,6 +80,8 @@ bool LinearError::TrainIteration(GML::Algorithm::MLThreadData &thData)
 	MEMSET(delta,0,sizeof(double)*nrFeatures);
 	(*deltaBias) = 0.0;
 	(*countErrors) = 0;
+	(*countPozitive) = 0;
+	(*countNegative) = 0;
 	
 	for (UInt32 tr=thData.ThreadID;(tr<nrRecords) && (StopAlgorithm==false);tr+=threadsCount)
 	{
@@ -96,6 +100,10 @@ bool LinearError::TrainIteration(GML::Algorithm::MLThreadData &thData)
 			if (UseBias)
 				(*deltaBias) += error;			
 			RecordErrors[tr]++;
+			if (thData.Record.Label==1)
+				(*countPozitive)++;
+			else
+				(*countNegative)++;
 			(*countErrors)++;
 		}
 	}
@@ -186,22 +194,26 @@ bool LinearError::SaveResultTable(char *fileName)
 }
 void LinearError::ComputeErrors()
 {
-	UInt32 					countErrors;
+	UInt32 					countErrors=0;
+	UInt32 					countPozitive=0;
+	UInt32 					countNegative=0;
 	GML::Utils::GString		temp;
 	
 	for (UInt32 tr=0;tr<MaxIterations;tr++)
 	{
 		ExecuteParalelCommand(THREAD_COMMAND_TRAIN);
 		// aditie
-		countErrors = 0;
+		countErrors = countPozitive = countNegative = 0;
 		for (UInt32 gr=0;gr<threadsCount;gr++)
 		{
 			GML::ML::VectorOp::AddVectors(Weight,((LinearErrorThreadData *)ThData[gr].Context)->delta,con->GetFeatureCount());
 			if (UseBias)
 				Bias+=((LinearErrorThreadData *)ThData[gr].Context)->deltaBias;
 			countErrors += ((LinearErrorThreadData *)ThData[gr].Context)->countErrors;
+			countPozitive += ((LinearErrorThreadData *)ThData[gr].Context)->countPozitive;
+			countNegative += ((LinearErrorThreadData *)ThData[gr].Context)->countNegative;
 		}
-		notif->Info("[%s] -> Iteration %d : Errors = %d",ObjectName,tr+1,countErrors);
+		notif->Info("[%s] -> It:%5d  Errors:%8d  Poz:%8d  Neg:%8d",ObjectName,tr+1,countErrors,countPozitive,countNegative);
 		if (SaveData == SAVE_DATA_AfterEachIteration)
 		{
 			temp.SetFormated("%s_IT_%05d___ERR_%07d.log",ResultFileName.GetText(),tr+1,countErrors);

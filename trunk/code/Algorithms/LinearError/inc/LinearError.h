@@ -8,6 +8,8 @@ struct LinearErrorThreadData
 	double	*delta;	
 	double	deltaBias;
 	UInt32	countErrors;
+	UInt32	countPozitive;
+	UInt32	countNegative;
 };
 
 class LinearError: public GML::Algorithm::IMLAlgorithm
