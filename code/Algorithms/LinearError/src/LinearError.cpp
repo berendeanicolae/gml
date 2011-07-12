@@ -10,7 +10,7 @@ LinearError::LinearError()
 	LinkPropertyToBool  ("UseBias",UseBias,false,"");
 	LinkPropertyToUInt32("MaxIterations",MaxIterations,100,"");
 	LinkPropertyToUInt32("SaveData",SaveData,SAVE_DATA_WhenAlgorithmEnds,"!!LIST:WhenAlgorithmEnds=0,AfterEachIteration!!");
-	LinkPropertyToUInt32("FilterBy",Filter,FILTER_NONE,"!!LIST:None=0,Value,Percentage!!");
+	LinkPropertyToUInt32("FilterBy",Filter,FILTER_NONE,"!!LIST:None=0,Value,Percentage,UniformPercentage!!");
 	LinkPropertyToDouble("FilterMin",Min,0);
 	LinkPropertyToDouble("FilterMax",Max,1);
 	LinkPropertyToString("ResultFileName",ResultFileName,"");
@@ -113,10 +113,12 @@ bool LinearError::SaveResultTable(char *fileName)
 {
 	GML::Utils::File		f;
 	GML::Utils::GString		fName,temp,hash;
-	UInt32					tr,count = 0;
+	UInt32					tr,count = 0,countPozitive = 0,countNegative=0;
 	GML::DB::RecordHash		rHash;
 	double					Label;
 	double					v_min,v_max,max_value;
+	double					max_value_poz,max_value_neg;
+	double					v_min_poz,v_min_neg,v_max_poz,v_max_neg;
 	
 	if (temp.Create(0x10000)==false)
 	{
@@ -128,39 +130,78 @@ bool LinearError::SaveResultTable(char *fileName)
 		notif->Error("[%s] -> Unable to create: %s",ObjectName,fileName);
 		return false;
 	}
-	if (Filter == FILTER_PERCENTAGE)
+	switch (Filter)
 	{
-		max_value = 0;
-		for (tr=0;tr<con->GetRecordCount();tr++)
-			if (RecordErrors[tr]>max_value)
-				max_value = RecordErrors[tr];
-		notif->Info("[%s] -> Max number of errors so far : %d",ObjectName,(UInt32)max_value);
-		v_min = Min * max_value;
-		v_max = Max * max_value;
-	} else {
-		v_min = Min;
-		v_max = Max;
-	}
+		case FILTER_UNIFORM_PERCENTAGE:
+			max_value_poz = max_value_neg = 0;
+			for (tr=0;tr<con->GetRecordCount();tr++)
+			{
+				if (con->GetRecordLabel(Label,tr)==false)
+				{
+					notif->Error("[%s] -> Unable to read label for #%d",ObjectName,tr);
+					return false;
+				}			
+				if ((Label==1) && (RecordErrors[tr]>max_value_poz))
+					max_value_poz = RecordErrors[tr];	
+				if ((Label!=1) && (RecordErrors[tr]>max_value_neg))
+					max_value_neg = RecordErrors[tr];					
+			}
+			notif->Info("[%s] -> Max number of errors so far : Poz:%d , Neg:%d",ObjectName,(UInt32)max_value_poz,(UInt32)max_value_neg);
+			v_min_poz = Min * max_value_poz;
+			v_min_neg = Min * max_value_neg;
+			v_max_poz = Max * max_value_poz;
+			v_max_neg = Max * max_value_neg;			
+			break;
+		case FILTER_PERCENTAGE:
+			max_value = 0;
+			for (tr=0;tr<con->GetRecordCount();tr++)
+				if (RecordErrors[tr]>max_value)
+					max_value = RecordErrors[tr];
+			notif->Info("[%s] -> Max number of errors so far : %d",ObjectName,(UInt32)max_value);
+			v_min = Min * max_value;
+			v_max = Max * max_value;		
+			break;
+		default:
+			v_min = Min;
+			v_max = Max;
+			break;
+	};
 	
 	for (tr=0;tr<con->GetRecordCount();tr++)
 	{
-		if (Filter!=FILTER_NONE)
+		if ((Filter!=FILTER_NONE) && (Filter!=FILTER_UNIFORM_PERCENTAGE))
 		{
 			if ((double)RecordErrors[tr]<v_min)
 				continue;
 			if ((double)RecordErrors[tr]>v_max)
 				continue;				
 		}
-		if (con->GetRecordHash(rHash,tr)==false)
-		{
-			notif->Error("[%s] -> Unable to read record hash for #%d",ObjectName,tr);
-			return false;
-		}
 		if (con->GetRecordLabel(Label,tr)==false)
 		{
 			notif->Error("[%s] -> Unable to read label for #%d",ObjectName,tr);
 			return false;
 		}
+		if (Filter==FILTER_UNIFORM_PERCENTAGE)
+		{
+			if (Label==1)
+			{
+				if ((double)RecordErrors[tr]<v_min_poz)
+					continue;
+				if ((double)RecordErrors[tr]>v_max_poz)
+					continue;				
+			} else {
+				if ((double)RecordErrors[tr]<v_min_neg)
+					continue;
+				if ((double)RecordErrors[tr]>v_max_neg)
+					continue;			
+			}
+		}
+		if (con->GetRecordHash(rHash,tr)==false)
+		{
+			notif->Error("[%s] -> Unable to read record hash for #%d",ObjectName,tr);
+			return false;
+		}
+
 		if (rHash.ToString(hash)==false)
 		{
 			notif->Error("[%s] -> Unable to convert record hash for #%d",ObjectName,tr);
@@ -172,6 +213,10 @@ bool LinearError::SaveResultTable(char *fileName)
 			return false;
 		}
 		count++;
+		if (Label==1)
+			countPozitive++;
+		else
+			countNegative++;
 		if (temp.Len()>64000)
 		{
 			if (f.Write(temp,temp.Len())==false)
@@ -189,7 +234,7 @@ bool LinearError::SaveResultTable(char *fileName)
 		return false;
 	}
 	f.Close();
-	notif->Info("[%s] -> %d records written in %s ",ObjectName,count,fileName);
+	notif->Info("[%s] -> %d records written in %s (Poz:%d , Neg:%d)",ObjectName,count,fileName,countPozitive,countNegative);
 	return true;
 }
 void LinearError::ComputeErrors()

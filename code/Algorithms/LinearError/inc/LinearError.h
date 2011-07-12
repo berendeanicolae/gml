@@ -32,6 +32,7 @@ class LinearError: public GML::Algorithm::IMLAlgorithm
 		FILTER_NONE = 0,
 		FILTER_VALUES,
 		FILTER_PERCENTAGE,
+		FILTER_UNIFORM_PERCENTAGE,
 	};
 	GML::ML::MLRecord		MainRecord;
 	GML::Utils::GString		ResultFileName;
