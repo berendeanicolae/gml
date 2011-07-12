@@ -2,7 +2,7 @@
 #define __GDT_MY_SQL__
 
 #include "gmllib.h"
-#include <mysql.h>
+#include "mysql.h"
 
 class GDTMySQL: public GML::DB::IDataBase
 {
