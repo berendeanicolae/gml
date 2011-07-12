@@ -16,7 +16,7 @@ IndexBitConnector::IndexBitConnector()
 bool	IndexBitConnector::AllocMemory(UInt64 memory)
 {
 	// aloca data :D
-	notifier->Info("[%s] -> Compressed method : %d ",ObjectName,Method);
+	notifier->Info("[%s] -> Compressed method : %d (Memory:%d) ",ObjectName,Method,(UInt32)memory);
 	if ((Data = new UInt8[(UInt32)memory])==NULL)
 	{
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for data !",ObjectName,memory);
