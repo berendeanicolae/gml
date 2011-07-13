@@ -1,0 +1,4 @@
+sources = HashWriter.cpp
+gmlplugin = yes
+libname = HashWriter
+owner = BTM
