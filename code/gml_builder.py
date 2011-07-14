@@ -21,6 +21,7 @@ def BuildGmlLib_h(c_path,f_path):
 		"AlgorithmResult.h",
 		"IParalelUnit.h",
 		"ThreadParalelUnit.h",
+		"TemplateParser.h",
 		"AttributeList.h",
 		"GMLObject.h",
 		"INotifier.h",
