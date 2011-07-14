@@ -201,6 +201,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClInclude Include="..\..\..\code\GmlLib\inc\Matrix.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\md5.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\MLRecord.h" />
+    <ClInclude Include="..\..\..\code\GmlLib\inc\TemplateParser.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\ThreadParalelUnit.h" />
     <ClInclude Include="..\..\..\Code\GmlLib\inc\Timer.h" />
     <ClInclude Include="..\..\..\code\GmlLib\inc\Vector.h" />
@@ -224,6 +225,7 @@ $(SolutionDir)..\..\tools\build_gmllib.py $(SolutionDir)..\..\Code\GmlLib\inc $(
     <ClCompile Include="..\..\..\Code\GmlLib\src\IParalelUnit.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\GString.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\md5.cpp" />
+    <ClCompile Include="..\..\..\code\GmlLib\src\TemplateParser.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\ThreadParalelUnit.cpp" />
     <ClCompile Include="..\..\..\Code\GmlLib\src\Timer.cpp" />
     <ClCompile Include="..\..\..\code\GmlLib\src\vector.cpp" />
