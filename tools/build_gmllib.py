@@ -15,6 +15,7 @@ list_headers = [
 	"AlgorithmResult.h",
 	"IParalelUnit.h",
 	"ThreadParalelUnit.h",
+	"TemplateParser.h",
 	"AttributeList.h",
 	"GMLObject.h",
 	"INotifier.h",
