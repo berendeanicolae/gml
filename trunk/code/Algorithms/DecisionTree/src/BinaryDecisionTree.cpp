@@ -68,10 +68,32 @@ double Compute_Sum(FeaturesInfo &fi, UInt32 totalPozitive, UInt32 totalNegative)
 {
 	return fi.PozitiveCount+fi.NegativeCount;
 }
+double Compute_Difference(FeaturesInfo &fi, UInt32 totalPozitive, UInt32 totalNegative)
+{
+	return 1.0/(((fi.PozitiveCount+1.0)/totalPozitive)*((fi.NegativeCount+1.0)/totalNegative));
+}
 double Compute_FAQ(FeaturesInfo &fi, UInt32 totalPozitive, UInt32 totalNegative)
 {
-	return abs((1.0/((fi.PozitiveCount+1.0)/totalPozitive-0.5))*(1.0/((fi.NegativeCount+1.0)/totalNegative-0.5)));
-	//return ((fi.PozitiveCount+1.0)/totalPozitive)*((fi.NegativeCount+1.0)/totalNegative);
+	return abs((1.0/((fi.PozitiveCount+1.0)/totalPozitive-0.5))*(1.0/((fi.NegativeCount+1.0)/totalNegative-0.5)));	
+}
+double Compute_F2(FeaturesInfo &fi, UInt32 totalPozitive, UInt32 totalNegative)
+{
+	double t_mal = fi.PozitiveCount;
+	double f_mal = totalPozitive - t_mal;
+	double t_clean = fi.NegativeCount;
+	double f_clean = totalNegative - t_clean;
+
+	double all_mal = totalPozitive;
+	double all_clean = totalNegative;
+    double miu_pl = (double)t_mal / all_mal;
+    double miu_min = (double)t_clean / all_clean;
+    double miu_total = (double)(t_mal + t_clean) / (all_mal + all_clean);
+    double sigma_pl = sqrt((double)(t_mal * (1 - miu_pl) * (1 - miu_pl) + f_mal * miu_pl * miu_pl));
+    double sigma_min = sqrt((double)(t_clean * (1 - miu_min) * (1 - miu_min) + f_clean * miu_min * miu_min));
+    double v1 = (miu_pl - miu_total) * (miu_pl - miu_total) + (miu_min - miu_total) * (miu_min - miu_total);
+    double v2 = sigma_pl*sigma_pl + sigma_min*sigma_min;
+    if (t_mal + t_clean == 0) return 0;
+    return v1 / v2;	
 }
 //=============================================================================
 BinaryDecisionTree::BinaryDecisionTree()
@@ -81,7 +103,7 @@ BinaryDecisionTree::BinaryDecisionTree()
 	SetPropertyMetaData("Command","!!LIST:None=0,Train,CustomFeatSplit!!");
 	LinkPropertyToString("HashBaseFileName", HashBaseFileName, "", "BaseName for the file the hashes will be saved in");
 	LinkPropertyToString("CustomFeatName", CustomFeatName, "", "FeatureName to split records by (name or #index)");		
-	LinkPropertyToUInt32("ComputeScoreMethod",ComputeScoreMethod,0,"!!LIST:InformationGain=0,SumPosCountNegCount,FAQ!!");
+	LinkPropertyToUInt32("ComputeScoreMethod",ComputeScoreMethod,0,"!!LIST:InformationGain=0,SumPosCountNegCount,FAQ,ComputeDifference,ComputeF2!!");
 	AddHashSaveProperties();	
 }
 
@@ -211,7 +233,8 @@ void BinaryDecisionTree::ComputeScore(BDTThreadData	&all,double (*fnComputeScore
 }
 bool BinaryDecisionTree::SaveHashesForFeature(char *fileName,GML::Utils::GTFVector<UInt32> *Indexes,UInt32 featIndex,bool featureValue)
 {
-	UInt32	idx,tr;
+	UInt32					idx,tr,countPos=0,countNeg=0;
+	GML::Utils::GString		temp;
 
 	for (tr=0;tr<con->GetRecordCount();tr++)
 		RecordsStatus[tr]=0;
@@ -224,11 +247,29 @@ bool BinaryDecisionTree::SaveHashesForFeature(char *fileName,GML::Utils::GTFVect
 			return false;
 		}
 		if ((MainRecord.Features[featIndex] == 1) && (featureValue))
+		{
 			RecordsStatus[idx] = 1;
+			if (MainRecord.Label==1)
+				countPos++;
+			else
+				countNeg++;
+		}
 		if ((MainRecord.Features[featIndex] != 1) && (!featureValue))
+		{
 			RecordsStatus[idx] = 1;
+			if (MainRecord.Label==1)
+				countPos++;
+			else
+				countNeg++;
+		}
 	}
-	return SaveHashResult(fileName,HashFileType,RecordsStatus);	
+	temp.Set(fileName);
+	temp.AddFormated("[%d][%d]",countPos, countNeg);
+	if (featureValue)
+		temp.Add("_1");
+	else
+		temp.Add("_0");	
+	return SaveHashResult(temp.GetText(),HashFileType,RecordsStatus);	
 }
 bool BinaryDecisionTree::CreateIndexes(GML::Utils::GTFVector<UInt32> *Indexes)
 {
@@ -258,6 +299,12 @@ void BinaryDecisionTree::PerformComputeScore(BDTThreadData	&all)
 		case COMPUTE_SCORE_FREQ:
 			ComputeScore(all, Compute_FAQ);		
 			break;
+		case COMPUTE_DIFFERENCE:
+			ComputeScore(all, Compute_Difference);		
+			break;
+		case COMPUTE_F2:
+			ComputeScore(all, Compute_F2);		
+			break;
 	}		
 }
 bool BinaryDecisionTree::PerformTrain()
@@ -274,7 +321,6 @@ bool BinaryDecisionTree::PerformTrain()
 	}
 	ComputeFeaturesStatistics(&indexes, bdtthreadData);
 	PerformComputeScore(bdtthreadData);
-
 	for (int tr=0;tr<10;tr++)
 	{
 		if (con->GetFeatureName(featName, bdtthreadData.FeaturesCount[tr].Index) == false)
@@ -286,15 +332,13 @@ bool BinaryDecisionTree::PerformTrain()
 		fileName.AddFormatedEx("%{str,L40} Index=%{uint32,dec,R8}  Score=%{double,Z4,R10} PC:%{uint32,dec,R8} TP:%{uint32,dec,R8} NC:%{uint32,dec,R8} TN:%{uint32,dec,R8}",featName.GetText(),bdtthreadData.FeaturesCount[tr].Index,bdtthreadData.FeaturesCount[tr].Score,bdtthreadData.FeaturesCount[tr].PozitiveCount, bdtthreadData.totalPozitive, bdtthreadData.FeaturesCount[tr].NegativeCount, bdtthreadData.totalNegative);
 		notif->Info("%s",fileName.GetText());
 	}
-
 	if (con->GetFeatureName(featName, bdtthreadData.FeaturesCount[0].Index) == false)
 	{
 		notif->Error("[%s] -> Unable to get feature name for feature with index: %d",ObjectName, bdtthreadData.FeaturesCount[0].Index);
 		return false;
-	}		
-	fileName.SetFormated("%s[%s][%d]_1",HashBaseFileName.GetText(),featName.GetText(), bdtthreadData.FeaturesCount[0].Index);
-	SaveHashesForFeature(fileName.GetText(), &indexes, bdtthreadData.FeaturesCount[0].Index, true);	
-	fileName.SetFormated("%s[%s][%d]_0",HashBaseFileName.GetText(),featName.GetText(), bdtthreadData.FeaturesCount[0].Index);
+	}			
+	fileName.SetFormated("%s[%s][%d]",HashBaseFileName.GetText(),featName.GetText(), bdtthreadData.FeaturesCount[0].Index);
+	SaveHashesForFeature(fileName.GetText(), &indexes, bdtthreadData.FeaturesCount[0].Index, true);		
 	SaveHashesForFeature(fileName.GetText(), &indexes, bdtthreadData.FeaturesCount[0].Index, false);
 	return true;
 }

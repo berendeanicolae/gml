@@ -34,7 +34,9 @@ class BinaryDecisionTree: public GML::Algorithm::IMLAlgorithm
 	enum {
 		COMPUTE_SCORE_IG = 0,
 		COMPUTE_SCORE_SUM,
- 		COMPUTE_SCORE_FREQ 
+ 		COMPUTE_SCORE_FREQ,
+		COMPUTE_DIFFERENCE,
+		COMPUTE_F2
 	};
 
 	GML::ML::MLRecord				MainRecord;
