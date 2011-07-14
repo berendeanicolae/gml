@@ -1,5 +1,7 @@
 #include "AttributeList.h"
 
+
+
 static unsigned int AttributeSizes[]={1,1,2,4,8,1,2,4,8,4,8,0};
 static char *AttributeTypeName[]={"BOOL","INT8","INT16","INT32","INT64","UINT8","UINT16","UINT32","UINT64","FLOAT","DOUBLE","STRING"};
 
@@ -31,6 +33,9 @@ void ClearAttribute(GML::Utils::Attribute *a)
 		delete a->MetaData;
 	MEMSET(a,0,sizeof(GML::Utils::Attribute));
 }
+//--------------------------------------------------------------------------------------
+
+//--------------------------------------------------------------------------------------
 bool AttributeToStringForm(GML::Utils::Attribute *a,GML::Utils::GString *tmp)
 {
 	tmp->Set("");
@@ -758,6 +763,7 @@ bool GML::Utils::AttributeList::FromString(GML::Utils::GString &text)
 
 	return true;
 }
+
 bool GML::Utils::AttributeList::Load(char *fileName)
 {
 	GML::Utils::GString			temp;

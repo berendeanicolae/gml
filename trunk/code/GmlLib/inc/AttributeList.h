@@ -48,7 +48,7 @@ namespace GML
 		{
 			GTVector<GML::Utils::Attribute>	list;
 			
-			bool			FromString(GML::Utils::GString &text);
+			bool			FromString(GML::Utils::GString &text);			
 		public:
 			enum 
 			{
