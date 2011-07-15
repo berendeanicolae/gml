@@ -76,6 +76,7 @@ int  Run(char *templateName)
 
 	if (config.Load(templateName)==false)
 	{
+		printf("%s\n",config.GetError());
 		printf("[ERROR] -> unable to load properties from %s\n",templateName);
 		return 2;
 	}
@@ -113,23 +114,31 @@ int  Template(char *objectName,char *templateName)
 {
 	GML::Utils::AttributeList	attr;
 	GML::Utils::Attribute		*a;
-	GML::Utils::GString			tmp,result,desc;
+	GML::Utils::GString			tmp,result,desc,fName;
 	GML::Utils::File			f;
+	bool						isAlg = false;
 	
-	if (GML::Builder::GetPluginProperties(objectName,attr)==false)
+	if (GML::Builder::GetPluginProperties(objectName,attr,&fName)==false)
 	{
 		printf("[ERROR] There is no algorithm, notifier, database or conector with the name : %s\n",objectName);
 		return 1;
 	}
-	result.SetFormated("AlgorithmName        = %s\n;----------------------------------------------------------------------------\n\n",objectName);
+	isAlg = fName.EndsWith(ALGORITHM_EXT,true);
+	result.Set("");
+	if (isAlg)
+		result.AddFormatedEx("%{str,L30,F }= \"%{str}\"\n","AlgorithmName",objectName);
+	else
+		result.AddFormatedEx("\t%{str,L30,F }= \"%{str}\"\n","Type",objectName);
+
 	for (UInt32 tr=0;tr<attr.GetCount();tr++)
 	{
 		if ((a=attr.Get(tr))==NULL)
 			continue;
-		tmp.Set(a->Name);
-		while (tmp.Len()<20)
-			tmp.AddChar(' ');
-		tmp.Add(" = ");
+		tmp.Set("");
+		if (isAlg)
+			tmp.AddFormatedEx("%{str,L30,F }= ",a->Name);
+		else
+			tmp.AddFormatedEx("\t%{str,L30,F }= ",a->Name);
 		switch (a->AttributeType)
 		{
 			case GML::Utils::AttributeList::BOOLEAN:
@@ -176,29 +185,37 @@ int  Template(char *objectName,char *templateName)
 			desc.Replace("\r",".");
 			desc.Strip();
 			if (desc.Len()>0)
-				result.AddFormated(";%s\n",desc.GetText());
+				result.AddFormated("#%s\n",desc.GetText());
 		}
 		desc.Set("");
 		if (((a->GetFlags() & GML::Utils::FL_LIST)!=0) && (a->AttributeType==GML::Utils::AttributeList::STRING))
 		{
 			if (a->GetListItems(desc))
-				result.AddFormated(";one of [%s]\n",desc.GetText());
+				result.AddFormated("#one of [%s]\n",desc.GetText());
 		}
 		result.AddFormated("%s\n\n",tmp.GetText());		
 	}
-	if (f.Create(templateName)==false)
+	if (isAlg==false)
+		result.Add("}\n");
+	if (templateName==NULL)
 	{
-		printf("[ERROR] Unable to create : %s\n",templateName);
-		return 1;
-	}
-	if (f.Write(result.GetText(),result.Len())==false)
-	{
-		printf("[ERROR] Unable to write to file : %s\n",templateName);
+		printf("%s\n",result.GetText());	
+		SaveToClipboard(result.GetText());
+	} else {
+		if (f.Create(templateName)==false)
+		{
+			printf("[ERROR] Unable to create : %s\n",templateName);
+			return 1;
+		}
+		if (f.Write(result.GetText(),result.Len())==false)
+		{
+			printf("[ERROR] Unable to write to file : %s\n",templateName);
+			f.Close();
+			DeleteFileA(templateName);
+			return 1;
+		}
 		f.Close();
-		DeleteFileA(templateName);
-		return 1;
 	}
-	f.Close();
 	return 0;
 }
 int  PyTemplate(char *objectName)
@@ -456,7 +473,7 @@ int  ShowHelp()
 	Print("       run ",10,0);Print("<template_file>           ",11,0);Print("-> executes a template file\n",12,0);
 	Print("       info ",10,0);Print("<object_name>            ",11,0);Print("-> shows informations about a specific Algorithm,Conector,DataBase or Notifier\n",12,0);	
 	Print("       desc ",10,0);Print("<object_name> <property> ",11,0);Print("-> shows description for a specify propery from an Algorithm,Conector,DataBase or Notifier\n",12,0);	
-	Print("       template ",10,0);Print("<object> <file>      ",11,0);Print("-> creates a template for a specifiy object\n",12,0);	
+	Print("       template ",10,0);Print("<object> [file]      ",11,0);Print("-> creates a template for a specifiy object. If no file is present , it copies to clipboard the template\n",12,0);	
 	Print("       pytemplate ",10,0);Print("<object>           ",11,0);Print("-> creates and copies to clipboard a template for a specifiy object\n",12,0);	
 	Print("       algorithms ",10,0);Print("                   ",11,0);Print("-> shows a list of existing algorithms\n",12,0);
 	Print("       connectors ",10,0);Print("                   ",11,0);Print("-> shows a list of existing connectors\n",12,0);
@@ -495,9 +512,12 @@ int  main(int argc, char* argv[])
 	// template
 	if (GML::Utils::GString::Equals(argv[1],"template",true))
 	{
-		if (argc!=4)
-			return Error("template command requare two parameters (a name for a an Algorithm, Conector, DataBase or Notifier and a file name)");
-		return Template(argv[2],argv[3]);
+		if ((argc!=4) && (argc!=3))
+			return Error("template command requares a name for a an Algorithm, Conector, DataBase or Notifier");
+		if (argc==3)
+			return Template(argv[2],NULL);
+		else
+			return Template(argv[2],argv[3]);
 	}
 	// pytemplate
 	if (GML::Utils::GString::Equals(argv[1],"pytemplate",true))

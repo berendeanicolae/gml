@@ -3,7 +3,7 @@
 
 
 static unsigned int AttributeSizes[]={1,1,2,4,8,1,2,4,8,4,8,0};
-static char *AttributeTypeName[]={"BOOL","INT8","INT16","INT32","INT64","UINT8","UINT16","UINT32","UINT64","FLOAT","DOUBLE","STRING"};
+static char *AttributeTypeName[]={"(BOOL)","(INT8)","(INT16)","(INT32)","(INT64)","(UINT8)","(UINT16)","(UINT32)","(UINT64)","(FLOAT)","(DOUBLE)","(STRING)"};
 
 struct __INTERNAL_ATTRIBUTE_FLAG_LIST
 {
@@ -56,7 +56,7 @@ bool AttributeToStringForm(GML::Utils::Attribute *a,GML::Utils::GString *tmp)
 		case GML::Utils::AttributeList::UINT64	:
 		case GML::Utils::AttributeList::FLOAT	:
 		case GML::Utils::AttributeList::DOUBLE	:
-			if (tmp->AddFormated("(%s) ",AttributeTypeName[a->AttributeType])==false) return false;
+			if (tmp->AddFormated("%s ",AttributeTypeName[a->AttributeType])==false) return false;
 			break;		
 		case GML::Utils::AttributeList::STRING	:			
 			break;
@@ -129,6 +129,160 @@ bool AttributeToStringForm(GML::Utils::Attribute *a,GML::Utils::GString *tmp)
 	}
 	return (tmp->Add("\n\n"));
 }
+bool FindAttributeTypeAndValue(GML::Utils::GString *value,unsigned int &Type,void *valueBuffer)
+{
+	Int64					int64Value;
+	Int32					int32Value;
+	UInt64					uint64Value;
+	UInt32					uint32Value;
+	
+	// boolean
+	if ((value->Equals("True",true)) || (value->Equals("Yes",true)))		
+	{
+		Type = GML::Utils::AttributeList::BOOLEAN;
+		(*(bool *)valueBuffer) = true;
+		return true;
+	}
+	// boolean
+	if ((value->Equals("False",true)) || (value->Equals("No",true)))		
+	{
+		Type = GML::Utils::AttributeList::BOOLEAN;
+		(*(bool *)valueBuffer) = false;
+		return true;
+	}
+	// verific daca e un numar negativ
+	if (value->StartsWith("-"))
+	{
+		if (value->ConvertToInt64(&int64Value))
+		{
+			if ((value->ConvertToInt32(&int32Value)) && (int32Value==(Int32)int64Value))
+			{
+				Type = GML::Utils::AttributeList::INT32;
+				(*(Int32 *)valueBuffer) = int32Value;
+				return true;
+			}
+			Type = GML::Utils::AttributeList::INT64;
+			(*(Int64 *)valueBuffer) = int64Value;
+			return true;
+		}
+	}
+	// verific daca nu e un numar pozitiv
+	if (value->ConvertToUInt64(&uint64Value))
+	{
+		if ((value->ConvertToUInt32(&uint32Value)) && (uint32Value==(UInt32)uint64Value))
+		{
+			Type = GML::Utils::AttributeList::UINT32;
+			(*(UInt32 *)valueBuffer) = uint32Value;
+			return true;
+		}
+		Type = GML::Utils::AttributeList::UINT64;
+		(*(UInt64 *)valueBuffer) = uint64Value;
+		return true;
+	}
+	// verific daca e un double
+	if (value->ConvertToDouble((double *)valueBuffer))
+	{
+		Type = GML::Utils::AttributeList::DOUBLE;
+		return true;
+	}
+	// altfel e un tip necunoscut
+	return false;
+}
+bool FindAttributeValue(GML::Utils::GString *value,unsigned int Type,void *valueBuffer)
+{
+	switch (Type)
+	{
+		case GML::Utils::AttributeList::BOOLEAN:
+			if ((value->Equals("Yes",true)) || (value->Equals("True",true)))
+				(*(bool *)valueBuffer) = true;
+			else
+				(*(bool *)valueBuffer) = false;
+			break;
+		case GML::Utils::AttributeList::INT8:
+			if (value->ConvertToInt8((Int8 *)valueBuffer)==false)
+				return false;
+			break;
+		case GML::Utils::AttributeList::INT16:
+			if (value->ConvertToInt16((Int16 *)valueBuffer)==false)
+				return false;
+			break;
+		case GML::Utils::AttributeList::INT32:
+			if (value->ConvertToInt32((Int32 *)valueBuffer)==false)
+				return false;
+			break;
+		case GML::Utils::AttributeList::INT64:
+			if (value->ConvertToInt64((Int64 *)valueBuffer)==false)
+				return false;
+			break;
+		case GML::Utils::AttributeList::UINT8:
+			if (value->ConvertToUInt8((UInt8 *)valueBuffer)==false)
+				return false;
+			break;
+		case GML::Utils::AttributeList::UINT16:
+			if (value->ConvertToUInt16((UInt16 *)valueBuffer)==false)
+				return false;
+			break;
+		case GML::Utils::AttributeList::UINT32:
+			if (value->ConvertToUInt32((UInt32 *)valueBuffer)==false)
+				return false;
+			break;
+		case GML::Utils::AttributeList::UINT64:
+			if (value->ConvertToUInt64((UInt64 *)valueBuffer)==false)
+				return false;
+			break;
+		case GML::Utils::AttributeList::FLOAT:
+			if (value->ConvertToFloat((float *)valueBuffer)==false)
+				return false;
+			break;
+		case GML::Utils::AttributeList::DOUBLE:
+			if (value->ConvertToDouble((double *)valueBuffer)==false)
+				return false;
+			break;
+		default:
+			return false;
+	}
+	return true;
+}
+UInt32 CountElementsInArray(char *text)
+{
+	UInt32 count = 1;
+	for (int tr=0;(*text)!=0;tr++,text++)
+	{
+		if (((*text)==',') || ((*text)==';'))
+			count++;
+	}
+	return count;
+}
+bool FindArrayAttributeValue(GML::Utils::GString *value,unsigned int Type,void *valueBuffer)
+{
+	unsigned char		*ptr = (unsigned char *)valueBuffer;
+	unsigned int		len = value->Len()-1;
+	unsigned int		tr,start;
+	char				*txt = value->GetText();
+	GML::Utils::GString temp;
+	
+	start = 1;
+	for (tr=1;tr<len;tr++)
+	{
+		if ((txt[tr]==';') || (txt[tr]==','))
+		{
+			if (temp.Set(&txt[start],tr-start)==false)
+				return false;
+			if (FindAttributeValue(&temp,Type,ptr)==false)
+				return false;
+			ptr+=AttributeSizes[Type];
+			start = tr+1;
+		}
+	}
+	// pentru ultimul caz
+	if (temp.Set(&txt[start],tr-start)==false)
+		return false;
+	if (FindAttributeValue(&temp,Type,ptr)==false)
+		return false;
+	return true;
+}
+//--------------------------------------------------------------------------------------
+
 bool AttributeProcessType(GML::Utils::GString *value,unsigned int *type,unsigned int *elementsCount)
 {
 	GML::Utils::GString		tmp;
@@ -422,6 +576,9 @@ GML::Utils::AttributeList::~AttributeList(void)
 {
 	Clear();
 }
+// -------------------------------------------------------------------------------------
+
+// -------------------------------------------------------------------------------------
 void GML::Utils::AttributeList::Clear()
 {
 	GML::Utils::Attribute *a;
@@ -661,7 +818,7 @@ bool GML::Utils::AttributeList::Save(char *fileName)
 	f.Close();
 	return true;
 }
-bool GML::Utils::AttributeList::FromString(GML::Utils::GString &text)
+bool GML::Utils::AttributeList::OldFromString(GML::Utils::GString &text)
 {
 	GML::Utils::GString			line,desc,name,value,Buffer;
 	int							index=0,eq_poz,tr;
@@ -763,7 +920,166 @@ bool GML::Utils::AttributeList::FromString(GML::Utils::GString &text)
 
 	return true;
 }
+bool GML::Utils::AttributeList::FromString(GML::Utils::GString &text)
+{
+	UInt32					start,next,tip,count,attrType,dataSize,ElementsCount,tr;
+	UInt8					Buf[32];
+	void*					Data;
+	GML::Utils::GString		key,desc,value,Buffer;
 
+	if (tp.Parse(text.GetText(),text.Len())==false)
+	{
+		error.Set(tp.GetError());
+		return false;
+	}
+	start = next = 0;
+	while (tp.FindNext(start,next))
+	{		
+		if (tp.Get(start,key,tip)==false)
+		{
+			error.Set("[GML:AttributeList] -> Internal Error (1)");
+			return false;
+		}
+		count = next-start;
+		// pentru descriere
+		if ((count==1) && (tip==tp.TOKEN_LIST))
+		{
+			if (desc.Set(&key)==false)
+			{
+				error.Set("[GML:AttributeList] -> Internal Error (2)");
+				return false;
+			}		
+			start = next;
+			continue;
+		}
+		// pentru key == valoare
+		if ((count>=3) && (tp.Tokens[start+1].Type = tp.TOKEN_EQ) && (tip==tp.TOKEN_WORD))
+		{
+			tip = tp.Tokens[start+2].Type;
+			dataSize = 0;
+			ElementsCount = 1;
+			if (count==3)
+			{
+				if (tp.Get(start+2,value,tip)==false)
+				{
+					error.Set("[GML:AttributeList] -> Internal Error (3)");
+					return false;
+				}
+
+				if ((tip==tp.TOKEN_WORD) || (tip==tp.TOKEN_STRING))
+				{
+					dataSize = value.Len()+1;
+					attrType = GML::Utils::AttributeList::STRING;
+					Data = value.GetText();
+					if (FindAttributeTypeAndValue(&value,attrType,Buf))
+					{
+						dataSize = AttributeSizes[attrType];
+						Data = Buf;
+					}
+				} else if ((tip==tp.TOKEN_LIST) || (tip==tp.TOKEN_DICT))
+				{
+					dataSize = value.Len()+1;
+					attrType = GML::Utils::AttributeList::STRING;
+					Data = value.GetText();
+				} else {
+					error.SetFormated("[GML:AttributeList] -> Invalid template format: %s",value.GetText());
+					return false;
+				}				
+			} else
+			if ((count == 4) && (tip == tp.TOKEN_CAST))
+			{
+				if (tp.Get(start+2,value,tip)==false)
+					return false;
+				attrType = 0xFFFFFFFF;
+				for (tr=0;tr<GML::Utils::AttributeList::ATTRIBUTES_COUNT;tr++)
+					if (value.Equals(AttributeTypeName[tr],true))
+					{
+						attrType = tr;
+						break;
+					}
+				if (attrType == 0xFFFFFFFF)
+				{
+					error.SetFormated("[GML:AttributeList] -> Invalid cast type: %s",value.GetText());
+					return false;
+				}
+				// cazuri posibile (cast) word , (cast) list				
+				if (tp.Get(start+3,value,tip)==false)
+				{
+					error.Set("[GML:AttributeList] -> Internal Error (4)");
+					return false;
+				}
+				if (tip == tp.TOKEN_WORD)
+				{
+					dataSize = value.Len()+1;				
+					Data = value.GetText();
+					if (FindAttributeValue(&value,attrType,Buf))
+					{
+						dataSize = AttributeSizes[attrType];
+						Data = Buf;
+					}
+				} else if (tip == tp.TOKEN_LIST)
+				{
+					ElementsCount = CountElementsInArray(value.GetText());
+					if (Buffer.Grow(AttributeSizes[attrType]*ElementsCount)==false)
+					{
+						error.SetFormated("[GML:AttributeList] -> Unable to allocate memory for %d elements",ElementsCount);
+						return false;
+					}
+					Data = Buffer.GetText();
+					dataSize = AttributeSizes[attrType]*ElementsCount;
+					if (FindArrayAttributeValue(&value,attrType,Data)==false)
+					{
+						error.SetFormated("[GML:AttributeList] ->Invalid array: %s",value.GetText());
+						return false;
+					}
+				} else {
+					if (tp.Get(start+2,next-1,value)==false)
+					{
+						error.Set("[GML:AttributeList] -> Internal Error (6)");
+						return false;
+					}
+					error.SetFormated("[GML:AttributeList] -> Invalid template format: %s",value.GetText());
+					return false;
+				}
+			} else {
+				if (tp.Get(start+2,next-1,value)==false)
+				{
+					error.Set("[GML:AttributeList] -> Internal Error (7)");
+					return false;
+				}
+				error.SetFormated("[GML:AttributeList] -> Invalid template format: %s",value.GetText());
+				return false;
+			}
+			if (dataSize==0)
+			{
+				error.Set("[GML:AttributeList] -> Internal Error (8) - dataSize is NULL");
+				return false;
+			}
+			if (desc.Len()>0)
+			{
+				if (AddAttribute(key.GetText(),Data,attrType,ElementsCount,desc.GetText())==false)
+				{
+					error.SetFormated("[GML:AttributeList] -> Unable to add key: %s",key.GetText());
+					return false;
+				}
+			} else {
+				if (AddAttribute(key.GetText(),Data,attrType,ElementsCount)==false)
+				{
+					error.SetFormated("[GML:AttributeList] -> Unable to add key: %s",key.GetText());
+					return false;
+				}
+			}
+			desc.Set("");
+			start = next;
+			continue;
+		}
+		// altfel eroare
+		error.SetFormated("[GML:AttributeList] ->Invalid format for template: %s",key.GetText());
+		return false;
+	}
+	list.Sort(true,AttributeCompare);
+	return true;
+}
 bool GML::Utils::AttributeList::Load(char *fileName)
 {
 	GML::Utils::GString			temp;
@@ -775,34 +1091,29 @@ bool GML::Utils::AttributeList::Load(char *fileName)
 	if (FromString(temp)==false)
 		return false;
 
+
 	return true;
 }
 bool GML::Utils::AttributeList::Create(char *text,char separator)
 {
 	GML::Utils::GString			temp;
-	char*						txt;
-	int							tr,count;
-
+	
 	Clear();
 
 	if (text==NULL)
-		return false;
-	if (temp.Set(text)==false)
-		return false;
-	if ((separator!=0) && (separator!='\n'))
 	{
-		txt = temp.GetText();
-		count=0;
-		for (tr=0;txt[tr]!=0;tr++)
-		{
-			if ((txt[tr]==separator) && (count==0))
-				txt[tr]='\n';
-			if (txt[tr]=='{')
-				count++;
-			if (txt[tr]=='}')
-				count--;
-		}
+		error.Set("[GML:AttributeList] -> Null text for attributeList");
+		return false;
+	}
+	if (temp.Set(text)==false)
+	{
+		error.Set("[GML:AttributeList] -> Unable to alloc memory for template ... ");
+		return false;
 	}
 
 	return FromString(temp);
+}
+char*GML::Utils::AttributeList::GetError()
+{
+	return error.GetText();
 }

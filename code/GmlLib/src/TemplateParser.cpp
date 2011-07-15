@@ -30,6 +30,8 @@ int TemplateFileGetCharType(unsigned char ch)
 		return TCHTYPE_PRD;
 	if (ch==')')
 		return TCHTYPE_PRI;
+	if ((ch=='\n') || (ch=='\r'))
+		return TCHTYPE_CRLF;
 	if ((ch=='"') || (ch=='\''))
 		return TCHTYPE_STRING;
 	if (ch=='#')
@@ -94,7 +96,6 @@ int FindTypeCast(unsigned char *ptr,unsigned int start,unsigned int size)
 }
 int FindString(unsigned char *ptr,unsigned int start,unsigned int size)
 {
-	start++;
 	ptr+=start;
 	unsigned char s_term = (*ptr);
 	ptr++;
@@ -172,12 +173,13 @@ int FindBlock(unsigned char *ptr,unsigned int start,unsigned int size)
 		
 	} while (start<size);
 	if ((acolade==0) && (ppatrate==0))
-		return start+1;
+		return start;
 	return -1;	
 }
 GML::Utils::TemplateParser::TemplateParser()
 {
 	Tokens.Create(1024);
+	Error.Set("");
 }
 bool GML::Utils::TemplateParser::AddToken(unsigned int start,unsigned int end,unsigned int Type)
 {
@@ -185,7 +187,12 @@ bool GML::Utils::TemplateParser::AddToken(unsigned int start,unsigned int end,un
 	t.Start = start;
 	t.End = end;
 	t.Type = Type;
-	return Tokens.PushByRef(t);
+	if (Tokens.PushByRef(t)==false)
+	{
+		Error.SetFormated("[GML:TemplateParser] -> Unable to allocate memory for token");
+		return false;
+	}
+	return true;
 }
 bool GML::Utils::TemplateParser::AddTerminator(unsigned int start)
 {
@@ -201,11 +208,18 @@ bool GML::Utils::TemplateParser::Parse(char *_Text,int TextSize)
 	int				start,next,cType;
 	unsigned char	*ptr = (unsigned char *)_Text;
 	bool			startLine = true;
-
+	
+	Error.Set("");
 	if (Text.Set(_Text,TextSize)==false)
+	{
+		Error.Set("[GML:TemplateParser] -> Unable to alloc memory for parse buffer");
 		return false;
+	}
 	if (Tokens.DeleteAll()==false)
+	{
+		Error.Set("[GML:TemplateParser] -> Failed to delete all tokens");
 		return false;
+	}	
 	start = 0;
 	while (start<TextSize)
 	{		
@@ -221,7 +235,10 @@ bool GML::Utils::TemplateParser::Parse(char *_Text,int TextSize)
 			case TCHTYPE_STRING:
 				next = FindString(ptr,start,TextSize);
 				if (next==-1)
+				{
+					Error.SetFormated("[GML:TemplateParser] -> Invalid string => %s",&ptr[start]);
 					return false;
+				}
 				if (AddToken(start,next,TOKEN_STRING)==false)
 					return false;
 				break;
@@ -233,7 +250,10 @@ bool GML::Utils::TemplateParser::Parse(char *_Text,int TextSize)
 			case TCHTYPE_PRD:
 				next = FindTypeCast(ptr,start,TextSize);
 				if (next==-1)
+				{
+					Error.SetFormated("[GML:TemplateParser] -> Invalid cast method => %s",&ptr[start]);
 					return false;
+				}
 				if (AddToken(start,next,TOKEN_CAST)==false)
 					return false;
 				break;
@@ -260,26 +280,35 @@ bool GML::Utils::TemplateParser::Parse(char *_Text,int TextSize)
 			case TCHTYPE_AD:
 				next = FindBlock(ptr,start,TextSize);
 				if (next==-1)
+				{
+					Error.SetFormated("[GML:TemplateParser] -> Invalid block ( invalid number of } or ] ) => %s",&ptr[start]);
 					return false;
+				}
 				if (AddToken(start,next,TOKEN_DICT)==false)
 					return false;
 				break;
 			case TCHTYPE_PPD:
 				next = FindBlock(ptr,start,TextSize);
 				if (next==-1)
+				{
+					Error.SetFormated("[GML:TemplateParser] -> Invalid block ( invalid number of } or ] ) => %s",&ptr[start]);
 					return false;
+				}
 				if (AddToken(start,next,TOKEN_LIST)==false)
 					return false;
 				break;
 			case TCHTYPE_UNK:
+				Error.SetFormated("[GML:TemplateParser] -> Unknwon charater (0x%02X) -> %c",ptr[start,ptr[start]]);
 				return false;
-				break;
 			default:
+				Error.SetFormated("[GML:TemplateParser] -> Unknwon charater (0x%02X) -> %c",ptr[start,ptr[start]]);
 				return false;
-				break;
 		}
 		if (next<=start)
+		{
+			Error.SetFormated("[GML:TemplateParser] -> Invalid token => %s",&ptr[start]);
 			return false;
+		}
 		start = next;
 	}
 	return AddTerminator(start);
@@ -294,6 +323,8 @@ bool GML::Utils::TemplateParser::Get(unsigned int index,GML::Utils::GString &str
 	if (t==NULL)
 		return false;
 	type = t->Type;
+	if (type == TOKEN_STRING)
+		return str.Set(&Text.GetText()[t->Start+1],t->End-t->Start-2);
 	return str.Set(&Text.GetText()[t->Start],t->End-t->Start);
 }
 bool GML::Utils::TemplateParser::Get(unsigned int start,unsigned int end,GML::Utils::GString &str)
@@ -320,6 +351,8 @@ bool GML::Utils::TemplateParser::FindNext(unsigned int &start,unsigned int &end)
 		t++;
 		start++;
 	}
+	if (start>=len)
+		return false;
 	end = start;
 	while ((end<len) && (t->Type!=TOKEN_TERM))
 	{
@@ -327,4 +360,8 @@ bool GML::Utils::TemplateParser::FindNext(unsigned int &start,unsigned int &end)
 		end++;
 	}
 	return true;
+}
+char*GML::Utils::TemplateParser::GetError()
+{
+	return Error.GetText();
 }

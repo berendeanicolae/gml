@@ -16,7 +16,8 @@ namespace GML
 		};
 		class EXPORT INotifier: public GMLObject
 		{
-
+		public:
+			GML::Utils::INotifier	*Notifier;
 		public:
 			enum {
 				NOTIFY_ERROR = 0,
@@ -28,13 +29,15 @@ namespace GML
 				NOTIFY_SENDOBJECTCOMMAND,
 				NOTIFY_RESULT = 100,
 			};
+			INotifier();
 			bool			Init(char *attributeString);
-
+		
 			virtual bool	OnInit() = 0;
 			virtual bool	Uninit() = 0;
 			virtual bool	Notify(UInt32 messageID,void *Data,UInt32 DataSize) = 0;
 			virtual bool	SuportsObjects();
 
+			bool			SendNotification(UInt32 messageID,void *Data,UInt32 DataSize);	
 			bool			NotifyString(UInt32 messageID,char* format,...);
 			bool			Info(char *format,...);
 			bool			Error(char *format,...);
@@ -45,6 +48,7 @@ namespace GML
 			bool			Result(GML::Utils::AlgorithmResult &ar);
 			bool			CreateObject(char *name,char *attributes);
 			bool			SendDataToObject(char *objName,char *attributes);
+			
 		};
 	}
 }

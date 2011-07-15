@@ -37,15 +37,13 @@ struct FeaturesThreadData
 public:
 	FeaturesThreadData() { FI=NULL; }
 };
-class FeaturesStatistics: public GML::Algorithm::IAlgorithm
+class FeaturesStatistics: public GML::Algorithm::IMLAlgorithm
 {
 	enum
 	{
 		COMMAND_NONE = 0,
 		COMMAND_COMPUTE
 	};
-	GML::DB::IDataBase							*db;
-	GML::ML::IConnector							*con;
 	GML::Utils::ThreadParalelUnit				*tpu;
 	FeaturesThreadData							All;
 	GML::Utils::GTVector<Stats>					StatsData;
@@ -55,13 +53,9 @@ public:
 	FeaturesThreadData				*fData;
 private:
 	// proprietati
-	GML::Utils::GString				Conector;
-	GML::Utils::GString				DataBase;
-	GML::Utils::GString				Notifier;
 	GML::Utils::GString				ResultFile;
 	GML::Utils::GString				FeaturesWeightFile;
 
-	UInt32							threadsCount;
 	UInt32							columnWidth;
 	UInt32							featureColumnWidth;
 	UInt32							sortBy;

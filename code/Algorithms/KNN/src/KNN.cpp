@@ -14,11 +14,7 @@ KNN::KNN()
 {
 	ObjectName = "KNN";
 
-	LinkPropertyToString("Connector",strConector,"","Conectorul la care sa se conecteze");
-	LinkPropertyToString("Notifier",strNotificator,"","Notificatorul la care sa se conecteze");
-	LinkPropertyToString("DataBase",strDB,"","Baza de date la care sa se conecteze");
 	LinkPropertyToUInt32("K",k,1);
-	LinkPropertyToUInt32("ThreadsCount",threadsCount,1);
 	LinkPropertyToDouble("MemProcent",procMem,0.66,"O valoarea care identifica ....");
 	LinkPropertyToUInt32("DistMethod",distMethod,DIST_EUCLIDIANA,"!!LIST:Euclidiana=0,ZuggyDist!!\nMetrica folosita");
 
@@ -27,23 +23,9 @@ KNN::KNN()
 
 bool KNN::Init()
 {
-	if ((notif = GML::Builder::CreateNotifier(strNotificator.GetText()))==NULL)
+	if (InitConnections()==false)
 		return false;
-	if ((db = GML::Builder::CreateDataBase(strDB.GetText(),*notif))==NULL)
-	{
-		notif->Error("[%s] -> Unable to create Database (%s)",ObjectName,strDB.GetText());
-		return false;
-	}
-	if (db->Connect()==false)
-	{
-		notif->Error("[%s] -> Unable to connesct to Database (%s)",ObjectName,strDB.GetText());
-		return false;
-	}
-	if ((con = GML::Builder::CreateConnectors(strConector.GetText(),*notif,*db))==NULL)
-	{
-		notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,strConector.GetText());
-		return false;
-	}
+
 	if ((procMem<=0) || (procMem>=1.0))
 	{
 		notif->Error("[%s] -> Procent memory should be between [0..1]",ObjectName);

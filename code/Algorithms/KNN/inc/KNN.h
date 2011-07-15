@@ -10,7 +10,7 @@ struct KNN_INFO
 
 };
 
-class KNN: public GML::Algorithm::IAlgorithm
+class KNN: public GML::Algorithm::IMLAlgorithm
 {
 	enum
 	{
@@ -23,12 +23,6 @@ class KNN: public GML::Algorithm::IAlgorithm
 		Test
 	};
 
-	GML::DB::IDataBase		*db;
-	GML::ML::IConnector		*con;
-
-	GML::Utils::GString		strDB;
-	GML::Utils::GString		strConector;
-	GML::Utils::GString		strNotificator;
 	GML::Utils::Indexes		memIndex,testIndex;
 
 	GML::ML::MLRecord		ob1,ob2;
