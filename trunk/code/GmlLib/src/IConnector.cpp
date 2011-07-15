@@ -5,7 +5,9 @@ GML::ML::IConnector::IConnector()
 {
 	notifier = NULL;
 	database = NULL;
-	conector = NULL;	
+	conector = NULL;
+	connectors = NULL;
+	connectorsCount = 0;
 	ObjectName = "IConnector";
 	columns.indexFeature = NULL;
 	ClearColumnIndexes();
@@ -351,17 +353,11 @@ bool GML::ML::IConnector::QueryRecordsCount(char *CountQueryStatement,UInt32 &re
 	}
 	return true;
 }
-bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBase *_database,GML::ML::IConnector *_connector,char *attributeString)
+bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,char *attributeString)
 {
 	bool										result;
 
-	// daca a fost deja initializat
-	if ((database!=NULL) || (conector!=NULL))
-	{
-		if (notifier)
-			notifier->Error("[%s] -> Conector already initilized !",ObjectName);
-		return false;
-	}
+	notifier = &_notifier;
 
 	if ((attributeString!=NULL) && (attributeString[0]!=0))
 	{
@@ -372,9 +368,6 @@ bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBa
 		}
 	}
 
-	notifier = &_notifier;
-	database = _database;
-	conector = _connector;
 	ClearColumnIndexes();
 
 	notifier->Info("[%s] -> OnInit()",ObjectName);
@@ -382,18 +375,6 @@ bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBa
 	if (result==false)
 		notifier->Error("[%s] -> OnInit() returned false",ObjectName);
 	return result;
-}
-bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,GML::DB::IDataBase &_database,char *attributeString)
-{	
-	return Init(_notifier,&_database,NULL,attributeString);
-}
-bool GML::ML::IConnector::Init(GML::ML::IConnector &_conector,char *attributeString)
-{
-	return Init(*(_conector.notifier),NULL,&_conector,attributeString);
-}
-bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,char *attributeString)
-{
-	return Init(_notifier,NULL,NULL,attributeString);
 }
 bool GML::ML::IConnector::Save(char *fileName)
 {

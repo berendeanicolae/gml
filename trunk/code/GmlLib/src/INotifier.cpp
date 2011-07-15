@@ -5,6 +5,16 @@
 
 #define TEMP_STACK_BUFFER_SIZE		2048
 
+GML::Utils::INotifier::INotifier()
+{
+	Notifier = NULL;
+}
+bool GML::Utils::INotifier::SendNotification(UInt32 messageID,void *Data,UInt32 DataSize)
+{
+	if (Notifier!=NULL)
+		Notifier->SendNotification(messageID,Data,DataSize);
+	return Notify(messageID,Data,DataSize);
+}
 bool GML::Utils::INotifier::NotifyString(UInt32 messageID,char *format,...)
 {
     va_list		args;
@@ -22,7 +32,7 @@ bool GML::Utils::INotifier::NotifyString(UInt32 messageID,char *format,...)
 		if ((len = vsprintf_s( stack, len+1, format, args ))<0)
 			return false;
 		stack[len]=0;
-		return Notify(messageID,stack,(unsigned int)len);
+		return SendNotification(messageID,stack,(unsigned int)len);
 	} else {
 		if ((temp = new char[len+1])==NULL)
 			return false;
@@ -32,7 +42,7 @@ bool GML::Utils::INotifier::NotifyString(UInt32 messageID,char *format,...)
 			if ((len = vsprintf_s( temp, len+1, format, args ))<0)
 				break;
 			temp[len]=0;
-			result = Notify(messageID,stack,(unsigned int)len);
+			result = SendNotification(messageID,stack,(unsigned int)len);
 			delete temp;
 			return result;
 		}
@@ -57,7 +67,7 @@ bool GML::Utils::INotifier::Error(char *format,...)
 		if ((len = vsprintf_s( stack, len+1, format, args ))<0)
 			return false;
 		stack[len]=0;
-		return Notify(GML::Utils::INotifier::NOTIFY_ERROR,stack,(unsigned int)len);
+		return SendNotification(GML::Utils::INotifier::NOTIFY_ERROR,stack,(unsigned int)len);
 	} else {
 		if ((temp = new char[len+1])==NULL)
 			return false;
@@ -67,7 +77,7 @@ bool GML::Utils::INotifier::Error(char *format,...)
 			if ((len = vsprintf_s( temp, len+1, format, args ))<0)
 				break;
 			temp[len]=0;
-			result = Notify(GML::Utils::INotifier::NOTIFY_ERROR,stack,(unsigned int)len);
+			result = SendNotification(GML::Utils::INotifier::NOTIFY_ERROR,stack,(unsigned int)len);
 			delete temp;
 			return result;
 		}
@@ -92,7 +102,7 @@ bool GML::Utils::INotifier::Info(char *format,...)
 		if ((len = vsprintf_s( stack, len+1, format, args ))<0)
 			return false;
 		stack[len]=0;
-		return Notify(GML::Utils::INotifier::NOTIFY_INFO,stack,(unsigned int)len);
+		return SendNotification(GML::Utils::INotifier::NOTIFY_INFO,stack,(unsigned int)len);
 	} else {
 		if ((temp = new char[len+1])==NULL)
 			return false;
@@ -102,7 +112,7 @@ bool GML::Utils::INotifier::Info(char *format,...)
 			if ((len = vsprintf_s( temp, len+1, format, args ))<0)
 				break;
 			temp[len]=0;
-			result = Notify(GML::Utils::INotifier::NOTIFY_INFO,stack,(unsigned int)len);
+			result = SendNotification(GML::Utils::INotifier::NOTIFY_INFO,stack,(unsigned int)len);
 			delete temp;
 			return result;
 		}
@@ -127,7 +137,7 @@ bool GML::Utils::INotifier::StartProcent(char *format,...)
 		if ((len = vsprintf_s( stack, len+1, format, args ))<0)
 			return false;
 		stack[len]=0;
-		return Notify(GML::Utils::INotifier::NOTIFY_START_PROCENT,stack,(unsigned int)len);
+		return SendNotification(GML::Utils::INotifier::NOTIFY_START_PROCENT,stack,(unsigned int)len);
 	} else {
 		if ((temp = new char[len+1])==NULL)
 			return false;
@@ -137,7 +147,7 @@ bool GML::Utils::INotifier::StartProcent(char *format,...)
 			if ((len = vsprintf_s( temp, len+1, format, args ))<0)
 				break;
 			temp[len]=0;
-			result = Notify(GML::Utils::INotifier::NOTIFY_START_PROCENT,stack,(unsigned int)len);
+			result = SendNotification(GML::Utils::INotifier::NOTIFY_START_PROCENT,stack,(unsigned int)len);
 			delete temp;
 			return result;
 		}
@@ -148,12 +158,12 @@ bool GML::Utils::INotifier::StartProcent(char *format,...)
 bool GML::Utils::INotifier::EndProcent()
 {
 	double proc = 1;
-	Notify(NOTIFY_PROCENT,&proc,sizeof(double));
-	return Notify(NOTIFY_END_PROCENT,"",0);
+	SendNotification(NOTIFY_PROCENT,&proc,sizeof(double));
+	return SendNotification(NOTIFY_END_PROCENT,"",0);
 }
 bool GML::Utils::INotifier::SetProcent(double procValue)
 {
-	return Notify(NOTIFY_PROCENT,&procValue,sizeof(double));
+	return SendNotification(NOTIFY_PROCENT,&procValue,sizeof(double));
 }
 bool GML::Utils::INotifier::SetProcent(double procValue,double maxValue)
 {
@@ -161,6 +171,7 @@ bool GML::Utils::INotifier::SetProcent(double procValue,double maxValue)
 }
 bool GML::Utils::INotifier::Init(char *attributeString)
 {
+	Notifier = NULL;
 	if ((attributeString!=NULL) && (attributeString[0]!=0))
 	{
 		if (SetProperty(attributeString)==false)
@@ -170,7 +181,7 @@ bool GML::Utils::INotifier::Init(char *attributeString)
 }
 bool GML::Utils::INotifier::Result(GML::Utils::AlgorithmResult &ar)
 {
-	return Notify(NOTIFY_RESULT,&ar,sizeof(ar));
+	return SendNotification(NOTIFY_RESULT,&ar,sizeof(ar));
 }
 bool GML::Utils::INotifier::CreateObject(char *name,char *attributes)
 {
@@ -190,7 +201,7 @@ bool GML::Utils::INotifier::CreateObject(char *name,char *attributes)
 		Size = 32;
 	}
 	Data[Size++]=0;
-	return Notify(NOTIFY_CREATEOBJECT,Data,Size);
+	return SendNotification(NOTIFY_CREATEOBJECT,Data,Size);
 }
 bool GML::Utils::INotifier::SendDataToObject(char *objName,char *attributes)
 {
@@ -210,7 +221,7 @@ bool GML::Utils::INotifier::SendDataToObject(char *objName,char *attributes)
 		Size = 32;
 	}
 	Data[Size++]=0;
-	return Notify(NOTIFY_SENDOBJECTCOMMAND,Data,Size);
+	return SendNotification(NOTIFY_SENDOBJECTCOMMAND,Data,Size);
 }
 bool GML::Utils::INotifier::SuportsObjects()
 {

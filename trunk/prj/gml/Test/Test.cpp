@@ -37,10 +37,50 @@ int my_fnc(UInt32 &e1,UInt32 &e2)
 		return -1;
 	return 0;
 }
+void my_test()
+{
+	GML::Utils::TemplateParser	p;
+	GML::Utils::GString			tmp;
+	UInt32						tip;
+
+	tmp.LoadFromFile("E:\\lucru\\GML\\gml\\prj\\gml\\Release\\a.a");
+	if (p.Parse(tmp.GetText(),tmp.Len())==false)
+	{
+		printf("Error (1)");
+		return;
+	}
+	unsigned int start,next;
+	start = next = 0;
+	while (p.FindNext(start,next))
+	{
+		p.Get(start,next,tmp);
+		printf("[Start=%d,Next=%d] => %s\n",start,next,tmp.GetText());
+		start = next;
+	}
+	/*
+	for (int tr=0;tr<p.GetCount();tr++)
+	{
+		p.Get(tr,tmp,tip);
+		printf("Tip (%d) => %s\n",tip,tmp.GetText());
+	}
+	*/
+}
+void my_test2()
+{
+	GML::Utils::AttributeList	attr;
+	if (attr.Load("E:\\lucru\\GML\\gml\\prj\\gml\\Release\\a.a")==false)
+	{
+		printf("Error (1)");
+		return ;
+	}
+	for (int tr=0;tr<attr.GetCount();tr++)
+		printf("%s\n",attr.Get(tr)->Name);
+}
 int _tmain(int argc, _TCHAR* argv[])
 {
 	GML::Utils::GString	tmp,l,r;
-
+	my_test2();
+	return 0;
 	double *d;
 
 	d = new(0) double[100000000];

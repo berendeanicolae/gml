@@ -37,12 +37,14 @@ namespace GML
 		};
 		class EXPORT IConnector : public GML::Utils::GMLObject
 		{
-		private:
-			bool										Init(GML::Utils::INotifier &Notifier,GML::DB::IDataBase *Database,GML::ML::IConnector *connecor,char *attributeString);
 		protected:
-			GML::Utils::INotifier						*notifier;			
+			GML::Utils::INotifier						*notifier;
+		public:			
 			GML::DB::IDataBase							*database;
 			GML::ML::IConnector							*conector;
+			GML::ML::IConnector							**connectors;
+			UInt32										connectorsCount;
+		protected:
 			GML::Utils::GString							DataFileName;			
 			GML::Utils::GString							Query;
 			GML::Utils::GString							CountQuery;
@@ -91,8 +93,6 @@ namespace GML
 		public:	
 			IConnector();
 
-			virtual bool				Init(GML::Utils::INotifier &Notifier,GML::DB::IDataBase &Database,char *attributeString=NULL);
-			virtual bool				Init(GML::ML::IConnector &conector,char *attributeString=NULL);
 			virtual bool				Init(GML::Utils::INotifier &Notifier,char *attributeString=NULL);
 			virtual bool				Save(char *fileName);
 			virtual bool				Load(char *fileName);
@@ -109,7 +109,8 @@ namespace GML
 
 			virtual UInt32				GetFeatureCount();
 			virtual UInt32				GetRecordCount();	
-			virtual UInt32				GetTotalRecordCount();
+			virtual UInt32				GetTotalRecordCount();		
+
 		};
 
 	}

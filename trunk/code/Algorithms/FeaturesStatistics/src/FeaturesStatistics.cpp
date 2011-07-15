@@ -216,33 +216,9 @@ bool FeaturesStatistics::Init()
 {
 	UInt32		tr,rap;
 
-	// creez obiectele:
-	if ((notif = GML::Builder::CreateNotifier(Notifier.GetText()))==NULL)
+	if (InitConnections()==false)
 		return false;
-	if (DataBase.Len()>0)
-	{
-		if ((db = GML::Builder::CreateDataBase(DataBase.GetText(),*notif))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Database (%s)",ObjectName,DataBase.GetText());
-			return false;
-		}
-		if (db->Connect()==false)
-		{
-			notif->Error("[%s] -> Unable to connesct to Database (%s)",ObjectName,DataBase.GetText());
-			return false;
-		}
-		if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif,*db))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,Conector.GetText());
-			return false;
-		}
-	} else {
-		if ((con = GML::Builder::CreateConnectors(Conector.GetText(),*notif))==NULL)
-		{
-			notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,Conector.GetText());
-			return false;
-		}
-	}
+	// creez obiectele:
 	if ((fData = new FeaturesThreadData[threadsCount])==NULL)
 	{
 		notif->Error("[%s] -> Unable to create %d FeaturesThreadData ",ObjectName,threadsCount);

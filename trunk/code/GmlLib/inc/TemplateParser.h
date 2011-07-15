@@ -29,7 +29,7 @@ namespace GML
 				unsigned int	End;
 				unsigned int	Type;
 			};
-			GML::Utils::GString				Text;
+			GML::Utils::GString				Text,Error;
 			GML::Utils::GTFVector<Token>	Tokens;
 
 			bool							AddToken(unsigned int start,unsigned int end,unsigned int Type);
@@ -41,6 +41,7 @@ namespace GML
 			bool							Get(unsigned int index,GML::Utils::GString &str,unsigned int &type);
 			bool							Get(unsigned int start,unsigned int end,GML::Utils::GString &str);
 			bool							FindNext(unsigned int &start,unsigned int &end);	
+			char*							GetError();
 		};
 	}
 };

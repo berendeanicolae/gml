@@ -1,6 +1,15 @@
 #include "Builder.h"
 #include "GString.h"
 
+struct PluginObjectInfo
+{
+	GML::Utils::GString			templateText;
+	GML::Utils::GString			typeName;
+	GML::Utils::AttributeList	attr;
+	GML::Utils::TemplateParser	tp;	
+	UInt32						CountElements;
+};
+
 bool FindGMLLibPath(GML::Utils::GString &gmlLib)
 {
 	HMODULE					hModule;
@@ -44,40 +53,128 @@ bool AdjustNameWithExtensionAndPath(GML::Utils::GString &path,char *extension,ch
 
 	return true;
 }
-
-//==========================================================================================
-GML::Utils::INotifier*		GML::Builder::CreateNotifier(char *pluginName)
+bool CheckIfArray(GML::Utils::GString &str,GML::Utils::INotifier *notifier,PluginObjectInfo &poi)
 {
-	GML::Utils::GString		path,attributeList;
-	HMODULE					hModule;
-	int						a_poz;
+	UInt32	tip;
+
+	poi.CountElements = 0;
+	
+	if (str.Strip()==false)
+	{
+		if (notifier)
+			notifier->Error("[GML:Builder] -> Internal error -> GString::Strip(%s)",str.GetText());
+		return false;
+	}
+	if (str.StartsWith("["))
+	{
+		if (str.EndsWith("]")==false)
+		{
+			if (notifier)
+				notifier->Error("[GML:Builder] -> Missing ']' in %s",str.GetText());
+			return false;
+		}
+		// este o lista -> il parsez
+		if (poi.tp.Parse(&str.GetText()[1],str.Len()-2)==false)
+		{
+			if (notifier)
+				notifier->Error(poi.tp.GetError());
+			return false;
+		}
+		// verific sa fie formata doar din dictionare
+		if (poi.tp.GetCount()==0)
+		{
+			if (notifier)
+				notifier->Error("[GML:Builder] ->Empty list : %s",str.GetText());
+			return false;
+		}
+		for (UInt32 tr=0;tr<poi.tp.GetCount();tr++)
+		{
+			tip = poi.tp.Tokens[tr].Type;
+			if (tip==GML::Utils::TemplateParser::TOKEN_DICT)
+			{
+				poi.CountElements++;
+				continue;
+			}
+			if (tip==GML::Utils::TemplateParser::TOKEN_TERM)
+				continue;
+			
+			if (notifier)
+				notifier->Error("[GML:Builder] -> List should contain only dictionaries : ",str.GetText());
+			return false;			
+		}
+		if (poi.CountElements == 0)
+		{
+			if (notifier)
+				notifier->Error("[GML:Builder] -> List should contain at least one dictionary : ",str.GetText());
+			return false;
+		}
+		// totul e ok , am un array
+	}
+	return true;
+}
+bool CreatePluginObjectInfo(char *text,GML::Utils::INotifier *notifier,PluginObjectInfo &poi)
+{
+	if (poi.templateText.Set(text)==false)
+	{
+		if (notifier)
+			notifier->Error("[GML:Builder] -> Invalid template : %s",text);
+		return false;
+	}
+	if (poi.templateText.Strip()==false)
+	{
+		if (notifier)
+			notifier->Error("[GML:Builder] -> Internal error -> GString::Strip(%s)",text);
+		return false;
+	}
+	if (poi.templateText.StartsWith("{"))
+	{
+		if (poi.templateText.EndsWith("}")==false)
+		{
+			if (notifier)
+				notifier->Error("[GML:Builder] -> Missing '}' in %s",text);
+			return false;
+		}
+		if (poi.templateText.DeleteChar(0)==false)
+		{
+			if (notifier)
+				notifier->Error("[GML:Builder] -> Internal error -> GString::DeleteChar(%s)",poi.templateText.GetText());
+			return false;
+		}
+		poi.templateText.Truncate(poi.templateText.Len()-1);
+	}
+	if (poi.attr.Create(poi.templateText.GetText())==false)
+	{
+		if (notifier)
+		{
+			notifier->Error(poi.attr.GetError());
+			notifier->Error("[GML:Builder] -> Invalid template: %s",poi.templateText.GetText());
+		}
+		return false;
+	}
+	if (poi.attr.UpdateString("type",poi.typeName)==false)
+	{
+		if (notifier)
+			notifier->Error("[GML:Builder] -> Missing 'Type' property in : ",poi.templateText.GetText());
+		return false;
+	}
+	return true;
+}
+//==========================================================================================
+GML::Utils::INotifier*		GML::Builder::CreateNotifier(char *buildString)
+{
+	GML::Utils::GString		notif;
+	HMODULE					hModule;	
 	GML::Utils::INotifier*	(*fnCreate)();
 	GML::Utils::INotifier*	newObject;
+	PluginObjectInfo		poi;
 
-
-	if (path.Set(pluginName)==false)
+	if (CreatePluginObjectInfo(buildString,NULL,poi)==false)
 		return NULL;
-	a_poz = path.Find("{");
-	if (a_poz>=0)
-	{
-		if (attributeList.Set(&path.GetText()[a_poz+1])==false)
-			return NULL;
-		if (attributeList.EndsWith("}"))
-			attributeList.Truncate(attributeList.Len()-1);
-		if (attributeList.Strip()==false)
-			return NULL;
-		path.Truncate(a_poz);
-		if (path.Strip()==false)
-			return NULL;
-	} else {
-		if (attributeList.Set("")==false)
-			return NULL;
-	}
-	if (AdjustNameWithExtensionAndPath(path,NOTIFYER_EXT,NOTIFYER_FOLDER)==false)
+	if (AdjustNameWithExtensionAndPath(poi.typeName,NOTIFYER_EXT,NOTIFYER_FOLDER)==false)
 		return NULL;
 
 	// incarc libraria
-	if ((hModule = LoadLibraryA(path.GetText()))==NULL)
+	if ((hModule = LoadLibraryA(poi.typeName.GetText()))==NULL)
 		return NULL;
 	// incarc functia Create
 	*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
@@ -86,137 +183,145 @@ GML::Utils::INotifier*		GML::Builder::CreateNotifier(char *pluginName)
 	// am incarcat si totul e ok -> cer o interfata
 	if ((newObject=fnCreate())==NULL)
 		return NULL;
-	if (newObject->Init(attributeList.GetText())==false)
+	if (newObject->Init(poi.templateText.GetText())==false)
 		return NULL;
+	// totul e ok -> verific daca nu cumva mai are si un alt notificator
+	if ((poi.attr.UpdateString("Notifier",notif)) && (notif.Len()>2))
+	{
+		newObject->Notifier = GML::Builder::CreateNotifier(notif.GetText());
+		if (newObject->Notifier==NULL)
+			return NULL;
+	}
 	return newObject;
 }
-GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *pluginName,GML::Utils::INotifier &notify)
-{
-	GML::Utils::GString		path,attributeList;
-	HMODULE					hModule;
-	int						a_poz;
+GML::DB::IDataBase*			GML::Builder::CreateDataBase(char *buildString,GML::Utils::INotifier &notify)
+{	
+	HMODULE					hModule;	
 	GML::DB::IDataBase*		(*fnCreate)();
 	GML::DB::IDataBase*		newObject;
+	PluginObjectInfo		poi;
 
-	if (path.Set(pluginName)==false)
+	if (CreatePluginObjectInfo(buildString,&notify,poi)==false)
 		return NULL;
-	a_poz = path.Find("{");
-	if (a_poz>=0)
-	{
-		if (attributeList.Set(&path.GetText()[a_poz+1])==false)
-			return NULL;
-		if (attributeList.EndsWith("}"))
-			attributeList.Truncate(attributeList.Len()-1);
-		if (attributeList.Strip()==false)
-			return NULL;
-		path.Truncate(a_poz);
-		if (path.Strip()==false)
-			return NULL;
-	} else {
-		if (attributeList.Set("")==false)
-			return NULL;
-	}
-	if (AdjustNameWithExtensionAndPath(path,DATABASE_EXT,DATABASE_FOLDER)==false)
+	if (AdjustNameWithExtensionAndPath(poi.typeName,DATABASE_EXT,DATABASE_FOLDER)==false)
 		return NULL;
-
 	// incarc libraria
-	if ((hModule = LoadLibraryA(path.GetText()))==NULL)
+	if ((hModule = LoadLibraryA(poi.typeName.GetText()))==NULL)
+	{
+		notify.Error("[GML:Builder] -> Unable to load library: %s",poi.typeName.GetText());
 		return NULL;
+	}
 	// incarc functia Create
 	*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
 	if (fnCreate==NULL)
+	{
+		notify.Error("[GML:Builder] -> Missing 'CreateInterface' export from library: %s",poi.typeName.GetText());
 		return NULL;
+	}
 	// am incarcat si totul e ok -> cer o interfata
 	if ((newObject=fnCreate())==NULL)
+	{
+		notify.Error("[GML:Builder] -> 'CreateInterface' failed in library: %s",poi.typeName.GetText());
 		return NULL;
-	if (newObject->Init(notify,attributeList.GetText())==false)
+	}
+	if (newObject->Init(notify,poi.templateText.GetText())==false)
+	{
+		notify.Error("[GML:Builder] -> 'Init' failed in library: %s",poi.typeName.GetText());
 		return NULL;
+	}
 	return newObject;
 }
-GML::ML::IConnector*		_CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase *database)
-{
-	GML::Utils::GString		list,path,attributeList;
-	int						poz,a_poz;
-	HMODULE					hModule;
+GML::ML::IConnector*		GML::Builder::CreateConnector(char *buildString,GML::Utils::INotifier &notify)
+{	
+	UInt32					tip,index;
+	GML::Utils::GString		conn;
+	HMODULE					hModule;	
 	GML::ML::IConnector*	(*fnCreate)();
-	GML::ML::IConnector		*con,*last;
-	bool					first;
+	GML::ML::IConnector*	newObject;
+	PluginObjectInfo		poi;
 
-	if (list.Set(conectorsList)==false)
+	if (CreatePluginObjectInfo(buildString,&notify,poi)==false)
 		return NULL;
-	if (list.Len()==0)
+	if (AdjustNameWithExtensionAndPath(poi.typeName,CONNECTOR_EXT,CONNECTOR_FOLDER)==false)
 		return NULL;
-	// vad daca mai am elemente in lista
-	first = true;
-	while (list.Len()>0)
+	// incarc libraria
+	if ((hModule = LoadLibraryA(poi.typeName.GetText()))==NULL)
 	{
-		poz = list.FindLast("=>");
-		if (poz<0)
+		notify.Error("[GML:Builder] -> Unable to load library: %s",poi.typeName.GetText());
+		return NULL;
+	}
+	// incarc functia Create
+	*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
+	if (fnCreate==NULL)
+	{
+		notify.Error("[GML:Builder] -> Missing 'CreateInterface' export from library: %s",poi.typeName.GetText());
+		return NULL;
+	}
+	// am incarcat si totul e ok -> cer o interfata
+	if ((newObject=fnCreate())==NULL)
+	{
+		notify.Error("[GML:Builder] -> 'CreateInterface' failed in library: %s",poi.typeName.GetText());
+		return NULL;
+	}
+	if ((poi.attr.UpdateString("Connector",conn)) && (conn.Len()>2))
+	{
+		// legatura cu ceilalti connectori
+		if (CheckIfArray(conn,&notify,poi)==false)
+			return NULL;
+		if (poi.CountElements>0)
 		{
-			poz = 0;
-			if (path.Set(list.GetText())==false)
-				return NULL;		
-		} else 	{
-			if (path.Set(&list.GetText()[poz+2])==false)
-				return NULL;
-		}
-		if (path.Strip()==false)
-			return NULL;
-		a_poz = path.Find("{");
-		if (a_poz>=0)
-		{
-			if (attributeList.Set(&path.GetText()[a_poz+1])==false)
-				return NULL;
-			if (attributeList.EndsWith("}"))
-				attributeList.Truncate(attributeList.Len()-1);
-			if (attributeList.Strip()==false)
-				return NULL;
-			path.Truncate(a_poz);
-			if (path.Strip()==false)
-				return NULL;
-		} else {
-			if (attributeList.Set("")==false)
-				return NULL;
-		}
-		if (AdjustNameWithExtensionAndPath(path,CONNECTOR_EXT,CONNECTOR_FOLDER)==false)
-			return NULL;
-		// incarc libraria
-		if ((hModule = LoadLibraryA(path.GetText()))==NULL)
-			return NULL;
-		// incarc functia Create
-		*(FARPROC *)&fnCreate = GetProcAddress(hModule,"CreateInterface");
-		if (fnCreate==NULL)
-			return NULL;
-		if ((con = fnCreate())==NULL)
-			return NULL;
-		if (first)
-		{
-			last = con;
-			if (database==NULL)
+			// array
+			if ((newObject->connectors = new GML::ML::IConnector* [poi.CountElements])==NULL)
 			{
-				if (last->Init(notify,attributeList.GetText())==false)
+				notify.Error("[GML:Builder] -> Unable to alloc %d connectors for : %s",poi.CountElements,poi.typeName.GetText());
+				return NULL;
+			}
+			newObject->connectorsCount = poi.CountElements;
+			index = 0;
+			for (UInt32 tr=0;tr<poi.tp.GetCount();tr++)
+			{
+				if (poi.tp.Tokens[tr].Type != GML::Utils::TemplateParser::TOKEN_DICT)
+					continue;
+				if (poi.tp.Get(tr,conn,tip)==false)
+				{
+					notify.Error("[GML:Builder] -> Unable to read connector(%d) from array : %s",index,poi.typeName.GetText());
 					return NULL;
-			} else {
-				if (last->Init(notify,*database,attributeList.GetText())==false)
+				}
+				newObject->connectors[index] = GML::Builder::CreateConnector(conn.GetText(),notify);
+				if (newObject->connectors[index]==NULL)
 					return NULL;
 			}
 		} else {
-			if (con->Init(*last,attributeList.GetText())==false)
+			if ((newObject->connectors = new GML::ML::IConnector* [1])==NULL)
+			{
+				notify.Error("[GML:Builder] -> Unable to alloc connectors for : %s",poi.typeName.GetText());
 				return NULL;
-			last = con;
+			}
+			newObject->connectorsCount = 1;
+			newObject->connectors[0] = GML::Builder::CreateConnector(conn.GetText(),notify);
+			if (newObject->connectors[0]==NULL)
+				return NULL;
 		}
-		first = false;
-		list.Truncate(poz);
+		// fac si linkul pt. connector
+		newObject->conector = newObject->connectors[0];
 	}
-	return last;
-}
-GML::ML::IConnector*		GML::Builder::CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database)
-{
-	return _CreateConnectors(conectorsList,notify,&database);
-}
-GML::ML::IConnector*		GML::Builder::CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify)
-{
-	return _CreateConnectors(conectorsList,notify,NULL);
+	if ((poi.attr.UpdateString("DataBase",conn)) && (conn.Len()>2))
+	{
+		if (newObject->connectorsCount>0)
+		{
+			notify.Error("[GML:Builder] -> A connector cannot be connected at the same time to a DataBase and another connector : %s",poi.typeName.GetText());
+			return NULL;
+		}
+		newObject->database = GML::Builder::CreateDataBase(conn.GetText(),notify);
+		if (newObject->database == NULL)
+			return NULL;
+	}
+	if (newObject->Init(notify,poi.templateText.GetText())==false)
+	{
+		notify.Error("[GML:Builder] -> 'Init' failed in library: %s",poi.typeName.GetText());
+		return NULL;
+	}
+	return newObject;
 }
 GML::Algorithm::IAlgorithm*	GML::Builder::CreateAlgorithm(char *algorithmPath)
 {

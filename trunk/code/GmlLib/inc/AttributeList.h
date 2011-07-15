@@ -4,6 +4,7 @@
 #include "GString.h"
 #include "GTVector.h"
 #include "File.h"
+#include "TemplateParser.h"
 
 
 
@@ -47,8 +48,11 @@ namespace GML
 		class EXPORT AttributeList
 		{
 			GTVector<GML::Utils::Attribute>	list;
+			TemplateParser					tp;
+			GML::Utils::GString				error;
 			
-			bool			FromString(GML::Utils::GString &text);			
+			bool			OldFromString(GML::Utils::GString &text);
+			bool			FromString(GML::Utils::GString &text);
 		public:
 			enum 
 			{
@@ -86,7 +90,8 @@ namespace GML
 
 			bool			Save(char *fileName);
 			bool			Load(char *fileName);
-			bool			Create(char *text,char separator=';');			
+			bool			Create(char *text,char separator=';');		
+			char*			GetError();	
 		};
 	}
 }

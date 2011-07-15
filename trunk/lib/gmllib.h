@@ -1509,6 +1509,56 @@ namespace GML
 	}
 };
 
+//===================== TemplateParser.h =================================================================================
+#ifndef __TEMPLATE_PARSER__
+#define __TEMPLATE_PARSER__
+
+
+namespace GML
+{
+	namespace Utils
+	{		
+		class  TemplateParser
+		{
+		public:
+			enum
+			{
+				TOKEN_CAST = 0,
+				TOKEN_STRING,
+				TOKEN_TERM,
+				TOKEN_WORD,
+				TOKEN_ASCII,
+				TOKEN_EQ,
+				TOKEN_LIST,
+				TOKEN_DICT
+			};
+
+			struct Token
+			{
+				unsigned int	Start;
+				unsigned int	End;
+				unsigned int	Type;
+			};
+			GML::Utils::GString				Text,Error;
+			GML::Utils::GTFVector<Token>	Tokens;
+
+			bool							AddToken(unsigned int start,unsigned int end,unsigned int Type);
+			bool							AddTerminator(unsigned int start);
+		public:
+			TemplateParser();
+			bool							Parse(char *_Text,int TextSize = -1);
+			unsigned int					GetCount();
+			bool							Get(unsigned int index,GML::Utils::GString &str,unsigned int &type);
+			bool							Get(unsigned int start,unsigned int end,GML::Utils::GString &str);
+			bool							FindNext(unsigned int &start,unsigned int &end);	
+			char*							GetError();
+		};
+	}
+};
+
+
+#endif
+
 //===================== AttributeList.h =================================================================================
 
 
@@ -1554,8 +1604,11 @@ namespace GML
 		class  AttributeList
 		{
 			GTVector<GML::Utils::Attribute>	list;
+			TemplateParser					tp;
+			GML::Utils::GString				error;
 			
-			bool			FromString(GML::Utils::GString &text);			
+			bool			OldFromString(GML::Utils::GString &text);
+			bool			FromString(GML::Utils::GString &text);
 		public:
 			enum 
 			{
@@ -1593,7 +1646,8 @@ namespace GML
 
 			bool			Save(char *fileName);
 			bool			Load(char *fileName);
-			bool			Create(char *text,char separator=';');			
+			bool			Create(char *text,char separator=';');		
+			char*			GetError();	
 		};
 	}
 }
@@ -1653,7 +1707,8 @@ namespace GML
 		};
 		class  INotifier: public GMLObject
 		{
-
+		public:
+			GML::Utils::INotifier	*Notifier;
 		public:
 			enum {
 				NOTIFY_ERROR = 0,
@@ -1665,13 +1720,15 @@ namespace GML
 				NOTIFY_SENDOBJECTCOMMAND,
 				NOTIFY_RESULT = 100,
 			};
+			INotifier();
 			bool			Init(char *attributeString);
-
+		
 			virtual bool	OnInit() = 0;
 			virtual bool	Uninit() = 0;
 			virtual bool	Notify(UInt32 messageID,void *Data,UInt32 DataSize) = 0;
 			virtual bool	SuportsObjects();
 
+			bool			SendNotification(UInt32 messageID,void *Data,UInt32 DataSize);	
 			bool			NotifyString(UInt32 messageID,char* format,...);
 			bool			Info(char *format,...);
 			bool			Error(char *format,...);
@@ -1682,6 +1739,7 @@ namespace GML
 			bool			Result(GML::Utils::AlgorithmResult &ar);
 			bool			CreateObject(char *name,char *attributes);
 			bool			SendDataToObject(char *objName,char *attributes);
+			
 		};
 	}
 }
@@ -1925,12 +1983,14 @@ namespace GML
 		};
 		class  IConnector : public GML::Utils::GMLObject
 		{
-		private:
-			bool										Init(GML::Utils::INotifier &Notifier,GML::DB::IDataBase *Database,GML::ML::IConnector *connecor,char *attributeString);
 		protected:
-			GML::Utils::INotifier						*notifier;			
+			GML::Utils::INotifier						*notifier;
+		public:			
 			GML::DB::IDataBase							*database;
 			GML::ML::IConnector							*conector;
+			GML::ML::IConnector							**connectors;
+			UInt32										connectorsCount;
+		protected:
 			GML::Utils::GString							DataFileName;			
 			GML::Utils::GString							Query;
 			GML::Utils::GString							CountQuery;
@@ -1979,8 +2039,6 @@ namespace GML
 		public:	
 			IConnector();
 
-			virtual bool				Init(GML::Utils::INotifier &Notifier,GML::DB::IDataBase &Database,char *attributeString=NULL);
-			virtual bool				Init(GML::ML::IConnector &conector,char *attributeString=NULL);
 			virtual bool				Init(GML::Utils::INotifier &Notifier,char *attributeString=NULL);
 			virtual bool				Save(char *fileName);
 			virtual bool				Load(char *fileName);
@@ -1997,7 +2055,8 @@ namespace GML
 
 			virtual UInt32				GetFeatureCount();
 			virtual UInt32				GetRecordCount();	
-			virtual UInt32				GetTotalRecordCount();
+			virtual UInt32				GetTotalRecordCount();		
+
 		};
 
 	}
@@ -2050,10 +2109,9 @@ namespace GML
 	class  Builder
 	{
 	public:
-		static GML::Utils::INotifier*		CreateNotifier(char *pluginName);	
-		static GML::DB::IDataBase*			CreateDataBase(char *pluginName,GML::Utils::INotifier &notify);
-		static GML::ML::IConnector*			CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify,GML::DB::IDataBase &database);
-		static GML::ML::IConnector*			CreateConnectors(char *conectorsList,GML::Utils::INotifier &notify);
+		static GML::Utils::INotifier*		CreateNotifier(char *buildString);	
+		static GML::DB::IDataBase*			CreateDataBase(char *buildString,GML::Utils::INotifier &notify);
+		static GML::ML::IConnector*			CreateConnector(char *buildString,GML::Utils::INotifier &notify);
 		static GML::Algorithm::IAlgorithm*	CreateAlgorithm(char *algorithmLib);	
 		static bool							GetPluginProperties(char *pluginName,GML::Utils::AttributeList &attr,GML::Utils::GString *fullName=NULL);
 	};
