@@ -270,6 +270,11 @@ GML::ML::IConnector*		GML::Builder::CreateConnector(char *buildString,GML::Utils
 			return NULL;
 		if (poi.CountElements>0)
 		{
+			if (newObject->AllowConnectors(poi.CountElements)==false)
+			{
+				notify.Error("[GML:Builder] -> '%s' cannot be connected to %d connectors",poi.typeName.GetText(),poi.CountElements);
+				return NULL;
+			}
 			// array
 			if ((newObject->connectors = new GML::ML::IConnector* [poi.CountElements])==NULL)
 			{
@@ -292,6 +297,11 @@ GML::ML::IConnector*		GML::Builder::CreateConnector(char *buildString,GML::Utils
 					return NULL;
 			}
 		} else {
+			if (newObject->AllowConnectors(1)==false)
+			{
+				notify.Error("[GML:Builder] -> '%s' cannot be connected to only one connector",poi.CountElements);
+				return NULL;
+			}
 			if ((newObject->connectors = new GML::ML::IConnector* [1])==NULL)
 			{
 				notify.Error("[GML:Builder] -> Unable to alloc connectors for : %s",poi.typeName.GetText());
