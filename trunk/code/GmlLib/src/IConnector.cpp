@@ -379,7 +379,7 @@ bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,char *attributeS
 bool GML::ML::IConnector::Save(char *fileName)
 {
 	if (notifier)
-		notifier->Error("[%s] Save function not implemented ",ObjectName);
+		notifier->Error("[%s] -> Save function not implemented ",ObjectName);
 	return false;
 }
 bool GML::ML::IConnector::Load(char *fileName)
@@ -397,7 +397,7 @@ bool GML::ML::IConnector::OnInitConnectionToDataBase()
 bool GML::ML::IConnector::OnInitConnectionToConnector()
 {
 	if (notifier)
-		notifier->Error("[%s] Connection to another connector is not suported !",ObjectName);
+		notifier->Error("[%s] -> Connection to another connector is not suported !",ObjectName);
 	return false;
 }
 bool GML::ML::IConnector::OnInitConnectionToCache()
@@ -420,7 +420,7 @@ bool GML::ML::IConnector::OnInit()
 	dataMemorySize = 0;
 	if (notifier==NULL)
 	{
-		DEBUGMSG("[%s] Notifier should be set first before executing this function !",ObjectName);
+		DEBUGMSG("[%s] -> Notifier should be set first before executing this function !",ObjectName);
 		return false;
 	}
 	ClearColumnIndexes();
@@ -462,6 +462,10 @@ bool GML::ML::IConnector::OnInit()
 
 	}
 	return true;
+}
+bool GML::ML::IConnector::AllowConnectors(UInt32 count)
+{
+	return (bool)(count==1);
 }
 bool GML::ML::IConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 {
