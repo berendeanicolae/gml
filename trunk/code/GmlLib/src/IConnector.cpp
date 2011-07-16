@@ -280,6 +280,7 @@ bool GML::ML::IConnector::UpdateColumnInformations(char *QueryStatement)
 		notifier->Error("[%s] QueryRecordsCount failed. Missing database",ObjectName);
 		return false;
 	}
+	/*
 	if (database->ExecuteQuery(QueryStatement)==false)
 	{
 		notifier->Error("[%s] database->ExecuteQuery(%s) failed",ObjectName,QueryStatement);
@@ -290,6 +291,7 @@ bool GML::ML::IConnector::UpdateColumnInformations(char *QueryStatement)
 		notifier->Error("[%s] -> Error reading column informations for query [%s]",ObjectName,QueryStatement);
 		return false;
 	}
+	*/
 	if (UpdateColumnInformations(VectPtr)==false)
 		return false;
 	return true;
@@ -311,6 +313,7 @@ bool GML::ML::IConnector::QueryRecordsCount(char *CountQueryStatement,UInt32 &re
 		notifier->Error("[%s] QueryRecordsCount failed. Missing database",ObjectName);
 		return false;
 	}
+	/*
 	if (database->ExecuteQuery(CountQueryStatement,&resRows)==false)
 	{
 		notifier->Error("[%s] database->ExecuteQuery(%s) failed",ObjectName,CountQueryStatement);
@@ -326,6 +329,7 @@ bool GML::ML::IConnector::QueryRecordsCount(char *CountQueryStatement,UInt32 &re
 		notifier->Error("[%s] database->FetchNextRow for query (%s) failed.",ObjectName,CountQueryStatement);
 		return false;
 	}
+	*/
 	if (VectPtr.Len()!=1)
 	{
 		notifier->Error("[%s] database->FetchNextRow for query (%s) should have returrned one value.",ObjectName,CountQueryStatement);
