@@ -2,11 +2,10 @@
 
 SimpleTextFileDB::SimpleTextFileDB()
 {
-	DataStart = 0xFFFFFFFFFFFFFFFF;
 	ObjectName = "SimpleTextFileDB";
 
-	LinkPropertyToString("FileName",fileName,"","File that contains the database !");
-	LinkPropertyToUInt32("CacheSize",CacheSize,0x20000,"Cache size for data base");
+	AddCacheProperties();
+
 }
 bool SimpleTextFileDB::OnInit()
 {

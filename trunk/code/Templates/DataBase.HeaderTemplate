@@ -1,13 +1,13 @@
-#ifndef __SIMPLE_TEXT_FILE_DB__
-#define __SIMPLE_TEXT_FILE_DB__
+#ifndef __DB_$(NAME)__
+#define __DB_$(NAME)__
 
 #include "gmllib.h"
 
-class SimpleTextFileDB: public GML::DB::IDataBase
+class $(NAME): public GML::DB::IDataBase
 {
-	GML::Utils::GString		line,token;
+	
 public:
-	SimpleTextFileDB();
+	$(NAME)();
 
 	bool				OnInit();
 	bool				Close();

@@ -1,0 +1,32 @@
+#include "$(NAME).h"
+
+$(NAME)::$(NAME)()
+{
+	ObjectName = "$(NAME)";
+
+	//Add extra properties here
+
+}
+bool $(NAME)::OnInit()
+{
+	// Add initialization code here
+	
+	return true;
+}
+bool $(NAME)::Close()
+{
+	// add uninitialization code here
+	return true;
+}
+bool $(NAME)::BeginIteration()
+{
+	// add code to begin iterating here
+	
+	return true;
+}
+bool $(NAME)::ReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
+{
+	// add code for reading next record here
+	return true;
+}
+
