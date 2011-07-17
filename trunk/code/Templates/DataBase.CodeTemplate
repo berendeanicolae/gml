@@ -24,7 +24,7 @@ bool $(NAME)::BeginIteration()
 	
 	return true;
 }
-bool $(NAME)::ReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
+bool $(NAME)::OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
 	// add code for reading next record here
 	return true;
