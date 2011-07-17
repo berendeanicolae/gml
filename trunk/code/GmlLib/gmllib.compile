@@ -1,3 +1,3 @@
-sources = AlgorithmResult.cpp AttributeList.cpp BitSet.cpp Builder.cpp DBRecord.cpp dllmain.cpp File.cpp GMLObject.cpp GString.cpp IAlgorithm.cpp IConnector.cpp IDataBase.cpp IMLAlgorithm.cpp Indexes.cpp INotifier.cpp IParalelUnit.cpp md5.cpp ThreadParalelUnit.cpp Timer.cpp vector.cpp VectorOp.cpp
+sources = AlgorithmResult.cpp AttributeList.cpp BitSet.cpp Builder.cpp CacheFile.cpp DBRecord.cpp dllmain.cpp File.cpp GMLObject.cpp GString.cpp IAlgorithm.cpp IConnector.cpp IDataBase.cpp IMLAlgorithm.cpp Indexes.cpp INotifier.cpp IParalelUnit.cpp md5.cpp ThreadParalelUnit.cpp Timer.cpp TemplateParser.cpp vector.cpp VectorOp.cpp
 extra = /EHsc
 out = gmllib.dll 
