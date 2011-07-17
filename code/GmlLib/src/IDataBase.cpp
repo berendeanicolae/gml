@@ -6,14 +6,21 @@ GML::DB::IDataBase::IDataBase()
 	Names.Create(2048);
 	Columns.Create(1024);
 	nrRecords = 0;
+	DataStart = CurentPos = INVALID_POS;
 }
 UInt32 GML::DB::IDataBase::GetRecordCount()
 {
 	return nrRecords;
 }
+
 GML::Utils::GTFVector<GML::DB::ColumnInfo>*	GML::DB::IDataBase::GetColumns()
 {
 	return &Columns;
+}
+void GML::DB::IDataBase::AddCacheProperties()
+{
+	LinkPropertyToString("FileName",fileName,"","File that contains the database !");
+	LinkPropertyToUInt32("CacheSize",CacheSize,0x20000,"Cache size for data base");
 }
 bool GML::DB::IDataBase::AddColumn(UInt32 DataType,UInt32 ColumnType,char *name)
 {
