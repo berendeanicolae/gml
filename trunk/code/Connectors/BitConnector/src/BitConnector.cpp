@@ -111,7 +111,6 @@ bool	BitConnector::OnInitConnectionToDataBase()
 	UInt32										tr,gr;
 	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
 	UInt8										*cPoz;
-	GML::Utils::GString							tempStr;
 	GML::DB::RecordHash							cHash;
 	double										cValue;
 
