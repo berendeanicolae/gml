@@ -14,11 +14,16 @@ BitConnector::BitConnector()
 
 bool	BitConnector::AllocMemory()
 {
+	GML::Utils::GString		temp;
 	// aloca data :D
 	if (((columns.nrFeatures+1)%8)==0)
 		Align8Size = (columns.nrFeatures+1)/8;
 	else
 		Align8Size = ((columns.nrFeatures+1)/8)+1;
+
+	temp.Set("");
+	temp.AddFormatedEx("[%s] -> Memory to be alocated : %{uint64,G3,dec} bytes",ObjectName,((UInt64)nrRecords)*(UInt64)Align8Size);
+	notifier->Info("%s",temp.GetText());
 
 	if ((Data = new UInt8[nrRecords*Align8Size])==NULL)
 	{
@@ -34,6 +39,7 @@ bool	BitConnector::AllocMemory()
 			return false;
 		}
 	}
+	
 	return true;
 }
 bool	BitConnector::OnInitConnectionToConnector()
