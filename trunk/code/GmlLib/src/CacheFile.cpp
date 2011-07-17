@@ -71,6 +71,10 @@ UInt64 GML::Utils::CacheFile::GetFileSize()
 {
 	return FileSize;
 }
+bool GML::Utils::CacheFile::IsEOF(UInt64 pos)
+{
+	return (bool)(pos>=FileSize);
+}
 bool GML::Utils::CacheFile::GetBuffer(UInt64 pos,void *Buffer,UInt32 size)
 {
 	void *data;

@@ -63,10 +63,8 @@ namespace GML
 			void						ClearColumnIndexes();
 			bool						UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double &value);
 			bool						UpdateHashValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,GML::DB::RecordHash &recHash);
-			bool						UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
+			bool						UpdateColumnInformationsFromDataBase();
 			bool						UpdateFeaturesNameFromConnector();
-			bool						QueryRecordsCount(char *CountQueryStatement,UInt32 &recordsCount);
-			bool						UpdateColumnInformations(char *QueryStatement);
 			bool						AddColumnName(char *name);
 			
 			bool						CreateCacheFile(char *fileName,char *sigName,CacheHeader *header,UInt32 headerSize,UInt32 extraFlags=0);
