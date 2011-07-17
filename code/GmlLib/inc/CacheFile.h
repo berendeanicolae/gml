@@ -22,6 +22,7 @@ namespace GML
 			~CacheFile();
 
 			bool		Open(char *fileName,UInt32 CacheAllocSize = 0xFFFF);
+			bool		IsEOF(UInt64 pos);
 			void		Close();			
 			UInt64		GetFileSize();
 			void*		GetSafePointer(UInt64 pos,UInt32 size);

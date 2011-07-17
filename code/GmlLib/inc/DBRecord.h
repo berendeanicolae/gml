@@ -30,6 +30,15 @@ namespace GML
 				UNKNOWN
 			};
 		}
+		namespace COLUMNTYPE
+		{
+			enum {
+				UNKNOWN,
+				LABEL,
+				HASH,
+				FEATURE,
+			};
+		};
 		struct EXPORT RecordHash
 		{
 		public:
@@ -46,11 +55,16 @@ namespace GML
 			bool	ComputeHashForBuffer(void *buffer,unsigned int bufferSize);
 			bool	ComputeHashForText(char *text);
 		};
+		struct EXPORT ColumnInfo
+		{
+			UInt32			DataType;
+			UInt32			ColumnType;
+			UInt32			NameIndex;
+			char*			Name;			
+		};
 		struct EXPORT DBRecord 
 		{
 			UInt32			Type;
-			char*			Name;
-			UInt32			Size;
 			union
 			{
 				bool		BoolVal;

@@ -109,57 +109,73 @@ bool GML::ML::IConnector::UpdateFeaturesNameFromConnector()
 	}
 	return true;
 }
-bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
+bool GML::ML::IConnector::UpdateColumnInformationsFromDataBase()
 {
-	UInt32				tr,cPoz;
-	GML::DB::DBRecord	*rec;
+	GML::Utils::GTFVector<GML::DB::ColumnInfo>*	db_columns;
+	GML::DB::ColumnInfo*						ci;
+	UInt32										cPoz;
 
-
-	ClearColumnIndexes();
-	for (tr=0;tr<VectPtr.Len();tr++)
+	if (database == NULL)
 	{
-		if ((rec=VectPtr.GetPtrToObject(tr))==NULL)
+		notifier->Error("[%s] -> 'UpdateColumnInformationsFromDataBase' should be used only when connected to a database !",ObjectName);
+		return false;
+	}
+	nrRecords = database->GetRecordCount();
+	if (nrRecords == 0)
+	{
+		notifier->Error("[%s] -> NULL number of records in database",ObjectName);
+		return false;
+	}
+	db_columns = database->GetColumns();
+	if (db_columns==NULL)
+	{
+		notifier->Error("[%s] -> Internal error: NULL pointer for colums in database",ObjectName);
+		return false;
+	}
+	ClearColumnIndexes();
+	// analizez datele
+	for (UInt32 tr=0;tr<db_columns->Len();tr++)
+	{
+		ci = db_columns->GetPtrToObject(tr);
+		// pentru label
+		if (ci->ColumnType == GML::DB::COLUMNTYPE::LABEL)
 		{
-			notifier->Error("[%s] -> Unable to read record #%d",ObjectName,tr);
-			return false;
-		}
-		if (GML::Utils::GString::Equals(rec->Name,"Label",true))
-		{			
-			// verific ca tipul sa fie unul ok
-			if ((rec->Type!=GML::DB::TYPES::DOUBLE) && 
-				(rec->Type!=GML::DB::TYPES::BOOLEAN) && 
-				(rec->Type!=GML::DB::TYPES::INT16) && 
-				(rec->Type!=GML::DB::TYPES::INT32))
+			if ((ci->DataType!=GML::DB::TYPES::DOUBLE) && 
+				(ci->DataType!=GML::DB::TYPES::BOOLEAN) && 
+				(ci->DataType!=GML::DB::TYPES::INT16) && 
+				(ci->DataType!=GML::DB::TYPES::INT32))
 			{
 				notifier->Error("[%s] -> Invalid type for Label at column #%d. Allowed types: BOOL,INT16,INT32,DOUBLE !",ObjectName,tr);
 				return false;
 			}
 			columns.indexLabel = tr;
+			continue;
 		}
-		if ((GML::Utils::GString::Equals(rec->Name,"Hash",true))  ||
-			(GML::Utils::GString::Equals(rec->Name,"md5f",true)))
+		// pentru Hash
+		if (ci->ColumnType == GML::DB::COLUMNTYPE::HASH)
 		{
-			// verific ca tipul sa fie unul ok
-			if ((rec->Type!=GML::DB::TYPES::HASH) && 
-				(rec->Type!=GML::DB::TYPES::ASCII))
+			if ((ci->DataType!=GML::DB::TYPES::HASH) && 
+				(ci->DataType!=GML::DB::TYPES::ASCII))
 			{
 				notifier->Error("[%s] -> Invalid type for Hash at column #%d. Allowed types: ASCIIVAL,HASHVAL !",ObjectName,tr);
 				return false;
 			}
 			columns.indexHash = tr;
+			continue;
 		}
-		if (GML::Utils::GString::StartsWith(rec->Name,"Ft_",true))
+		// pentru Features
+		if (ci->ColumnType == GML::DB::COLUMNTYPE::FEATURE)
 		{
-			// verific ca tipul sa fie unul ok
-			if ((rec->Type!=GML::DB::TYPES::DOUBLE) && 
-				(rec->Type!=GML::DB::TYPES::BOOLEAN) && 
-				(rec->Type!=GML::DB::TYPES::INT16) && 
-				(rec->Type!=GML::DB::TYPES::INT32))
+			if ((ci->DataType!=GML::DB::TYPES::DOUBLE) && 
+				(ci->DataType!=GML::DB::TYPES::BOOLEAN) && 
+				(ci->DataType!=GML::DB::TYPES::INT16) && 
+				(ci->DataType!=GML::DB::TYPES::INT32))
 			{
 				notifier->Error("[%s] Invalid type for Feature at column #%d. Allowed types: BOOL,INT16,INT32,DOUBLE !",ObjectName,tr);
 				return false;
 			}
 			columns.nrFeatures++;
+			continue;
 		}
 	}
 	if (columns.nrFeatures==0)
@@ -178,27 +194,23 @@ bool GML::ML::IConnector::UpdateColumnInformations(GML::Utils::GTFVector<GML::DB
 		notifier->Error("[%s] -> Unable to alloc %d features indexes ",ObjectName,columns.nrFeatures);
 		return false;
 	}
-
-	// setez si indexii
-	for (cPoz=0,tr=0;tr<VectPtr.Len();tr++)
+	// aloc si indexii
+	cPoz = 0;
+	for (UInt32 tr=0;tr<db_columns->Len();tr++)
 	{
-		if ((rec=VectPtr.GetPtrToObject(tr))==NULL)
-		{
-			notifier->Error("[%s] -> Unable to read record #%d",ObjectName,tr);
-			return false;
-		}
-		if (GML::Utils::GString::StartsWith(rec->Name,"Ft_",true))
+		ci = db_columns->GetPtrToObject(tr);
+		if (ci->ColumnType == GML::DB::COLUMNTYPE::FEATURE)
 		{
 			columns.indexFeature[cPoz] = tr;
 			if (StoreFeaturesName)
 			{
-				if (AddColumnName(rec->Name)==false)			
+				if (AddColumnName(ci->Name)==false)			
 				{
-					notifier->Error("[%s] -> Unable to save name for feature #%d (%s)",ObjectName,tr,rec->Name);
+					notifier->Error("[%s] -> Unable to save name for feature #%d (%s)",ObjectName,tr,ci->Name);
 					return false;
 				}
 			}
-			cPoz++;			
+			cPoz++;	
 		}
 	}
 
@@ -262,97 +274,6 @@ bool GML::ML::IConnector::UpdateHashValue(GML::Utils::GTFVector<GML::DB::DBRecor
 			break;
 		default:
 			notifier->Error("[%s] -> Unable to convert column from index %d to double !",ObjectName,index);
-			return false;
-	}
-	return true;
-}
-bool GML::ML::IConnector::UpdateColumnInformations(char *QueryStatement)
-{
-	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
-
-	if (QueryStatement==NULL)
-	{
-		notifier->Error("[%s] CountQueryStatement = NULL. Missing query.",ObjectName);
-		return false;
-	}
-	if (database==NULL)
-	{
-		notifier->Error("[%s] QueryRecordsCount failed. Missing database",ObjectName);
-		return false;
-	}
-	/*
-	if (database->ExecuteQuery(QueryStatement)==false)
-	{
-		notifier->Error("[%s] database->ExecuteQuery(%s) failed",ObjectName,QueryStatement);
-		return false;
-	}
-	if (database->GetColumnInformations(VectPtr)==false)
-	{
-		notifier->Error("[%s] -> Error reading column informations for query [%s]",ObjectName,QueryStatement);
-		return false;
-	}
-	*/
-	if (UpdateColumnInformations(VectPtr)==false)
-		return false;
-	return true;
-}
-bool GML::ML::IConnector::QueryRecordsCount(char *CountQueryStatement,UInt32 &recordsCount)
-{
-	UInt32										resRows;
-	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
-	GML::DB::DBRecord							*rec;
-
-	recordsCount = 0;
-	if (CountQueryStatement==NULL)
-	{
-		notifier->Error("[%s] CountQueryStatement = NULL. Missing query.",ObjectName);
-		return false;
-	}
-	if (database==NULL)
-	{
-		notifier->Error("[%s] QueryRecordsCount failed. Missing database",ObjectName);
-		return false;
-	}
-	/*
-	if (database->ExecuteQuery(CountQueryStatement,&resRows)==false)
-	{
-		notifier->Error("[%s] database->ExecuteQuery(%s) failed",ObjectName,CountQueryStatement);
-		return false;
-	}
-	if (resRows!=1)
-	{
-		notifier->Error("[%s] database->ExecuteQuery(%s) returns %d rows (it should have returned one row)",ObjectName,CountQueryStatement,resRows);
-		return false;
-	}
-	if (database->FetchNextRow(VectPtr)==false)
-	{
-		notifier->Error("[%s] database->FetchNextRow for query (%s) failed.",ObjectName,CountQueryStatement);
-		return false;
-	}
-	*/
-	if (VectPtr.Len()!=1)
-	{
-		notifier->Error("[%s] database->FetchNextRow for query (%s) should have returrned one value.",ObjectName,CountQueryStatement);
-		return false;
-	}
-	if ((rec = VectPtr.GetPtrToObject(0))==NULL)
-	{
-		notifier->Error("[%s] Internal error 'VectPtr.GetPtrToObject(0)'",ObjectName);
-		return false;
-	}
-	switch (rec->Type)
-	{
-		case GML::DB::TYPES::INT32:
-			recordsCount = (UInt32)rec->Value.Int32Val;
-			break;
-		case GML::DB::TYPES::UINT32:
-			recordsCount = (UInt32)rec->Value.UInt32Val;
-			break;
-		case GML::DB::TYPES::UINT64:
-			recordsCount = (UInt32)rec->Value.UInt64Val;
-			break;
-		default:
-			notifier->Error("[%s] '%s' returnes an invalid type (non-numeric - %d )",ObjectName,CountQueryStatement,rec->Type);
 			return false;
 	}
 	return true;
@@ -433,6 +354,14 @@ bool GML::ML::IConnector::OnInit()
 		// daca exista o baza de date , incerc conectarea la ea
 		if (database!=NULL)
 		{
+			// initializez baza de date
+			if (UpdateColumnInformationsFromDataBase()==false)
+				return false;
+			if (database->BeginIteration()==false)
+			{
+				notifier->Error("[%s] -> Failed on BeginIteration()",ObjectName);
+				return false;
+			}
 			if (OnInitConnectionToDataBase()==false)
 				return false;
 			break;

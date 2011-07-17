@@ -1302,7 +1302,7 @@ bool GML::Utils::GString::Split(GString *separator,GString *arrayList,int arrayL
 bool GML::Utils::GString::SplitInTwo(TCHAR *separator,GString *leftPart,GString *rightPart,int separatorIndex,bool ignoreCase)
 {
 	int		poz = -1;
-	if ((separator==NULL) || (leftPart==NULL) || (rightPart==NULL))
+	if (separator==NULL)
 		return false;
 	if (separatorIndex>0)
 	{
@@ -1322,8 +1322,16 @@ bool GML::Utils::GString::SplitInTwo(TCHAR *separator,GString *leftPart,GString 
 	}
 	if (poz<0)
 		return false;
-	leftPart->Set(Text,poz);
-	rightPart->Set(&Text[poz+Len(separator)]);
+	if (leftPart)
+	{
+		if (leftPart->Set(Text,poz)==false)
+			return false;
+	}
+	if (rightPart)
+	{
+		if (rightPart->Set(&Text[poz+Len(separator)])==false)
+			return false;
+	}
 	return true;
 }
 bool GML::Utils::GString::SplitInTwo(GString *separator,GString *leftPart,GString *rightPart,int separatorIndex,bool ignoreCase)

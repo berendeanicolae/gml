@@ -22,27 +22,19 @@
 
 class SimpleTextFileDB: public GML::DB::IDataBase
 {
-	//GML::Utils::File		file;
-	GML::Utils::GString		fileName,tempStr,featureIndex,allDB;
-	UInt32					nrRecords,nrFeatures,namedFeaturesCount;
-	UInt32					cIndex;
-	GML::Utils::GString*	FeatNames;
-	int						dbPoz;
-	bool					modQueryCount;
+	GML::Utils::CacheFile	file;
+	GML::Utils::GString		fileName;
+	GML::Utils::GString		line,token;
+	UInt32					CacheSize;
+	UInt64					DataStart,CurentPos;
+
 public:
 	SimpleTextFileDB();
 
-	bool					OnInit();
-	bool					Connect ();
-	bool					Disconnect ();
-	bool					ExecuteQuery (char* Statement,UInt32 *rowsCount=NULL);
-	bool					FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
-	bool					GetColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
-
-	bool				InsertRow (char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect);
-	bool				InsertRow (char* Table, char* Fields, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect);
-	bool				Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTFVector<GML::DB::DBRecord> &UpdateVals);
-
+	bool				OnInit();
+	bool				Close();
+	bool				BeginIteration();
+	bool				ReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
 };
  
 
