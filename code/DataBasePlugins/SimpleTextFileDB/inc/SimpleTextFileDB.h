@@ -12,7 +12,7 @@ public:
 	bool				OnInit();
 	bool				Close();
 	bool				BeginIteration();
-	bool				ReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
+	bool				OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
 };
  
 

@@ -14,6 +14,8 @@
 #define CONNECTOR_FOLDER	"Connectors"
 #define ALGORITHM_FOLDER	"Algorithms"
 
+#define INVALID_POS			0xFFFFFFFFFFFFFFFFLL
+
 #ifdef _DEBUG
 	#define DEBUGMSG	printf
 #else
@@ -1980,10 +1982,6 @@ namespace GML
 		class  IDataBase: public GML::Utils::GMLObject
 		{
 		protected:
-			enum
-			{
-				INVALID_POS = 0xFFFFFFFFFFFFFFFF,
-			};
 			GML::Utils::INotifier						*notifier;
 			GML::Utils::GTFVector<GML::DB::ColumnInfo>	Columns;
 			GML::Utils::GTFVector<char>					Names;
@@ -2006,7 +2004,8 @@ namespace GML
 			virtual bool								OnInit()=0;			
 			virtual bool								Close()=0;
 			virtual bool								BeginIteration() = 0;
-			virtual bool								ReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr) = 0;
+			virtual bool								ReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
+			virtual bool								OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr) = 0;
 		};
 	}
 }
