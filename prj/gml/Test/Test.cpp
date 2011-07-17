@@ -7,20 +7,20 @@
 
 void TestDB()
 {
-	GML::Utils::GTFVector<GML::DB::DBRecord>		v;
-	GML::Utils::INotifier *n = GML::Builder::CreateNotifier("ConsoleNotifier");
-	GML::DB::IDataBase *db =  GML::Builder::CreateDataBase("MySQL",*n);
-	db->SetProperty("Server='127.0.0.1';Database=TestDB;Username=root;Password=a");
-	db->Connect();
-	db->ExecuteQuery("Select * from gdtdb limit 5;");
-	while (db->FetchNextRow(v))
-	{
-		for (int tr=0;tr<v.Len();tr++)
-		{
-			printf("%s->",v[tr].Name);
-		}
-		printf("\n");
-	}
+	//GML::Utils::GTFVector<GML::DB::DBRecord>		v;
+	//GML::Utils::INotifier *n = GML::Builder::CreateNotifier("ConsoleNotifier");
+	//GML::DB::IDataBase *db =  GML::Builder::CreateDataBase("MySQL",*n);
+	//db->SetProperty("Server='127.0.0.1';Database=TestDB;Username=root;Password=a");
+	//db->Connect();
+	//db->ExecuteQuery("Select * from gdtdb limit 5;");
+	//while (db->FetchNextRow(v))
+	//{
+	//	for (int tr=0;tr<v.Len();tr++)
+	//	{
+	//		printf("%s->",v[tr].Name);
+	//	}
+	//	printf("\n");
+	//}
 
 }
 void PrintBitSet(GML::Utils::BitSet &bs)
@@ -76,10 +76,33 @@ void my_test2()
 	for (int tr=0;tr<attr.GetCount();tr++)
 		printf("%s\n",attr.Get(tr)->Name);
 }
+void my_test3()
+{
+	GML::Utils::CacheFile	f;
+	GML::Utils::GString		str;
+	UInt64	pos=0;
+
+	if (f.Open("E:\\lucru\\GML\\gml\\prj\\gml\\Release\\lv.tmpl")==false)
+	{
+		printf("nu am putut deschide .");
+		return;
+	}
+	while (pos<f.GetFileSize())
+	{
+		if (f.ReadLine(pos,str)==false)
+		{
+			printf("----------- ERROR ---------");
+			return;
+		}
+		str.Strip();
+		printf("%s\n",str.GetText());
+	}
+	printf("--- ALL OK --- ");
+}
 int _tmain(int argc, _TCHAR* argv[])
 {
 	GML::Utils::GString	tmp,l,r;
-	my_test2();
+	my_test3();
 	return 0;
 	double *d;
 

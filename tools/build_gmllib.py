@@ -11,6 +11,7 @@ list_headers = [
 	"md5.h",
 	"GString.h",
 	"File.h",
+	"CacheFile.h",
 	"Timer.h",
 	"AlgorithmResult.h",
 	"IParalelUnit.h",
