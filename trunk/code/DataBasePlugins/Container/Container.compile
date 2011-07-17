@@ -1,0 +1,3 @@
+sources = Container.cpp
+gmlplugin = yes
+libname = Container
