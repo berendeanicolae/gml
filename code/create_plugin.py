@@ -96,6 +96,34 @@ def CreateDataBase(template_name):
 	if CreateFile(os.path.join(path,name+".compile"),compileFile)==False:
 		return
 	print("All ok -> DataBasePlugins "+name+" created !")
+def CreateConnector(template_name):
+	global template_alg_h,template_alg_cpp
+	name = sys.argv[2]
+	path = os.path.join(".","Connectors",name)
+	hFile = LoadHeaderTemplate(template_name)
+	if hFile==None:
+		return
+	codeFile = LoadCodeTemplate(template_name)
+	if codeFile==None:
+		return
+	if os.path.exists(path):
+		print("Connector '"+name+"' already exists ...")
+		return
+	if CreateFolder(path)==False:
+		return
+	if CreateFolder(os.path.join(path,"inc"))==False:
+		return
+	if CreateFolder(os.path.join(path,"src"))==False:
+		return
+	if CreateFile(os.path.join(path,"inc",name+".h"),hFile.replace("$(NAME)",name))==False:
+		return
+	if CreateFile(os.path.join(path,"src",name+".cpp"),codeFile.replace("$(NAME)",name))==False:
+		return	
+	compileFile = "sources = "+name+".cpp\ngmlplugin = yes\nlibname = "+name+"\n"
+	if CreateFile(os.path.join(path,name+".compile"),compileFile)==False:
+		return
+	print("All ok -> Connector "+name+" created !")
+
 def main():
 	if len(sys.argv)<3:
 		Help()
@@ -106,4 +134,7 @@ def main():
 	if sys.argv[1]=="database":
 		CreateDataBase("DataBase")
 		return		
+	if sys.argv[1]=="connector":
+		CreateConnector("Connector")
+		return
 main()
