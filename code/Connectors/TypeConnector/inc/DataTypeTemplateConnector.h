@@ -158,26 +158,10 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 {
 	UInt32										tr,gr;
 	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
-	DataType									*cPoz;
-	GML::Utils::GString							tempStr;
+	DataType									*cPoz;	
 	GML::DB::RecordHash							cHash;
 	double										cValue;
 
-	if (database->Connect()==false)
-	{
-		notifier->Error("[%s] -> Could not connect to database",ObjectName);
-		return false;
-	}
-	tempStr.SetFormated("%s LIMIT 1",Query.GetText());
-	if (UpdateColumnInformations(tempStr.GetText())==false)
-		return false;
-	if (QueryRecordsCount(CountQuery.GetText(),nrRecords)==false)
-		return false;
-	if (nrRecords==0) 
-	{
-		notifier->Error("[%s] -> I received 0 records from the database",ObjectName);
-		return false;
-	}
 	if (AllocMemory()==false)
 		return false;
 	// sunt exact la inceput
@@ -186,27 +170,12 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 	notifier->StartProcent("[%s] -> Loading DataBase : ",ObjectName);
 
 	for (tr=0;tr<nrRecords;tr++)
-	{		
-		// cache
-		if ((tr % CachedRecords)==0)
+	{
+		if (database->ReadNextRecord(VectPtr)==false)
 		{
-			if (tr+CachedRecords<nrRecords)
-				tempStr.SetFormated("%s LIMIT %d,%d",Query.GetText(),tr,CachedRecords);
-			else
-				tempStr.SetFormated("%s LIMIT %d,%d",Query.GetText(),tr,nrRecords-tr);
-			//notifier->Info("%s",tempStr.GetText());
-			if (database->ExecuteQuery(tempStr.GetText())==false)
-			{
-				notifier->Error("[%s] -> Unable to Execute query : %s !",ObjectName,tempStr.GetText());
-				return false;
-			}
-			notifier->SetProcent((double)tr,(double)nrRecords);
-		}
-		if (database->FetchNextRow(VectPtr)==false)
-		{
-			notifier->Error("[%s] -> Error reading #%d record !",ObjectName,tr);
+			notifier->Error("[%s] -> Unable to read #d record from database!",ObjectName,tr);
 			return false;
-		}		
+		}
 		// pentru fiecare record pun valorile
 		for (gr=0;gr<columns.nrFeatures;gr++)
 		{
@@ -214,7 +183,7 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 				return false;
 			cPoz[gr]=(DataType)cValue;
 		}
-		// pun si label-ul		
+		// pun si label-ul
 		if (UpdateDoubleValue(VectPtr,columns.indexLabel,cValue)==false)
 			return false;
 		if (LabelIsBool)
@@ -222,7 +191,7 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 			BSLabel.Set(tr,(cValue!=0));
 		} else {
 			Labels[tr] = (DataType)cValue;
-		}		
+		}
 		// adaug si Hash-ul
 		if (StoreRecordHash)
 		{
@@ -236,6 +205,8 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 		}
 		// trecem la urmatorul record
 		cPoz+=columns.nrFeatures;
+		if ((tr % 1000)==0)
+			notifier->SetProcent(tr,nrRecords);
 	}	
 	notifier->EndProcent();
 	// all ok , am incarcat datele
