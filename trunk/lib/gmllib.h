@@ -1413,6 +1413,69 @@ namespace GML
 	}
 }
 
+//===================== CacheFile.h =================================================================================
+#ifndef __STREAM_FILE__
+#define __STREAM_FILE__
+
+
+namespace GML
+{
+	namespace Utils
+	{
+		class  CacheFile
+		{
+			File		file;
+			UInt8*		Cache;
+			UInt64		CacheAllocSize;
+			UInt64		CacheStart,CacheEnd,FileSize;
+						
+			bool		UpdateCache(UInt64 newPoz);
+			 
+		public:
+			CacheFile();
+			~CacheFile();
+
+			bool		Open(char *fileName,UInt32 CacheAllocSize = 0xFFFF);
+			bool		IsEOF(UInt64 pos);
+			void		Close();			
+			UInt64		GetFileSize();
+			void*		GetSafePointer(UInt64 pos,UInt32 size);
+
+			// Get
+			bool		GetUInt8(UInt64 pos,UInt8 &value);
+			bool		GetUInt16(UInt64 pos,UInt16 &value);
+			bool		GetUInt32(UInt64 pos,UInt32 &value);
+			bool		GetUInt64(UInt64 pos,UInt64 &value);
+			bool		GetInt8(UInt64 pos,Int8 &value);
+			bool		GetInt16(UInt64 pos,Int16 &value);
+			bool		GetInt32(UInt64 pos,Int32 &value);
+			bool		GetInt64(UInt64 pos,Int64 &value);
+			bool		GetFloat(UInt64 pos,float &value);
+			bool		GetDouble(UInt64 pos,double &value);
+			bool		GetBool(UInt64 pos,bool &value);
+			bool		GetBuffer(UInt64 pos,void *Buffer,UInt32 size);			
+			bool		GetLine(UInt64 pos,GML::Utils::GString &line);
+
+			// read
+			bool		ReadUInt8(UInt64 &pos,UInt8 &value);
+			bool		ReadUInt16(UInt64 &pos,UInt16 &value);
+			bool		ReadUInt32(UInt64 &pos,UInt32 &value);
+			bool		ReadUInt64(UInt64 &pos,UInt64 &value);
+			bool		ReadInt8(UInt64 &pos,Int8 &value);
+			bool		ReadInt16(UInt64 &pos,Int16 &value);
+			bool		ReadInt32(UInt64 &pos,Int32 &value);
+			bool		ReadInt64(UInt64 &pos,Int64 &value);
+			bool		ReadFloat(UInt64 &pos,float &value);
+			bool		ReadDouble(UInt64 &pos,double &value);
+			bool		ReadBool(UInt64 &pos,bool &value);
+			bool		ReadBuffer(UInt64 &pos,void *Buffer,UInt32 size);	
+			bool		ReadLine(UInt64 &pos,GML::Utils::GString &line);
+		};
+	}
+}
+
+#endif
+
 //===================== Timer.h =================================================================================
 
 
@@ -1829,6 +1892,15 @@ namespace GML
 				UNKNOWN
 			};
 		}
+		namespace COLUMNTYPE
+		{
+			enum {
+				UNKNOWN,
+				LABEL,
+				HASH,
+				FEATURE,
+			};
+		};
 		struct  RecordHash
 		{
 		public:
@@ -1845,11 +1917,16 @@ namespace GML
 			bool	ComputeHashForBuffer(void *buffer,unsigned int bufferSize);
 			bool	ComputeHashForText(char *text);
 		};
+		struct  ColumnInfo
+		{
+			UInt32			DataType;
+			UInt32			ColumnType;
+			UInt32			NameIndex;
+			char*			Name;			
+		};
 		struct  DBRecord 
 		{
 			UInt32			Type;
-			char*			Name;
-			UInt32			Size;
 			union
 			{
 				bool		BoolVal;
@@ -1903,46 +1980,23 @@ namespace GML
 		class  IDataBase: public GML::Utils::GMLObject
 		{
 		protected:
-			GML::Utils::INotifier			*notifier;
+			GML::Utils::INotifier						*notifier;
+			GML::Utils::GTFVector<GML::DB::ColumnInfo>	Columns;
+			GML::Utils::GTFVector<char>					Names;
+			UInt32										nrRecords;
 
+			bool										AddColumn(UInt32 DataType,UInt32 ColumnType,char *name);
 		public:
-			virtual ~IDataBase();
-			bool						Init (GML::Utils::INotifier &notifier, char *connectionString);
-			virtual bool				OnInit()=0;			
-			virtual bool				Connect ()=0;
-			virtual bool				Disconnect ()=0;
-			virtual bool				ExecuteQuery(char* Statement,UInt32 *rowsCount=NULL)=0;
-			virtual bool				FetchNextRow (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)=0;
-			virtual bool				GetColumnInformations (GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)=0;
+			IDataBase();
+			bool										Init (GML::Utils::INotifier &notifier, char *connectionString);
+			UInt32										GetRecordCount();
+			GML::Utils::GTFVector<GML::DB::ColumnInfo>*	GetColumns();
 
-			 /*
-			  *Usage: insert a new ENTIRE row into the database
-			  *Param:
-			  *	- INPUT char* Table: the table the data is to be inserted in
-			  *	- INPUT DbRecordVect * Vect: a vector of Record objects to be inserted
-			  *	Return: true/false if the action succeded or not
-			  */
-			virtual bool				InsertRow (char* Table, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)=0;
 
-			/*
-			  *Usage: insert a new ENTIRE row into the database
-			  *Param:
-			  *	- INPUT char* Table: the table the data is to be inserted in
-			  *	- INPUT char* Fields: a string of fields to be inserted separated by comma
-			  *	- INPUT DbRecordVect * Vect: a vector of Record objects to be inserted
-			  *	Return: true/false if the action succeded or not
-			  */
-			virtual bool				InsertRow (char* Table, char* Fields, GML::Utils::GTFVector<GML::DB::DBRecord> &Vect)=0;
-
-			/*
-			 * Usage: execute a sql update statement 
-			 * Param:
-			 *  - INPUT char* SqlStatement: the update sql statement
-			 *  - INPUT DbRecordVect* WhereVals: the values used to create the where part of the statement
-			 *  - INPUT DbRecordVect* UpdateVals: the values used to replace the old values
-			 * Return: true/false if the operation succeded or not
-			 */
-			virtual bool				Update (char* SqlStatement, GML::Utils::GTFVector<GML::DB::DBRecord> &WhereVals, GML::Utils::GTFVector<GML::DB::DBRecord> &UpdateVals)=0;
+			virtual bool								OnInit()=0;			
+			virtual bool								Close()=0;
+			virtual bool								BeginIteration() = 0;
+			virtual bool								ReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr) = 0;
 		};
 	}
 }
@@ -2009,10 +2063,8 @@ namespace GML
 			void						ClearColumnIndexes();
 			bool						UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double &value);
 			bool						UpdateHashValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,GML::DB::RecordHash &recHash);
-			bool						UpdateColumnInformations(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr);
+			bool						UpdateColumnInformationsFromDataBase();
 			bool						UpdateFeaturesNameFromConnector();
-			bool						QueryRecordsCount(char *CountQueryStatement,UInt32 &recordsCount);
-			bool						UpdateColumnInformations(char *QueryStatement);
 			bool						AddColumnName(char *name);
 			
 			bool						CreateCacheFile(char *fileName,char *sigName,CacheHeader *header,UInt32 headerSize,UInt32 extraFlags=0);
