@@ -111,3 +111,36 @@ bool GML::DB::IDataBase::Init(GML::Utils::INotifier &_notifier, char *connection
 
 	return true;
 }
+bool GML::DB::IDataBase::ReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
+{
+	GML::DB::DBRecord	rec;
+	GML::DB::DBRecord*	r;
+	UInt32				columnsCount;
+
+	columnsCount = Columns.Len();
+	if (VectPtr.Len()!=columnsCount)
+	{
+		if (VectPtr.DeleteAll()==false)
+		{
+			notifier->Error("[%s] -> Internal error (unable to clean DBRecord vector) ",ObjectName);
+			return false;
+		}
+		MEMSET(&rec,0,sizeof(rec));
+		for (UInt32 tr=0;tr<columnsCount;tr++)
+		{
+			rec.Type = Columns[tr].DataType;
+			if (VectPtr.PushByRef(rec)==false)
+			{
+				notifier->Error("[%s] -> Unable to add value cu VectPtr ",ObjectName);
+				return false;
+			}
+		}		
+	} else {
+		r = VectPtr.GetPtrToObject(0);
+		for (UInt32 tr=0;tr<columnsCount;tr++,r++)
+		{
+			MEMSET(&r->Value,0,sizeof(r->Value));
+		}
+	}
+	return OnReadNextRecord(VectPtr);
+}

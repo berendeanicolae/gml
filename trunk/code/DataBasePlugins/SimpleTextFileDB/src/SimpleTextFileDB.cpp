@@ -113,9 +113,8 @@ bool SimpleTextFileDB::BeginIteration()
 		return false;
 	return true;
 }
-bool SimpleTextFileDB::ReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
+bool SimpleTextFileDB::OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
-	GML::DB::DBRecord	rec;
 	GML::DB::DBRecord*	r;
 	char*				ptr;
 	char				temp[64];
@@ -133,31 +132,7 @@ bool SimpleTextFileDB::ReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &
 	} while (line.Len()==0);
 	
 	// fill up
-	if (VectPtr.Len()!=columnsCount)
-	{
-		if (VectPtr.DeleteAll()==false)
-		{
-			notifier->Error("[%s] -> Internal error (unable to clean DBRecord vector) ",ObjectName);
-			return false;
-		}
-		MEMSET(&rec,0,sizeof(rec));
-		for (UInt32 tr=0;tr<columnsCount;tr++)
-		{
-			rec.Type = Columns[tr].DataType;
-			if (VectPtr.PushByRef(rec)==false)
-			{
-				notifier->Error("[%s] -> Unable to add value cu VectPtr ",ObjectName);
-				return false;
-			}
-		}
-		
-	} else {
-		r = VectPtr.GetPtrToObject(0);
-		for (UInt32 tr=0;tr<columnsCount;tr++,r++)
-		{
-			MEMSET(&r->Value,0,sizeof(r->Value));
-		}
-	}
+
 	r = VectPtr.GetPtrToObject(0);
 	ptr = line.GetText();
 	cPoz = 0;	

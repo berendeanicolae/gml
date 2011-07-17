@@ -11,6 +11,8 @@
 #define CONNECTOR_FOLDER	"Connectors"
 #define ALGORITHM_FOLDER	"Algorithms"
 
+#define INVALID_POS			0xFFFFFFFFFFFFFFFFLL
+
 #ifdef _DEBUG
 	#define DEBUGMSG	printf
 #else

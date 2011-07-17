@@ -214,6 +214,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FeatureFilterConnector", "C
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Container", "Databases\Container\Container.vcxproj", "{162B3A99-A310-4E28-B7E6-424CFC314A5D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D218E74E-F7BB-40F8-9791-D2DEC548EE2A} = {D218E74E-F7BB-40F8-9791-D2DEC548EE2A}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
