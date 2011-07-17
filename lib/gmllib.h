@@ -1980,12 +1980,22 @@ namespace GML
 		class  IDataBase: public GML::Utils::GMLObject
 		{
 		protected:
+			enum
+			{
+				INVALID_POS = 0xFFFFFFFFFFFFFFFF,
+			};
 			GML::Utils::INotifier						*notifier;
 			GML::Utils::GTFVector<GML::DB::ColumnInfo>	Columns;
 			GML::Utils::GTFVector<char>					Names;
 			UInt32										nrRecords;
+			GML::Utils::CacheFile						file;
+			GML::Utils::GString							fileName;
+			UInt32										CacheSize;
+			UInt64										DataStart,CurentPos;
+
 
 			bool										AddColumn(UInt32 DataType,UInt32 ColumnType,char *name);
+			void										AddCacheProperties();
 		public:
 			IDataBase();
 			bool										Init (GML::Utils::INotifier &notifier, char *connectionString);
