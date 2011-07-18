@@ -298,10 +298,10 @@ bool GML::Utils::TemplateParser::Parse(char *_Text,int TextSize)
 					return false;
 				break;
 			case TCHTYPE_UNK:
-				Error.SetFormated("[GML:TemplateParser] -> Unknwon charater (0x%02X) -> %c",ptr[start,ptr[start]]);
+				Error.SetFormated("[GML:TemplateParser] -> Unknwon charater (0x%02X) -> %c",ptr[start],ptr[start]);
 				return false;
 			default:
-				Error.SetFormated("[GML:TemplateParser] -> Unknwon charater (0x%02X) -> %c",ptr[start,ptr[start]]);
+				Error.SetFormated("[GML:TemplateParser] -> Unknwon charater (0x%02X) -> %c",ptr[start],ptr[start]);
 				return false;
 		}
 		if (next<=start)
