@@ -1,0 +1,3 @@
+sources = UniqueFeatureConnector.cpp
+gmlplugin = yes
+libname = UniqueFeatureConnector
