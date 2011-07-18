@@ -39,7 +39,7 @@ def main():
 		rev = "UNK"
 	zname = "GMLInstaller_"+rev+".exe"
 	print ("Building: "+zname) 	
-	base_folder = "../prj/gml/Release"
+	base_folder = "../Bin"
 	ia_base_folder = "../prj/GMLFramework/Release"	
 	#plugin
 	AddFromFolderByExt(os.path.join(base_folder,"Algorithms"),["alg"],"Algorithms")
@@ -51,17 +51,17 @@ def main():
 	AddFileToarchList(os.path.join(base_folder,"libmysql.dll"),"libmysql.dll")
 	AddFileToarchList(os.path.join(base_folder,"gml.exe"),"gml.exe")	
 	#SDK
-	AddFileToarchList("../lib/gmllib.lib","SDK/gmllib.lib")
-	AddFileToarchList("../lib/gmllib.h","SDK/gmllib.h")
+	AddFileToarchList("../bin/SDK/gmllib.lib","SDK/gmllib.lib")
+	AddFileToarchList("../bin/SDK/gmllib.h","SDK/gmllib.h")
 	#graphics
 	#lib & exe
-	AddFileToarchList(os.path.join(ia_base_folder,"gmllib.dll"),"gmllib.dll")
-	AddFileToarchList(os.path.join(ia_base_folder,"libmysql.dll"),"libmysql.dll")
-	AddFileToarchList(os.path.join(ia_base_folder,"gml.exe"),"gml.exe")	
+	AddFileToarchList(os.path.join(base_folder,"gmllib.dll"),"gmllib.dll")
+	#AddFileToarchList(os.path.join(ia_base_folder,"libmysql.dll"),"libmysql.dll")
+	AddFileToarchList(os.path.join(base_folder,"gml.exe"),"gml.exe")	
 	#gmlpy
 	AddFileToarchList("gmlpy.py","gmlpy.py")		
-	AddFileToarchList(os.path.join(base_folder,"gmlgui.exe"),"gmlgui.exe")
-	AddFileToarchList(os.path.join(base_folder,"interfaceNotifier.dll"),"interfaceNotifier.dll")
+	#AddFileToarchList(os.path.join(base_folder,"gmlgui.exe"),"gmlgui.exe")
+	#AddFileToarchList(os.path.join(base_folder,"interfaceNotifier.dll"),"interfaceNotifier.dll")
 	#curat alte chestii
 	open("arcList.txt","wt").write(arcList);
 	shutil.copy("../prj/GMLInstaller/Release/GMLInstaller.exe",zname)
