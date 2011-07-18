@@ -343,7 +343,7 @@ bool Container::OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectP
 			switch (cfi->Op)
 			{
 				case OP_NONE:
-					if (cfi->Type == GML::DB::TYPES::BOOLEAN)
+					if (cfi->Type != GML::DB::TYPES::BOOLEAN)
 						VectPtr[cfi->ColumnIndex].Value.UInt32Val = value;
 					else
 						VectPtr[cfi->ColumnIndex].Value.BoolVal = true;

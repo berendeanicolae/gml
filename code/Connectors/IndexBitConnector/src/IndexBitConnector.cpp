@@ -20,7 +20,7 @@ bool	IndexBitConnector::AllocMemory(UInt64 memory)
 	temp.Set("");
 	temp.AddFormatedEx("[%{str}] -> Compressed method : %{uint32,dec} (Memory: %{uint64,G3,dec} bytes)",ObjectName,Method,memory); 
 	notifier->Info("%s",temp.GetText());
-	if ((Data = new UInt8[(UInt32)memory])==NULL)
+	if ((Data = new UInt8[memory])==NULL)
 	{
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for data !",ObjectName,memory);
 		return false;
@@ -245,10 +245,10 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 }
 bool	IndexBitConnector::OnInitConnectionToDataBase()
 {
-	UInt32										tr,gr;
+	UInt32										tr,gr,colIndex;
 	UInt64										cIndex;
 	GML::Utils::GTFVector<GML::DB::DBRecord>	VectPtr;
-	GML::Utils::GString							tempStr;
+	GML::Utils::GString							temp;
 	GML::DB::RecordHash							cHash;
 	double										cValue;
 	IndexBitCounter								ibc;
@@ -265,7 +265,8 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 		// pentru fiecare record pun valorile
 		for (gr=0;gr<columns.nrFeatures;gr++)
 		{
-			if (UpdateDoubleValue(VectPtr,columns.indexFeature[gr],cValue)==false)
+			colIndex = columns.indexFeature[gr];
+			if (UpdateDoubleValue(VectPtr,colIndex,cValue)==false)
 				return false;
 			if (cValue!=0.0)
 				Update(ibc,gr);				
@@ -274,6 +275,7 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 			notifier->SetProcent(tr,nrRecords);
 	}	
 	notifier->EndProcent();
+	notifier->Info("[%s] -> Total number of features: %d",ObjectName,ibc.countInt32);
 	ComputeMemory(ibc,MemToAlloc);
 	if (AllocMemory(MemToAlloc)==false)
 		return false;
@@ -297,12 +299,18 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 		// pentru fiecare record pun valorile
 		for (gr=0;gr<columns.nrFeatures;gr++)
 		{
-			if (UpdateDoubleValue(VectPtr,columns.indexFeature[gr],cValue)==false)
+			colIndex = columns.indexFeature[gr];
+			if (UpdateDoubleValue(VectPtr,colIndex,cValue)==false)
 				return false;
 			if (cValue!=0.0)				
 			{
 				if (AddIndex(gr,cIndex)==false)
+				{
+					temp.Set("");
+					temp.AddFormatedEx("[%{str}] -> Unable to add Index to list : Records:%{uint32,dec} , Feature:%{uint32,dec} , Poz:%{uint64,dec,G3} , Alloc:%{uint64,dec,G3}",ObjectName,tr,gr,cIndex,MemToAlloc);
+					notifier->Error("%s",temp.GetText());
 					return false;
+				}
 			}
 		}
 		// pun si label-ul
