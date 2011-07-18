@@ -27,7 +27,7 @@ bool $(NAME)::GetRecordLabel( double &label,UInt32 index )
 {
 	return false;
 }
-bool $(NAME)::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMask)
+bool $(NAME)::GetRecord( GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask)
 {
 	return false;
 }
@@ -40,11 +40,11 @@ bool $(NAME)::GetFeatureName(GML::Utils::GString &str,UInt32 index)
 	return false;
 }
 
-bool $(NAME)::CreateMlRecord( MLRecord &record )
+bool $(NAME)::CreateMlRecord( GML::ML::MLRecord &record )
 {
 	return false;
 }
-bool $(NAME)::FreeMLRecord( MLRecord &record )
+bool $(NAME)::FreeMLRecord( GML::ML::MLRecord &record )
 {
 	return false;
 }
