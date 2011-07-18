@@ -15,8 +15,11 @@ IndexBitConnector::IndexBitConnector()
 
 bool	IndexBitConnector::AllocMemory(UInt64 memory)
 {
+	GML::Utils::GString	temp;
 	// aloca data :D
-	notifier->Info("[%s] -> Compressed method : %d (Memory:%d) ",ObjectName,Method,(UInt32)memory);
+	temp.Set("");
+	temp.AddFormatedEx("[%{str}] -> Compressed method : %{uint32,dec} (Memory:%{uint64,G3,dec})",ObjectName,Method,memory); 
+	notifier->Info("%s",temp.GetText());
 	if ((Data = new UInt8[(UInt32)memory])==NULL)
 	{
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for data !",ObjectName,memory);
