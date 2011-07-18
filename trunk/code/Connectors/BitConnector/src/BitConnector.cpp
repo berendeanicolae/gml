@@ -22,7 +22,7 @@ bool	BitConnector::AllocMemory()
 		Align8Size = ((columns.nrFeatures+1)/8)+1;
 
 	temp.Set("");
-	temp.AddFormatedEx("[%s] -> Memory to be alocated : %{uint64,G3,dec} bytes",ObjectName,((UInt64)nrRecords)*(UInt64)Align8Size);
+	temp.AddFormatedEx("[%{str}] -> Memory to be alocated : %{uint64,G3,dec} bytes",ObjectName,((UInt64)nrRecords)*(UInt64)Align8Size);
 	notifier->Info("%s",temp.GetText());
 
 	if ((Data = new UInt8[nrRecords*Align8Size])==NULL)

@@ -97,7 +97,7 @@ bool UniqueFeatureConnector::OnInitConnectionToConnector()
 	// caut duplicate
 	for (tr=start=0;tr<FList.Len();tr++)
 	{
-		if (memcmp(FList[tr].Hash.Hash.bValue,FList[tr].Hash.Hash.dwValue,16)!=0)
+		if (memcmp(FList[tr].Hash.Hash.bValue,FList[start].Hash.Hash.dwValue,16)!=0)
 		{
 			if (AnalizeSubList(start,tr)==false)
 			{
@@ -112,11 +112,12 @@ bool UniqueFeatureConnector::OnInitConnectionToConnector()
 		notifier->Error("[%s] -> Unable to create unique indexes",ObjectName);
 		return false;
 	}
+	conector->FreeMLRecord(rec);
 
 	nrRecords = Indexes.Len();
 	columns.nrFeatures = conector->GetFeatureCount();
 	dataMemorySize = nrRecords*sizeof(UInt32);
-	return false;
+	return true;
 }
 
 
