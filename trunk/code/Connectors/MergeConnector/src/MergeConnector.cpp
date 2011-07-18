@@ -41,31 +41,16 @@ bool MergeConnector::OnInitConnectionToConnector()
 	notifier->StartProcent("[%s] -> Testing compatibility ... ",ObjectName);
 	for (tr=1;tr<connectorsCount;tr++)
 	{
-		if (connectors[tr]==NULL)
-		{
-			notifier->Error("[%s] -> Internal error (NULL connector #%d)",ObjectName,tr);
-			return false;		
-		}
-		/*
-		if (connectors[0]->GetObjectName()==NULL)
-			notifier->Info("NULL - 0");
-		if (connectors[tr]->GetObjectName()==NULL)
-			notifier->Info("NULL - tr");			
-		notifier->Info("(1) - %s - %s",connectors[0]->GetObjectName(),connectors[tr]->GetObjectName());
 		if (GML::Utils::GString::Equals(connectors[0]->GetObjectName(),connectors[tr]->GetObjectName())==false)
 		{
 			notifier->Error("[%s] -> All connectors in a merge connector should be of the same type",ObjectName);
 			return false;
 		}
-		*/
-		notifier->Info("(2)");
-		
 		if (connectors[tr]->GetFeatureCount()!=connectors[0]->GetFeatureCount())
 		{
 			notifier->Error("[%s] -> All connectors in a merge connector should have the same number of features !",ObjectName);
 			return false;	
 		}
-		notifier->Info("(3)");
 		for (gr=0;gr<connectors[0]->GetFeatureCount();gr++)
 		{
 			if (connectors[0]->GetFeatureName(featName1,gr)==false)
@@ -84,12 +69,12 @@ bool MergeConnector::OnInitConnectionToConnector()
 				return false;			
 			}
 		}
-		Translate[tr].Set(Translate[tr-1].Start,Translate[tr-1].Start+connectors[tr]->GetRecordCount());
+		Translate[tr].Set(Translate[tr-1].End,Translate[tr-1].End+connectors[tr]->GetRecordCount());
 		notifier->SetProcent(tr,connectorsCount);
 	}
 	notifier->EndProcent();
 	// sunt compatibile - creez tabele cu linkuri
-	nrRecords = Translate[connectorsCount].End;
+	nrRecords = Translate[connectorsCount-1].End;
 	columns.nrFeatures = conector->GetFeatureCount();
 	dataMemorySize = connectorsCount*sizeof(GML::Utils::Interval);	
 	return true;
