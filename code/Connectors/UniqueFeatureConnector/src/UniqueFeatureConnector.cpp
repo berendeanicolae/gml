@@ -53,7 +53,7 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 bool UniqueFeatureConnector::OnInitConnectionToConnector()
 {
 	GML::ML::MLRecord	rec;	
-	UInt32				start,tr,featSize;
+	UInt32				start,tr,featSize,max;
 
 	if (conector->CreateMlRecord(rec)==false)
 	{
@@ -94,7 +94,9 @@ bool UniqueFeatureConnector::OnInitConnectionToConnector()
 	// am citit toate datele , le sortez
 	notifier->Info("[%s] -> Sorting ... ",ObjectName);
 	FList.Sort(FeatInfoCompare);
+	
 	// caut duplicate
+	max = 0;
 	for (tr=start=0;tr<FList.Len();tr++)
 	{
 		if (memcmp(FList[tr].Hash.Hash.bValue,FList[start].Hash.Hash.dwValue,16)!=0)
@@ -104,6 +106,8 @@ bool UniqueFeatureConnector::OnInitConnectionToConnector()
 				notifier->Error("[%s] -> Unable to create unique indexes",ObjectName);
 				return false;
 			}
+			if ((tr-start)>max)
+				max = tr-start;
 			start = tr;
 		}
 	}
@@ -112,11 +116,15 @@ bool UniqueFeatureConnector::OnInitConnectionToConnector()
 		notifier->Error("[%s] -> Unable to create unique indexes",ObjectName);
 		return false;
 	}
+	if ((tr-start)>max)
+		max = tr-start;
+	notifier->Info("[%s] -> Max number of duplicates : %d",ObjectName,max);
+
 	conector->FreeMLRecord(rec);
 
 	nrRecords = Indexes.Len();
 	columns.nrFeatures = conector->GetFeatureCount();
-	dataMemorySize = nrRecords*sizeof(UInt32);
+	dataMemorySize = (UInt64)nrRecords*sizeof(UInt32);
 	return true;
 }
 
