@@ -1,0 +1,3 @@
+sources = MergeConnector.cpp
+gmlplugin = yes
+libname = MergeConnector
