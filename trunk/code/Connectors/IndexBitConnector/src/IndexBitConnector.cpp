@@ -18,7 +18,7 @@ bool	IndexBitConnector::AllocMemory(UInt64 memory)
 	GML::Utils::GString	temp;
 	// aloca data :D
 	temp.Set("");
-	temp.AddFormatedEx("[%{str}] -> Compressed method : %{uint32,dec} (Memory:%{uint64,G3,dec})",ObjectName,Method,memory); 
+	temp.AddFormatedEx("[%{str}] -> Compressed method : %{uint32,dec} (Memory: %{uint64,G3,dec} bytes)",ObjectName,Method,memory); 
 	notifier->Info("%s",temp.GetText());
 	if ((Data = new UInt8[(UInt32)memory])==NULL)
 	{
@@ -141,6 +141,7 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 	UInt64										cIndex;
 	UInt8										*cPoz;
 	GML::ML::MLRecord							cRec;
+	GML::Utils::GString							temp;
 	IndexBitCounter								ibc;
 
 	columns.nrFeatures = conector->GetFeatureCount();
@@ -204,7 +205,12 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 			if (cRec.Features[gr]!=0.0)
 			{
 				if (AddIndex(gr,cIndex)==false)
+				{
+					temp.Set("");
+					temp.AddFormatedEx("[%{str}] -> Unable to add Index to list : Records:%{uint32,dec} , Feature:%{uint32,dec} , Poz:%{uint64,dec,G3} , Alloc:%{uint64,dec,G3}",ObjectName,tr,gr,cIndex,MemToAlloc);
+					notifier->Error("%s",temp.GetText());
 					return false;
+				}
 			}
 		}
 		// pun si label-ul
@@ -216,9 +222,6 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 		// adaug si Hash-ul
 		if (StoreRecordHash)
 		{
-			//GML::Utils::GString	tmp;
-			//cRec.Hash.ToString(tmp);
-			//notifier->Info(" %s ",tmp.GetText());
 			if (Hashes.PushByRef(cRec.Hash)==false)
 			{
 				notifier->Error("[%s] -> Unable to save Hash with id %d",ObjectName,tr);
