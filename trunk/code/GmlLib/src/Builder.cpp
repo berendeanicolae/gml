@@ -295,6 +295,12 @@ GML::ML::IConnector*		GML::Builder::CreateConnector(char *buildString,GML::Utils
 				newObject->connectors[index] = GML::Builder::CreateConnector(conn.GetText(),notify);
 				if (newObject->connectors[index]==NULL)
 					return NULL;
+				index++;
+			}
+			if (index!=poi.CountElements)
+			{
+				notify.Error("[GML:Builder] -> Internal error (unable to initialize %d connectors) : %s",poi.CountElements,poi.typeName.GetText());
+				return NULL;
 			}
 		} else {
 			if (newObject->AllowConnectors(1)==false)
