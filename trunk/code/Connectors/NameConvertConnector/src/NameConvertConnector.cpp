@@ -12,7 +12,10 @@ bool NameConvertConnector::OnInitConnectionToConnector()
 	int						poz,count;
 	
 	if (all.LoadFromFile(FeatureNamesList.GetText())==false)
+	{
+		notifier->Info("[%s] -> Unable to load file: %s",ObjectName,FeatureNamesList.GetText());
 		return false;
+	}
 	
 	poz = 0;
 	count = 0;
@@ -24,7 +27,10 @@ bool NameConvertConnector::OnInitConnectionToConnector()
 		count++;
 	}
 	if (count==0)
+	{
+		notifier->Info("[%s] -> Incorent number de features names (0 , expecting %d)",ObjectName,conector->GetFeatureCount());
 		return false;
+	}
 	NewNames = new GML::Utils::GString [count];
 	poz = 0;
 	count = 0;
@@ -38,7 +44,10 @@ bool NameConvertConnector::OnInitConnectionToConnector()
 	}
 	notifier->Info("[%s] -> Found %d names ",ObjectName,count);
 	if (conector->GetFeatureCount()!=count)
+	{
+		notifier->Info("[%s] -> Incorent number de features names (%d , expecting %d)",ObjectName,count,conector->GetFeatureCount());
 		return false;
+	}
 	return true;
 }
 bool NameConvertConnector::GetRecordLabel( double &label,UInt32 index )
