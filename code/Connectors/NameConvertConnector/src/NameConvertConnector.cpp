@@ -48,6 +48,8 @@ bool NameConvertConnector::OnInitConnectionToConnector()
 		notifier->Info("[%s] -> Incorent number de features names (%d , expecting %d)",ObjectName,count,conector->GetFeatureCount());
 		return false;
 	}
+	columns.nrFeatures = conector->GetFeatureCount();
+	nrRecords = conector->GetRecordCount();
 	return true;
 }
 bool NameConvertConnector::GetRecordLabel( double &label,UInt32 index )
