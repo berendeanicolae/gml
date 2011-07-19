@@ -1,0 +1,3 @@
+sources = CompressedBitConnector.cpp
+gmlplugin = yes
+libname = CompressedBitConnector
