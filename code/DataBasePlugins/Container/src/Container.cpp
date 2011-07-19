@@ -85,6 +85,7 @@ Container::Container()
 
 	LinkPropertyToDouble("Label",Label,1,"Label value for Container records");
 	LinkPropertyToString("FeatureInformationFile",FeatureInformationFile,"","File that contains informations about features to be extracted from container");
+	LinkPropertyToBool  ("AddExtraInfoToFeatureName",AddExtraInfoToFeatureName,true,"Adds cID and fID to feature name");
 
 	AddCacheProperties();
 
@@ -219,6 +220,14 @@ bool Container::LoadFIF()
 			}
 		}
 		fi.ColumnIndex = Columns.Len();
+		if (AddExtraInfoToFeatureName)
+		{
+			if (tok[0].AddFormated("(0x%02X,0x%08X)",cID,fID)==false)
+			{
+				notifier->Error("[%s] -> Unable to add cID and fID to featureName.",ObjectName);
+				return false;
+			}
+		}
 		if (AddColumn(fi.Type,GML::DB::COLUMNTYPE::FEATURE,tok[0].GetText())==false)
 			return false;
 		if (FInfo.PushByRef(fi)==false)
