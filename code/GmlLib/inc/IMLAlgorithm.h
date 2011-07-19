@@ -60,11 +60,9 @@ namespace GML
 			double							DistanceBias;
 			double							DistanceK;
 
-			GML::Utils::GString				Conector;
-			GML::Utils::GString				DataBase;
+			GML::Utils::GString				Conector;			
 			GML::Utils::GString				Notifier;
-			GML::Utils::GString				HashFileName;	
-			GML::DB::IDataBase				*db;
+			GML::Utils::GString				HashFileName;				
 			GML::ML::IConnector				*con;
 
 			// local variables

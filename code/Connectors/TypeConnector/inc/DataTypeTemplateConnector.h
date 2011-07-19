@@ -38,7 +38,7 @@ template <class DataType> DataTypeTemplateConnector<DataType>::DataTypeTemplateC
 
 	LinkPropertyToBool("LabelIsBool",LabelIsBool,false,"Specify if label is consider a bool value or not");
 
-	AddDataBaseProperties();
+	AddTwoClassLabelProperties();
 	AddCacheProperties();
 	AddStoreProperties();
 }
@@ -82,6 +82,7 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 	UInt32										tr,gr,recMask;	
 	DataType									*cPoz;
 	GML::ML::MLRecord							cRec;
+	bool										Label;
 
 	columns.nrFeatures = conector->GetFeatureCount();
 	nrRecords = conector->GetRecordCount();
@@ -124,7 +125,9 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 		// pun si label-ul
 		if (LabelIsBool)
 		{
-			BSLabel.Set(tr,cRec.Label!=0);
+			if (UpdateTwoClassLabelValue(cRec.Label,Label)==false)
+				return false;
+			BSLabel.Set(tr,Label);
 		} else {
 			Labels[tr] = (DataType)cRec.Label;
 		}
@@ -161,6 +164,7 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 	DataType									*cPoz;	
 	GML::DB::RecordHash							cHash;
 	double										cValue;
+	bool										Label;
 
 	if (AllocMemory()==false)
 		return false;
@@ -188,7 +192,9 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 			return false;
 		if (LabelIsBool)
 		{
-			BSLabel.Set(tr,(cValue!=0));
+			if (UpdateTwoClassLabelValue(cValue,Label)==false)
+				return false;
+			BSLabel.Set(tr,Label);
 		} else {
 			Labels[tr] = (DataType)cValue;
 		}
@@ -336,9 +342,9 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::GetRecord(GM
 	if (LabelIsBool)
 	{
 		if (BSLabel.Get(index))
-			record.Label = 1.0;
+			record.Label = OutLabelPositive;
 		else
-			record.Label = -1.0;
+			record.Label = OutLabelNegative;
 	} else {
 		record.Label = (double)Labels[index];
 	}
@@ -360,9 +366,9 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::GetRecordLab
 	if (LabelIsBool)
 	{
 		if (BSLabel.Get(index))
-			Label = 1.0;
+			Label = OutLabelPositive;
 		else
-			Label = -1.0;
+			Label = OutLabelNegative;
 	} else {
 		Label = (double)Labels[index];
 	}

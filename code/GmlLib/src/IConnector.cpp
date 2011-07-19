@@ -16,11 +16,13 @@ GML::ML::IConnector::IConnector()
 	
 
 }
-void GML::ML::IConnector::AddDataBaseProperties()
+void GML::ML::IConnector::AddTwoClassLabelProperties()
 {
-	LinkPropertyToString("Query",Query,"SELECT * FROM RecordTable","The query for the select statement");
-	LinkPropertyToString("CountQuery",CountQuery,"SELECT COUNT(*) FROM RecordTable","The query for counting the elements in the record set");
-	LinkPropertyToUInt32("CachedRecords",CachedRecords,10000,"Number of records to be cached during one SQL query.");
+	LinkPropertyToDouble("InLabelPositive",InLabelPositive,1.0,"Value for the positive Label received from the database or a conector");
+	LinkPropertyToDouble("InLabelNegative",InLabelNegative,-1.0,"Value for the positive Label received from the database or a conector");
+	LinkPropertyToDouble("OutLabelPositive",OutLabelPositive,1.0,"Value for the label that will be set when querying a positive label");
+	LinkPropertyToDouble("OutLabelNegative",OutLabelNegative,-1.0,"Value for the label that will be set when querying a negative label");
+	LinkPropertyToUInt32("LabelConversionMethod",LabelConversionMethod,LABEL_CONVERT_EXACT,"!!LIST:Exact=0,ExactPositive,ExactNegative!!");
 }
 void GML::ML::IConnector::AddCacheProperties()
 {
@@ -216,6 +218,39 @@ bool GML::ML::IConnector::UpdateColumnInformationsFromDataBase()
 
 	return true;
 }
+bool GML::ML::IConnector::UpdateTwoClassLabelValue(double value,bool &label)
+{
+	switch (LabelConversionMethod)
+	{
+		case LABEL_CONVERT_EXACT:
+			if (value==InLabelPositive)
+			{
+				label = true;
+				return true;
+			}
+			if (value==InLabelNegative)
+			{
+				label = false;
+				return true;
+			}
+			notifier->Error("[%s] -> Invalid value for label (%lf). Expecting (%lf for positive and %lf for negative).",ObjectName,value,InLabelPositive,InLabelNegative);
+			return false;
+		case LABEL_CONVERT_FIX_POSITIVE:
+			if (value==InLabelPositive)
+				label = true;
+			else
+				label = false;
+			return true;	
+		case LABEL_CONVERT_FIX_NEGATIVE:
+			if (value==InLabelNegative)
+				label = false;
+			else
+				label = true;
+			return true;
+	}
+	notifier->Error("[%s] -> Invalid 'LabelConversionMethod' property value (%d)",ObjectName,LabelConversionMethod);
+	return false;
+}
 bool GML::ML::IConnector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double &value)
 {
 	GML::DB::DBRecord	*rec;
@@ -240,10 +275,10 @@ bool GML::ML::IConnector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRec
 			value = (double)rec->Value.Int32Val;
 			break;
 		case GML::DB::TYPES::BOOLEAN:
-			if (rec->Value.BoolVal)
-				value = 1.0;
+			if (rec->Value.BoolVal==false)
+				value = 0.0;
 			else
-				value = -1.0;
+				value = 1.0;
 			break;
 		default:
 			notifier->Error("[%s] -> Unable to convert column from index %d to double !",ObjectName,index);

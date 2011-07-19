@@ -2047,6 +2047,12 @@ namespace GML
 		class  IConnector : public GML::Utils::GMLObject
 		{
 		protected:
+			enum
+			{
+				LABEL_CONVERT_EXACT = 0,
+				LABEL_CONVERT_FIX_POSITIVE,
+				LABEL_CONVERT_FIX_NEGATIVE,
+			};
 			GML::Utils::INotifier						*notifier;
 		public:			
 			GML::DB::IDataBase							*database;
@@ -2067,10 +2073,14 @@ namespace GML
 			GML::Utils::GTFVector<UInt32>				indexFeatureNames;
 			GML::Utils::GTFVector<UInt8>				dataFeaturesNames;
 			GML::Utils::File							file;
-
+			double										InLabelPositive,OutLabelPositive;
+			double										InLabelNegative,OutLabelNegative;
+			UInt32										LabelConversionMethod;
 			
+						
 			void						ClearColumnIndexes();
 			bool						UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double &value);
+			bool						UpdateTwoClassLabelValue(double value,bool &label);
 			bool						UpdateHashValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,GML::DB::RecordHash &recHash);
 			bool						UpdateColumnInformationsFromDataBase();
 			bool						UpdateFeaturesNameFromConnector();
@@ -2087,8 +2097,7 @@ namespace GML
 			bool						SaveRecordHashesAndFeatureNames();
 			bool						LoadRecordHashesAndFeatureNames(CacheHeader *h);
 
-
-			void						AddDataBaseProperties();
+			void						AddTwoClassLabelProperties();
 			void						AddCacheProperties();
 			void						AddStoreProperties();
 
@@ -2234,11 +2243,9 @@ namespace GML
 			double							DistanceBias;
 			double							DistanceK;
 
-			GML::Utils::GString				Conector;
-			GML::Utils::GString				DataBase;
+			GML::Utils::GString				Conector;			
 			GML::Utils::GString				Notifier;
-			GML::Utils::GString				HashFileName;	
-			GML::DB::IDataBase				*db;
+			GML::Utils::GString				HashFileName;				
 			GML::ML::IConnector				*con;
 
 			// local variables
