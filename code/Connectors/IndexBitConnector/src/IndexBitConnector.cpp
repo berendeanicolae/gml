@@ -307,7 +307,7 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 			colIndex = columns.indexFeature[gr];
 			if (UpdateDoubleValue(VectPtr,colIndex,cValue)==false)
 				return false;
-			if (cValue==1.0)				
+			if (cValue!=0.0)				
 			{
 				if (AddIndex(gr,cIndex)==false)
 				{
