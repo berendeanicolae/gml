@@ -175,7 +175,7 @@ bool GML::ML::IConnector::UpdateColumnInformationsFromDataBase()
 				(ci->DataType!=GML::DB::TYPES::INT32) &&
 				(ci->DataType!=GML::DB::TYPES::UINT8) && 
 				(ci->DataType!=GML::DB::TYPES::UINT16) && 
-				(ci->DataType!=GML::DB::TYPES::UINT32) &&
+				(ci->DataType!=GML::DB::TYPES::UINT32) 
 				)
 			{
 				notifier->Error("[%s] -> Invalid type for Feature at column #%d. Allowed types: BOOL,INT8,INT16,INT32,UINT8,UINT16,UINT32,DOUBLE !",ObjectName,tr);
