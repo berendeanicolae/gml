@@ -170,10 +170,15 @@ bool GML::ML::IConnector::UpdateColumnInformationsFromDataBase()
 		{
 			if ((ci->DataType!=GML::DB::TYPES::DOUBLE) && 
 				(ci->DataType!=GML::DB::TYPES::BOOLEAN) && 
+				(ci->DataType!=GML::DB::TYPES::INT8) && 
 				(ci->DataType!=GML::DB::TYPES::INT16) && 
-				(ci->DataType!=GML::DB::TYPES::INT32))
+				(ci->DataType!=GML::DB::TYPES::INT32) &&
+				(ci->DataType!=GML::DB::TYPES::UINT8) && 
+				(ci->DataType!=GML::DB::TYPES::UINT16) && 
+				(ci->DataType!=GML::DB::TYPES::UINT32) &&
+				)
 			{
-				notifier->Error("[%s] Invalid type for Feature at column #%d. Allowed types: BOOL,INT16,INT32,DOUBLE !",ObjectName,tr);
+				notifier->Error("[%s] -> Invalid type for Feature at column #%d. Allowed types: BOOL,INT8,INT16,INT32,UINT8,UINT16,UINT32,DOUBLE !",ObjectName,tr);
 				return false;
 			}
 			columns.nrFeatures++;
@@ -273,6 +278,15 @@ bool GML::ML::IConnector::UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRec
 			break;
 		case GML::DB::TYPES::INT32:
 			value = (double)rec->Value.Int32Val;
+			break;
+		case GML::DB::TYPES::UINT8:
+			value = (double)rec->Value.UInt8Val;
+			break;
+		case GML::DB::TYPES::UINT16:
+			value = (double)rec->Value.UInt16Val;
+			break;
+		case GML::DB::TYPES::UINT32:
+			value = (double)rec->Value.UInt32Val;
 			break;
 		case GML::DB::TYPES::BOOLEAN:
 			if (rec->Value.BoolVal==false)
