@@ -1,0 +1,3 @@
+sources = NameConvertConnector.cpp
+gmlplugin = yes
+libname = NameConvertConnector
