@@ -41,6 +41,7 @@ protected:
 	GML::Utils::GString					FeatureInformationFile;
 	GML::Utils::GTFVector<FeatInfo>		FInfo;
 	GML::Utils::GTFVector<UInt32>		ParamValues;
+	bool								AddExtraInfoToFeatureName;
 
 	bool								ProcessExpression(GML::Utils::GString &expre,FeatInfo &fi);
 	bool								LoadFIF();
