@@ -86,7 +86,7 @@ bool	BitConnector::OnInitConnectionToConnector()
 		}
 		// pentru fiecare record pun valorile
 		for (gr=0;gr<columns.nrFeatures;gr++)
-			if (cRec.Features[gr]==1.0)
+			if (cRec.Features[gr]!=0.0)
 				cPoz[gr/8] |= (1<<(gr%8));
 		// pun si label-ul
 		if (UpdateTwoClassLabelValue(cRec.Label,Label)==false)
@@ -143,7 +143,7 @@ bool	BitConnector::OnInitConnectionToDataBase()
 		{
 			if (UpdateDoubleValue(VectPtr,columns.indexFeature[gr],cValue)==false)
 				return false;
-			if (cValue==1.0)
+			if (cValue!=0.0)
 				cPoz[gr/8] |= (1<<(gr%8));
 		}
 		// pun si label-ul
