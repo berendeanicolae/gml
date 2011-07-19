@@ -322,7 +322,7 @@ bool	CompressedBitConnector::OnInitConnectionToDataBase()
 			colIndex = columns.indexFeature[gr];
 			if (UpdateDoubleValue(VectPtr,colIndex,cValue)==false)
 				return false;
-			if (cValue==1.0)
+			if (cValue!=0.0)
 				Update(ibc,gr);				
 		}
 		if ((tr % 10000)==0)
@@ -359,7 +359,7 @@ bool	CompressedBitConnector::OnInitConnectionToDataBase()
 				return false;
 			if (cValue!=0.0)				
 			{
-				if (AddIndex(Last - gr,cIndex)==false)
+				if (AddIndex(gr-Last,cIndex)==false)
 				{
 					temp.Set("");
 					temp.AddFormatedEx("[%{str}] -> Unable to add Index to list : Records:%{uint32,dec} , Feature:%{uint32,dec} , Poz:%{uint64,dec,G3} , Alloc:%{uint64,dec,G3}",ObjectName,tr,gr,cIndex,MemToAlloc);
