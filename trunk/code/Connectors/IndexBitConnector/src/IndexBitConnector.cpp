@@ -8,7 +8,7 @@ IndexBitConnector::IndexBitConnector()
 	Indexes = NULL;
 	ObjectName = "IndexBitConnector";
 
-	AddDataBaseProperties();
+	AddTwoClassLabelProperties();
 	AddCacheProperties();
 	AddStoreProperties();
 }
@@ -20,6 +20,7 @@ bool	IndexBitConnector::AllocMemory(UInt64 memory)
 	temp.Set("");
 	temp.AddFormatedEx("[%{str}] -> Compressed method : %{uint32,dec} (Memory: %{uint64,G3,dec} bytes)",ObjectName,Method,memory); 
 	notifier->Info("%s",temp.GetText());
+
 	if ((Data = new UInt8[memory])==NULL)
 	{
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for data !",ObjectName,memory);
@@ -143,6 +144,7 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 	GML::ML::MLRecord							cRec;
 	GML::Utils::GString							temp;
 	IndexBitCounter								ibc;
+	bool										Label;
 
 	columns.nrFeatures = conector->GetFeatureCount();
 	nrRecords = conector->GetRecordCount();
@@ -214,7 +216,9 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 			}
 		}
 		// pun si label-ul
-		if (Labels.Set(tr,(bool)(cRec.Label==1.0))==false)
+		if (UpdateTwoClassLabelValue(cRec.Label,Label)==false)
+			return false;
+		if (Labels.Set(tr,Label)==false)
 		{
 			notifier->Error("[%s] -> Unable to set label for record #%d",tr);
 			return false;
@@ -252,6 +256,7 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 	GML::DB::RecordHash							cHash;
 	double										cValue;
 	IndexBitCounter								ibc;
+	bool										Label;
 
 	memset(&ibc,0,sizeof(ibc));
 	notifier->StartProcent("[%s] -> Analizing DataBase : ",ObjectName);
@@ -268,7 +273,7 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 			colIndex = columns.indexFeature[gr];
 			if (UpdateDoubleValue(VectPtr,colIndex,cValue)==false)
 				return false;
-			if (cValue!=0.0)
+			if (cValue==1.0)
 				Update(ibc,gr);				
 		}
 		if ((tr % 10000)==0)
@@ -302,7 +307,7 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 			colIndex = columns.indexFeature[gr];
 			if (UpdateDoubleValue(VectPtr,colIndex,cValue)==false)
 				return false;
-			if (cValue!=0.0)				
+			if (cValue==1.0)				
 			{
 				if (AddIndex(gr,cIndex)==false)
 				{
@@ -316,7 +321,13 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 		// pun si label-ul
 		if (UpdateDoubleValue(VectPtr,columns.indexLabel,cValue)==false)
 			return false;
-		Labels.Set(tr,(bool)(cValue==1));
+		if (UpdateTwoClassLabelValue(cValue,Label)==false)
+			return false;
+		if (Labels.Set(tr,Label)==false)
+		{
+			notifier->Error("[%s] -> Unable to set label for record #%d",ObjectName,tr);
+			return false;
+		}
 		// adaug si Hash-ul
 		if (StoreRecordHash)
 		{
@@ -480,9 +491,9 @@ bool	IndexBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 
 
 	// pun si label-ul
 	if (Labels.Get(index))
-		record.Label = 1.0;
+		record.Label = OutLabelPositive;
 	else
-		record.Label = -1.0;
+		record.Label = OutLabelNegative;
 
 	if (recordMask & GML::ML::ConnectorFlags::STORE_HASH)
 	{
@@ -501,9 +512,9 @@ bool	IndexBitConnector::GetRecordLabel(double &Label,UInt32 index)
 
 	// pun si label-ul
 	if (Labels.Get(index))
-		Label = 1.0;
+		Label = OutLabelPositive;
 	else
-		Label = -1.0;
+		Label = OutLabelNegative;
 
 	return true;
 }

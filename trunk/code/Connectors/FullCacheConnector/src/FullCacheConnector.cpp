@@ -8,8 +8,7 @@ FullCacheConnector::FullCacheConnector()
 	 Labels  = NULL;	 
 
 	 ObjectName = "FullCacheConnector";
-
-	AddDataBaseProperties();
+	
 	AddCacheProperties();
 	AddStoreProperties();
 }

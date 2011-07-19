@@ -142,10 +142,6 @@ FeaturesStatistics::FeaturesStatistics()
 
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
 
-	LinkPropertyToString("DataBase"					,DataBase				,"");
-	LinkPropertyToString("Connector"				,Conector				,"");
-	LinkPropertyToString("Notifier"					,Notifier				,"");
-	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1);
 	LinkPropertyToUInt32("ColumnWidth"				,columnWidth			,12,"Sets the column width (0 for no aligniation)");
 	LinkPropertyToUInt32("FeatureColumnWidth"		,featureColumnWidth		,20,"Sets the feature name column width (0 for no aligniation)");
 	LinkPropertyToString("ResultFile"				,ResultFile				,"","Name of the file to save the result table or none if no save is requared");

@@ -7,7 +7,7 @@ BitConnector::BitConnector()
 	Data = NULL;
 	ObjectName = "BitConnector";
 
-	AddDataBaseProperties();
+	AddTwoClassLabelProperties();
 	AddCacheProperties();
 	AddStoreProperties();
 }
@@ -47,6 +47,7 @@ bool	BitConnector::OnInitConnectionToConnector()
 	UInt32										tr,gr,recMask;	
 	UInt8										*cPoz;
 	GML::ML::MLRecord							cRec;
+	bool										Label;
 
 	columns.nrFeatures = conector->GetFeatureCount();
 	nrRecords = conector->GetRecordCount();
@@ -88,7 +89,9 @@ bool	BitConnector::OnInitConnectionToConnector()
 			if (cRec.Features[gr]==1.0)
 				cPoz[gr/8] |= (1<<(gr%8));
 		// pun si label-ul
-		if (cRec.Label==1.0)
+		if (UpdateTwoClassLabelValue(cRec.Label,Label)==false)
+			return false;
+		if (Label)
 			cPoz[columns.nrFeatures/8] |= (1<<(columns.nrFeatures%8));
 		// adaug si Hash-ul
 		if (StoreRecordHash)
@@ -119,6 +122,7 @@ bool	BitConnector::OnInitConnectionToDataBase()
 	UInt8										*cPoz;
 	GML::DB::RecordHash							cHash;
 	double										cValue;
+	bool										Label;
 
 	if (AllocMemory()==false)
 		return false;
@@ -145,7 +149,9 @@ bool	BitConnector::OnInitConnectionToDataBase()
 		// pun si label-ul
 		if (UpdateDoubleValue(VectPtr,columns.indexLabel,cValue)==false)
 			return false;
-		if (cValue==1.0)
+		if (UpdateTwoClassLabelValue(cValue,Label)==false)
+			return false;
+		if (Label)
 			cPoz[columns.nrFeatures/8] |= (1<<(columns.nrFeatures%8));
 		// adaug si Hash-ul
 		if (StoreRecordHash)
@@ -261,9 +267,9 @@ bool	BitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recor
 	}
 	// pun si label-ul
 	if ((cPoz[columns.nrFeatures/8] & (1<<(columns.nrFeatures%8)))!=0)
-		record.Label = 1.0;
+		record.Label = OutLabelPositive;
 	else
-		record.Label = -1.0;
+		record.Label = OutLabelNegative;
 
 	if (recordMask & GML::ML::ConnectorFlags::STORE_HASH)
 	{
@@ -284,9 +290,9 @@ bool	BitConnector::GetRecordLabel(double &Label,UInt32 index)
 
 	// pun si label-ul
 	if ((cPoz[columns.nrFeatures/8] & (1<<(columns.nrFeatures%8)))!=0)
-		Label = 1.0;
+		Label = OutLabelPositive;
 	else
-		Label = -1.0;
+		Label = OutLabelNegative;
 
 	return true;
 }
