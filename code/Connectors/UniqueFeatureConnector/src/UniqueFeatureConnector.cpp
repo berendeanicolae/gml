@@ -13,7 +13,7 @@ UniqueFeatureConnector::UniqueFeatureConnector()
 	LinkPropertyToUInt32("IfUniqeRecordNegative",IfUniqeRecordNegative,ACTION_KEEP,"!!LIST:Keep=0,Remove!!");
 	LinkPropertyToUInt32("IfMultipleRecordsPositive",IfMultipleRecordsPositive,ACTION_KEEP_ONE,"!!LIST:KeepOne=0,KeepAll,RemoveAll!!");
 	LinkPropertyToUInt32("IfMultipleRecordsNegative",IfMultipleRecordsNegative,ACTION_KEEP_ONE,"!!LIST:KeepOne=0,KeepAll,RemoveAll!!");
-	LinkPropertyToUInt32("IsMultiClassRecords",IsMultiClassRecords,ACTION_MC_KEEP_FIRST_NEGATIVE,"!!LIST:KeepAll=0,RemoveAll,KeepFirstPositive,KeepFirstNegative,KeepFirstPositiveAndNegative,KeepOnlyPositive,KeepOnlyNegative!!");
+	LinkPropertyToUInt32("IfMultiClassRecords",IsMultiClassRecords,ACTION_MC_KEEP_FIRST_NEGATIVE,"!!LIST:KeepAll=0,RemoveAll,KeepFirstPositive,KeepFirstNegative,KeepFirstPositiveAndNegative,KeepOnlyPositive,KeepOnlyNegative!!");
 }
 UniqueFeatureConnector::~UniqueFeatureConnector()
 {
