@@ -50,6 +50,34 @@ double entropy(double v_true,double v_false)
 	return -(v1*log2(v1)) - (v2*log2(v2));
 }
 
+double Compute_Pozitive(FeaturesInformations *f)
+{
+	return f->countPozitive;
+}
+double Compute_TotalPozitive(FeaturesInformations *f)
+{
+	return f->totalPozitive;
+}
+double Compute_ProcPozitive(FeaturesInformations *f)
+{
+	if (f->totalPozitive==0)
+		return 0;
+	return (f->countPozitive*100.0)/f->totalPozitive;
+}
+double Compute_Negative(FeaturesInformations *f)
+{
+	return f->countNegative;
+}
+double Compute_TotalNegative(FeaturesInformations *f)
+{
+	return f->totalNegative;
+}
+double Compute_ProcNegative(FeaturesInformations *f)
+{
+	if (f->totalNegative==0)
+		return 0;
+	return (f->countNegative*100.0)/f->totalNegative;
+}
 double Compute_RapPozNeg(FeaturesInformations *f)
 {
 	if (f->countPozitive>=f->countNegative)
@@ -148,7 +176,18 @@ FeaturesStatistics::FeaturesStatistics()
 	LinkPropertyToBool  ("NotifyResult"				,notifyResults			,true);
 	LinkPropertyToBool  ("ShowFeatureName"			,showFeatureName		,true,"Shows feature name in the result list");
 	LinkPropertyToDouble("MultiplyFactor"			,multiplyFactor			,1.0);
-	
+	LinkPropertyToUInt32("MinPositiveElements"		,MinPoz					,0,"Minimum number of positive elements (for filtering)");
+	LinkPropertyToUInt32("MaxPositiveElements"		,MaxPoz					,0xFFFFFFFF,"Maximum number of positive elements (for filtering)");
+	LinkPropertyToUInt32("MinNegativeElements"		,MinNeg					,0,"Minimum number of negative elements (for filtering)");
+	LinkPropertyToUInt32("MaxNegativeElements"		,MaxNeg					,0xFFFFFFFF,"Maximum number of negative elements (for filtering)");	
+
+	AddNewStatFunction("TotalPoz",Compute_TotalPozitive);
+	AddNewStatFunction("TotalNeg",Compute_TotalNegative);
+	AddNewStatFunction("PozCount",Compute_Pozitive);
+	AddNewStatFunction("NegCount",Compute_Negative);
+
+	AddNewStatFunction("PozProc",Compute_ProcPozitive);
+	AddNewStatFunction("NegProc",Compute_ProcNegative);
 
 	AddNewStatFunction("Poz/Neg",Compute_RapPozNeg);
 	AddNewStatFunction("ProcDiff",Compute_ProcDiff);
@@ -296,10 +335,10 @@ bool FeaturesStatistics::CreateHeaders(GML::Utils::GString &str)
 	{
 		if (showFeatureName)
 		{
-			if (str.Set("FeatName|Pozitive|Negative|")==false)
+			if (str.Set("FeatName|")==false)
 				return false;
 		} else {
-			if (str.Set("#|Pozitive|Negative|")==false)
+			if (str.Set("#|")==false)
 				return false;
 		}
 	} else {
@@ -316,25 +355,20 @@ bool FeaturesStatistics::CreateHeaders(GML::Utils::GString &str)
 				return false;
 		}
 
-		if (str.SetFormated("%s|Pozitive|Negative|",tmp.GetText())==false)
+		if (str.SetFormated("%s|",tmp.GetText())==false)
 			return false;
 	}
 
 	for (tr=0;tr<StatsData.Len();tr++)
 	{
-		if (tmp.Set(StatsData[tr].Name)==false)
-			return false;
-		while (tmp.Len()<columnWidth)
+		if (columnWidth==0)
 		{
-			if (tmp.Add("                                                                                                     ")==false)
+			if (str.AddFormatedEx("%{str}|",StatsData[tr].Name.GetText())==false)
+				return false;
+		} else {
+			if (str.AddFormatedEx("%{str,L%%,F ,trunc}|",StatsData[tr].Name.GetText(),columnWidth)==false)
 				return false;
 		}
-		if (columnWidth>0)
-			tmp.Truncate(columnWidth);
-		if (str.Add(&tmp)==false)
-			return false;
-		if (str.Add("|")==false)
-			return false;
 	}
 	return true;
 }
@@ -354,7 +388,7 @@ bool FeaturesStatistics::CreateRecordInfo(FeaturesInformations &finf,GML::Utils:
 			if (tmp.SetFormated("%d",finf.Index)==false)
 				return false;
 		}
-		if (str.SetFormated("%s|%d|%d|",tmp.GetText(),(UInt32)finf.countPozitive,(UInt32)finf.countNegative)==false)
+		if (str.SetFormated("%s|",tmp.GetText())==false)
 			return false;
 	} else {
 		if (showFeatureName)
@@ -369,20 +403,33 @@ bool FeaturesStatistics::CreateRecordInfo(FeaturesInformations &finf,GML::Utils:
 			if (tmp.SetFormated("%5d",finf.Index)==false)
 				return false;
 		}
-		if (str.SetFormated("%s|%8d|%8d|",tmp.GetText(),(UInt32)finf.countPozitive,(UInt32)finf.countNegative)==false)
+		if (str.SetFormated("%s|",tmp.GetText())==false)
 			return false;
 	}
 	for (tr=0;tr<StatsData.Len();tr++)
 	{
-		if (tmp.SetFormated("%.4lf",finf.fnValue[tr])==false)
+		if (tmp.Set("")==false)
 			return false;
-		while (tmp.Len()<columnWidth)
-		{
-			if (tmp.Insert(" ",0)==false)
-				return false;
-		}
 		if (columnWidth>0)
-			tmp.Truncate(columnWidth);
+		{
+			if (tr<4)
+			{
+				if (tmp.AddFormatedEx("%{uint32,R%%,F ,G3}",(UInt32)finf.fnValue[tr],columnWidth)==false)
+					return false;
+			} else {
+				if (tmp.AddFormatedEx("%{double,Z4,R%%,F }",finf.fnValue[tr],columnWidth)==false)
+					return false;
+			}
+		} else {
+			if (tr<4)
+			{
+				if (tmp.AddFormatedEx("%{uint32}",(UInt32)finf.fnValue[tr])==false)
+					return false;
+			} else {
+				if (tmp.AddFormatedEx("%{double,Z4,}",finf.fnValue[tr])==false)
+					return false;
+			}
+		}
 		if (str.Add(&tmp)==false)
 			return false;
 		if (str.Add("|")==false)
@@ -390,7 +437,14 @@ bool FeaturesStatistics::CreateRecordInfo(FeaturesInformations &finf,GML::Utils:
 	}
 	return true;
 }
-
+bool FeaturesStatistics::Validate(FeaturesInformations *fi)
+{
+	if ((fi->countNegative<MinNeg) || (fi->countNegative>MaxNeg))
+		return false;
+	if ((fi->countPozitive<MinPoz) || (fi->countPozitive>MaxPoz))
+		return false;
+	return true;
+}
 void FeaturesStatistics::PrintStats()
 {
 	UInt32					tr;
@@ -414,6 +468,8 @@ void FeaturesStatistics::PrintStats()
 	}
 	for (tr=0;tr<con->GetFeatureCount();tr++)
 	{
+		if (!Validate(&ComputedData[tr]))
+			continue;
 		if (CreateRecordInfo(ComputedData[tr],str)==false)
 		{
 			notif->Error("[%s] -> Unable to create record line !",ObjectName);
@@ -465,6 +521,8 @@ void FeaturesStatistics::SaveToFile()
 
 	for (tr=0;tr<con->GetFeatureCount();tr++)
 	{
+		if (!Validate(&ComputedData[tr]))
+			continue;
 		if (CreateRecordInfo(ComputedData[tr],str)==false)
 		{
 			notif->Error("[%s] -> Unable to create record line !",ObjectName);
