@@ -10,10 +10,34 @@ struct FeatInfo
 };
 class UniqueFeatureConnector : public GML::ML::IConnector
 {	
+	enum
+	{
+		ACTION_KEEP = 0,
+		ACTION_REMOVE,
+
+		ACTION_KEEP_ONE = 0,
+		ACTION_KEEP_ALL,
+		ACTION_REMOVE_ALL,
+
+		ACTION_MC_KEEP_ALL = 0,
+		ACTION_MC_REMOVE_ALL,
+		ACTION_MC_KEEP_FIRST_POSITIVE,
+		ACTION_MC_KEEP_FIRST_NEGATIVE,
+		ACTION_MC_KEEP_FIRST_POSITIVE_AND_NEGATIVE,
+		ACTION_MC_KEEP_ONLY_POSITIVE,
+		ACTION_MC_KEEP_ONLY_NEGATIVE,
+
+	};
+
+
 	GML::Utils::GTFVector<FeatInfo>	FList;
 	GML::Utils::Indexes				Indexes;
+	
+	UInt32							IfUniqeRecordPositive,IfMultipleRecordsPositive;
+	UInt32							IfUniqeRecordNegative,IfMultipleRecordsNegative;
+	UInt32							IsMultiClassRecords;
 
-
+	bool					DoActionOnSingleClass(UInt32 start,UInt32 end,UInt32 ifOne,UInt32 ifMany);
 	bool					OnInitConnectionToConnector();
 	bool					AnalizeSubList(UInt32 start,UInt32 end);
 	

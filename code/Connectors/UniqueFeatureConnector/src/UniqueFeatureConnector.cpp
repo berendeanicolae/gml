@@ -8,10 +8,44 @@ int FeatInfoCompare(FeatInfo &f1,FeatInfo &f2)
 UniqueFeatureConnector::UniqueFeatureConnector()
 {
 	ObjectName = "UniqueFeatureConnector";
+
+	LinkPropertyToUInt32("IfUniqeRecordPositive",IfUniqeRecordPositive,ACTION_KEEP,"!!LIST:Keep=0,Remove!!");
+	LinkPropertyToUInt32("IfUniqeRecordNegative",IfUniqeRecordNegative,ACTION_KEEP,"!!LIST:Keep=0,Remove!!");
+	LinkPropertyToUInt32("IfMultipleRecordsPositive",IfMultipleRecordsPositive,ACTION_KEEP_ONE,"!!LIST:KeepOne=0,KeepAll,RemoveAll!!");
+	LinkPropertyToUInt32("IfMultipleRecordsNegative",IfMultipleRecordsNegative,ACTION_KEEP_ONE,"!!LIST:KeepOne=0,KeepAll,RemoveAll!!");
+	LinkPropertyToUInt32("IsMultiClassRecords",IsMultiClassRecords,ACTION_MC_KEEP_FIRST_NEGATIVE,"!!LIST:KeepAll=0,RemoveAll,KeepFirstPositive,KeepFirstNegative,KeepFirstPositiveAndNegative,KeepOnlyPositive,KeepOnlyNegative!!");
 }
 UniqueFeatureConnector::~UniqueFeatureConnector()
 {
 	Close();
+}
+bool UniqueFeatureConnector::DoActionOnSingleClass(UInt32 start,UInt32 end,UInt32 ifOne,UInt32 ifMany)
+{
+	UInt32	tr;
+	// daca am unul singur
+	if (start+1==end)
+	{
+		if (ifOne==ACTION_REMOVE)
+			return true;
+		return Indexes.Push(FList[start].Index);
+	}
+	// daca am mai multi
+	switch (ifMany)
+	{
+		case ACTION_KEEP_ONE:
+			return Indexes.Push(FList[start].Index);
+		case ACTION_KEEP_ALL:
+			for (tr=start;tr<end;tr++)
+			{
+				if (Indexes.Push(FList[tr].Index)==false)
+					return false;
+			}
+			return true;
+		case ACTION_REMOVE_ALL:
+			return true;
+	}
+	notifier->Error("[%s] ->Unknown metod for many objects: %d!",ObjectName,ifMany);
+	return false;
 }
 bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 {
@@ -42,12 +76,61 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 	}
 	// cazuri:
 	if ((Pozitive>0) && (Negative==0))
-		return Indexes.Push(FList[start].Index);
+		return DoActionOnSingleClass(start,end,IfUniqeRecordPositive,IfMultipleRecordsPositive);
 	if ((Pozitive==0) && (Negative>0))
-		return Indexes.Push(FList[start].Index);
-	if (Negative>0)
-		return Indexes.Push(firstNegative);
+		return DoActionOnSingleClass(start,end,IfUniqeRecordNegative,IfMultipleRecordsNegative);
+	// sunt pe un multi class
+	curent = start;
+	switch (IsMultiClassRecords)
+	{
+		case ACTION_MC_KEEP_ALL:
+			for (;curent<end;curent++)
+			{
+				if (Indexes.Push(FList[curent].Index)==false)
+					return false;
+			}
+			return true;
+		case ACTION_MC_REMOVE_ALL:
+			return true;
+		case ACTION_MC_KEEP_FIRST_POSITIVE:
+			return Indexes.Push(firstPozitive);
+		case ACTION_MC_KEEP_FIRST_NEGATIVE:
+			return Indexes.Push(firstNegative);
+		case ACTION_MC_KEEP_FIRST_POSITIVE_AND_NEGATIVE:
+			return (Indexes.Push(firstPozitive)  & Indexes.Push(firstNegative));
+		case ACTION_MC_KEEP_ONLY_POSITIVE:
+			for (;curent<end;curent++)
+			{
+				if (conector->GetRecordLabel(Label,FList[curent].Index)==false)
+				{
+					notifier->Error("[%s] -> Unable to read label for record #%d!",ObjectName,FList[curent].Index);
+					return false;
+				}
+				if (Label==1.0)
+				{
+					if (Indexes.Push(FList[curent].Index)==false)
+						return false;
+				}
+			}
+			return true;
+		case ACTION_MC_KEEP_ONLY_NEGATIVE:
+			for (;curent<end;curent++)
+			{
+				if (conector->GetRecordLabel(Label,FList[curent].Index)==false)
+				{
+					notifier->Error("[%s] -> Unable to read label for record #%d!",ObjectName,FList[curent].Index);
+					return false;
+				}
+				if (Label!=1.0)
+				{
+					if (Indexes.Push(FList[curent].Index)==false)
+						return false;
+				}
+			}
+			return true;
+	}
 
+	notifier->Error("[%s] -> Unknwon method for MultiClassRecords",ObjectName,IsMultiClassRecords);
 	return false;
 }
 bool UniqueFeatureConnector::OnInitConnectionToConnector()
@@ -118,8 +201,8 @@ bool UniqueFeatureConnector::OnInitConnectionToConnector()
 	}
 	if ((tr-start)>max)
 		max = tr-start;
-	notifier->Info("[%s] -> Max number of duplicates : %d",ObjectName,max);
-
+	notifier->Info("[%s] -> Max number of duplicates  : %d",ObjectName,max);
+	notifier->Info("[%s] -> Number of records removed : %d",ObjectName,conector->GetRecordCount()-Indexes.Len());
 	conector->FreeMLRecord(rec);
 
 	nrRecords = Indexes.Len();
