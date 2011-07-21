@@ -13,10 +13,55 @@ MapConnector::MapConnector()
 	LinkPropertyToDouble("EndInterval",endMapInterval,1.0,"Value for the end of the interval");
 }
 
+bool	MapConnector::CreateNameIndexes()
+{
+	UInt32	tr,gr;
+	if (NameIndex.Create(columns.nrFeatures)==false)
+	{
+		notifier->Error("[%s] -> Unable to alloc %d for name indexes",ObjectName,columns.nrFeatures);
+		return false;
+	}
+	switch (mapMethod)
+	{
+		case UseAND:
+		case UseXOR:
+		case UseOR:
+		case UseMultiply:
+		case UseAddition:
+			for (tr=0;tr<conector->GetFeatureCount();tr++)
+			{
+				for (gr=tr;gr<conector->GetFeatureCount();gr++)
+				{
+					if (NameIndex.Push((tr<<16) | (gr & 0xFFFF))==false)
+					{
+						notifier->Error("[%s] -> Unable to add map (%d,%d) to list",ObjectName,tr,gr);
+						return false;
+					}
+				}
+			}
+			break;
+		case Negate:
+		case Interval:
+			for (tr=0;tr<conector->GetFeatureCount();tr++)
+			{
+				if (NameIndex.Push(tr)==false)
+				{
+					notifier->Error("[%s] -> Unable to add map (%d) to list",ObjectName,tr);
+					return false;
+				}
+			}
+			break;
+		default:
+			notifier->Error("[%s] -> Method %d doesn`t support name indexes !",ObjectName,mapMethod);
+			return false;
+	};
+	return true;
+}
 bool	MapConnector::OnInitConnectionToConnector()
 {
 	columns.nrFeatures = 0;
 	// calculez cate feature-uri o sa am in functie de metoda
+
 	switch (mapMethod)
 	{
 		case UseAND:
@@ -40,6 +85,15 @@ bool	MapConnector::OnInitConnectionToConnector()
 			notifier->Error("[%s] -> Unknown method ID = %d",ObjectName,mapMethod);
 			return false;
 	};
+	if (StoreFeaturesName)
+	{
+		if (CreateNameIndexes()==false)
+		{
+			notifier->Error("[%s] -> Unable to create feature name indexes",ObjectName);
+			return false;
+		}
+	}
+
 	notifier->Info("[%s] -> Mapping %d features to %d features ",ObjectName,conector->GetFeatureCount(),columns.nrFeatures);
 	nrRecords = conector->GetRecordCount();
 	
@@ -165,7 +219,48 @@ bool	MapConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 }
 bool	MapConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
 {
-	notifier->Error("[%s] -> GetFeatureName is not suported !",ObjectName);
+	GML::Utils::GString	s1,s2;
+	UInt32				value,v1,v2;
+
+	if (StoreFeaturesName==false)
+	{
+		notifier->Error("[%s] -> Feature names are only supported when 'StoreFeaturesName' is set",ObjectName);
+		return false;
+	}
+	if (index>=columns.nrFeatures)
+		return false;
+
+	value = NameIndex[index];
+	v1 = value >> 16;
+	v2 = value & 0xFFFF;
+
+	switch (mapMethod)
+	{
+		case UseAND:
+			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s1,v2)==false))
+				return false;
+			return str.SetFormated("%s AND %s",s1.GetText(),s2.GetText());
+		case UseOR:
+			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s1,v2)==false))
+				return false;
+			return str.SetFormated("%s OR %s",s1.GetText(),s2.GetText());
+		case UseXOR:
+			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s1,v2)==false))
+				return false;
+			return str.SetFormated("%s XOR %s",s1.GetText(),s2.GetText());
+		case UseMultiply:
+			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s1,v2)==false))
+				return false;
+			return str.SetFormated("%s MUL %s",s1.GetText(),s2.GetText());
+		case UseAddition:
+			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s1,v2)==false))
+				return false;
+			return str.SetFormated("%s ADD %s",s1.GetText(),s2.GetText());
+		case Negate:
+		case Interval:
+			return conector->GetFeatureName(str,index);
+	}
+	notifier->Error("[%s] -> Unable to extract feature name for index : %d ",ObjectName,index);
 	return false;
 }
 bool	MapConnector::FreeMLRecord(GML::ML::MLRecord &record)

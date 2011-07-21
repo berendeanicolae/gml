@@ -1,5 +1,6 @@
 #include "gmllib.h"
 
+
 struct FeaturesInfo
 {
 	UInt32 PozitiveCount;
