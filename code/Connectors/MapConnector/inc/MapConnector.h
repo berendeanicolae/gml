@@ -16,9 +16,11 @@ class MapConnector: public GML::ML::IConnector
 
 	};
 
-	UInt32	mapMethod;
-	double	startMapInterval,endMapInterval;
+	UInt32		mapMethod;
+	double		startMapInterval,endMapInterval;
+	GML::Utils::GTFVector<UInt32>	NameIndex;
 
+	bool		CreateNameIndexes();
 	bool		OnInitConnectionToConnector();
 
 public:
