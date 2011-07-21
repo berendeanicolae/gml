@@ -49,6 +49,7 @@ class FeaturesStatistics: public GML::Algorithm::IMLAlgorithm
 	GML::Utils::GTVector<Stats>					StatsData;
 	GML::Utils::GTVector<FeaturesInformations>	ComputedData;
 	GML::Utils::GString							SortProps,WeightFileType;
+	UInt32										MinPoz,MaxPoz,MinNeg,MaxNeg;
 public:
 	FeaturesThreadData				*fData;
 private:
@@ -74,6 +75,7 @@ private:
 	bool							CreateHeaders(GML::Utils::GString &str);
 	bool							CreateRecordInfo(FeaturesInformations &finf,GML::Utils::GString &str);
 	void							Sort();
+	bool							Validate(FeaturesInformations *fi);
 public:
 	FeaturesStatistics();
 
