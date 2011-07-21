@@ -237,23 +237,23 @@ bool	MapConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
 	switch (mapMethod)
 	{
 		case UseAND:
-			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s1,v2)==false))
+			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s2,v2)==false))
 				return false;
 			return str.SetFormated("%s AND %s",s1.GetText(),s2.GetText());
 		case UseOR:
-			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s1,v2)==false))
+			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s2,v2)==false))
 				return false;
 			return str.SetFormated("%s OR %s",s1.GetText(),s2.GetText());
 		case UseXOR:
-			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s1,v2)==false))
+			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s2,v2)==false))
 				return false;
 			return str.SetFormated("%s XOR %s",s1.GetText(),s2.GetText());
 		case UseMultiply:
-			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s1,v2)==false))
+			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s2,v2)==false))
 				return false;
 			return str.SetFormated("%s MUL %s",s1.GetText(),s2.GetText());
 		case UseAddition:
-			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s1,v2)==false))
+			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s2,v2)==false))
 				return false;
 			return str.SetFormated("%s ADD %s",s1.GetText(),s2.GetText());
 		case Negate:
