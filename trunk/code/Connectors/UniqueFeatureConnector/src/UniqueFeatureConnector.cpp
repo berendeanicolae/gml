@@ -4,7 +4,7 @@ int FeatInfoCompare(FeatInfo &f1,FeatInfo &f2)
 {
 	return memcmp(f1.Hash.Hash.bValue,f2.Hash.Hash.bValue,16);
 }
-//==============================================================================
+//============================================================================== 
 UniqueFeatureConnector::UniqueFeatureConnector()
 {
 	ObjectName = "UniqueFeatureConnector";
