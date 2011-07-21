@@ -80,10 +80,12 @@ double Compute_ProcNegative(FeaturesInformations *f)
 }
 double Compute_RapPozNeg(FeaturesInformations *f)
 {
-	if (f->countPozitive>=f->countNegative)
-		return f->countPozitive/f->countNegative;
+	if (f->countPozitive==f->countNegative)
+		return 0;
+	if (f->countPozitive>f->countNegative)
+		return f->countPozitive/(f->countNegative+1);
 	else
-		return -(f->countNegative/f->countPozitive);
+		return -(f->countNegative/(f->countPozitive+1));
 }
 double Compute_ProcDiff(FeaturesInformations *f)
 {
@@ -210,7 +212,7 @@ FeaturesStatistics::FeaturesStatistics()
 	WeightFileType.Add("!!");
 
 	LinkPropertyToUInt32("SortBy"					,sortBy					,0xFFFF,SortProps.GetText());
-	LinkPropertyToUInt32("SortDirection"			,sortDirection			,0,"!!LIST:Ascendet=0,Descendent!!");
+	LinkPropertyToUInt32("SortDirection"			,sortDirection			,0,"!!LIST:Ascendent=0,Descendent!!");
 	LinkPropertyToUInt32("SaveFeaturesWeight"		,saveFeatureWeightFile	,0xFFFF,WeightFileType.GetText());
 	LinkPropertyToString("FeaturesWeightFile"		,FeaturesWeightFile		,"");
 }
