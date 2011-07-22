@@ -1,3 +1,5 @@
+
+
 #include "HashWriter.h"
 
 HashWriter::HashWriter()
@@ -5,7 +7,7 @@ HashWriter::HashWriter()
 	ObjectName = "HashWriter";
 
 	//Add extra commands here
-	SetPropertyMetaData("Command","!!LIST:None=0,GetNegative,GetPositive,GetAllIn1,GetAllSeparated!!");
+	SetPropertyMetaData("Command","!!LIST:None=0,GetNegative,GetPositive,GetAllIn1,GetAllSeparated,SaveAll!!");
 	LinkPropertyToString("OutputFileName", OutputFileName, "", "FileName for the file to save hashes in");			
 }
 bool HashWriter::Init()
@@ -205,6 +207,83 @@ bool HashWriter::SaveHashes(UInt32 command)
 	}
 	return true;
 }
+bool HashWriter::SaveAll()
+{
+	GML::Utils::File		f;
+	GML::Utils::GString		temp,hash,curent;
+	UInt32					tr,gr;
+
+	if (temp.Create(0x1000)==false)
+	{
+		notif->Error("[%s] -> Unable to alloc memory for cache",ObjectName);
+		return false;
+	}
+	if (f.Create(OutputFileName.GetText())==false)
+	{
+		notif->Error("[%s] -> Unable to create: %s",ObjectName,OutputFileName.GetText());
+		return false;
+	}
+
+	temp.Set("");
+	notif->Info("[%s] -> Saving %d records to %s",ObjectName,con->GetRecordCount(),OutputFileName.GetText());
+	for (tr=0;tr<con->GetRecordCount();tr++)	
+	{
+		if (con->GetRecord(MainRecord,tr,GML::ML::ConnectorFlags::STORE_HASH)==false)
+		{
+			notif->Error("[%s] -> Unable to read record #%d",ObjectName,tr);
+			return false;
+		}
+		if (MainRecord.Hash.ToString(hash)==false)
+		{
+			notif->Error("[%s] -> Unable to convert record hash for #%d",ObjectName,tr);
+			return false;
+		}
+		if (temp.AddFormated("%s|%lf|",hash.GetText(),MainRecord.Label)==false)
+		{
+			notif->Error("[%s] -> Unable to create line ",ObjectName);
+			return false;
+		}
+		for (gr=0;gr<con->GetFeatureCount();gr++)
+		{
+			if (((double)((int)MainRecord.Features[gr])) == MainRecord.Features[gr])
+			{
+				if (temp.AddFormated("%d|",(int)MainRecord.Features[gr])==false)
+				{
+					notif->Error("[%s] -> Unable to create line for feature #%d",ObjectName,gr);
+					return false;
+				}
+			} else {
+				if (temp.AddFormated("%lf|",MainRecord.Features[gr])==false)
+				{
+					notif->Error("[%s] -> Unable to create line for feature #%d",ObjectName,gr);
+					return false;
+				}			
+			}
+		}
+		temp.Add("\n");		
+		if (temp.Len()>64000)
+		{						
+			if (f.Write(temp.GetText(),temp.Len())==false)
+			{
+				notif->Error("[%s] -> Unable to write to %s",ObjectName,OutputFileName.GetText());
+				return false;
+			}
+			temp.Truncate(0);
+			temp.Set("");
+		}
+	}
+	if (temp.Len()>0)
+	{			
+		if (f.Write(temp.GetText(),temp.Len())==false)
+		{
+			notif->Error("[%s] -> Unable to write to %s",ObjectName,OutputFileName.GetText());
+			return false;
+		}
+	}
+	f.Close();
+	notif->Info("[%s] -> %s saved ok !",ObjectName,OutputFileName.GetText());
+	return true;
+}
 
 void HashWriter::OnExecute()
 {
@@ -220,6 +299,9 @@ void HashWriter::OnExecute()
 		case COMMAND_SHOW_POSITIVE:
 		case COMMAND_SHOW_ALL_IN_1:
 			SaveHashes(Command);
+			break;
+		case COMMAND_SAVE_ALL:
+			SaveAll();
 			break;
 		default:
 			notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);

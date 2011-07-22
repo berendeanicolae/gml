@@ -15,7 +15,8 @@ class HashWriter: public GML::Algorithm::IMLAlgorithm
 		COMMAND_SHOW_NEGATIVE,
 		COMMAND_SHOW_POSITIVE,
 		COMMAND_SHOW_ALL_IN_1,
-		COMMAND_SHOW_ALL_IN_2
+		COMMAND_SHOW_ALL_IN_2,
+		COMMAND_SAVE_ALL,
 		//Add extra commands here
 	};
 	enum {
@@ -30,6 +31,7 @@ class HashWriter: public GML::Algorithm::IMLAlgorithm
 	void				OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
 	bool				OnInitThreadData(GML::Algorithm::MLThreadData &thData);
 	bool 				SaveHashes(UInt32 command);
+	bool 				SaveAll();
 public:
 	HashWriter();
 
