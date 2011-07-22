@@ -224,13 +224,13 @@ bool UniqueFeatureConnector::OnInitConnectionToConnector()
 		max = tr-start;
 
 	// vad cate sunt pozitive si negative
-	tmp.Set("");tmp.AddFormatedEx("[%s] -> Initial       : Positive:%{uint32,G3} , Negative:%{uint32,G3}",ObjectName,countInfo.TotalPoz,countInfo.TotalNeg);
+	tmp.Set("");tmp.AddFormatedEx("[%{str}] -> Initial       : Positive:%{uint32,G3} , Negative:%{uint32,G3}",ObjectName,countInfo.TotalPoz,countInfo.TotalNeg);
 	notifier->Info("%s",tmp.GetText());
 
-	tmp.Set("");tmp.AddFormatedEx("[%s] -> Unique        : Positive:%{uint32,G3} , Negative:%{uint32,G3}",ObjectName,countInfo.UniqPoz,countInfo.UniqNeg);
+	tmp.Set("");tmp.AddFormatedEx("[%{str}] -> Unique        : Positive:%{uint32,G3} , Negative:%{uint32,G3}",ObjectName,countInfo.UniqPoz,countInfo.UniqNeg);
 	notifier->Info("%s",tmp.GetText());
 
-	tmp.Set("");tmp.AddFormatedEx("[%s] -> Combinations  : Positive:%{uint32,G3} , Negative:%{uint32,G3}",ObjectName,countInfo.CombPoz,countInfo.CombNeg);
+	tmp.Set("");tmp.AddFormatedEx("[%{str}] -> Combinations  : Positive:%{uint32,G3} , Negative:%{uint32,G3}",ObjectName,countInfo.CombPoz,countInfo.CombNeg);
 	notifier->Info("%s",tmp.GetText());
 
 	
