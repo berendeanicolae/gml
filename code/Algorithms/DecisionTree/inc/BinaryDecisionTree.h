@@ -36,7 +36,8 @@ class BinaryDecisionTree: public GML::Algorithm::IMLAlgorithm
 		COMPUTE_SCORE_SUM,
  		COMPUTE_SCORE_FREQ,
 		COMPUTE_DIFFERENCE,
-		COMPUTE_F2
+		COMPUTE_F2,
+		COMPUTE_BEST_POSITIVE
 	};
 
 	GML::ML::MLRecord				MainRecord;
