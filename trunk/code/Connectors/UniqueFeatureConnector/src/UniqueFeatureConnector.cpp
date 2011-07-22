@@ -76,14 +76,22 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 	}
 	// cazuri:
 	if ((Pozitive>0) && (Negative==0))
+	{
+		countInfo.CombPoz+=Pozitive;
 		return DoActionOnSingleClass(start,end,IfUniqeRecordPositive,IfMultipleRecordsPositive);
+	}
 	if ((Pozitive==0) && (Negative>0))
+	{
+		countInfo.CombNeg+=Negative;
 		return DoActionOnSingleClass(start,end,IfUniqeRecordNegative,IfMultipleRecordsNegative);
+	}
 	// sunt pe un multi class
 	curent = start;
 	switch (IsMultiClassRecords)
 	{
 		case ACTION_MC_KEEP_ALL:
+			countInfo.CombPoz+=Pozitive;
+			countInfo.CombNeg+=Negative;
 			for (;curent<end;curent++)
 			{
 				if (Indexes.Push(FList[curent].Index)==false)
@@ -93,12 +101,16 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 		case ACTION_MC_REMOVE_ALL:
 			return true;
 		case ACTION_MC_KEEP_FIRST_POSITIVE:
+			countInfo.CombPoz+=1;
 			return Indexes.Push(firstPozitive);
 		case ACTION_MC_KEEP_FIRST_NEGATIVE:
+			countInfo.CombNeg+=1;
 			return Indexes.Push(firstNegative);
 		case ACTION_MC_KEEP_FIRST_POSITIVE_AND_NEGATIVE:
+			countInfo.CombPoz+=1;
+			countInfo.CombNeg+=1;
 			return (Indexes.Push(firstPozitive)  & Indexes.Push(firstNegative));
-		case ACTION_MC_KEEP_ONLY_POSITIVE:
+		case ACTION_MC_KEEP_ONLY_POSITIVE:			
 			for (;curent<end;curent++)
 			{
 				if (conector->GetRecordLabel(Label,FList[curent].Index)==false)
@@ -108,6 +120,7 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 				}
 				if (Label==1.0)
 				{
+					countInfo.CombPoz+=1;
 					if (Indexes.Push(FList[curent].Index)==false)
 						return false;
 				}
@@ -123,6 +136,7 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 				}
 				if (Label!=1.0)
 				{
+					countInfo.CombNeg+=1;
 					if (Indexes.Push(FList[curent].Index)==false)
 						return false;
 				}
@@ -136,9 +150,11 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 bool UniqueFeatureConnector::OnInitConnectionToConnector()
 {
 	GML::ML::MLRecord	rec;	
-	UInt32				start,tr,featSize,max,poz,neg;
-	double				Label;
+	GML::Utils::GString	tmp;
+	UInt32				start,tr,featSize,max;
+	
 
+	memset(&countInfo,0,sizeof(countInfo));
 	if (conector->CreateMlRecord(rec)==false)
 	{
 		notifier->Error("[%s] -> Unable to create record from child connector!",ObjectName);
@@ -171,6 +187,10 @@ bool UniqueFeatureConnector::OnInitConnectionToConnector()
 			notifier->Error("[%s] -> Unable to compute hash for record #%d!",ObjectName,tr);
 			return false;
 		}
+		if (rec.Label==1.0)
+			countInfo.TotalPoz++;
+		else
+			countInfo.TotalNeg++;
 		if ((tr % 1000)==0)
 			notifier->SetProcent(tr,FList.Len());
 	}
@@ -204,20 +224,16 @@ bool UniqueFeatureConnector::OnInitConnectionToConnector()
 		max = tr-start;
 
 	// vad cate sunt pozitive si negative
-	poz = neg = 0;
-	for (tr=0;tr<Indexes.Len();tr++)
-	{
-		if (conector->GetRecordLabel(Label,tr)==false)
-		{
-			notifier->Error("[%s] -> Unable to read label for record #%d!",ObjectName,tr);
-			return false;
-		}
-		if (Label==1.0)
-			poz++;
-		else
-			neg++;
-	}
-	notifier->Info("[%s] -> Positive Count:%d , Negative Count:%d",ObjectName,poz,neg);
+	tmp.Set("");tmp.AddFormatedEx("[%s] -> Initial       : Positive:%{uint32,G3} , Negative:%{uint32,G3}",ObjectName,countInfo.TotalPoz,countInfo.TotalNeg);
+	notifier->Info("%s",tmp.GetText());
+
+	tmp.Set("");tmp.AddFormatedEx("[%s] -> Unique        : Positive:%{uint32,G3} , Negative:%{uint32,G3}",ObjectName,countInfo.UniqPoz,countInfo.UniqNeg);
+	notifier->Info("%s",tmp.GetText());
+
+	tmp.Set("");tmp.AddFormatedEx("[%s] -> Combinations  : Positive:%{uint32,G3} , Negative:%{uint32,G3}",ObjectName,countInfo.CombPoz,countInfo.CombNeg);
+	notifier->Info("%s",tmp.GetText());
+
+	
 	notifier->Info("[%s] -> Max number of duplicates  : %d",ObjectName,max);
 	notifier->Info("[%s] -> Number of records removed : %d",ObjectName,conector->GetRecordCount()-Indexes.Len());
 	conector->FreeMLRecord(rec);

@@ -8,6 +8,12 @@ struct FeatInfo
 	GML::DB::RecordHash		Hash;
 	UInt32					Index;
 };
+struct FeatCountInfo
+{
+	UInt32					TotalPoz,TotalNeg;
+	UInt32					UniqPoz,UniqNeg;
+	UInt32					CombPoz,CombNeg;
+};
 class UniqueFeatureConnector : public GML::ML::IConnector
 {	
 	enum
@@ -32,6 +38,8 @@ class UniqueFeatureConnector : public GML::ML::IConnector
 
 	GML::Utils::GTFVector<FeatInfo>	FList;
 	GML::Utils::Indexes				Indexes;
+
+	FeatCountInfo					countInfo;
 	
 	UInt32							IfUniqeRecordPositive,IfMultipleRecordsPositive;
 	UInt32							IfUniqeRecordNegative,IfMultipleRecordsNegative;
