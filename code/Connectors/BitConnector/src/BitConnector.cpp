@@ -25,7 +25,7 @@ bool	BitConnector::AllocMemory()
 	temp.AddFormatedEx("[%{str}] -> Memory to be alocated : %{uint64,G3,dec} bytes",ObjectName,((UInt64)nrRecords)*(UInt64)Align8Size);
 	notifier->Info("%s",temp.GetText());
 
-	if ((Data = new UInt8[nrRecords*Align8Size])==NULL)
+	if ((Data = new UInt8[(UInt64)nrRecords*(UInt64)Align8Size])==NULL)
 	{
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for data !",ObjectName,nrRecords*Align8Size);
 		return false;
@@ -193,7 +193,7 @@ bool	BitConnector::Save(char *fileName)
 		h.Align8Size = Align8Size;
 		if (file.Write(&h,sizeof(h))==false)
 			break;
-		if (file.Write(Data,nrRecords*Align8Size)==false)
+		if (file.Write(Data,(UInt64)nrRecords*(UInt64)Align8Size)==false)
 			break;
 		if (SaveRecordHashesAndFeatureNames()==false)
 			break;
@@ -217,17 +217,17 @@ bool	BitConnector::Load(char *fileName)
 		Align8Size = h.Align8Size;
 		if (Data!=NULL)
 			delete Data;
-		if ((Data = new UInt8[nrRecords*Align8Size])==NULL)
+		if ((Data = new UInt8[(UInt64)nrRecords*(UInt64)Align8Size])==NULL)
 		{
 			notifier->Error("[%s] -> Unable to allocate %ud bytes for data indexes !",ObjectName,nrRecords*Align8Size);
 			break;
 		}
-		if (file.Read(Data,nrRecords*Align8Size)==false)
+		if (file.Read(Data,(UInt64)nrRecords*(UInt64)Align8Size)==false)
 			break;
 		if (LoadRecordHashesAndFeatureNames(&h)==false)
 			break;
 		CloseCacheFile();
-		dataMemorySize = nrRecords*Align8Size;
+		dataMemorySize = (UInt64)nrRecords*(UInt64)Align8Size;
 		return true;		
 	}
 	ClearColumnIndexes();
