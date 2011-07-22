@@ -328,6 +328,7 @@ bool Container::OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectP
 			case 1:
 				if (file.ReadUInt32(CurentPos,value)==false)
 					return false;
+				value = (value >> 24) | (value << 24) | ((value & 0x00FF0000) >> 8) | ((value & 0x0000FF00) << 8);
 				read+=sizeof(UInt32);
 				break;
 			case 2:
