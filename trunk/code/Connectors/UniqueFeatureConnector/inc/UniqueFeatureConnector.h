@@ -45,7 +45,7 @@ class UniqueFeatureConnector : public GML::ML::IConnector
 	UInt32							IfUniqeRecordNegative,IfMultipleRecordsNegative;
 	UInt32							IsMultiClassRecords;
 
-	bool					DoActionOnSingleClass(UInt32 start,UInt32 end,UInt32 ifOne,UInt32 ifMany);
+	bool					DoActionOnSingleClass(UInt32 start,UInt32 end,UInt32 ifOne,UInt32 ifMany,bool isPositive);
 	bool					OnInitConnectionToConnector();
 	bool					AnalizeSubList(UInt32 start,UInt32 end);
 	
