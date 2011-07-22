@@ -45,12 +45,12 @@ template <class DataType> DataTypeTemplateConnector<DataType>::DataTypeTemplateC
 
 template <class DataType> bool	DataTypeTemplateConnector<DataType>::AllocMemory()
 {
-	if ((Data = new DataType[nrRecords*columns.nrFeatures])==NULL)
+	if ((Data = new DataType[(UInt64)nrRecords*(UInt64)columns.nrFeatures])==NULL)
 	{
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for data !",ObjectName,nrRecords*columns.nrFeatures);
 		return false;
 	}
-	memset(Data,0,nrRecords*columns.nrFeatures*sizeof(DataType));
+	memset(Data,0,(UInt64)nrRecords*(UInt64)columns.nrFeatures*sizeof(DataType));
 	if (!LabelIsBool)
 	{
 		if ((Labels = new DataType[nrRecords])==NULL) 
@@ -253,7 +253,7 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::Save(char *f
 			if (file.Write(Labels,nrRecords*sizeof(DataType))==false)
 				break;
 		}
-		if (file.Write(Data,nrRecords*sizeof(DataType)*columns.nrFeatures)==false)
+		if (file.Write(Data,(UInt64)nrRecords*(UInt64)sizeof(DataType)*(UInt64)columns.nrFeatures)==false)
 			break;
 		if (SaveRecordHashesAndFeatureNames()==false)
 			break;
@@ -303,12 +303,12 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::Load(char *f
 			if (file.Read(Labels,nrRecords*sizeof(DataType))==false)
 				break;
 		}
-		if (file.Read(Data,nrRecords*columns.nrFeatures*sizeof(DataType))==false)
+		if (file.Read(Data,(UInt64)nrRecords*(UInt64)columns.nrFeatures*(UInt64)sizeof(DataType))==false)
 			break;
 		if (LoadRecordHashesAndFeatureNames(&h)==false)
 			break;
 		CloseCacheFile();
-		dataMemorySize = (UInt64)nrRecords * sizeof(DataType) * columns.nrFeatures;
+		dataMemorySize = (UInt64)nrRecords * (UInt64)sizeof(DataType) * (UInt64)columns.nrFeatures;
 		if (LabelIsBool)
 			dataMemorySize += nrRecords/8;
 		else

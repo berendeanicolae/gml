@@ -1,0 +1,3 @@
+sources = RuleFilterConnector.cpp
+gmlplugin = yes
+libname = RuleFilterConnector

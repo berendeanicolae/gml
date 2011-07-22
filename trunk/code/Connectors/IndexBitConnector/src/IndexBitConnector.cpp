@@ -375,7 +375,7 @@ bool	IndexBitConnector::Save(char *fileName)
 		h.MemToAlloc = MemToAlloc;
 		if (file.Write(&h,sizeof(h))==false)
 			break;
-		if (file.Write(Data,(UInt32)MemToAlloc)==false)
+		if (file.Write(Data,MemToAlloc)==false)
 			break;
 		if (file.Write(Indexes,sizeof(UInt32)*nrRecords)==false)
 			break;
@@ -412,7 +412,7 @@ bool	IndexBitConnector::Load(char *fileName)
 			notifier->Error("[%s] -> Unable to allocate space for cache initialization",ObjectName);
 			break;
 		}
-		if (file.Read(Data,(UInt32)MemToAlloc)==false)
+		if (file.Read(Data,MemToAlloc)==false)
 			break;
 		if (file.Read(Indexes,sizeof(UInt32)*nrRecords)==false)
 			break;
