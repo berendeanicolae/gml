@@ -295,7 +295,8 @@ bool FeaturesStatistics::Init()
 }
 void FeaturesStatistics::OnRunThreadCommand(FeaturesThreadData &ftd,UInt32 command)
 {
-	UInt32	tr,gr,count;
+	UInt32	tr,gr,count,dif;
+
 
 	count = con->GetFeatureCount();
 	// citesc datele asociate range-ului

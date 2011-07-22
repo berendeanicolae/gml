@@ -4,7 +4,7 @@ MapConnector::MapConnector()
 {
 	ObjectName = "MapConnector";
 
-	LinkPropertyToUInt32("MapMethod",mapMethod,UseAND,	"!!LIST:UseAND=0,UseOR,UseXOR,UseAnd+Or,UseMultiply,UseAddition,UseFeatAverage,Negate,Interval!!\n"
+	LinkPropertyToUInt32("MapMethod",mapMethod,UseAND,	"!!LIST:UseAND=0,UseOR,UseXOR,UseAnd+Or,UseMultiply,UseAddition,UseFeatAverage,Negate,Interval,UseANDx3!!\n"
 														"Selects the method to be used for mapping\n"
 														"* UseAND -> feat(1..n) will become feat`(1..m) where\n"														
 														"\n"
@@ -15,7 +15,7 @@ MapConnector::MapConnector()
 
 bool	MapConnector::CreateNameIndexes()
 {
-	UInt32	tr,gr;
+	UInt32	tr,gr,hr;
 	if (NameIndex.Create(columns.nrFeatures)==false)
 	{
 		notifier->Error("[%s] -> Unable to alloc %d for name indexes",ObjectName,columns.nrFeatures);
@@ -40,6 +40,22 @@ bool	MapConnector::CreateNameIndexes()
 				}
 			}
 			break;
+		case UseANDx3:
+			for (tr=0;tr<conector->GetFeatureCount();tr++)
+			{
+				for (gr=tr;gr<conector->GetFeatureCount();gr++)
+				{
+					for (hr=gr;hr<conector->GetFeatureCount();hr++)
+					{
+						if (NameIndex.Push(((tr & 0xFF)<<16) | ((gr & 0xFF)<<8) | (hr & 0xFF))==false)
+						{
+							notifier->Error("[%s] -> Unable to add map (%d,%d,%d) to list",ObjectName,tr,gr,hr);
+							return false;
+						}
+					}
+				}
+			}
+			break;
 		case Negate:
 		case Interval:
 			for (tr=0;tr<conector->GetFeatureCount();tr++)
@@ -59,17 +75,25 @@ bool	MapConnector::CreateNameIndexes()
 }
 bool	MapConnector::OnInitConnectionToConnector()
 {
+	UInt32 tr,gr,hr;
 	columns.nrFeatures = 0;
 	// calculez cate feature-uri o sa am in functie de metoda
 
 	switch (mapMethod)
-	{
+	{	
 		case UseAND:
 		case UseXOR:
 		case UseOR:
 		case UseMultiply:
 		case UseAddition:
 			columns.nrFeatures = (conector->GetFeatureCount() * (conector->GetFeatureCount()+1))>>1;
+			break;
+		case UseANDx3:
+			columns.nrFeatures = 0;
+			for (tr=0;tr<conector->GetFeatureCount();tr++)
+				for (gr=tr;gr<conector->GetFeatureCount();gr++)
+					for (hr=gr;hr<conector->GetFeatureCount();hr++)
+						columns.nrFeatures++;
 			break;
 		case UseAnd_Or:
 			columns.nrFeatures = (conector->GetFeatureCount() * (conector->GetFeatureCount()+1));
@@ -121,8 +145,8 @@ bool	MapConnector::CreateMlRecord (GML::ML::MLRecord &record)
 }
 bool	MapConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask)
 {
-	UInt32		tr,gr,pCount;
-	double		*p1,*p2,*pMap;
+	UInt32		tr,gr,hr,pCount;
+	double		*p1,*p2,*p3,*pMap;
 	double		sum;
 
 	if (conector->GetRecord(*record.Parent,index,recordMask)==false)
@@ -141,6 +165,12 @@ bool	MapConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recor
 			for (tr=0,p1=record.Parent->Features;tr<pCount;tr++,p1++)
 				for (gr=tr,p2=p1;gr<pCount;gr++,p2++,pMap++)
 					(*pMap) = (double)((UInt32)(*p1) & (UInt32)(*p2));
+			break;
+		case UseANDx3:
+			for (tr=0,p1=record.Parent->Features;tr<pCount;tr++,p1++)
+				for (gr=tr,p2=p1;gr<pCount;gr++,p2++)
+					for (hr=gr,p3=p2;hr<pCount;hr++,p3++,pMap++)
+						(*pMap) = (double)((UInt32)(*p1) & (UInt32)(*p2) & (UInt32)(*p2));
 			break;
 		case UseOR:
 			for (tr=0,p1=record.Parent->Features;tr<pCount;tr++,p1++)
@@ -219,7 +249,7 @@ bool	MapConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 }
 bool	MapConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
 {
-	GML::Utils::GString	s1,s2;
+	GML::Utils::GString	s1,s2,s3;
 	UInt32				value,v1,v2;
 
 	if (StoreFeaturesName==false)
@@ -240,6 +270,12 @@ bool	MapConnector::GetFeatureName(GML::Utils::GString &str,UInt32 index)
 			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s2,v2)==false))
 				return false;
 			return str.SetFormated("%s AND %s",s1.GetText(),s2.GetText());
+		case UseANDx3:
+			if ((conector->GetFeatureName(s1,(value >> 16) & 0xFF)==false) || 
+				(conector->GetFeatureName(s2,(value >> 8) & 0xFF)==false) || 
+				(conector->GetFeatureName(s3,(value >> 0) & 0xFF)==false))
+				return false;
+			return str.SetFormated("%s AND %s AND %s",s1.GetText(),s2.GetText(),s3.GetText());
 		case UseOR:
 			if ((conector->GetFeatureName(s1,v1)==false) || (conector->GetFeatureName(s2,v2)==false))
 				return false;

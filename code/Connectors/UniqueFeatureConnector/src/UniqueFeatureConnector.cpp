@@ -136,7 +136,8 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 bool UniqueFeatureConnector::OnInitConnectionToConnector()
 {
 	GML::ML::MLRecord	rec;	
-	UInt32				start,tr,featSize,max;
+	UInt32				start,tr,featSize,max,poz,neg;
+	double				Label;
 
 	if (conector->CreateMlRecord(rec)==false)
 	{
@@ -201,6 +202,22 @@ bool UniqueFeatureConnector::OnInitConnectionToConnector()
 	}
 	if ((tr-start)>max)
 		max = tr-start;
+
+	// vad cate sunt pozitive si negative
+	poz = neg = 0;
+	for (tr=0;tr<Indexes.Len();tr++)
+	{
+		if (conector->GetRecordLabel(Label,tr)==false)
+		{
+			notifier->Error("[%s] -> Unable to read label for record #%d!",ObjectName,tr);
+			return false;
+		}
+		if (Label==1.0)
+			poz++;
+		else
+			neg++;
+	}
+	notifier->Info("[%s] -> Positive Count:%d , Negative Count:%d",ObjectName,poz,neg);
 	notifier->Info("[%s] -> Max number of duplicates  : %d",ObjectName,max);
 	notifier->Info("[%s] -> Number of records removed : %d",ObjectName,conector->GetRecordCount()-Indexes.Len());
 	conector->FreeMLRecord(rec);

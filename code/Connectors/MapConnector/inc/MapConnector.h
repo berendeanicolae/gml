@@ -13,6 +13,7 @@ class MapConnector: public GML::ML::IConnector
 		UseFeatAverage,
 		Negate,
 		Interval,
+		UseANDx3,
 
 	};
 
