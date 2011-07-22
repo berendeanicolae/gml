@@ -19,7 +19,7 @@ UniqueFeatureConnector::~UniqueFeatureConnector()
 {
 	Close();
 }
-bool UniqueFeatureConnector::DoActionOnSingleClass(UInt32 start,UInt32 end,UInt32 ifOne,UInt32 ifMany)
+bool UniqueFeatureConnector::DoActionOnSingleClass(UInt32 start,UInt32 end,UInt32 ifOne,UInt32 ifMany,bool isPositive)
 {
 	UInt32	tr;
 	// daca am unul singur
@@ -27,14 +27,38 @@ bool UniqueFeatureConnector::DoActionOnSingleClass(UInt32 start,UInt32 end,UInt3
 	{
 		if (ifOne==ACTION_REMOVE)
 			return true;
+		if (isPositive)
+		{
+			countInfo.CombPoz++;
+			countInfo.UniqPoz++;
+		} else {
+			countInfo.CombNeg++;
+			countInfo.UniqNeg++;
+		}
 		return Indexes.Push(FList[start].Index);
 	}
 	// daca am mai multi
 	switch (ifMany)
 	{
 		case ACTION_KEEP_ONE:
+			if (isPositive)
+			{
+				countInfo.CombPoz+=(end-start);
+				countInfo.UniqPoz++;
+			} else {
+				countInfo.CombNeg+=(end-start);
+				countInfo.UniqNeg++;
+			}
 			return Indexes.Push(FList[start].Index);
 		case ACTION_KEEP_ALL:
+			if (isPositive)
+			{
+				countInfo.CombPoz+=(end-start);
+				countInfo.UniqPoz+=(end-start);
+			} else {
+				countInfo.CombNeg+=(end-start);
+				countInfo.UniqNeg+=(end-start);
+			}
 			for (tr=start;tr<end;tr++)
 			{
 				if (Indexes.Push(FList[tr].Index)==false)
@@ -77,13 +101,11 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 	// cazuri:
 	if ((Pozitive>0) && (Negative==0))
 	{
-		countInfo.CombPoz+=Pozitive;
-		return DoActionOnSingleClass(start,end,IfUniqeRecordPositive,IfMultipleRecordsPositive);
+		return DoActionOnSingleClass(start,end,IfUniqeRecordPositive,IfMultipleRecordsPositive,true);
 	}
 	if ((Pozitive==0) && (Negative>0))
 	{
-		countInfo.CombNeg+=Negative;
-		return DoActionOnSingleClass(start,end,IfUniqeRecordNegative,IfMultipleRecordsNegative);
+		return DoActionOnSingleClass(start,end,IfUniqeRecordNegative,IfMultipleRecordsNegative,false);
 	}
 	// sunt pe un multi class
 	curent = start;
@@ -92,6 +114,8 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 		case ACTION_MC_KEEP_ALL:
 			countInfo.CombPoz+=Pozitive;
 			countInfo.CombNeg+=Negative;
+			countInfo.UniqPoz+=Pozitive;
+			countInfo.UniqNeg+=Negative;
 			for (;curent<end;curent++)
 			{
 				if (Indexes.Push(FList[curent].Index)==false)
@@ -101,14 +125,18 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 		case ACTION_MC_REMOVE_ALL:
 			return true;
 		case ACTION_MC_KEEP_FIRST_POSITIVE:
-			countInfo.CombPoz+=1;
+			countInfo.CombPoz+=Pozitive;
+			countInfo.UniqPoz++;
 			return Indexes.Push(firstPozitive);
 		case ACTION_MC_KEEP_FIRST_NEGATIVE:
-			countInfo.CombNeg+=1;
+			countInfo.CombNeg+=Negative;
+			countInfo.UniqNeg++;
 			return Indexes.Push(firstNegative);
 		case ACTION_MC_KEEP_FIRST_POSITIVE_AND_NEGATIVE:
-			countInfo.CombPoz+=1;
-			countInfo.CombNeg+=1;
+			countInfo.CombPoz+=Pozitive;
+			countInfo.CombNeg+=Negative;
+			countInfo.UniqNeg++;
+			countInfo.UniqPoz++;
 			return (Indexes.Push(firstPozitive)  & Indexes.Push(firstNegative));
 		case ACTION_MC_KEEP_ONLY_POSITIVE:			
 			for (;curent<end;curent++)
@@ -121,6 +149,7 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 				if (Label==1.0)
 				{
 					countInfo.CombPoz+=1;
+					countInfo.UniqPoz+=1;
 					if (Indexes.Push(FList[curent].Index)==false)
 						return false;
 				}
@@ -137,6 +166,7 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 				if (Label!=1.0)
 				{
 					countInfo.CombNeg+=1;
+					countInfo.UniqNeg+=1;
 					if (Indexes.Push(FList[curent].Index)==false)
 						return false;
 				}
