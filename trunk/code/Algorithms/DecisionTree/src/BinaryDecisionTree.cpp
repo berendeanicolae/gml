@@ -95,6 +95,10 @@ double Compute_F2(FeaturesInfo &fi, UInt32 totalPozitive, UInt32 totalNegative)
     if (t_mal + t_clean == 0) return 0;
     return v1 / v2;	
 }
+double Compute_FirstPositive(FeaturesInfo &fi, UInt32 totalPozitive, UInt32 totalNegative)
+{
+	return (((fi.PozitiveCount+1.0)/totalPozitive)/((fi.NegativeCount+1.0)/totalNegative))*((totalPozitive+totalNegative)/100);
+}
 //=============================================================================
 BinaryDecisionTree::BinaryDecisionTree()
 {
@@ -103,7 +107,7 @@ BinaryDecisionTree::BinaryDecisionTree()
 	SetPropertyMetaData("Command","!!LIST:None=0,Train,CustomFeatSplit!!");
 	LinkPropertyToString("HashBaseFileName", HashBaseFileName, "", "BaseName for the file the hashes will be saved in");
 	LinkPropertyToString("CustomFeatName", CustomFeatName, "", "FeatureName to split records by (name or #index)");		
-	LinkPropertyToUInt32("ComputeScoreMethod",ComputeScoreMethod,0,"!!LIST:InformationGain=0,SumPosCountNegCount,FAQ,ComputeDifference,ComputeF2!!");
+	LinkPropertyToUInt32("ComputeScoreMethod",ComputeScoreMethod,0,"!!LIST:InformationGain=0,SumPosCountNegCount,FAQ,ComputeDifference,ComputeF2,ComputeBestPositive!!");
 	AddHashSaveProperties();	
 }
 
@@ -304,6 +308,9 @@ void BinaryDecisionTree::PerformComputeScore(BDTThreadData	&all)
 			break;
 		case COMPUTE_F2:
 			ComputeScore(all, Compute_F2);		
+			break;
+		case COMPUTE_BEST_POSITIVE:
+			ComputeScore(all, Compute_FirstPositive);		
 			break;
 	}		
 }
