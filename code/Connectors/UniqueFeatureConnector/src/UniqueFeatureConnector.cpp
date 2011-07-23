@@ -14,6 +14,8 @@ UniqueFeatureConnector::UniqueFeatureConnector()
 	LinkPropertyToUInt32("IfMultipleRecordsPositive",IfMultipleRecordsPositive,ACTION_KEEP_ONE,"!!LIST:KeepOne=0,KeepAll,RemoveAll!!");
 	LinkPropertyToUInt32("IfMultipleRecordsNegative",IfMultipleRecordsNegative,ACTION_KEEP_ONE,"!!LIST:KeepOne=0,KeepAll,RemoveAll!!");
 	LinkPropertyToUInt32("IfMultiClassRecords",IsMultiClassRecords,ACTION_MC_KEEP_FIRST_NEGATIVE,"!!LIST:KeepAll=0,RemoveAll,KeepFirstPositive,KeepFirstNegative,KeepFirstPositiveAndNegative,KeepOnlyPositive,KeepOnlyNegative!!");
+
+	AddMultiThreadingProperties();
 }
 UniqueFeatureConnector::~UniqueFeatureConnector()
 {
@@ -88,11 +90,13 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 		}
 		if (Label==1.0)
 		{
+			countInfo.TotalPoz++;
 			Pozitive++;
 			if (firstPozitive == 0xFFFFFFFF)
 				firstPozitive = FList[curent].Index;
 		} else {
 			Negative++;
+			countInfo.TotalNeg++;
 			if (firstNegative == 0xFFFFFFFF)
 				firstNegative = FList[curent].Index;
 		}
@@ -177,11 +181,45 @@ bool UniqueFeatureConnector::AnalizeSubList(UInt32 start,UInt32 end)
 	notifier->Error("[%s] -> Unknwon method for MultiClassRecords",ObjectName,IsMultiClassRecords);
 	return false;
 }
+bool UniqueFeatureConnector::ComputeFeatureHashes(GML::ML::ConnectorThreadData &thData)
+{
+	UInt32	tr,featSize;
+	
+	featSize = conector->GetFeatureCount() * sizeof(double);
+	
+	if (thData.ThreadID == 0)
+		notifier->StartProcent("[%s] -> Computing hashes ... ",ObjectName);
+	for (tr=thData.ThreadID;tr<FList.Len();tr+=threadsCount)
+	{
+		if (conector->GetRecord(thData.Record,tr)==false)
+		{
+			notifier->Error("[%s] -> Unable to read record #%d!",ObjectName,tr);
+			return false;
+		}
+		if (FList[tr].Hash.ComputeHashForBuffer(thData.Record.Features,featSize)==false)
+		{
+			notifier->Error("[%s] -> Unable to compute hash for record #%d!",ObjectName,tr);
+			return false;
+		}
+		if (thData.ThreadID == 0)
+		{
+			if ((tr % 1000)==0)
+				notifier->SetProcent(tr,FList.Len());
+		}
+	}
+	if (thData.ThreadID == 0)
+		notifier->EndProcent();
+	return true;
+}
+void UniqueFeatureConnector::OnRunThreadCommand(GML::ML::ConnectorThreadData &thData,UInt32 threadCommand)
+{
+	ComputeFeatureHashes(thData);
+}
 bool UniqueFeatureConnector::OnInitConnectionToConnector()
 {
 	GML::ML::MLRecord	rec;	
 	GML::Utils::GString	tmp;
-	UInt32				start,tr,featSize,max;
+	UInt32				start,tr,max;
 	
 
 	memset(&countInfo,0,sizeof(countInfo));
@@ -203,28 +241,10 @@ bool UniqueFeatureConnector::OnInitConnectionToConnector()
 	for (tr=0;tr<FList.Len();tr++)
 		FList[tr].Index = tr;
 
-	featSize = conector->GetFeatureCount() * sizeof(double);
-	notifier->StartProcent("[%s] -> Computing hashes ... ",ObjectName);
-	for (tr=0;tr<FList.Len();tr++)
-	{
-		if (conector->GetRecord(rec,tr)==false)
-		{
-			notifier->Error("[%s] -> Unable to read record #%d!",ObjectName,tr);
-			return false;
-		}
-		if (FList[tr].Hash.ComputeHashForBuffer(rec.Features,featSize)==false)
-		{
-			notifier->Error("[%s] -> Unable to compute hash for record #%d!",ObjectName,tr);
-			return false;
-		}
-		if (rec.Label==1.0)
-			countInfo.TotalPoz++;
-		else
-			countInfo.TotalNeg++;
-		if ((tr % 1000)==0)
-			notifier->SetProcent(tr,FList.Len());
-	}
-	notifier->EndProcent();
+	
+	if (ExecuteParalelCommand(0)==false)
+		return false;
+
 	// am citit toate datele , le sortez
 	notifier->Info("[%s] -> Sorting ... ",ObjectName);
 	FList.Sort(FeatInfoCompare);
