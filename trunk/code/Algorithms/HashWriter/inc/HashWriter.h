@@ -8,6 +8,15 @@ struct HashWriterThreadData
 	// add thread specific data here
 };
 
+struct FeatInfo
+{
+	GML::DB::RecordHash		fHash;
+	GML::DB::RecordHash		rHash;
+	UInt32					Index;
+	double					Label;
+};
+
+
 class HashWriter: public GML::Algorithm::IMLAlgorithm
 {
 	enum {
@@ -17,6 +26,7 @@ class HashWriter: public GML::Algorithm::IMLAlgorithm
 		COMMAND_SHOW_ALL_IN_1,
 		COMMAND_SHOW_ALL_IN_2,
 		COMMAND_SAVE_ALL,
+		COMMAND_FEAT_COMB_GROUPS,
 		//Add extra commands here
 	};
 	enum {
@@ -28,10 +38,17 @@ class HashWriter: public GML::Algorithm::IMLAlgorithm
 	GML::Utils::GString		OutputFileNamePositive;
 	GML::Utils::GString		OutputFileNameNegative;
 
+	GML::Utils::GTFVector<FeatInfo>		FList;
+	bool								SaveFeaturesNames;
+
 	void				OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
 	bool				OnInitThreadData(GML::Algorithm::MLThreadData &thData);
 	bool 				SaveHashes(UInt32 command);
 	bool 				SaveAll();
+	bool				SaveHashGroupsByFeatComb();
+	bool				LoadRecords();
+	bool				GetFeatures(GML::Utils::GString	&features, UInt32 recIndex);
+	void				PrintFlist();
 public:
 	HashWriter();
 
