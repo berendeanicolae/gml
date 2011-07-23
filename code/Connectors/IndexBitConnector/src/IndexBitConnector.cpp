@@ -1,6 +1,6 @@
 #include "IndexBitConnector.h"
 
-#define CACHE_SIG_NAME "IndexBitConnectorV1"
+#define CACHE_SIG_NAME "IndexBitConnectorV2"
 
 IndexBitConnector::IndexBitConnector()
 {
@@ -26,7 +26,7 @@ bool	IndexBitConnector::AllocMemory(UInt64 memory)
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for data !",ObjectName,memory);
 		return false;
 	}
-	if ((Indexes = new UInt32[nrRecords])==NULL)
+	if ((Indexes = new UInt64[nrRecords])==NULL)
 	{
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for index data !",ObjectName,nrRecords);
 		return false;
@@ -192,7 +192,7 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 	cIndex = 0;
 	for (tr=0;tr<nrRecords;tr++)
 	{
-		Indexes[tr] = (UInt32)cIndex;
+		Indexes[tr] = cIndex;
 		if ((tr % 10000)==0)
 			notifier->SetProcent((double)tr,(double)nrRecords);
 		
@@ -242,7 +242,7 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 			return false;
 	}
 	// all ok , am incarcat datele
-	dataMemorySize = (UInt64)nrRecords * sizeof(UInt32) + MemToAlloc+Labels.GetAllocated();
+	dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
 	conector->FreeMLRecord(cRec);
 	return true;
 
@@ -295,7 +295,7 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 
 	for (tr=0;tr<nrRecords;tr++)
 	{
-		Indexes[tr] = (UInt32)cIndex;
+		Indexes[tr] = cIndex;
 		if (database->ReadNextRecord(VectPtr)==false)
 		{
 			notifier->Error("[%s] -> Unable to read #d record from database!",ObjectName,tr);
@@ -350,7 +350,7 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 			return false;
 	}
 	// all ok , am incarcat datele
-	dataMemorySize = (UInt64)nrRecords * sizeof(UInt32) + MemToAlloc+Labels.GetAllocated();
+	dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
 	return true;
 }
 
@@ -377,7 +377,7 @@ bool	IndexBitConnector::Save(char *fileName)
 			break;
 		if (file.Write(Data,MemToAlloc)==false)
 			break;
-		if (file.Write(Indexes,sizeof(UInt32)*nrRecords)==false)
+		if (file.Write(Indexes,sizeof(UInt64)*((UInt64)nrRecords))==false)
 			break;
 		if (file.Write(Labels.GetData(),Labels.GetAllocated())==false)
 			break;
@@ -414,14 +414,14 @@ bool	IndexBitConnector::Load(char *fileName)
 		}
 		if (file.Read(Data,MemToAlloc)==false)
 			break;
-		if (file.Read(Indexes,sizeof(UInt32)*nrRecords)==false)
+		if (file.Read(Indexes,sizeof(UInt64)*((UInt64)nrRecords))==false)
 			break;
 		if (file.Read(Labels.GetData(),Labels.GetAllocated())==false)
 			break;
 		if (LoadRecordHashesAndFeatureNames(&h)==false)
 			break;
 		CloseCacheFile();
-		dataMemorySize = (UInt64)nrRecords * sizeof(UInt32) + MemToAlloc+Labels.GetAllocated();
+		dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
 		return true;		
 	}
 	ClearColumnIndexes();
