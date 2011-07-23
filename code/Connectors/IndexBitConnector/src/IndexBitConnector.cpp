@@ -438,14 +438,15 @@ bool	IndexBitConnector::CreateMlRecord (GML::ML::MLRecord &record)
 bool	IndexBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask)
 {
 	UInt8	*cPoz,*end;
-	UInt32	sz,indexFeat;
+	UInt32	indexFeat;
+	UInt64	sz;
 
 	if (index>=nrRecords)
 		return false;
 	cPoz = &Data[Indexes[index]];
 	if (index+1==nrRecords)
 	{
-		sz = (UInt32)MemToAlloc -Indexes[index];
+		sz = MemToAlloc -Indexes[index];
 	} else {
 		sz = Indexes[index+1]-Indexes[index];
 	}
