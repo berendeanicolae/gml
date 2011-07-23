@@ -48,6 +48,9 @@ class UniqueFeatureConnector : public GML::ML::IConnector
 	bool					DoActionOnSingleClass(UInt32 start,UInt32 end,UInt32 ifOne,UInt32 ifMany,bool isPositive);
 	bool					OnInitConnectionToConnector();
 	bool					AnalizeSubList(UInt32 start,UInt32 end);
+
+	void					OnRunThreadCommand(GML::ML::ConnectorThreadData &thData,UInt32 threadCommand);
+	bool					ComputeFeatureHashes(GML::ML::ConnectorThreadData &thData);
 	
 public:
 	UniqueFeatureConnector();
