@@ -233,7 +233,7 @@ bool UniqueFeatureConnector::OnInitConnectionToConnector()
 	max = 0;
 	for (tr=start=0;tr<FList.Len();tr++)
 	{
-		if (memcmp(FList[tr].Hash.Hash.bValue,FList[start].Hash.Hash.BValue,16)!=0)
+		if (memcmp(FList[tr].Hash.Hash.bValue,FList[start].Hash.Hash.bValue,16)!=0)
 		{
 			if (AnalizeSubList(start,tr)==false)
 			{
