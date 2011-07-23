@@ -725,13 +725,13 @@ bool GML::ML::IConnector::LoadRecordHashes()
 	if (Hashes.Create(nrRecords,true)==false)
 	{
 		if (notifier)
-			notifier->Error("[%s] -> Unable to alloc %d records for hash entries !",ObjectName,nrRecords);
+			notifier->Error("[%s] -> Unable to alloc %d hash entries !",ObjectName,nrRecords);
 		return false;
 	}
 	if (file.Read(Hashes.GetPtrToObject(0),nrRecords*sizeof(GML::DB::RecordHash))==false)
 	{
 		if (notifier)
-			notifier->Error("[%s] -> Unable to read from file total number of records",ObjectName);
+			notifier->Error("[%s] -> Unable to read %d record hashes from file",ObjectName,nrRecords);
 		return false;
 	}
 	return true;
