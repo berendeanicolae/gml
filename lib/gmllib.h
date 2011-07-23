@@ -2044,6 +2044,12 @@ namespace GML
 			UInt32				Flags;
 
 		};
+		struct  ConnectorThreadData
+		{
+			UInt32							ThreadID;
+			GML::ML::MLRecord				Record;
+			void*							Context;
+		};
 		class  IConnector : public GML::Utils::GMLObject
 		{
 		protected:
@@ -2059,6 +2065,7 @@ namespace GML
 			GML::ML::IConnector							*conector;
 			GML::ML::IConnector							**connectors;
 			UInt32										connectorsCount;
+			GML::ML::ConnectorThreadData				*ThData;
 		protected:
 			GML::Utils::GString							DataFileName;			
 			GML::Utils::GString							Query;
@@ -2076,6 +2083,9 @@ namespace GML
 			double										InLabelPositive,OutLabelPositive;
 			double										InLabelNegative,OutLabelNegative;
 			UInt32										LabelConversionMethod;
+
+			UInt32										threadsCount;
+			GML::Utils::ThreadParalelUnit				*tpu;
 			
 						
 			void						ClearColumnIndexes();
@@ -2086,6 +2096,9 @@ namespace GML
 			bool						UpdateFeaturesNameFromConnector();
 			bool						AddColumnName(char *name);
 			
+			bool						InitThreads();
+			bool						ExecuteParalelCommand(UInt32 command);
+
 			bool						CreateCacheFile(char *fileName,char *sigName,CacheHeader *header,UInt32 headerSize,UInt32 extraFlags=0);
 			bool						OpeanCacheFile(char *fileName,char *sigName,CacheHeader *header,UInt32 headerSize);
 			void						CloseCacheFile();
@@ -2100,12 +2113,13 @@ namespace GML
 			void						AddTwoClassLabelProperties();
 			void						AddCacheProperties();
 			void						AddStoreProperties();
+			void						AddMultiThreadingProperties();
 
 			virtual bool				OnInit();
 			virtual bool				OnInitConnectionToDataBase();
 			virtual bool				OnInitConnectionToConnector();
-			virtual bool				OnInitConnectionToCache();
-			
+			virtual bool				OnInitConnectionToCache();			
+			virtual bool				OnInitThreadData(GML::ML::ConnectorThreadData &thData);
 		public:	
 			IConnector();
 
@@ -2128,6 +2142,7 @@ namespace GML
 			virtual UInt32				GetTotalRecordCount();	
 
 			virtual bool				AllowConnectors(UInt32 count);	
+			virtual void				OnRunThreadCommand(GML::ML::ConnectorThreadData &thData,UInt32 threadCommand);
 
 		};
 
