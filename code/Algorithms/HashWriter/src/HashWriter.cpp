@@ -1,14 +1,18 @@
-
-
 #include "HashWriter.h"
 
+int FeatInfoCompare(FeatInfo &f1,FeatInfo &f2)
+{
+	return memcmp(f1.fHash.Hash.bValue,f2.fHash.Hash.bValue,16);
+}
+//============================================================================== 
 HashWriter::HashWriter()
 {
 	ObjectName = "HashWriter";
 
 	//Add extra commands here
-	SetPropertyMetaData("Command","!!LIST:None=0,GetNegative,GetPositive,GetAllIn1,GetAllSeparated,SaveAll!!");
-	LinkPropertyToString("OutputFileName", OutputFileName, "", "FileName for the file to save hashes in");			
+	SetPropertyMetaData("Command","!!LIST:None=0,GetNegative,GetPositive,GetAllIn1,GetAllSeparated,SaveAll,GroupHashesByFeatures!!");
+	LinkPropertyToString("OutputFileName", OutputFileName, "", "FileName for the file to save hashes in");		
+	LinkPropertyToBool("SaveFeaturesNames", SaveFeaturesNames, false, "Save also feaures names");
 }
 bool HashWriter::Init()
 {
@@ -284,6 +288,178 @@ bool HashWriter::SaveAll()
 	notif->Info("[%s] -> %s saved ok !",ObjectName,OutputFileName.GetText());
 	return true;
 }
+void HashWriter::PrintFlist()
+{
+	GML::Utils::GString		tmpR,tmpF;
+	UInt32					tr;
+
+	for (tr=0; tr<FList.Len(); tr++)
+	{		
+		FList[tr].rHash.ToString(tmpR);
+		FList[tr].fHash.ToString(tmpF);
+		notif->Info("[%s] -> %d %s %s %f",ObjectName,FList[tr].Index, tmpR.GetText(), tmpF.GetText(), FList[tr].Label);
+	}
+}
+bool HashWriter::LoadRecords()
+{
+	UInt32		tr,featSize;
+
+	if (FList.Create(con->GetRecordCount(),true)==false)
+	{
+		notif->Error("[%s] -> Unable to allocate memory for !",ObjectName);
+		return false;
+	}
+	for (tr=0;tr<FList.Len();tr++)
+		FList[tr].Index = tr;
+
+	featSize = con->GetFeatureCount() * sizeof(double);
+	notif->StartProcent("[%s] -> Computing hashes ... ",ObjectName);
+	for (tr=0;tr<FList.Len();tr++)
+	{
+		if (con->GetRecord(MainRecord,tr)==false)
+		{
+			notif->Error("[%s] -> Unable to read record #%d!",ObjectName,tr);
+			return false;
+		}
+		if (FList[tr].fHash.ComputeHashForBuffer(MainRecord.Features,featSize)==false)
+		{
+			notif->Error("[%s] -> Unable to compute features hash for record #%d!",ObjectName,tr);
+			return false;
+		}		
+		if (con->GetRecordHash(FList[tr].rHash,tr)==false)
+		{
+			notif->Error("[%s] -> Unable to read record hash for #%d",ObjectName,tr);
+			return false;
+		}
+		FList[tr].Label = MainRecord.Label;
+		if ((tr % 1000)==0)
+			notif->SetProcent(tr,FList.Len());
+	}
+	notif->EndProcent();
+
+	return true;
+}
+bool HashWriter::GetFeatures(GML::Utils::GString &features, UInt32 recIndex)
+{
+	UInt32					tr;
+	GML::Utils::GString		featName;
+
+	features.Set("------------------------------------------\n");
+	if (con->GetRecord(MainRecord,recIndex)==false)
+	{
+		notif->Error("[%s] -> Unalbe to read record %d!",ObjectName,recIndex);
+		return false;
+	}
+	for (tr=0;tr<con->GetFeatureCount();tr++)
+	{
+		if ((double)(MainRecord.Features[tr])!=0.0)
+		{
+			if (con->GetFeatureName(featName, tr) == false)
+			{
+				notif->Error("[%s] -> Unable to get feature name for feature with index: %d",ObjectName, tr);
+				return false;
+			}		
+			features.AddFormated("%s\n",featName.GetText());
+		}
+	}
+	features.Add("------------------------------------------");
+	return true;
+}
+bool HashWriter::SaveHashGroupsByFeatComb()
+{	
+	UInt32					tr,featSize,posCount,negCount;
+	GML::Utils::GString		temp,hash;
+	GML::Utils::File		f;
+	GML::DB::RecordHash		tempFeatHash;
+
+	if(LoadRecords()==false)
+	{
+		notif->Error("[%s] -> Failed to read records!",ObjectName);
+		return false;
+	}
+	//PrintFlist();	
+	// am citit toate datele , le sortez
+	notif->Info("[%s] -> Sorting ... ",ObjectName);	
+	//notif->Info("================================================");
+	FList.Sort(FeatInfoCompare);
+	//PrintFlist();
+
+	if (temp.Create(0x1000)==false)
+	{
+		notif->Error("[%s] -> Unable to alloc memory for cache",ObjectName);
+		return false;
+	}
+	if (f.Create(OutputFileName.GetText())==false)
+	{
+		notif->Error("[%s] -> Unable to create: %s",ObjectName,OutputFileName.GetText());
+		return false;
+	}
+
+	temp.Set("");
+	tempFeatHash = FList[0].fHash;
+	posCount = negCount = 0;
+	notif->Info("[%s] -> Saving %d records to %s",ObjectName,con->GetRecordCount(),OutputFileName.GetText());
+	for (tr=0;tr<con->GetRecordCount();tr++)	
+	{
+		if (memcmp(FList[tr].fHash.Hash.bValue,tempFeatHash.Hash.bValue,16)!=0)
+		{
+			if (SaveFeaturesNames)
+			{
+				if (GetFeatures(hash,FList[tr].Index)==false)
+					return false;
+				if (temp.AddFormated("%s\n",hash.GetText())==false)
+				{
+					notif->Error("[%s] -> Unable to add line ",ObjectName);
+					return false;
+				}
+			}
+			if (temp.AddFormated("T:%d|PC:%d|NC:%d\n================================================\n",posCount+negCount,posCount,negCount)==false)
+			{
+				notif->Error("[%s] -> Unable to add line ",ObjectName);
+				return false;
+			}
+			posCount = negCount = 0;
+			tempFeatHash = FList[tr].fHash;
+		}
+		if (FList[tr].rHash.ToString(hash)==false)
+		{
+			notif->Error("[%s] -> Unable to convert record hash for #%d",ObjectName,tr);
+			return false;
+		}		
+		if (FList[tr].Label==1.0)
+			posCount++;
+		else
+			negCount++;
+		if (temp.AddFormated("%s|%lf",hash.GetText(),FList[tr].Label)==false)
+		{
+			notif->Error("[%s] -> Unable to create line ",ObjectName);
+			return false;
+		}		
+		temp.Add("\n");		
+		if (temp.Len()>64000)
+		{						
+			if (f.Write(temp.GetText(),temp.Len())==false)
+			{
+				notif->Error("[%s] -> Unable to write to %s",ObjectName,OutputFileName.GetText());
+				return false;
+			}
+			temp.Truncate(0);
+			temp.Set("");
+		}
+	}
+	if (temp.Len()>0)
+	{			
+		if (f.Write(temp.GetText(),temp.Len())==false)
+		{
+			notif->Error("[%s] -> Unable to write to %s",ObjectName,OutputFileName.GetText());
+			return false;
+		}
+	}
+	f.Close();
+	notif->Info("[%s] -> %s saved ok !",ObjectName,OutputFileName.GetText());
+	
+	return true;
+}
 
 void HashWriter::OnExecute()
 {
@@ -302,6 +478,9 @@ void HashWriter::OnExecute()
 			break;
 		case COMMAND_SAVE_ALL:
 			SaveAll();
+			break;
+		case COMMAND_FEAT_COMB_GROUPS:
+			SaveHashGroupsByFeatComb();
 			break;
 		default:
 			notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);
