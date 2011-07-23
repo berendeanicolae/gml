@@ -1,5 +1,10 @@
 #include "IConnector.h"
 
+void ConnectorThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
+{
+	GML::ML::IConnector *con = (GML::ML::IConnector *)context;
+	con->OnRunThreadCommand(con->ThData[paralel->GetID()],paralel->GetCodeID());
+}
 
 GML::ML::IConnector::IConnector()
 {
@@ -13,8 +18,12 @@ GML::ML::IConnector::IConnector()
 	ClearColumnIndexes();
 	nrRecords = 0;
 	dataMemorySize = 0;
-	
-
+	tpu = NULL;
+	threadsCount = 1;
+}
+void GML::ML::IConnector::AddMultiThreadingProperties()
+{
+	LinkPropertyToUInt32("ThreadsCount"				,threadsCount			,1,"Number of threads to be used for parallel computations.");
 }
 void GML::ML::IConnector::AddTwoClassLabelProperties()
 {
@@ -327,6 +336,56 @@ bool GML::ML::IConnector::UpdateHashValue(GML::Utils::GTFVector<GML::DB::DBRecor
 	}
 	return true;
 }
+bool GML::ML::IConnector::InitThreads()
+{
+	UInt32	tr;
+
+	if (notifier==NULL)
+	{
+		DEBUGMSG("[%s] -> Connection to a notifier is not set ...",ObjectName);
+		return false;
+	}
+	if (threadsCount<1)
+	{
+		notifier->Error("[%s] -> Invalid number of threads (%d). Should be at least one thread.",threadsCount);
+		return false;
+	}
+	if ((ThData = new GML::ML::ConnectorThreadData[threadsCount])==NULL)
+	{
+		notifier->Error("[%s] -> Unable to create %d MLThreadData Objects",threadsCount,threadsCount);
+		return false;
+	}
+	if ((tpu = new GML::Utils::ThreadParalelUnit[threadsCount])==NULL)
+	{
+		notifier->Error("[%s] -> Unable to create %d threads ",ObjectName,threadsCount);
+		return false;
+	}
+	for (tr=0;tr<threadsCount;tr++)
+	{
+		if (tpu[tr].Init(tr,this,ConnectorThreadRedirectFunction)==false)
+		{
+			notifier->Error("[%s] -> Unable to start thread #%d",ObjectName,tr);
+			return false;
+		}
+		if (conector!=NULL)
+		{
+			if (conector->CreateMlRecord(ThData[tr].Record)==false)
+			{
+				notifier->Error("[%s] -> Unable to create MLThreadData[%d].Record",ObjectName,tr);
+				return false;
+			}
+		}
+		ThData[tr].ThreadID = tr; 
+		ThData[tr].Context = NULL;
+		if (OnInitThreadData(ThData[tr])==false)
+		{
+			notifier->Error("[%s] -> Unable to create MLThreadData.Context ",ObjectName);
+			return false;
+		}
+	}
+	notifier->Info("[%s] -> Computation Threads created: %d",ObjectName,threadsCount);
+	return true;
+}
 bool GML::ML::IConnector::Init(GML::Utils::INotifier &_notifier,char *attributeString)
 {
 	bool										result;
@@ -388,6 +447,39 @@ bool GML::ML::IConnector::OnInitConnectionToCache()
 	}
 	return Load(DataFileName.GetText());
 }
+bool GML::ML::IConnector::OnInitThreadData(GML::ML::ConnectorThreadData &thData)
+{
+	return true;
+}
+void GML::ML::IConnector::OnRunThreadCommand(GML::ML::ConnectorThreadData &thData,UInt32 threadCommand)
+{
+}
+bool GML::ML::IConnector::ExecuteParalelCommand(UInt32 command)
+{
+	UInt32	tr;
+
+	if ((tpu==NULL) || (threadsCount<1))
+	{
+		notifier->Error("[%s] -> Thread data was not initilized (Did you call InitThreads method ?)",ObjectName);
+		return false;
+	}
+	// executie
+	for (tr=0;tr<threadsCount;tr++)
+		if (tpu[tr].Execute(command)==false)
+		{
+			notifier->Error("[%s] -> Error on runnig thread #%d",ObjectName,tr);
+			return false;
+		}
+	// asteptare
+	for (tr=0;tr<threadsCount;tr++)
+		if (tpu[tr].WaitToFinish()==false)
+		{
+			notifier->Error("[%s] -> WaitToFinish failed on thread #%d",ObjectName,tr);
+			return false;
+		}
+	// all ok
+	return true;
+}
 bool GML::ML::IConnector::OnInit()
 {
 	GML::Utils::GString		temp;
@@ -418,6 +510,11 @@ bool GML::ML::IConnector::OnInit()
 		// daca exista un connector ma conectez la el
 		if (conector!=NULL)
 		{
+			if (HasProperty("ThreadsCount"))
+			{
+				if (InitThreads()==false)
+					return false;
+			}
 			if (OnInitConnectionToConnector()==false)
 				return false;
 			break;
