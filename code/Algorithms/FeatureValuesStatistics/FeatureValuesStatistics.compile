@@ -1,0 +1,3 @@
+sources = FeatureValuesStatistics.cpp
+gmlplugin = yes
+libname = FeatureValuesStatistics
