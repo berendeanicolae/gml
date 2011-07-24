@@ -197,7 +197,7 @@ bool FeatureValuesStatistics::ComputeValuesForFeature(UInt32 index,GML::Utils::F
 			start = tr;
 			value = Vi[tr].Value;
 			label = Vi[tr].Label;			
-
+			lastLabel = 0;
 			continue;
 		}
 		if (Vi[tr].Label!=label)

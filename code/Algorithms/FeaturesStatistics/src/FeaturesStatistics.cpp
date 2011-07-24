@@ -297,9 +297,8 @@ void FeaturesStatistics::OnRunThreadCommand(FeaturesThreadData &ftd,UInt32 comma
 {
 	UInt32	tr,gr,count,dif;
 
-
 	count = con->GetFeatureCount();
-	// citesc datele asociate range-ului
+	// citesc datele asociate range-ului	
 	for (tr=ftd.Range.Start;(tr<ftd.Range.End) && (StopAlgorithm==false);tr++)
 	{
 		if (con->GetRecord(ftd.Record,tr)==false)
