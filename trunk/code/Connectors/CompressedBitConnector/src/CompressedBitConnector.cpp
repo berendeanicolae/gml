@@ -24,7 +24,7 @@ bool	CompressedBitConnector::AllocMemory(UInt64 memory)
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for data !",ObjectName,memory);
 		return false;
 	}
-	if ((Indexes = new UInt32[nrRecords])==NULL)
+	if ((Indexes = new UInt64[nrRecords])==NULL)
 	{
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for index data !",ObjectName,nrRecords);
 		return false;
@@ -238,7 +238,7 @@ bool	CompressedBitConnector::OnInitConnectionToConnector()
 	cIndex = 0;
 	for (tr=0;tr<nrRecords;tr++)
 	{
-		Indexes[tr] = (UInt32)cIndex;
+		Indexes[tr] = cIndex;
 		if ((tr % 10000)==0)
 			notifier->SetProcent((double)tr,(double)nrRecords);
 		
@@ -290,7 +290,7 @@ bool	CompressedBitConnector::OnInitConnectionToConnector()
 			return false;
 	}
 	// all ok , am incarcat datele
-	dataMemorySize = (UInt64)nrRecords * sizeof(UInt32) + MemToAlloc+Labels.GetAllocated();
+	dataMemorySize = (UInt64)nrRecords * (UInt64)sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
 	conector->FreeMLRecord(cRec);
 	return true;
 
@@ -344,7 +344,7 @@ bool	CompressedBitConnector::OnInitConnectionToDataBase()
 
 	for (tr=0;tr<nrRecords;tr++)
 	{
-		Indexes[tr] = (UInt32)cIndex;
+		Indexes[tr] = cIndex;
 		if (database->ReadNextRecord(VectPtr)==false)
 		{
 			notifier->Error("[%s] -> Unable to read #d record from database!",ObjectName,tr);
@@ -401,7 +401,7 @@ bool	CompressedBitConnector::OnInitConnectionToDataBase()
 			return false;
 	}
 	// all ok , am incarcat datele
-	dataMemorySize = (UInt64)nrRecords * sizeof(UInt32) + MemToAlloc+Labels.GetAllocated();
+	dataMemorySize = (UInt64)nrRecords * (UInt64)sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
 	return true;
 }
 
@@ -426,9 +426,9 @@ bool	CompressedBitConnector::Save(char *fileName)
 		h.MemToAlloc = MemToAlloc;
 		if (file.Write(&h,sizeof(h))==false)
 			break;
-		if (file.Write(Data,(UInt32)MemToAlloc)==false)
+		if (file.Write(Data,(UInt64)MemToAlloc)==false)
 			break;
-		if (file.Write(Indexes,sizeof(UInt32)*nrRecords)==false)
+		if (file.Write(Indexes,sizeof(UInt64)*(UInt64)nrRecords)==false)
 			break;
 		if (file.Write(Labels.GetData(),Labels.GetAllocated())==false)
 			break;
@@ -463,9 +463,9 @@ bool	CompressedBitConnector::Load(char *fileName)
 			notifier->Error("[%s] -> Unable to allocate space for cache initialization",ObjectName);
 			break;
 		}
-		if (file.Read(Data,(UInt32)MemToAlloc)==false)
+		if (file.Read(Data,(UInt64)MemToAlloc)==false)
 			break;
-		if (file.Read(Indexes,sizeof(UInt32)*nrRecords)==false)
+		if (file.Read(Indexes,sizeof(UInt64)*(UInt64)nrRecords)==false)
 			break;
 		if (file.Read(Labels.GetData(),Labels.GetAllocated())==false)
 			break;
@@ -489,14 +489,15 @@ bool	CompressedBitConnector::CreateMlRecord (GML::ML::MLRecord &record)
 bool	CompressedBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask)
 {
 	UInt8	*cPoz,*end;
-	UInt32	sz,indexFeat,Last;
+	UInt64	sz;
+	UInt32	indexFeat,Last;
 
 	if (index>=nrRecords)
 		return false;
 	cPoz = &Data[Indexes[index]];
 	if (index+1==nrRecords)
 	{
-		sz = (UInt32)MemToAlloc -Indexes[index];
+		sz = MemToAlloc -Indexes[index];
 	} else {
 		sz = Indexes[index+1]-Indexes[index];
 	}
