@@ -250,7 +250,7 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::Save(char *f
 			if (file.Write(BSLabel.GetData(),BSLabel.GetAllocated())==false)
 				break;
 		} else {
-			if (file.Write(Labels,nrRecords*sizeof(DataType))==false)
+			if (file.Write(Labels,(UInt64)nrRecords*(UInt64)sizeof(DataType))==false)
 				break;
 		}
 		if (file.Write(Data,(UInt64)nrRecords*(UInt64)sizeof(DataType)*(UInt64)columns.nrFeatures)==false)
