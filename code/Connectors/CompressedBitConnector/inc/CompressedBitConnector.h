@@ -35,7 +35,7 @@ class CompressedBitConnector: public GML::ML::IConnector
 	UInt32				Method;
 	UInt64				MemToAlloc;
 	UInt8				*Data;	
-	UInt32				*Indexes;	
+	UInt64				*Indexes;	
 	GML::Utils::BitSet	Labels;
 
 	void				Update(IndexBitCounter &ibt,UInt32 index);
