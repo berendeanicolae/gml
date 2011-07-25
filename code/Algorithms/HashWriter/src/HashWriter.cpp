@@ -34,7 +34,9 @@ void HashWriter::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 
 {
 	switch (threadCommand)
 	{
-		case THREAD_COMMAND_NONE:
+		case COMMAND_FEAT_COMB_GROUPS:
+			LoadRecords(thData);
+			break;
 			// do nothing
 			return;
 		// add extra thread command processes here
@@ -300,28 +302,27 @@ void HashWriter::PrintFlist()
 		notif->Info("[%s] -> %d %s %s %f",ObjectName,FList[tr].Index, tmpR.GetText(), tmpF.GetText(), FList[tr].Label);
 	}
 }
-bool HashWriter::LoadRecords()
+bool HashWriter::LoadRecords(GML::Algorithm::MLThreadData &thData)
 {
-	UInt32		tr,featSize;
-
-	if (FList.Create(con->GetRecordCount(),true)==false)
+	UInt32				tr,featSize;
+	GML::ML::MLRecord	currentRecord;		
+	
+	if (con->CreateMlRecord(currentRecord)==false)
 	{
-		notif->Error("[%s] -> Unable to allocate memory for !",ObjectName);
+		notif->Error("[%s] -> Unable to create currentRecord",ObjectName);
 		return false;
 	}
-	for (tr=0;tr<FList.Len();tr++)
-		FList[tr].Index = tr;
-
 	featSize = con->GetFeatureCount() * sizeof(double);
-	notif->StartProcent("[%s] -> Computing hashes ... ",ObjectName);
-	for (tr=0;tr<FList.Len();tr++)
+	if (thData.ThreadID==0)
+		notif->StartProcent("[%s] -> Computing hashes ... ",ObjectName);
+	for (tr=thData.ThreadID;tr<FList.Len();tr+=threadsCount)	
 	{
-		if (con->GetRecord(MainRecord,tr)==false)
+		if (con->GetRecord(currentRecord,tr)==false)
 		{
 			notif->Error("[%s] -> Unable to read record #%d!",ObjectName,tr);
 			return false;
 		}
-		if (FList[tr].fHash.ComputeHashForBuffer(MainRecord.Features,featSize)==false)
+		if (FList[tr].fHash.ComputeHashForBuffer(currentRecord.Features,featSize)==false)
 		{
 			notif->Error("[%s] -> Unable to compute features hash for record #%d!",ObjectName,tr);
 			return false;
@@ -331,11 +332,13 @@ bool HashWriter::LoadRecords()
 			notif->Error("[%s] -> Unable to read record hash for #%d",ObjectName,tr);
 			return false;
 		}
-		FList[tr].Label = MainRecord.Label;
+		FList[tr].Label = currentRecord.Label;
 		if ((tr % 1000)==0)
-			notif->SetProcent(tr,FList.Len());
+			if (thData.ThreadID==0)
+				notif->SetProcent(tr,FList.Len());
 	}
-	notif->EndProcent();
+	if (thData.ThreadID==0)
+		notif->EndProcent();
 
 	return true;
 }
@@ -372,11 +375,15 @@ bool HashWriter::SaveHashGroupsByFeatComb()
 	GML::Utils::File		f;
 	GML::DB::RecordHash		tempFeatHash;
 
-	if(LoadRecords()==false)
+	if (FList.Create(con->GetRecordCount(),true)==false)
 	{
-		notif->Error("[%s] -> Failed to read records!",ObjectName);
+		notif->Error("[%s] -> Unable to allocate memory for !",ObjectName);
 		return false;
 	}
+	for (tr=0;tr<FList.Len();tr++)
+		FList[tr].Index = tr;
+
+	ExecuteParalelCommand(COMMAND_FEAT_COMB_GROUPS);
 	//PrintFlist();	
 	// am citit toate datele , le sortez
 	notif->Info("[%s] -> Sorting ... ",ObjectName);	

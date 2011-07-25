@@ -46,7 +46,7 @@ class HashWriter: public GML::Algorithm::IMLAlgorithm
 	bool 				SaveHashes(UInt32 command);
 	bool 				SaveAll();
 	bool				SaveHashGroupsByFeatComb();
-	bool				LoadRecords();
+	bool				LoadRecords(GML::Algorithm::MLThreadData &thData);
 	bool				GetFeatures(GML::Utils::GString	&features, UInt32 recIndex);
 	void				PrintFlist();
 public:
