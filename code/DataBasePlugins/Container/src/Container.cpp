@@ -278,6 +278,8 @@ bool Container::OnInit()
 	if (LoadFIF()==false)
 		return false;
 
+	notifier->Info("[%s] -> FileName: %s",ObjectName,fileName.GetText());
+	notifier->Info("[%s] -> FeatureInformationFile: %s",ObjectName,FeatureInformationFile.GetText());
 	nrRecords = h.nrRecords;	
 	return true;
 }
