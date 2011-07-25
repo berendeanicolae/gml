@@ -329,8 +329,7 @@ bool Container::OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectP
 				break;
 			case 1:
 				if (file.ReadUInt32(CurentPos,value)==false)
-					return false;
-				value = ((value & 0xFF000000) >> 24) | ((value & 0xFF) << 24) | ((value & 0x00FF0000) >> 8) | ((value & 0x0000FF00) << 8);
+					return false;				
 				read+=sizeof(UInt32);
 				break;
 			case 2:
@@ -339,10 +338,11 @@ bool Container::OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectP
 			case 3:
 				value = 0xFFFFFFFF;
 				break;
-		};
+		};		
 		// verificare pe MD5
 		if ((fi.Key>=0xF00001388) && (fi.Key<=0xF0000138B))
 		{
+			value = ((value & 0xFF000000) >> 24) | ((value & 0xFF) << 24) | ((value & 0x00FF0000) >> 8) | ((value & 0x0000FF00) << 8);
 			VectPtr[0].Value.Hash.Hash.dwValue[fi.Key-0xF00001388] = value;
 			continue;
 		}		
@@ -350,7 +350,8 @@ bool Container::OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectP
 		if ((found = FInfo.BinarySearch(fi,FInfoSort))>=0)
 		{
 			// setez valoarea
-			cfi = FInfo.GetPtrToObject(found);
+			//notifier->Info("CID = %d, FID = %d , Value:0x%08X , id:%d, fIndex:%d , vIndex:%d",(UInt32)(fi.Key >> 32),(UInt32)(fi.Key & 0xFFFFFFFF),value,id,fIndex,vIndex);
+			cfi = FInfo.GetPtrToObject(found);			
 			params = ParamValues.GetPtrToObject(cfi->ParamsStartIndex);
 			switch (cfi->Op)
 			{
