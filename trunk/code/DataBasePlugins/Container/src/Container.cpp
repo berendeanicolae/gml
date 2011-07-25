@@ -427,4 +427,3 @@ bool Container::OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectP
 	}
 	return true;
 }
-
