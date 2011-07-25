@@ -305,24 +305,18 @@ void HashWriter::PrintFlist()
 bool HashWriter::LoadRecords(GML::Algorithm::MLThreadData &thData)
 {
 	UInt32				tr,featSize;
-	GML::ML::MLRecord	currentRecord;		
-	
-	if (con->CreateMlRecord(currentRecord)==false)
-	{
-		notif->Error("[%s] -> Unable to create currentRecord",ObjectName);
-		return false;
-	}
+		
 	featSize = con->GetFeatureCount() * sizeof(double);
 	if (thData.ThreadID==0)
 		notif->StartProcent("[%s] -> Computing hashes ... ",ObjectName);
 	for (tr=thData.ThreadID;tr<FList.Len();tr+=threadsCount)	
 	{
-		if (con->GetRecord(currentRecord,tr)==false)
+		if (con->GetRecord(thData.Record,tr)==false)
 		{
 			notif->Error("[%s] -> Unable to read record #%d!",ObjectName,tr);
 			return false;
 		}
-		if (FList[tr].fHash.ComputeHashForBuffer(currentRecord.Features,featSize)==false)
+		if (FList[tr].fHash.ComputeHashForBuffer(thData.Record.Features,featSize)==false)
 		{
 			notif->Error("[%s] -> Unable to compute features hash for record #%d!",ObjectName,tr);
 			return false;
@@ -331,8 +325,8 @@ bool HashWriter::LoadRecords(GML::Algorithm::MLThreadData &thData)
 		{
 			notif->Error("[%s] -> Unable to read record hash for #%d",ObjectName,tr);
 			return false;
-		}
-		FList[tr].Label = currentRecord.Label;
+		}		
+		FList[tr].Label = thData.Record.Label;
 		if ((tr % 1000)==0)
 			if (thData.ThreadID==0)
 				notif->SetProcent(tr,FList.Len());
