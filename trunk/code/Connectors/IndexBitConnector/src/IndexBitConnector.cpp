@@ -31,8 +31,8 @@ bool	IndexBitConnector::AllocMemory(UInt64 memory)
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for index data !",ObjectName,nrRecords);
 		return false;
 	}
-	memset(Data,0,(UInt32)memory);
-	memset(Indexes,0,nrRecords*sizeof(UInt32));
+	memset(Data,0,memory);
+	memset(Indexes,0,(UInt64)nrRecords*sizeof(UInt64));
 
 	if (Labels.Create(nrRecords)==false)
 	{
@@ -130,7 +130,7 @@ void	IndexBitConnector::ComputeMemory(IndexBitCounter &ibt,UInt64 &memory)
 	if (ibt.maxIndex <= 0xFFFF)
 	{
 		Method = METHOD_INT16_INDEX;
-		memory = (UInt64)ibt.countInt16 * sizeof(UInt16);
+		memory = (UInt64)ibt.countInt16 * (UInt64)sizeof(UInt16);
 		return;
 	}
 	Method = METHOD_INT32_INDEX;
@@ -161,7 +161,7 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 		return false;
 	}
 	memset(&ibc,0,sizeof(ibc));
-	notifier->StartProcent("[%s] -> Analizing DataBase : ",ObjectName);
+	notifier->StartProcent("[%s] -> Analizing DataBase (%d records): ",ObjectName,nrRecords);
 	for (tr=0;tr<nrRecords;tr++)
 	{
 		if ((tr % 10000)==0)
