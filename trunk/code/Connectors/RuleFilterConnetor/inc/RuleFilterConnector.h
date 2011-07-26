@@ -12,10 +12,11 @@ class RuleFilterConnector : public GML::ML::IConnector
 		Method_RemoveIfOneFeatureIsSet,
 		Method_KeepIfOneFeatureIsSet,
 	};
-	GML::Utils::Indexes		Indexes;	
-	GML::Utils::GString		RulesFile;
-	UInt32					Method;
-	GML::Utils::BitSet		FList;
+	GML::Utils::Indexes				Indexes;
+	GML::Utils::GTFVector<bool>		KeepRecords;
+	GML::Utils::GString				RulesFile;
+	UInt32							Method;
+	GML::Utils::BitSet				FList;
 	
 	bool					FeatureNameToIndex(GML::Utils::GString &name,UInt32 &index);
 	bool					LoadFeaturesList();
@@ -23,6 +24,8 @@ class RuleFilterConnector : public GML::ML::IConnector
 	
 	bool					Check_AllFeaturesAreSet(GML::ML::MLRecord &rec);
 	bool					Check_OneFeatureIsSet(GML::ML::MLRecord &rec);
+	bool 					CheckRules(GML::ML::ConnectorThreadData &thData);
+	void 					OnRunThreadCommand(GML::ML::ConnectorThreadData &thData,UInt32 threadCommand);
 public:
 	RuleFilterConnector();
 	~RuleFilterConnector();
