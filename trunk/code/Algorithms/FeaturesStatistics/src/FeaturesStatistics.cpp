@@ -120,7 +120,7 @@ double Compute_F1(FeaturesInformations *f)
 	//if (v1 < 0) v1 = -v1;
 	//if (v2 < 0) v2 = -v2;
 	if (t_mal + t_clean == 0) return 0;
-	return v1 / v2;
+	return (v1*1000000) / v2;
 	//double precision = (double)(f.t_mal) / ((double)f.t_mal);
 }
 double Compute_F2(FeaturesInformations *f)
@@ -140,7 +140,7 @@ double Compute_F2(FeaturesInformations *f)
     double v1 = (miu_pl - miu_total) * (miu_pl - miu_total) + (miu_min - miu_total) * (miu_min - miu_total);
     double v2 = sigma_pl*sigma_pl + sigma_min*sigma_min;
     if (t_mal + t_clean == 0) return 0;
-    return v1 / v2;
+    return (v1 *1000000)/ v2;
 }
 double Compute_ProcTo100(FeaturesInformations *f)
 {
