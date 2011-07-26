@@ -125,7 +125,7 @@ bool LabelModifierConnector::OnInitConnectionToConnector()
 	notifier->EndProcent();
 	HashList.Free();
 
-	nrRecords = HashList.Len();
+	nrRecords = conector->GetRecordCount();
 	columns.nrFeatures = conector->GetFeatureCount();
 	dataMemorySize = (UInt64)nrRecords*sizeof(UInt32);
 	return true;
