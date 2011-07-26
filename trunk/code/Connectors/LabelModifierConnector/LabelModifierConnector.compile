@@ -1,0 +1,3 @@
+sources = LabelModifierConnector.cpp
+gmlplugin = yes
+libname = LabelModifierConnector
