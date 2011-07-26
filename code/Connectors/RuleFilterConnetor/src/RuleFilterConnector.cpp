@@ -93,11 +93,52 @@ bool RuleFilterConnector::Check_OneFeatureIsSet(GML::ML::MLRecord &rec)
 	}
 	return false;
 }
+bool RuleFilterConnector::CheckRules(GML::ML::ConnectorThreadData &thData)
+{
+	bool kv;
+
+	if (thData.ThreadID == 0)
+		notifier->StartProcent("[%s] -> Analizing records ... ",ObjectName);
+	for (UInt32 tr=thData.ThreadID;tr<conector->GetRecordCount();tr+=threadsCount)
+	{
+		if (conector->GetRecord(thData.Record,tr)==false)		
+		{
+			notifier->Error("[%s] -> Error reading #%d record from parent connector!",ObjectName,tr);
+			return false;
+		}
+		switch (Method)
+		{
+			case Method_RemoveIfAllFeaturesAreSet:
+				kv = !Check_AllFeaturesAreSet(thData.Record);
+				break;
+			case Method_KeepIfAllFeaturesAreSet:
+				kv = Check_AllFeaturesAreSet(thData.Record);
+				break;
+			case Method_RemoveIfOneFeatureIsSet:
+				kv = !Check_OneFeatureIsSet(thData.Record);
+				break;
+			case Method_KeepIfOneFeatureIsSet:
+				kv = Check_OneFeatureIsSet(thData.Record);
+				break;
+			default:
+				notifier->Error("[%s] -> Unknown method: %d!",ObjectName,Method);
+				return false;
+		};
+		KeepRecords[tr] = kv;
+		
+		if ((thData.ThreadID == 0) && ((tr % 10000)==0))
+			notifier->SetProcent(tr,conector->GetRecordCount());
+	}
+	if (thData.ThreadID == 0)
+		notifier->EndProcent();
+	return true;
+}
+void RuleFilterConnector::OnRunThreadCommand(GML::ML::ConnectorThreadData &thData,UInt32 threadCommand)
+{
+	CheckRules(thData);
+}
 bool RuleFilterConnector::OnInitConnectionToConnector()
 {
-	GML::ML::MLRecord	cRec;
-	bool				keepRecord;
-
 	if (Indexes.Create(conector->GetRecordCount())==false)
 	{
 		notifier->Error("[%s] -> Unable to allocate %d indexes ",ObjectName,conector->GetRecordCount());
@@ -108,59 +149,38 @@ bool RuleFilterConnector::OnInitConnectionToConnector()
 		notifier->Error("[%s] -> Unable to create %d indexes for features",ObjectName,conector->GetFeatureCount());
 		return false;
 	}
-	if (conector->CreateMlRecord(cRec)==false)
+	if (KeepRecords.Create(conector->GetRecordCount(),true)==false)
 	{
-		notifier->Error("[%s] -> Unable to crea MLRecord ",ObjectName);
-		return false;
-	}	
+		notifier->Error("[%s] -> Unable to create %d indexes for records",ObjectName,conector->GetRecordCount());
+		return false;	
+	}
+	memset(KeepRecords.GetPtrToObject(0),0,sizeof(bool)*conector->GetRecordCount());
 	FList.SetAll(false);
 	
 	if (LoadFeaturesList()==false)
 		return false;
-		
-	notifier->StartProcent("[%s] -> Analizing records ... ",ObjectName);
+	if (ExecuteParalelCommand(0)==false)
+		return false;
+	// am terminat , adaug si indexii
+	notifier->Info("[%s] -> Creating filter ... ",ObjectName);
 	for (UInt32 tr=0;tr<conector->GetRecordCount();tr++)
 	{
-		if (conector->GetRecord(cRec,tr)==false)		
-		{
-			notifier->Error("[%s] -> Error reading #%d record from parent connector!",ObjectName,tr);
-			return false;
-		}
-		switch (Method)
-		{
-			case Method_RemoveIfAllFeaturesAreSet:
-				keepRecord = !Check_AllFeaturesAreSet(cRec);
-				break;
-			case Method_KeepIfAllFeaturesAreSet:
-				keepRecord = Check_AllFeaturesAreSet(cRec);
-				break;
-			case Method_RemoveIfOneFeatureIsSet:
-				keepRecord = !Check_OneFeatureIsSet(cRec);
-				break;
-			case Method_KeepIfOneFeatureIsSet:
-				keepRecord = Check_OneFeatureIsSet(cRec);
-				break;
-			default:
-				notifier->Error("[%s] -> Unknown method: %d!",ObjectName,Method);
-				return false;
-		};
-		if (keepRecord)
+		if (KeepRecords[tr])
 		{
 			if (Indexes.Push(tr)==false)
 			{
-				notifier->Error("[%s] -> Unable to add record #d to index list",ObjectName,tr);
-				return false;
-			}		
+				notifier->Error("[%s] -> Unable to add index %d ",ObjectName,tr);
+				return false;				
+			}
 		}
-		
-		if ((tr % 10000)==0)
-			notifier->SetProcent(tr,conector->GetRecordCount());
 	}
-	notifier->EndProcent();
+	// sterg celelalte elemente
+	FList.Destroy();
+	KeepRecords.Free();
 	
 	nrRecords = Indexes.Len();
 	columns.nrFeatures = conector->GetFeatureCount();
-	dataMemorySize = nrRecords*sizeof(UInt32);	
+	dataMemorySize = (UInt64)nrRecords*(UInt64)sizeof(UInt32);	
 	return true;
 }
 bool RuleFilterConnector::GetRecordLabel( double &label,UInt32 index )
