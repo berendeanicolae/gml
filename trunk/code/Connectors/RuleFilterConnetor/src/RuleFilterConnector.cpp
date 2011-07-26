@@ -7,6 +7,7 @@ RuleFilterConnector::RuleFilterConnector()
 	LinkPropertyToString("RulesFile",RulesFile,"","Name of the file that contains rules");
 	LinkPropertyToUInt32("Method",Method,Method_RemoveIfAllFeaturesAreSet,"!!LIST:RemoveIfAllFeaturesAreSet=0,KeepIfAllFeaturesAreSet,RemoveIfOneFeatureIsSet,KeepIfOneFeatureIsSet!!");
 	
+	AddMultiThreadingProperties();
 }
 RuleFilterConnector::~RuleFilterConnector()
 {
