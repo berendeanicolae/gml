@@ -139,6 +139,9 @@ double Compute_F2(FeaturesInformations *f)
 	double t_clean = f->countNegative;
 	double f_clean = f->totalNegative - t_clean;
 
+	if ((t_mal + t_clean) == 0) return 0;
+	if ((f->totalPozitive==0) || (f->totalNegative==0)) return 0;
+
 	double all_mal = f->totalPozitive;
 	double all_clean = f->totalNegative;
     double miu_pl = (double)t_mal / all_mal;
@@ -148,7 +151,8 @@ double Compute_F2(FeaturesInformations *f)
     double sigma_min = sqrt((double)(t_clean * (1 - miu_min) * (1 - miu_min) + f_clean * miu_min * miu_min));
     double v1 = (miu_pl - miu_total) * (miu_pl - miu_total) + (miu_min - miu_total) * (miu_min - miu_total);
     double v2 = sigma_pl*sigma_pl + sigma_min*sigma_min;
-    if (t_mal + t_clean == 0) return 0;
+    
+	//if (v2==0) return 0;
     return (v1 *1000000)/ v2;
 }
 double Compute_ProcTo100(FeaturesInformations *f)
