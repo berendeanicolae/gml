@@ -10,14 +10,22 @@ void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
 int  Compare_FeaturesInformations(FeaturesInformations &f1,FeaturesInformations &f2,void *context)
 {
 	UInt32	column = *((UInt32 *)context);
-
-
+	
 	if (f1.fnValue[column]>f2.fnValue[column])
 		return 1;
 	if (f1.fnValue[column]<f2.fnValue[column])
 		return -1;
 	return 0;
 }
+int  Compare_FeaturesInformations2(FeaturesInformations &f1,FeaturesInformations &f2)
+{
+	if (f1.compareValue>f2.compareValue)
+		return 1;
+	if (f1.compareValue<f2.compareValue)
+		return -1;
+	return 0;
+}
+/*
 bool FeaturesInformations::operator< (FeaturesInformations &a)
 {
 	return (bool)(Index<a.Index);
@@ -26,6 +34,7 @@ bool FeaturesInformations::operator> (FeaturesInformations &a)
 {
 	return (bool)(Index>a.Index);
 }
+*/
 //====================================================================================================
 Stats::Stats()
 {
@@ -652,8 +661,13 @@ bool FeaturesStatistics::Compute()
 	// sortez
 	if (sortBy!=0xFFFF)
 	{
-		ComputedData.Sort(sortDirection==0,Compare_FeaturesInformations,&sortBy);
+		notif->Info("[%s] -> Sorting data ... ",ObjectName);
+		for (UInt32 tr=0;tr<con->GetFeatureCount();tr++)
+			ComputedData[tr].compareValue = ComputedData[tr].fnValue[sortBy];
+		//ComputedData.Sort(sortDirection==0,Compare_FeaturesInformations,&sortBy);
+		ComputedData.Sort(Compare_FeaturesInformations2,sortDirection==0);
 	}
+	notif->Info("[%s] -> Saving result ... ",ObjectName);
 	// printez
 	if (notifyResults)
 		PrintStats();
