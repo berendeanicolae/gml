@@ -160,7 +160,7 @@ double Compute_F2(FeaturesInformations *f)
     double v1 = (miu_pl - miu_total) * (miu_pl - miu_total) + (miu_min - miu_total) * (miu_min - miu_total);
     double v2 = sigma_pl*sigma_pl + sigma_min*sigma_min;
     
-	//if (v2==0) return 0;
+	if (v2==0) return 0;
     return (v1 *1000000)/ v2;
 }
 double Compute_ProcTo100(FeaturesInformations *f)
