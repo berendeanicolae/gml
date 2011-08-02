@@ -219,6 +219,31 @@ double Compute_G3(FeaturesInformations *f)
 		return 0;
 	return (((dif * 100)/total)+((dif*100)/all));
 }
+double Compute_G4(FeaturesInformations *f)
+{
+	double total = f->totalPozitive+f->totalNegative;
+	double dif = abs(f->countPozitive - f->countNegative);
+	
+	if (total==0)
+		return 0;
+	return (dif * 100)/total;
+}
+double Compute_ProbPoz(FeaturesInformations *f)
+{
+	if ((f->totalPozitive==0) || (f->totalNegative==0))
+		return 0;
+	double prob_mal = f->countPozitive/f->totalPozitive;
+	double prob_cln = f->countNegative/f->totalNegative;
+	return prob_mal*(1-prob_cln);
+}
+double Compute_ProbNeg(FeaturesInformations *f)
+{
+	if ((f->totalPozitive==0) || (f->totalNegative==0))
+		return 0;
+	double prob_mal = f->countPozitive/f->totalPozitive;
+	double prob_cln = f->countNegative/f->totalNegative;
+	return prob_cln*(1-prob_mal);
+}
 //====================================================================================================
 
 FeaturesStatistics::FeaturesStatistics()
@@ -262,6 +287,9 @@ FeaturesStatistics::FeaturesStatistics()
 	AddNewStatFunction("G1",Compute_G1);
 	AddNewStatFunction("G2",Compute_G2);
 	AddNewStatFunction("G3",Compute_G3);
+	AddNewStatFunction("G4",Compute_G4);
+	AddNewStatFunction("ProbPoz",Compute_ProbPoz);
+	AddNewStatFunction("ProbNeg",Compute_ProbNeg);
 
 	SortProps.Set("!!LIST:NoSort=0xFFFF");
 	WeightFileType.Set("!!LIST:None=0xFFFF");
