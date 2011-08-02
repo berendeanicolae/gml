@@ -100,6 +100,14 @@ double Compute_ProcDiff(FeaturesInformations *f)
 {
 	return ((f->countPozitive*100)/f->totalPozitive)-((f->countNegative*100)/f->totalNegative);
 }
+double Compute_AbsProcDiff(FeaturesInformations *f)
+{
+	if ((f->countPozitive==0) && (f->countNegative==0))
+		return 0;
+	if ((f->totalNegative==0) || (f->totalPozitive==0))
+		return 100;
+	return abs(((f->countPozitive*100)/f->totalPozitive)-((f->countNegative*100)/f->totalNegative));
+}
 double Compute_Diff(FeaturesInformations *f)
 {
 	return f->countPozitive-f->countNegative;
@@ -139,7 +147,7 @@ double Compute_F2(FeaturesInformations *f)
 	double t_clean = f->countNegative;
 	double f_clean = f->totalNegative - t_clean;
 
-	if ((t_mal + t_clean) == 0) return 0;
+	if ((t_mal==0) && (t_clean == 0)) return 0;
 	if ((f->totalPozitive==0) || (f->totalNegative==0)) return 0;
 
 	double all_mal = f->totalPozitive;
@@ -163,6 +171,15 @@ double Compute_ProcTo100(FeaturesInformations *f)
 		return -(100-(f->countPozitive/f->countNegative)*100);
 	return 0;
 }
+double Compute_AbsProcTo100(FeaturesInformations *f)
+{
+	if (f->countPozitive>f->countNegative)
+		return 100-(f->countNegative/f->countPozitive)*100;
+	if (f->countPozitive<f->countNegative)
+		return 100-(f->countPozitive/f->countNegative)*100;
+	return 0;
+}
+
 double Compute_InformationGain(FeaturesInformations *f)
 {
 	double e, e1, e2;
@@ -173,7 +190,35 @@ double Compute_InformationGain(FeaturesInformations *f)
 
 	return e - ((double)(f->countPozitive + f->countNegative) / total) * e1 - ((double)((f->totalPozitive-f->countPozitive) + (f->totalNegative-f->countNegative)) / total) * e2;
 }
-
+double Compute_G1(FeaturesInformations *f)
+{
+	double total = f->countPozitive+f->countNegative;
+	double dif = abs(f->countPozitive - f->countNegative);
+	
+	if (total==0)
+		return 0;
+	return (dif * 100)/total;
+}
+double Compute_G2(FeaturesInformations *f)
+{
+	double all = f->totalPozitive+f->totalNegative;
+	double total = f->countPozitive+f->countNegative;
+	double dif = abs(f->countPozitive - f->countNegative);
+	
+	if (total==0)
+		return 0;
+	return ((dif * 100)/total)*((dif*100)/all);
+}
+double Compute_G3(FeaturesInformations *f)
+{
+	double all = f->totalPozitive+f->totalNegative;
+	double total = f->countPozitive+f->countNegative;
+	double dif = abs(f->countPozitive - f->countNegative);
+	
+	if (total==0)
+		return 0;
+	return (((dif * 100)/total)+((dif*100)/all));
+}
 //====================================================================================================
 
 FeaturesStatistics::FeaturesStatistics()
@@ -206,12 +251,17 @@ FeaturesStatistics::FeaturesStatistics()
 
 	AddNewStatFunction("Poz/Neg",Compute_RapPozNeg);
 	AddNewStatFunction("ProcDiff",Compute_ProcDiff);
+	AddNewStatFunction("Abs(ProcDiff)",Compute_AbsProcDiff);
 	AddNewStatFunction("Diff",Compute_Diff);
 	AddNewStatFunction("Abs(Diff)",Compute_AbsDiff);
 	AddNewStatFunction("F1",Compute_F1);
 	AddNewStatFunction("F2",Compute_F2);
 	AddNewStatFunction("InformationGain",Compute_InformationGain);
 	AddNewStatFunction("ProcTo100",Compute_ProcTo100);
+	AddNewStatFunction("Abs(ProcTo100)",Compute_AbsProcTo100);
+	AddNewStatFunction("G1",Compute_G1);
+	AddNewStatFunction("G2",Compute_G2);
+	AddNewStatFunction("G3",Compute_G3);
 
 	SortProps.Set("!!LIST:NoSort=0xFFFF");
 	WeightFileType.Set("!!LIST:None=0xFFFF");
@@ -432,8 +482,14 @@ bool FeaturesStatistics::CreateRecordInfo(FeaturesInformations &finf,GML::Utils:
 				if (tmp.AddFormatedEx("%{uint32,R%%,F ,G3}",(UInt32)finf.fnValue[tr],columnWidth)==false)
 					return false;
 			} else {
-				if (tmp.AddFormatedEx("%{double,Z4,R%%,F }",finf.fnValue[tr],columnWidth)==false)
-					return false;
+				if (tr<6)
+				{
+					if (tmp.AddFormatedEx("%{double,Z2,R%%,F }%",finf.fnValue[tr],columnWidth-1)==false)
+						return false;
+				} else {
+					if (tmp.AddFormatedEx("%{double,Z4,R%%,F }",finf.fnValue[tr],columnWidth)==false)
+						return false;
+				}
 			}
 		} else {
 			if (tr<4)
