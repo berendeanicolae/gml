@@ -15,9 +15,10 @@ public:
 	double			totalPozitive;
 	double			totalNegative;
 	double			*fnValue;
+	double			compareValue;
 
-	bool			operator< (FeaturesInformations &a);
-	bool			operator> (FeaturesInformations &a);
+	//bool			operator< (FeaturesInformations &a);
+	//bool			operator> (FeaturesInformations &a);
 };
 class Stats
 {
@@ -48,7 +49,7 @@ class FeaturesStatistics: public GML::Algorithm::IMLAlgorithm
 	GML::Utils::ThreadParalelUnit				*tpu;
 	FeaturesThreadData							All;
 	GML::Utils::GTVector<Stats>					StatsData;
-	GML::Utils::GTVector<FeaturesInformations>	ComputedData;
+	GML::Utils::GTFVector<FeaturesInformations>	ComputedData;
 	GML::Utils::GString							SortProps,WeightFileType;
 	UInt32										MinPoz,MaxPoz,MinNeg,MaxNeg;
 public:
