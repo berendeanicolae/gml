@@ -40,6 +40,7 @@ class HashWriter: public GML::Algorithm::IMLAlgorithm
 
 	GML::Utils::GTFVector<FeatInfo>		FList;
 	bool								SaveFeaturesNames;
+	bool								SaveFeaturesHash;
 
 	void				OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
 	bool				OnInitThreadData(GML::Algorithm::MLThreadData &thData);

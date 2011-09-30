@@ -13,6 +13,7 @@ HashWriter::HashWriter()
 	SetPropertyMetaData("Command","!!LIST:None=0,GetNegative,GetPositive,GetAllIn1,GetAllSeparated,SaveAll,GroupHashesByFeatures!!");
 	LinkPropertyToString("OutputFileName", OutputFileName, "", "FileName for the file to save hashes in");		
 	LinkPropertyToBool("SaveFeaturesNames", SaveFeaturesNames, false, "Save also feaures names");
+	LinkPropertyToBool("SaveFeaturesHash", SaveFeaturesHash, false, "Save also feaures names");
 }
 bool HashWriter::Init()
 {
@@ -55,11 +56,13 @@ bool HashWriter::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
 bool HashWriter::SaveHashes(UInt32 command)
 {
 	GML::Utils::File		f,fp,fn;
-	GML::Utils::GString		fName,tempPos,tempNeg,hash;
-	UInt32				tr,count = 0,countPozitive = 0,countNegative=0;
+	GML::Utils::GString		fName, tempPos, tempNeg, hash, featHash;
+	UInt32					tr, count = 0, countPozitive = 0, countNegative=0, featSize;
 	GML::DB::RecordHash		rHash;
-	double				Label;
-
+	GML::DB::RecordHash		fHash;
+	double					Label;
+			
+	featSize = con->GetFeatureCount() * sizeof(double);
 	if (tempPos.Create(0x10000)==false)
 	{
 		notif->Error("[%s] -> Unable to alloc memory for cache",ObjectName);
@@ -109,21 +112,56 @@ bool HashWriter::SaveHashes(UInt32 command)
 			notif->Error("[%s] -> Unable to convert record hash for #%d",ObjectName,tr);
 			return false;
 		}
-		if (Label==-1 && command!=COMMAND_SHOW_POSITIVE)
+		if (SaveFeaturesHash)
 		{
-			if (tempNeg.AddFormated("%s\n",hash.GetText())==false)
+			if (con->GetRecord(MainRecord, tr)==false)
 			{
-				notif->Error("[%s] -> Unable to create log entry for record #%d",ObjectName,tr);
+				notif->Error("[%s] -> Unable to read record #%d!",ObjectName,tr);
 				return false;
 			}
-		} else {
-			if (Label==1 && command!=COMMAND_SHOW_NEGATIVE)
-				if (tempPos.AddFormated("%s\n",hash.GetText())==false)
+			if (fHash.ComputeHashForBuffer(MainRecord.Features,featSize)==false)
+			{
+				notif->Error("[%s] -> Unable to compute features hash for record #%d!",ObjectName,tr);
+				return false;
+			}		
+			if (fHash.ToString(featHash)==false)
+			{
+				notif->Error("[%s] -> Unable to convert record features hash for #%d",ObjectName,tr);
+				return false;
+			}
+			if (Label==-1 && command!=COMMAND_SHOW_POSITIVE)
+			{
+				if (tempNeg.AddFormated("%s|%s\n",hash.GetText(), featHash.GetText())==false)
 				{
 					notif->Error("[%s] -> Unable to create log entry for record #%d",ObjectName,tr);
 					return false;
 				}
-		}	
+			} else {
+				if (Label==1 && command!=COMMAND_SHOW_NEGATIVE)
+					if (tempPos.AddFormated("%s|%s\n",hash.GetText(), featHash.GetText())==false)
+					{
+						notif->Error("[%s] -> Unable to create log entry for record #%d",ObjectName,tr);
+						return false;
+					}
+			}	
+		} else
+		{
+			if (Label==-1 && command!=COMMAND_SHOW_POSITIVE)
+			{
+				if (tempNeg.AddFormated("%s\n",hash.GetText())==false)
+				{
+					notif->Error("[%s] -> Unable to create log entry for record #%d",ObjectName,tr);
+					return false;
+				}
+			} else {
+				if (Label==1 && command!=COMMAND_SHOW_NEGATIVE)
+					if (tempPos.AddFormated("%s\n",hash.GetText())==false)
+					{
+						notif->Error("[%s] -> Unable to create log entry for record #%d",ObjectName,tr);
+						return false;
+					}
+			}
+		}
 		count++;
 		if (Label==1)
 			countPozitive++;
