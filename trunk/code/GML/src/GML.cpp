@@ -74,6 +74,7 @@ int  Run(char *templateName)
 	GML::Utils::GString			algName;
 	GML::Algorithm::IAlgorithm	*alg;
 
+	//printf("Run(%s)\n",templateName);
 	if (config.Load(templateName)==false)
 	{
 		printf("%s\n",config.GetError());

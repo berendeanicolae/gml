@@ -101,42 +101,42 @@ void my_test3()
 }
 int _tmain(int argc, _TCHAR* argv[])
 {
-	GML::Utils::GString	tmp,l,r;
-	my_test3();
-	return 0;
-	double *d;
+	//GML::Utils::GString	tmp,l,r;
+	//my_test3();
+	//return 0;
+	//double *d;
 
-	d = new(0) double[100000000];
-	if (d==NULL)
-		printf("Test");
+	//d = new(0) double[100000000];
+	//if (d==NULL)
+	//	printf("Test");
 
-	tmp.Set("Salut = Value = 100 = 200 = 300");
-	tmp.SplitInTwo("=",&l,&r,-2);
-	tmp.ConvertToLower();
-	tmp.ConvertToUpper();
-	//tmp.AddChars('-',10);
-	//tmp.InsertChars('-',0,10);
-	//tmp.InsertChars('x',3,4);
+	//tmp.Set("Salut = Value = 100 = 200 = 300");
+	//tmp.SplitInTwo("=",&l,&r,-2);
+	//tmp.ConvertToLower();
+	//tmp.ConvertToUpper();
+	////tmp.AddChars('-',10);
+	////tmp.InsertChars('-',0,10);
+	////tmp.InsertChars('x',3,4);
 
-	//tmp.AddFormatedEx(".Result [%{uint8,L%%,G%%,F%%,B%%}] sal %{int} %{s,R20,F%%} value=[%{dbl,Z%%}]",1000,20,2,'-',2,10,"testare",'.',5.2,0);
-	return 1;
-	GML::Utils::GTFVector<UInt32> v;
-	v.Create(100);
-	for (int tr=0;tr<100;tr++)
-		v.Push(rand()%10000);
-	
-	v.Push(100);
-	v.Push(50);
-	v.Push(1000);
-	v.Push(5);
-	v.Push(2);
-	v.Sort(my_fnc);
-	for (int tr=0;tr<v.Len();tr++)
-		printf("%d,",v[tr]);
-	printf("\n");
-	UInt32 val = 1;
-	printf("%d\n",v.BinarySearch(val,my_fnc));
-	return 1;
+	////tmp.AddFormatedEx(".Result [%{uint8,L%%,G%%,F%%,B%%}] sal %{int} %{s,R20,F%%} value=[%{dbl,Z%%}]",1000,20,2,'-',2,10,"testare",'.',5.2,0);
+	//return 1;
+	//GML::Utils::GTFVector<UInt32> v;
+	//v.Create(100);
+	//for (int tr=0;tr<100;tr++)
+	//	v.Push(rand()%10000);
+	//
+	//v.Push(100);
+	//v.Push(50);
+	//v.Push(1000);
+	//v.Push(5);
+	//v.Push(2);
+	//v.Sort(my_fnc);
+	//for (int tr=0;tr<v.Len();tr++)
+	//	printf("%d,",v[tr]);
+	//printf("\n");
+	//UInt32 val = 1;
+	//printf("%d\n",v.BinarySearch(val,my_fnc));
+	//return 1;
 
 	//GML::Utils::AttributeList	attr;
 
@@ -175,7 +175,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//attr.AddDouble("LearningRate",0.02);
 	//attr.AddUInt32("MaxIteratii",30);
 
-	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("OneSidePerceptron");
+	GML::Algorithm::IAlgorithm *alg = GML::Builder::CreateAlgorithm("CacheBuilder");
 	if (alg==NULL)
 		return 1;
 	if (alg->SetProperty(

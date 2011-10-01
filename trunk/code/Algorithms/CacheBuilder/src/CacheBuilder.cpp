@@ -3,13 +3,12 @@
 
 CacheBuilder::CacheBuilder()
 {
-	ObjectName = "CacheBuilder";
-
+	ObjectName = "CacheBuilder";	
 	SetPropertyMetaData("Command","!!LIST:None=0,CreateCache!!");
 	LinkPropertyToString("CacheName",				CacheName				,"","Name of the file that will contain the cache");
 }
 bool CacheBuilder::Init()
-{
+{	
 	return InitConnections();
 }
 void CacheBuilder::OnExecute()
