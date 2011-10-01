@@ -795,6 +795,7 @@ bool Distances::OnCompute()
 			MergeDistancesClosestPositiveNegative();			
 			SaveNegativePositive(DistanceTableFileName.GetText());
 			SaveHashResult(HashFileName.GetText(),HashFileType,RecordsStatus);
+			return true;
 	}
 	return false;
 }
