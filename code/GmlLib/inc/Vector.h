@@ -3,6 +3,7 @@
 #include "Compat.h"
 
 typedef int					(*_BinarySearchCompFunction)(void *element1,void *element2);
+typedef int					(*_ContextCompFunction)(void *element1,void *element2,void *context);
 
 namespace GML
 {
@@ -34,6 +35,7 @@ namespace GML
 
 			int				BinarySearch(void *Element,_BinarySearchCompFunction cmpFunc);
 			void			Sort(_BinarySearchCompFunction cmpFunc,bool ascendet);
+			void			Sort(_ContextCompFunction cmpFunc,bool ascendet,void *Context);
 
 			bool			Push(void *Element);
 			bool			Insert(void *Element,unsigned int index);

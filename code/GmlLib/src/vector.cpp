@@ -221,6 +221,79 @@ void __HeapSort(unsigned char *Data,int ElementSize,_BinarySearchCompFunction cm
 	if (ElementSize>1024)
 		delete tempElement;
 }
+void __HeapSortContext(unsigned char *Data,int ElementSize,_ContextCompFunction cmpFunc,int nrElements,bool ascendent,void *Context) 
+{
+    unsigned char	*tempElement;	// echivalentul lui t
+	unsigned char	tempData[1024];
+    unsigned int	n = nrElements, parent = nrElements/2, index, child; 
+
+	if (ElementSize<=1024)
+	{
+		tempElement = tempData;
+	} else {
+		if ((tempElement = new unsigned char[ElementSize])==NULL)
+			return;
+	}
+
+	if (ascendent)
+	{
+		for (;;) { 
+			if (parent > 0) { 
+				memcpy(tempElement,&Data[(--parent)*ElementSize],ElementSize);
+			} else {
+				n--;                /* make the heap smaller */
+				if (n == 0) return; /* When the heap is empty, we are done */
+				memcpy(tempElement,&Data[n*ElementSize],ElementSize);
+				memcpy(&Data[n*ElementSize],&Data[0],ElementSize);
+			}
+			index = parent; /* start at the parent index */
+			child = index * 2 + 1; /* get its left child index */
+			while (child < n) {
+				if ((child + 1 < n) && (cmpFunc(&Data[(child+1)*ElementSize],&Data[child*ElementSize],Context)>0))
+					child++;
+
+				if (cmpFunc(&Data[child*ElementSize],tempElement,Context)>0)
+				{
+					memcpy(&Data[ElementSize*index],&Data[ElementSize*child],ElementSize);
+					index = child; 
+					child = index * 2 + 1; 
+				} else {
+					break;
+				}
+			}
+			memcpy(&Data[index*ElementSize],tempElement,ElementSize);
+		}
+	} else {
+		for (;;) { 
+			if (parent > 0) { 
+				memcpy(tempElement,&Data[(--parent)*ElementSize],ElementSize);
+			} else {
+				n--;                /* make the heap smaller */
+				if (n == 0) return; /* When the heap is empty, we are done */
+				memcpy(tempElement,&Data[n*ElementSize],ElementSize);
+				memcpy(&Data[n*ElementSize],&Data[0],ElementSize);
+			}
+			index = parent; /* start at the parent index */
+			child = index * 2 + 1; /* get its left child index */
+			while (child < n) {
+				if ((child + 1 < n) && (cmpFunc(&Data[(child+1)*ElementSize],&Data[child*ElementSize],Context)<0))
+					child++;
+
+				if (cmpFunc(&Data[child*ElementSize],tempElement,Context)<0)
+				{
+					memcpy(&Data[ElementSize*index],&Data[ElementSize*child],ElementSize);
+					index = child; 
+					child = index * 2 + 1; 
+				} else {
+					break;
+				}
+			}
+			memcpy(&Data[index*ElementSize],tempElement,ElementSize);
+		}
+	}
+	if (ElementSize>1024)
+		delete tempElement;
+}
 //===================================================================================================================
 GML::Utils::Vector::Vector(void)
 {
@@ -378,4 +451,9 @@ void GML::Utils::Vector::Sort(_BinarySearchCompFunction cmpFunc,bool ascendet)
 		//__QSort(Data,ElementSize,cmpFunc,0,NrElemente-1,ascendet);
 		//__BubbleSort(Data,ElementSize,cmpFunc,NrElemente,ascendet);
 		__HeapSort(Data,ElementSize,cmpFunc,NrElemente,ascendet);
+}
+void GML::Utils::Vector::Sort(_ContextCompFunction cmpFunc,bool ascendet,void *Context)
+{
+	if (NrElemente>0)
+		__HeapSortContext(Data,ElementSize,cmpFunc,NrElemente,ascendet,Context);
 }
