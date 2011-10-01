@@ -37,6 +37,7 @@ bool GML::Algorithm::IMLAlgorithm::InitConnections()
 {
 	if ((notif = GML::Builder::CreateNotifier(Notifier.GetText()))==NULL)
 		return false;
+	//notif->Error("[%s] -> InitConnections()",ObjectName);
 	if ((con = GML::Builder::CreateConnector(Conector.GetText(),*notif))==NULL)
 	{
 		notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,Conector.GetText());
