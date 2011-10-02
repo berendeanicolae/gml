@@ -1,0 +1,3 @@
+sources = DistancesStatistics.cpp
+gmlplugin = yes
+libname = DistancesStatistics
