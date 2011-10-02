@@ -228,6 +228,19 @@ double Compute_G4(FeaturesInformations *f)
 		return 0;
 	return (dif * 100)/total;
 }
+double Compute_GProc(FeaturesInformations *f)
+{
+	double p_poz,p_neg,dif;
+
+	if ((f->totalPozitive==0.0) || (f->totalNegative==0))
+		return 0;	// functioneaza doar daca am de ambele feluri
+	if ((f->countPozitive==0) && (f->countNegative==0))
+		return 0;
+	p_poz = (f->countPozitive*100.0)/f->totalPozitive;
+	p_neg = (f->countNegative*100.0)/f->totalNegative;
+	dif = abs(p_poz-p_neg);
+	return (dif * 100.0)/(p_poz+p_neg);
+}
 double Compute_ProbPoz(FeaturesInformations *f)
 {
 	if ((f->totalPozitive==0) || (f->totalNegative==0))
@@ -288,6 +301,7 @@ FeaturesStatistics::FeaturesStatistics()
 	AddNewStatFunction("G2",Compute_G2);
 	AddNewStatFunction("G3",Compute_G3);
 	AddNewStatFunction("G4",Compute_G4);
+	AddNewStatFunction("GProc",Compute_GProc);
 	AddNewStatFunction("ProbPoz",Compute_ProbPoz);
 	AddNewStatFunction("ProbNeg",Compute_ProbNeg);
 
