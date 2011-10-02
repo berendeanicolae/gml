@@ -36,6 +36,7 @@ class DistancesStatistics: public GML::Algorithm::IMLAlgorithm
 	double								HistogramMinValue,HistogramMaxValue,HistogramStep;	
 	UInt32								Method;
 	bool								UseWeightsForFeatures;
+	bool								Ignore0ValuesInHistogram;
 	double								*featWeight;
 	GML::Utils::Indexes					indexesPozitive,indexesNegative;
 

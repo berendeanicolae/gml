@@ -14,7 +14,7 @@ DistancesStatistics::DistancesStatistics()
 	LinkPropertyToBool  ("UseWeightsForFeatures",UseWeightsForFeatures,false,"Specifyes if weights for features should be used.");
 	LinkPropertyToUInt32("Method",Method,0,"!!LIST:PositiveToNegative=0,PositiveToPositive,NegativeToPositive,NegativeToNegative,All!!");
 	LinkPropertyToString("FeaturesWeightFile",FeaturesWeightFile,"","Name of the file that contains the weights for features!");
-	
+	LinkPropertyToBool  ("Ignore0ValuesInHistogram",Ignore0ValuesInHistogram,true,"If set , 0 values in histogram will not be saved in the result file");
 	AddDistanceProperties();
 }
 bool DistancesStatistics::Init()
@@ -298,7 +298,7 @@ bool DistancesStatistics::SaveHistogram()
 	if ((HistogramStep == (double)((int)(HistogramStep))) && (HistogramMinValue == (double)((int)(HistogramMinValue))))
 		isDouble = false;
 		
-	proc = 100.0 * (((double)Histogram[0])/sum);	
+	proc = 100.0 * (((double)Histogram[0])/sum);		
 	if (isDouble)
 			tmp.AddFormatedEx("Less than %{double,Z2,L9}|%{uint32,R8}|%{double,Z2,R6}%\n",HistogramMinValue,Histogram[0],proc);
 		else
@@ -306,12 +306,13 @@ bool DistancesStatistics::SaveHistogram()
 			
 	for (UInt32 tr=1;(tr<Histogram.Len());tr++)
 	{		
-		i1 = (double)(HistogramMinValue+(double)tr*HistogramStep);
+		i1 = (double)(HistogramMinValue+(double)(tr-1)*HistogramStep);
 		if (i1>HistogramMaxValue)
 			break;
 		i2 = i1+HistogramStep;
 		proc = 100.0 * (((double)Histogram[tr])/sum);
-				
+		if ((Ignore0ValuesInHistogram) && (Histogram[tr]==0))
+			continue;
 		if (isDouble)
 			tmp.AddFormatedEx("%{double,Z2,R8} - %{double,Z2,R8}|%{uint32,R8}|%{double,Z2,R6}%\n",i1,i2,Histogram[tr],proc);
 		else
