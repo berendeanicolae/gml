@@ -279,7 +279,7 @@ bool DistancesStatistics::SaveHistogram()
 	GML::Utils::File	f;
 	GML::Utils::GString	tmp;
 	UInt32				tr;
-	double				sum = 0.0,i1,i2,proc;
+	double				sum = 0.0,i1,i2,proc,cum = 0.0,pCum;
 	bool				isDouble;
 	
 	if (f.Create(ResultFile.GetText())==false)
@@ -288,7 +288,8 @@ bool DistancesStatistics::SaveHistogram()
 		return false;
 	}
 	tmp.Create(64000);
-	tmp.Set("");
+	tmp.Set("Interval           |   Count  |  Procent |Cumulative\n");
+	tmp.Add("====================================================\n");
 	
 	for (tr=0;tr<Histogram.Len();tr++)
 		sum+=Histogram[tr];
@@ -300,10 +301,10 @@ bool DistancesStatistics::SaveHistogram()
 		
 	proc = 100.0 * (((double)Histogram[0])/sum);		
 	if (isDouble)
-			tmp.AddFormatedEx("Less than %{double,Z2,L9}|%{uint32,R10}|%{double,Z2,R6}%\n",HistogramMinValue,Histogram[0],proc);
+			tmp.AddFormatedEx("Less than %{double,Z2,L9}|%{uint32,R10}|%{double,Z3,R9}%|%{double,Z3,R9}%\n",HistogramMinValue,Histogram[0],proc,proc);
 		else
-			tmp.AddFormatedEx("Less than %{uint32,L9}|%{uint32,R10}|%{double,Z2,R6}%\n",(UInt32)HistogramMinValue,Histogram[0],proc);
-			
+			tmp.AddFormatedEx("Less than %{uint32,L9}|%{uint32,R10}|%{double,Z3,R9}%|%{double,Z3,R9}%\n",(UInt32)HistogramMinValue,Histogram[0],proc,proc);
+	cum = Histogram[0];		
 	for (UInt32 tr=1;(tr<Histogram.Len());tr++)
 	{		
 		i1 = (double)(HistogramMinValue+(double)(tr-1)*HistogramStep);
@@ -311,12 +312,14 @@ bool DistancesStatistics::SaveHistogram()
 			break;
 		i2 = i1+HistogramStep;
 		proc = 100.0 * (((double)Histogram[tr])/sum);
+		cum += Histogram[tr];
+		pCum = 100.0 * (cum / sum);
 		if ((Ignore0ValuesInHistogram) && (Histogram[tr]==0))
 			continue;
 		if (isDouble)
-			tmp.AddFormatedEx("%{double,Z2,R8} - %{double,Z2,R8}|%{uint32,R10}|%{double,Z2,R6}%\n",i1,i2,Histogram[tr],proc);
+			tmp.AddFormatedEx("%{double,Z2,R8} - %{double,Z2,R8}|%{uint32,R10}|%{double,Z3,R9}%|%{double,Z3,R9}%\n",i1,i2,Histogram[tr],proc,pCum);
 		else
-			tmp.AddFormatedEx("%{uint32,R8} - %{uint32,R8}|%{uint32,R10}|%{double,Z2,R6}%\n",(UInt32)i1,(UInt32)i2,Histogram[tr],proc);
+			tmp.AddFormatedEx("%{uint32,R8} - %{uint32,R8}|%{uint32,R10}|%{double,Z3,R9}%|%{double,Z3,R9}%\n",(UInt32)i1,(UInt32)i2,Histogram[tr],proc,pCum);
 		if (tmp.Len()>60000)
 		{
 			if (f.Write(tmp.GetText(),tmp.Len())==false)
@@ -330,10 +333,11 @@ bool DistancesStatistics::SaveHistogram()
 		}		
 	}
 	proc = 100.0 * (((double)Histogram[Histogram.Len()-1])/sum);	
+	pCum = 100.0;
 	if (isDouble)
-			tmp.AddFormatedEx("Bigger than %{double,Z2,L7}|%{uint32,R10}|%{double,Z2,R6}%\n",HistogramMinValue,Histogram[Histogram.Len()-1],proc);
+			tmp.AddFormatedEx("Bigger than %{double,Z2,L7}|%{uint32,R10}|%{double,Z3,R9}%|%{double,Z3,R9}%\n",HistogramMinValue,Histogram[Histogram.Len()-1],proc,pCum);
 		else
-			tmp.AddFormatedEx("Bigger than %{uint32,L7}|%{uint32,R10}|%{double,Z2,R6}%\n",(UInt32)HistogramMinValue,Histogram[Histogram.Len()-1],proc);	
+			tmp.AddFormatedEx("Bigger than %{uint32,L7}|%{uint32,R10}|%{double,Z3,R9}%|%{double,Z3,R9}%\n",(UInt32)HistogramMinValue,Histogram[Histogram.Len()-1],proc,pCum);	
 	if (f.Write(tmp.GetText(),tmp.Len())==false)
 	{
 		notif->Error("[%s] -> Unable to write to result file: %s",ObjectName,ResultFile.GetText());
