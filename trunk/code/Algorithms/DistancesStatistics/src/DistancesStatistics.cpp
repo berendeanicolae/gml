@@ -12,7 +12,7 @@ DistancesStatistics::DistancesStatistics()
 	LinkPropertyToDouble("HistogramStep",HistogramStep,1.0,"Step in Histogram (must be bigger than 0.0)");
 	LinkPropertyToString("ResultFile",ResultFile,"","Name of the where the results will be written");
 	LinkPropertyToBool  ("UseWeightsForFeatures",UseWeightsForFeatures,false,"Specifyes if weights for features should be used.");
-	LinkPropertyToUInt32("Method",Method,0,"!!LIST:PositiveToNegative=0,PositiveToPositive,NegativeToPositive,NegativeToNegative,All!!");
+	LinkPropertyToUInt32("Method",Method,0,"!!LIST:PositiveToNegative=0,PositiveToPositive,NegativeToPositive,NegativeToNegative,MinPositiveToNegative,MinPositiveToPositive,MinNegativeToPositive,MinNegativeToNegative!!");
 	LinkPropertyToString("FeaturesWeightFile",FeaturesWeightFile,"","Name of the file that contains the weights for features!");
 	LinkPropertyToBool  ("Ignore0ValuesInHistogram",Ignore0ValuesInHistogram,true,"If set , 0 values in histogram will not be saved in the result file");
 	AddDistanceProperties();
@@ -46,6 +46,10 @@ bool DistancesStatistics::Init()
 		case METHOD_PositiveToPositive:
 		case METHOD_NegativeToPositive:
 		case METHOD_NegativeToNegative:
+		case METHOD_MinPositiveToNegative:
+		case METHOD_MinPositiveToPositive:
+		case METHOD_MinNegativeToPositive:
+		case METHOD_MinNegativeToNegative:		
 			if (CreatePozitiveAndNegativeIndexes()==false)
 				return false;
 			break;
@@ -159,6 +163,56 @@ bool DistancesStatistics::ComputeHistogram(GML::Algorithm::MLThreadData &thData,
 	return true;
 }
 
+bool DistancesStatistics::ComputeHistogramMin(GML::Algorithm::MLThreadData &thData,GML::Utils::Indexes &class1,GML::Utils::Indexes &class2)
+{
+	UInt32								tr,gr,featuresCount,class1Count,class2Count,idxPoz,idxNeg,histoIndex;
+	DistancesStatisticsThreadData*		dt = (DistancesStatisticsThreadData *)thData.Context;
+	double								dist,minDist;	
+	
+
+	featuresCount = con->GetFeatureCount();
+	class1Count = class1.Len();
+	class2Count = class2.Len();
+	
+	for (tr=0;tr<dt->Histogram.Len();tr++)
+		dt->Histogram[tr]=0;
+		
+	if (thData.ThreadID==0)
+		notif->StartProcent("[%s] -> Computing ... ",ObjectName);
+	for (tr=thData.ThreadID;tr<class1Count;tr+=threadsCount)
+	{
+		idxPoz = class1.Get(tr);
+		if (con->GetRecord(thData.Record,idxPoz)==false)
+		{
+			notif->Error("[%s] -> Unable to read record #%d",ObjectName,idxPoz);
+			return false;
+		}
+		for (gr=0;gr<class2Count;gr++)
+		{
+			idxNeg = class2.Get(gr);
+			if (con->GetRecord(dt->SecRec,idxNeg)==false)
+			{
+				notif->Error("[%s] -> Unable to read record #%d",ObjectName,idxNeg);
+				return false;
+			}
+			dist = GetDistance(thData.Record,dt->SecRec);
+			if (gr==0) {
+				minDist = dist;
+			} else {
+				if (dist<minDist)
+					minDist = dist;
+			}
+		}
+		histoIndex = ValueToHistogramIndex(minDist);
+		dt->Histogram[histoIndex]++;		
+		if (thData.ThreadID==0)
+			notif->SetProcent(tr,class1Count);
+	}
+	if (thData.ThreadID==0)
+		notif->EndProcent();
+	return true;
+}
+
 bool DistancesStatistics::LoadFeatureWeightFile()
 {
 	GML::Utils::AttributeList	attrList;
@@ -259,6 +313,18 @@ void DistancesStatistics::OnRunThreadCommand(GML::Algorithm::MLThreadData &thDat
 			ComputeHistogram(thData,indexesNegative,indexesNegative);
 			break;
 			
+		case THREAD_COMMAND_COMPUTE_MinPositiveToNegative:
+			ComputeHistogramMin(thData,indexesPozitive,indexesNegative);
+			break;
+		case THREAD_COMMAND_COMPUTE_MinPositiveToPositive:
+			ComputeHistogramMin(thData,indexesPozitive,indexesPozitive);
+			break;
+		case THREAD_COMMAND_COMPUTE_MinNegativeToPositive:
+			ComputeHistogramMin(thData,indexesNegative,indexesPozitive);
+			break;
+		case THREAD_COMMAND_COMPUTE_MinNegativeToNegative:
+			ComputeHistogramMin(thData,indexesNegative,indexesNegative);
+			break;			
 		// add extra thread command processes here
 	};
 }
@@ -370,6 +436,27 @@ void DistancesStatistics::Compute()
 			break;
 		case METHOD_NegativeToNegative:
 			ExecuteParalelCommand(THREAD_COMMAND_COMPUTE_NegativeToNegative);
+			MergeThreadHistograms();
+			SaveHistogram();
+			break;	
+
+		case METHOD_MinPositiveToNegative:
+			ExecuteParalelCommand(THREAD_COMMAND_COMPUTE_MinPositiveToNegative);
+			MergeThreadHistograms();
+			SaveHistogram();
+			break;
+		case METHOD_MinPositiveToPositive:
+			ExecuteParalelCommand(THREAD_COMMAND_COMPUTE_MinPositiveToPositive);
+			MergeThreadHistograms();
+			SaveHistogram();
+			break;
+		case METHOD_MinNegativeToPositive:
+			ExecuteParalelCommand(THREAD_COMMAND_COMPUTE_MinNegativeToPositive);
+			MergeThreadHistograms();
+			SaveHistogram();
+			break;
+		case METHOD_MinNegativeToNegative:
+			ExecuteParalelCommand(THREAD_COMMAND_COMPUTE_MinNegativeToNegative);
 			MergeThreadHistograms();
 			SaveHistogram();
 			break;			
