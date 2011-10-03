@@ -401,9 +401,9 @@ bool DistancesStatistics::SaveHistogram()
 	proc = 100.0 * (((double)Histogram[Histogram.Len()-1])/sum);	
 	pCum = 100.0;
 	if (isDouble)
-			tmp.AddFormatedEx("Bigger than %{double,Z2,L7}|%{uint32,R10}|%{double,Z3,R9}%|%{double,Z3,R9}%\n",HistogramMinValue,Histogram[Histogram.Len()-1],proc,pCum);
+			tmp.AddFormatedEx("Bigger than %{double,Z2,L7}|%{uint32,R10}|%{double,Z3,R9}%|%{double,Z3,R9}%\n",HistogramMaxValue,Histogram[Histogram.Len()-1],proc,pCum);
 		else
-			tmp.AddFormatedEx("Bigger than %{uint32,L7}|%{uint32,R10}|%{double,Z3,R9}%|%{double,Z3,R9}%\n",(UInt32)HistogramMinValue,Histogram[Histogram.Len()-1],proc,pCum);	
+			tmp.AddFormatedEx("Bigger than %{uint32,L7}|%{uint32,R10}|%{double,Z3,R9}%|%{double,Z3,R9}%\n",(UInt32)HistogramMaxValue,Histogram[Histogram.Len()-1],proc,pCum);	
 	if (f.Write(tmp.GetText(),tmp.Len())==false)
 	{
 		notif->Error("[%s] -> Unable to write to result file: %s",ObjectName,ResultFile.GetText());
