@@ -1,0 +1,3 @@
+sources = LabelFilterConnector.cpp
+gmlplugin = yes
+libname = LabelFilterConnector
