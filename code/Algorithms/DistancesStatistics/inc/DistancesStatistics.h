@@ -21,13 +21,20 @@ class DistancesStatistics: public GML::Algorithm::IMLAlgorithm
 		THREAD_COMMAND_COMPUTE_PositiveToPositive,
 		THREAD_COMMAND_COMPUTE_NegativeToPositive,
 		THREAD_COMMAND_COMPUTE_NegativeToNegative,
+		THREAD_COMMAND_COMPUTE_MinPositiveToNegative,
+		THREAD_COMMAND_COMPUTE_MinPositiveToPositive,
+		THREAD_COMMAND_COMPUTE_MinNegativeToPositive,
+		THREAD_COMMAND_COMPUTE_MinNegativeToNegative,		
 	};
 	enum {
 		METHOD_PositiveToNegative = 0,
 		METHOD_PositiveToPositive,
 		METHOD_NegativeToPositive,
 		METHOD_NegativeToNegative,
-		METHOD_All,
+		METHOD_MinPositiveToNegative,
+		METHOD_MinPositiveToPositive,
+		METHOD_MinNegativeToPositive,
+		METHOD_MinNegativeToNegative,
 	};
 	GML::ML::MLRecord					MainRecord;
 	GML::Utils::GTFVector<UInt32>		Histogram;
@@ -48,6 +55,7 @@ class DistancesStatistics: public GML::Algorithm::IMLAlgorithm
 	UInt32								ValueToHistogramIndex(double value);
 	bool								CreateHistogram(GML::Utils::GTFVector<UInt32> &histoObject,bool showFinalMessage);
 	bool 								ComputeHistogram(GML::Algorithm::MLThreadData &thData,GML::Utils::Indexes &class1,GML::Utils::Indexes &class2);
+	bool 								ComputeHistogramMin(GML::Algorithm::MLThreadData &thData,GML::Utils::Indexes &class1,GML::Utils::Indexes &class2);
 	void								MergeThreadHistograms();
 	bool								SaveHistogram();
 	void								Compute();
