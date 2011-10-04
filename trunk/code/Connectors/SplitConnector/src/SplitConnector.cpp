@@ -38,10 +38,10 @@ bool   SplitConnector::CreateIndexList()
 			Start = conector->GetRecordCount();
 		count = (conector->GetRecordCount()-Start) + End;
 	}
-	notifier->Info("[%s] Allocing %d records ",ObjectName,nrRecords);
+	notifier->Info("[%s] Allocing %d records ",ObjectName,count);
 	if (Indexes.Create(count)==false)	
 	{
-		notifier->Error("[%s] Unable to alloc %d indexes ",ObjectName,nrRecords);
+		notifier->Error("[%s] Unable to alloc %d indexes ",ObjectName,count);
 		return false;
 	}
 	return true;
@@ -61,7 +61,7 @@ bool   SplitConnector::AddIndexes()
 			return false;
 		}
 		cPoz++;
-		if (cPoz==recCount)
+		if ((cPoz==recCount) && (cPoz!=End))
 			cPoz=0;
 	}
 	return true;
