@@ -651,7 +651,7 @@ bool GML::ML::IConnector::OpeanCacheFile(char *fileName,char *sigName,CacheHeade
 			notifier->Error("[%s] -> Header should be at least %d bytes!",ObjectName,sizeof(CacheHeader));
 		return false;
 	}
-	if (file.OpenRead(fileName)==false)
+	if (file.OpenRead(fileName,true)==false)
 	{
 		if (notifier)
 			notifier->Error("[%s] -> Unable to open : %s",ObjectName,fileName);
