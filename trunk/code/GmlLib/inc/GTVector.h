@@ -58,7 +58,7 @@ namespace GML
 			bool						Delete(Int32 index);
 			bool						DeleteAll();
 	
-			//------ Info --------------------------------------------------------------------------
+			//------ Info ----------------------------------------------------------------------------
 			bool						Exists();
 			UInt32						GetCount();
 			UInt32						Len();
@@ -66,14 +66,14 @@ namespace GML
 			//------ Operatori -----------------------------------------------------------------------
 			GTVector<TemplateObject>&	operator= (GTVector<TemplateObject> &vector);
 
-			//------ FOREACH --------------------------------------------------------------------------
+			//------ FOREACH -------------------------------------------------------------------------
 			//void						__ForEachInit(FOREACH_DATA<TemplateObject> &fd);
 			//void						__ForEachClose(FOREACH_DATA<TemplateObject> &fd);
 			//bool						__ForEachNext(FOREACH_DATA<TemplateObject> &fd);
 			//void						__ForEachGet(FOREACH_DATA *fd,int index,void *variable);
 
 	
-			//------ Sort --------------------------------------------------------------------------
+			//------ Sort ----------------------------------------------------------------------------
 			void						SetCompareFunction(Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2));
 			void						Sort(bool ascendent=true,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2,void *context)=NULL,void *context=NULL);			
 			bool						BinarySearch(TemplateObject &Element,Int32 *left_location=NULL,Int32 *right_location=NULL,Int32 (*compFunction)(TemplateObject &element1,TemplateObject &element2,void *context)=NULL,void *context=NULL);

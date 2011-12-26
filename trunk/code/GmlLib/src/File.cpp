@@ -96,6 +96,20 @@ bool GML::Utils::File::SetFilePos(UInt64 pos)
 #endif
 	return false;
 }
+void GML::Utils::File::Resize(UInt64 newSize)
+{
+#ifdef OS_WINDOWS
+	if (hFile!=INVALID_HANDLE_VALUE)
+	{
+		if (SetFilePos(newSize)==false)
+			return false;
+		if (SetEndOfFile(hFile)==FALSE)
+			return false;
+		return true;
+	}
+#endif
+	return false;
+}
 bool GML::Utils::File::Read(void *Buffer,UInt64 size,UInt64 *readSize)
 {
 #ifdef OS_WINDOWS
