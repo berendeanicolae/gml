@@ -150,6 +150,12 @@ bool GML::Utils::File::Read(void *Buffer,UInt64 size,UInt64 *readSize)
 #endif
 	return false;
 }
+bool GML::Utils::File::Read(UInt64 pos,void *Buffer,UInt64 size,UInt64 *readSize)
+{
+	if (SetFilePos(pos)==false)
+		return false;
+	return Read(Buffer,size,readSize);
+}
 bool GML::Utils::File::Write(void *Buffer,UInt64 size,UInt64 *writeSize)
 {
 #ifdef OS_WINDOWS
@@ -182,6 +188,12 @@ bool GML::Utils::File::Write(void *Buffer,UInt64 size,UInt64 *writeSize)
 	return true;
 #endif
 	return false;
+}
+bool GML::Utils::File::Write(UInt64 pos,void *Buffer,UInt64 size,UInt64 *writeSize)
+{
+	if (SetFilePos(pos)==false)
+		return false;
+	return Write(Buffer,size,writeSize);
 }
 bool GML::Utils::File::ReadNextLine(GString &line,bool skipEmpyLines)
 {
