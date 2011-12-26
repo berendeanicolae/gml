@@ -96,7 +96,7 @@ bool GML::Utils::File::SetFilePos(UInt64 pos)
 #endif
 	return false;
 }
-void GML::Utils::File::Resize(UInt64 newSize)
+bool GML::Utils::File::Resize(UInt64 newSize)
 {
 #ifdef OS_WINDOWS
 	if (hFile!=INVALID_HANDLE_VALUE)
@@ -107,6 +107,13 @@ void GML::Utils::File::Resize(UInt64 newSize)
 			return false;
 		return true;
 	}
+#endif
+	return false;
+}
+bool GML::Utils::File::IsOpened()
+{
+#ifdef OS_WINDOWS
+	return (hFile!=INVALID_HANDLE_VALUE);
 #endif
 	return false;
 }
