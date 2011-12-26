@@ -18,6 +18,7 @@ namespace GML
 			bool			OpenRead(char *name,bool share=false);
 			bool			OpenReadWrite(char *name,bool append=false,bool share=false);
 			void			Close();
+			bool			Resize(UInt64 newSize);
 			UInt64			GetFileSize();
 			bool			GetFilePos(UInt64 &pos);
 			bool			SetFilePos(UInt64 pos);
