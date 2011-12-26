@@ -6,11 +6,16 @@ IndexBitConnector::IndexBitConnector()
 {
 	Data = NULL;
 	Indexes = NULL;
+	CacheStart = CacheEnd = INVALID_CACHE_INDEX;
+	
+	CacheMemory = 0;
 	ObjectName = "IndexBitConnector";
 
 	AddTwoClassLabelProperties();
 	AddCacheProperties();
 	AddStoreProperties();
+	
+	LinkPropertyToUInt32("CacheMemorySize",CacheMemory,0,"Memory allocated to cache the records.\nIf 0 all the records will be loaded in memory.\nWorks only if the records are loaded from a cache!");
 }
 
 bool	IndexBitConnector::AllocMemory(UInt64 memory)
@@ -242,6 +247,7 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 			return false;
 	}
 	// all ok , am incarcat datele
+	CacheMemory = 0; // ca sa nu am probleme la GetRecord
 	dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
 	conector->FreeMLRecord(cRec);
 	return true;
@@ -350,6 +356,7 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 			return false;
 	}
 	// all ok , am incarcat datele
+	CacheMemory = 0; // ca sa nu am probleme la GetRecord
 	dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
 	return true;
 }
@@ -360,6 +367,8 @@ bool	IndexBitConnector::Close()
 		delete Data;
 	if (Indexes!=NULL)
 		delete Indexes;
+	if ((CacheMemory>0) && (file.IsOpened()))
+		file.Close();
 	Data = NULL;
 	Indexes = NULL;
 	return true;
@@ -407,13 +416,25 @@ bool	IndexBitConnector::Load(char *fileName)
 		MemToAlloc = h.MemToAlloc;
 		Method = h.Flags; 
 	
-		if (AllocMemory(h.MemToAlloc)==false)
+		if (CacheMemory!=0)
 		{
-			notifier->Error("[%s] -> Unable to allocate space for cache initialization",ObjectName);
-			break;
+			if (AllocMemory(CacheMemory)==false)
+			{
+				notifier->Error("[%s] -> Unable to allocate space for cache memory (%d)",ObjectName,CacheMemory);
+				break;
+			}
+			if (file.SetFilePos((UInt64)sizeof(h)+(UInt64)MemToAlloc)==false)
+				break;
+			CacheStart = CacheEnd = INVALID_CACHE_INDEX;
+		} else {
+			if (AllocMemory(h.MemToAlloc)==false)
+			{
+				notifier->Error("[%s] -> Unable to allocate space for cache initialization",ObjectName);
+				break;
+			}
+			if (file.Read(Data,MemToAlloc)==false)
+				break;
 		}
-		if (file.Read(Data,MemToAlloc)==false)
-			break;
 		if (file.Read(Indexes,sizeof(UInt64)*((UInt64)nrRecords))==false)
 			break;
 		if (file.Read(Labels.GetData(),Labels.GetAllocated())==false)
@@ -421,7 +442,17 @@ bool	IndexBitConnector::Load(char *fileName)
 		if (LoadRecordHashesAndFeatureNames(&h)==false)
 			break;
 		CloseCacheFile();
-		dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
+		if (CacheMemory!=0)
+		{
+			dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + CacheMemory+Labels.GetAllocated();
+			if (file.OpenRead(fileName)==false)
+			{
+				notifier->Error("[%s] -> Unable to open '%s' for cache reading ...",ObjectName,fileName);
+				return false;
+			}
+		} else {
+			dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
+		}		
 		return true;		
 	}
 	ClearColumnIndexes();
@@ -435,21 +466,58 @@ bool	IndexBitConnector::CreateMlRecord (GML::ML::MLRecord &record)
 	record.FeatCount = columns.nrFeatures;	
 	return ((record.Features = new double[columns.nrFeatures])!=NULL);
 }
+bool	IndexBitConnector::UpdateCacheMemory(UInt64 start,UInt64 szBuffer)
+{
+	UInt64	sz = 0;
+	
+	while (true)
+	{
+		if (start>MemToAlloc)
+			break;
+		sz = CacheMemory;
+		if (start+sz>MemToAlloc)
+			sz = MemToAlloc-start;
+		if (sz<szBuffer)
+			break;
+		if (file.Read(start+sizeof(IndexBitConnectorHeader),Data,sz)==false)
+			break;
+		CacheStart = start;
+		CacheEnd = start+sz;
+		return true;
+	}
+	CacheStart = CacheEnd = INVALID_CACHE_INDEX;
+	notifier->Error("[%s] -> Unable to update cache ...",ObjectName);
+	return false;
+}
 bool	IndexBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask)
 {
 	UInt8	*cPoz,*end;
 	UInt32	indexFeat;
-	UInt64	sz;
+	UInt64	sz,iPoz;
 
 	if (index>=nrRecords)
 		return false;
-	cPoz = &Data[Indexes[index]];
 	if (index+1==nrRecords)
 	{
 		sz = MemToAlloc -Indexes[index];
 	} else {
 		sz = Indexes[index+1]-Indexes[index];
+	}		
+		
+	if (CacheMemory==0)
+	{
+		cPoz = &Data[Indexes[index]];
+	} else {
+		// verific daca e in cache, updatez
+		iPoz = Indexes[index];
+		if ((iPoz<CacheStart) || (iPoz+sz>=CacheEnd))
+		{
+			if (UpdateCacheMemory(iPoz,sz)==false)
+				return false;			
+		}
+		cPoz = &Data[iPoz-CacheStart];
 	}
+
 	end = cPoz+sz;
 	memset(record.Features,0,sizeof(double)*columns.nrFeatures);
 	while (cPoz<end)

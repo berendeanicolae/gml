@@ -1,5 +1,6 @@
 #include "gmllib.h"
 
+#define INVALID_CACHE_INDEX	0xFFFFFFFFFFFFFFFF
 struct IndexBitCounter
 {
 	UInt32		countInt8;
@@ -27,6 +28,8 @@ class IndexBitConnector: public GML::ML::IConnector
 	};
 	UInt32				Method;
 	UInt64				MemToAlloc;
+	UInt32				CacheMemory;
+	UInt64				CacheStart,CacheEnd;
 	UInt8				*Data;	
 	UInt64				*Indexes;	
 	GML::Utils::BitSet	Labels;
@@ -37,6 +40,7 @@ class IndexBitConnector: public GML::ML::IConnector
 	bool				OnInitConnectionToDataBase();
 	bool				OnInitConnectionToConnector();
 	bool				AllocMemory(UInt64 memory);
+	bool				UpdateCacheMemory(UInt64 start,UInt64 szBuffer);
 public:
 	IndexBitConnector();
 
