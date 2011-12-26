@@ -418,6 +418,7 @@ bool	IndexBitConnector::Load(char *fileName)
 	
 		if (CacheMemory!=0)
 		{
+			notifier->Info("[%s] -> Using %d bytes for cache",ObjectName,CacheMemory);
 			if (AllocMemory(CacheMemory)==false)
 			{
 				notifier->Error("[%s] -> Unable to allocate space for cache memory (%d)",ObjectName,CacheMemory);
@@ -471,7 +472,7 @@ bool	IndexBitConnector::UpdateCacheMemory(UInt64 start,UInt64 szBuffer)
 	UInt64	sz = 0;
 	
 	while (true)
-	{
+	{		
 		if (start>MemToAlloc)
 			break;
 		sz = CacheMemory;
@@ -479,6 +480,7 @@ bool	IndexBitConnector::UpdateCacheMemory(UInt64 start,UInt64 szBuffer)
 			sz = MemToAlloc-start;
 		if (sz<szBuffer)
 			break;
+		//notifier->Info("[%s] -> Updateing cache : [%d-%d]",ObjectName,(int)start,(int)(start+sz));
 		if (file.Read(start+sizeof(IndexBitConnectorHeader),Data,sz)==false)
 			break;
 		CacheStart = start;
