@@ -3,13 +3,13 @@
 #define INVALID_CACHE_INDEX	0xFFFFFFFFFFFFFFFF
 struct IndexBitCounter
 {
-	UInt32		countInt8;
-	UInt32		countInt16;
-	UInt32		countInt32;
-	UInt32		count254BaseInt8;
-	UInt32		count254BaseInt16;
-	UInt32		count253BaseInt8;
-	UInt32		count253BaseInt16;	
+	UInt64		countInt8;
+	UInt64		countInt16;
+	UInt64		countInt32;
+	UInt64		count254BaseInt8;
+	UInt64		count254BaseInt16;
+	UInt64		count253BaseInt8;
+	UInt64		count253BaseInt16;	
 	UInt32		maxIndex;
 };
 struct IndexBitConnectorHeader: public GML::ML::CacheHeader
