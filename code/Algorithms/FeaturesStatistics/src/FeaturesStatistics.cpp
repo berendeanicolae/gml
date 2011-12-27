@@ -400,11 +400,16 @@ bool FeaturesStatistics::Init()
 }
 void FeaturesStatistics::OnRunThreadCommand(FeaturesThreadData &ftd,UInt32 command)
 {
-	UInt32	tr,gr,count,dif;
+	UInt32	tr,gr,count,dif,size,index;
 
 	count = con->GetFeatureCount();
-	// citesc datele asociate range-ului	
-	for (tr=ftd.Range.Start;(tr<ftd.Range.End) && (StopAlgorithm==false);tr++)
+	// citesc datele asociate range-ului
+	
+	size = ftd.Range.End-ftd.Range.Start;
+	
+	if (ftd.Range.Start==0)
+		notif->StartProcent("[%s] -> Computing ... ",ObjectName);	
+	for (tr=ftd.Range.Start,index=0;(tr<ftd.Range.End) && (StopAlgorithm==false);tr++,index++)
 	{
 		if (con->GetRecord(ftd.Record,tr)==false)
 		{
@@ -423,7 +428,12 @@ void FeaturesStatistics::OnRunThreadCommand(FeaturesThreadData &ftd,UInt32 comma
 				else
 					ftd.FI[gr].NegativeCount++;
 			}
+		if ((ftd.Range.Start==0) && ((index % 1000)==0))
+			notif->SetProcent(index,size);
 	}
+	if (ftd.Range.Start==0)
+		notif->EndProcent();	
+	
 }
 bool FeaturesStatistics::CreateHeaders(GML::Utils::GString &str)
 {
