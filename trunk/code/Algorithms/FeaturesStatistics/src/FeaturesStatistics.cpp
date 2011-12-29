@@ -321,16 +321,16 @@ double GetJointBooleanEntropy(FeaturesInformations *f)
     if (sum < 1) sum = 1;
     
     prob = (double)f->FPosLPos / (double)sum;
-    ret_val -= prob * log(prob);		
+    if (prob) ret_val -= prob * log(prob);		
 
     prob = (double)f->FPosLNeg / (double)sum;
-    ret_val -= prob * log(prob);		
+    if (prob) ret_val -= prob * log(prob);		
 
     prob = (double)f->FNegLPos / (double)sum;
-    ret_val -= prob * log(prob);		
+    if (prob)ret_val -= prob * log(prob);		
 
     prob = (double)f->FNegLNeg / (double)sum;
-    ret_val -= prob * log(prob);		
+    if (prob)ret_val -= prob * log(prob);		
 
     return ret_val;
 }
