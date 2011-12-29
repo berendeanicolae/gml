@@ -15,6 +15,7 @@ namespace GML
 			GML::DB::RecordHash	Hash;	
 			double				Label;
 			MLRecord*			Parent;
+			void*				ThreadData;
 		};
 	}
 }
