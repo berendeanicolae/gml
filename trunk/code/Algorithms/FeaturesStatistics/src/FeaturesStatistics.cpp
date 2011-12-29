@@ -309,27 +309,27 @@ double GetBooleanEntropy(double pos_count, double neg_count)
     return ret_val;
 }
 
-double GetJointBooleanEntropy(FeaturesInformations *f)
+double GetJointBooleanEntropy(double lposfpos,double  lposfneg,double  lnegfpos,double  lnegfneg)
 {
     double prob, ret_val = 0.0, sum = 0.0;
 
-    sum += f->FPosLPos;
-    sum += f->FPosLNeg;
-    sum += f->FNegLPos;
-    sum += f->FNegLNeg;
+    sum += lposfpos;
+    sum += lposfneg;
+    sum += lnegfpos;
+    sum += lnegfneg;
 
     if (sum < 1) sum = 1;
     
-    prob = (double)f->FPosLPos / (double)sum;
+    prob = (double)lposfpos / (double)sum;
     if (prob) ret_val -= prob * log(prob);		
 
-    prob = (double)f->FPosLNeg / (double)sum;
+    prob = (double)lposfneg / (double)sum;
     if (prob) ret_val -= prob * log(prob);		
 
-    prob = (double)f->FNegLPos / (double)sum;
+    prob = (double)lnegfpos / (double)sum;
     if (prob)ret_val -= prob * log(prob);		
 
-    prob = (double)f->FNegLNeg / (double)sum;
+    prob = (double)lnegfneg / (double)sum;
     if (prob)ret_val -= prob * log(prob);		
 
     return ret_val;
@@ -338,9 +338,15 @@ double GetJointBooleanEntropy(FeaturesInformations *f)
 double Compute_AsymetricUncertainty(FeaturesInformations *f) 
 {
     double feature_entropy, label_entropy, joint_entropy, ret_val;
-    feature_entropy = GetBooleanEntropy(f->countPozitive, f->countNegative);
+    
+    double lposfpos = f->countPozitive;
+    double lposfneg = f->totalPozitive - f->countPozitive;
+    double lnegfpos = f->countNegative;
+    double lnegfneg = f->totalNegative - f->countNegative;
+
+    feature_entropy = GetBooleanEntropy(f->countPozitive+f->countNegative, f->totalNegative+f->totalPozitive);
     label_entropy   = GetBooleanEntropy(f->totalPozitive, f->totalNegative);
-    joint_entropy   = GetJointBooleanEntropy(f);
+    joint_entropy   = GetJointBooleanEntropy(lposfpos, lposfneg, lnegfpos, lnegfneg);
 
     ret_val = feature_entropy + label_entropy;
     if (ret_val < 1e-10) ret_val = 1e-10;
@@ -442,11 +448,6 @@ bool FeaturesStatistics::CreateFeaturesInfo(FeaturesThreadData *fInfo)
 	{
 		fInfo->FI[tr].NegativeCount = 0;
 		fInfo->FI[tr].PozitiveCount = 0;
-
-        fInfo->FI[tr].FPosLPos = 0;
-        fInfo->FI[tr].FPosLNeg = 0;
-        fInfo->FI[tr].FNegLPos = 0;
-        fInfo->FI[tr].FNegLNeg = 0;
 	}
 	fInfo->totalNegative = 0;
 	fInfo->totalPozitive = 0;
@@ -521,20 +522,11 @@ void FeaturesStatistics::OnRunThreadCommand(FeaturesThreadData &ftd,UInt32 comma
 			ftd.totalNegative++;
 		for (gr=0;(gr<count) && (StopAlgorithm==false);gr++)
 			if (ftd.Record.Features[gr]!=0)
-			{
-				if (ftd.Record.Label==1) {
+            {
+				if (ftd.Record.Label==1)
 					ftd.FI[gr].PozitiveCount++;
-                    ftd.FI[gr].FPosLPos++;
-                }
-				else {
+      			else 
 					ftd.FI[gr].NegativeCount++;
-                    ftd.FI[gr].FPosLNeg++;
-                }
-			} else {
-                if (ftd.Record.Label==1) 
-                    ftd.FI[gr].FNegLPos++;
-                else
-                    ftd.FI[gr].FNegLNeg++;
             }
 		if ((ftd.Range.Start==0) && ((index % 1000)==0))
 			notif->SetProcent(index,size);
@@ -840,11 +832,6 @@ bool FeaturesStatistics::Compute()
 		{
 			All.FI[gr].PozitiveCount+=fData[tr].FI[gr].PozitiveCount;
 			All.FI[gr].NegativeCount+=fData[tr].FI[gr].NegativeCount;
-
-            All.FI[gr].FPosLPos += fData[tr].FI[gr].FPosLPos;
-            All.FI[gr].FPosLNeg += fData[tr].FI[gr].FPosLNeg;
-            All.FI[gr].FNegLPos += fData[tr].FI[gr].FNegLPos;
-            All.FI[gr].FNegLNeg += fData[tr].FI[gr].FNegLNeg;
 		}
 		All.totalNegative+=fData[tr].totalNegative;
 		All.totalPozitive+=fData[tr].totalPozitive;
@@ -856,11 +843,6 @@ bool FeaturesStatistics::Compute()
 		info.Index = tr;
 		info.totalPozitive = All.totalPozitive;
 		info.totalNegative = All.totalNegative;
-
-        info.FPosLPos = All.FI[tr].FPosLPos;
-        info.FPosLNeg = All.FI[tr].FPosLNeg;
-        info.FNegLPos = All.FI[tr].FNegLPos;
-        info.FNegLNeg = All.FI[tr].FNegLNeg;
 
 		info.countNegative = All.FI[tr].NegativeCount;
 		info.countPozitive = All.FI[tr].PozitiveCount;
