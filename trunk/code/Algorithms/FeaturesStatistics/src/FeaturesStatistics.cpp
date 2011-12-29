@@ -100,6 +100,18 @@ double Compute_ProcDiff(FeaturesInformations *f)
 {
 	return ((f->countPozitive*100)/f->totalPozitive)-((f->countNegative*100)/f->totalNegative);
 }
+double Compute_ProcAverage(FeaturesInformations *f)
+{
+	if ((f->totalNegative==0) || (f->totalPozitive==0))
+		return 0;		
+	return (((f->countPozitive*100)/f->totalPozitive)+((f->countNegative*100)/f->totalNegative))/2;
+}
+double Compute_ProcTotal(FeaturesInformations *f)
+{
+	if ((f->totalNegative+f->totalPozitive)==0)
+		return 0;		
+	return ((f->countPozitive+f->countNegative)*100)/(f->totalNegative+f->totalPozitive);	
+}
 double Compute_AbsProcDiff(FeaturesInformations *f)
 {
 	if ((f->countPozitive==0) && (f->countNegative==0))
@@ -382,6 +394,8 @@ FeaturesStatistics::FeaturesStatistics()
 
 	AddNewStatFunction("PozProc",Compute_ProcPozitive);
 	AddNewStatFunction("NegProc",Compute_ProcNegative);
+	AddNewStatFunction("ProcAverage",Compute_ProcAverage);
+	AddNewStatFunction("ProcTotal",Compute_ProcTotal);
 
 	AddNewStatFunction("Poz/Neg",Compute_RapPozNeg);
 	AddNewStatFunction("ProcDiff",Compute_ProcDiff);
