@@ -257,6 +257,18 @@ double Compute_ProbNeg(FeaturesInformations *f)
 	double prob_cln = f->countNegative/f->totalNegative;
 	return prob_cln*(1-prob_mal);
 }
+double Compute_MedianClosenest(FeaturesInformations *f)
+{
+	if ((f->totalPozitive==0) || (f->totalNegative==0))
+		return 0;
+	double prob_mal = f->countPozitive/f->totalPozitive-0.5;
+	double prob_cln = f->countNegative/f->totalNegative-0.5;
+	if (prob_mal<0)
+		prob_mal = -prob_mal;
+	if (prob_cln<0)
+		prob_cln = -prob_cln;
+	return ((1-prob_mal)+(1-prob_cln))/2;
+}
 //====================================================================================================
 
 FeaturesStatistics::FeaturesStatistics()
@@ -304,6 +316,7 @@ FeaturesStatistics::FeaturesStatistics()
 	AddNewStatFunction("GProc",Compute_GProc);
 	AddNewStatFunction("ProbPoz",Compute_ProbPoz);
 	AddNewStatFunction("ProbNeg",Compute_ProbNeg);
+	AddNewStatFunction("MedianClose",Compute_MedianClosenest);
 
 	SortProps.Set("!!LIST:NoSort=0xFFFF");
 	WeightFileType.Set("!!LIST:None=0xFFFF");
