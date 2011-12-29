@@ -16,6 +16,13 @@ struct IndexBitConnectorHeader: public GML::ML::CacheHeader
 {
 	UInt64		MemToAlloc;
 };
+struct IndexBitConnectorThreadCacheData
+{
+	GML::Utils::File	CacheFile;
+	UInt64				CacheStart,CacheEnd;
+	UInt8				Data[1];
+	
+};
 class IndexBitConnector: public GML::ML::IConnector
 {
 	enum
@@ -28,11 +35,12 @@ class IndexBitConnector: public GML::ML::IConnector
 	};
 	UInt32				Method;
 	UInt64				MemToAlloc;
-	UInt32				CacheMemory;
-	UInt64				CacheStart,CacheEnd;
+	UInt32				CacheMemory;	
 	UInt8				*Data;	
 	UInt64				*Indexes;	
 	GML::Utils::BitSet	Labels;
+	
+	GML::Utils::GString	CacheFileName;
 
 	void				Update(IndexBitCounter &ibt,UInt32 index);
 	void				ComputeMemory(IndexBitCounter &ibt,UInt64 &memory);
@@ -40,7 +48,7 @@ class IndexBitConnector: public GML::ML::IConnector
 	bool				OnInitConnectionToDataBase();
 	bool				OnInitConnectionToConnector();
 	bool				AllocMemory(UInt64 memory);
-	bool				UpdateCacheMemory(UInt64 start,UInt64 szBuffer);
+	bool				UpdateCacheMemory(IndexBitConnectorThreadCacheData &ibthData,UInt64 start,UInt64 szBuffer);
 public:
 	IndexBitConnector();
 

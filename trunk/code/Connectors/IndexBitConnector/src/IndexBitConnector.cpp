@@ -6,7 +6,7 @@ IndexBitConnector::IndexBitConnector()
 {
 	Data = NULL;
 	Indexes = NULL;
-	CacheStart = CacheEnd = INVALID_CACHE_INDEX;
+	
 	
 	CacheMemory = 0;
 	ObjectName = "IndexBitConnector";
@@ -151,6 +151,7 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 	IndexBitCounter								ibc;
 	bool										Label;
 
+	CacheMemory = 0; // ca sa nu am probleme la GetRecord
 	columns.nrFeatures = conector->GetFeatureCount();
 	nrRecords = conector->GetRecordCount();
 	if (UpdateFeaturesNameFromConnector()==false)
@@ -247,7 +248,7 @@ bool	IndexBitConnector::OnInitConnectionToConnector()
 			return false;
 	}
 	// all ok , am incarcat datele
-	CacheMemory = 0; // ca sa nu am probleme la GetRecord
+	
 	dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
 	conector->FreeMLRecord(cRec);
 	return true;
@@ -264,6 +265,7 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 	IndexBitCounter								ibc;
 	bool										Label;
 
+	CacheMemory = 0; // ca sa nu am probleme la GetRecord
 	memset(&ibc,0,sizeof(ibc));
 	notifier->StartProcent("[%s] -> Analizing DataBase : ",ObjectName);
 	for (tr=0;tr<nrRecords;tr++)
@@ -355,8 +357,7 @@ bool	IndexBitConnector::OnInitConnectionToDataBase()
 			notifier->Error("[%s] -> Internal Error computing compressed size ... (cIndex=%d,MemToAlloc=%d)",ObjectName,(UInt32)cIndex,(UInt32)MemToAlloc);
 			return false;
 	}
-	// all ok , am incarcat datele
-	CacheMemory = 0; // ca sa nu am probleme la GetRecord
+	// all ok , am incarcat datele	
 	dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
 	return true;
 }
@@ -405,6 +406,8 @@ bool	IndexBitConnector::Load(char *fileName)
 	IndexBitConnectorHeader	h;
 	while (true)
 	{
+		if (CacheFileName.Set(fileName)==false)
+			break;
 		if (OpeanCacheFile(fileName,CACHE_SIG_NAME,&h,sizeof(h))==false)
 			break;
 		if (Data!=NULL)
@@ -425,8 +428,7 @@ bool	IndexBitConnector::Load(char *fileName)
 				break;
 			}
 			if (file.SetFilePos((UInt64)sizeof(h)+(UInt64)MemToAlloc)==false)
-				break;
-			CacheStart = CacheEnd = INVALID_CACHE_INDEX;
+				break;			
 		} else {
 			if (AllocMemory(h.MemToAlloc)==false)
 			{
@@ -446,11 +448,6 @@ bool	IndexBitConnector::Load(char *fileName)
 		if (CacheMemory!=0)
 		{
 			dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + CacheMemory+Labels.GetAllocated();
-			if (file.OpenRead(fileName)==false)
-			{
-				notifier->Error("[%s] -> Unable to open '%s' for cache reading ...",ObjectName,fileName);
-				return false;
-			}
 		} else {
 			dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
 		}		
@@ -458,16 +455,40 @@ bool	IndexBitConnector::Load(char *fileName)
 	}
 	ClearColumnIndexes();
 	CloseCacheFile();
+	CacheFileName.Set("");
 	notifier->Error("[%s] -> Error read data from %s",ObjectName,fileName);
 	return false;
 }
 
 bool	IndexBitConnector::CreateMlRecord (GML::ML::MLRecord &record)
 {
+	record.ThreadData = NULL;
 	record.FeatCount = columns.nrFeatures;	
-	return ((record.Features = new double[columns.nrFeatures])!=NULL);
+	if ((record.Features = new double[columns.nrFeatures])==NULL)
+	{
+		notifier->Error("[%s] -> Unable to create mlRecord: error allocing %d values for features !",ObjectName,columns.nrFeatures);
+		return false;
+	}
+	if (CacheMemory>0)
+	{
+		if ((record.ThreadData = new UInt8[sizeof(IndexBitConnectorThreadCacheData)+CacheMemory])==NULL)
+		{
+			notifier->Error("[%s] -> Unable to create mlRecord: error allocing %d bytes for cache",ObjectName,(UInt32)CacheMemory);
+			return false;
+		}
+		IndexBitConnectorThreadCacheData *ibthData = (IndexBitConnectorThreadCacheData *)record.ThreadData;
+		ibthData->CacheStart = INVALID_CACHE_INDEX;
+		ibthData->CacheEnd = INVALID_CACHE_INDEX;
+		if (ibthData->CacheFile.OpenRead(CacheFileName.GetText(),true)==false)
+		{
+			DWORD err = GetLastError();
+			notifier->Error("[%s] -> Unable to create mlRecord: error opening %s for caching - %d",ObjectName,CacheFileName.GetText(),err);
+			return false;
+		}
+	}
+	return true;
 }
-bool	IndexBitConnector::UpdateCacheMemory(UInt64 start,UInt64 szBuffer)
+bool	IndexBitConnector::UpdateCacheMemory(IndexBitConnectorThreadCacheData &ibthData,UInt64 start,UInt64 szBuffer)
 {
 	UInt64	sz = 0;
 	
@@ -481,21 +502,22 @@ bool	IndexBitConnector::UpdateCacheMemory(UInt64 start,UInt64 szBuffer)
 		if (sz<szBuffer)
 			break;
 		//notifier->Info("[%s] -> Updateing cache : [%d-%d]",ObjectName,(int)start,(int)(start+sz));
-		if (file.Read(start+sizeof(IndexBitConnectorHeader),Data,sz)==false)
+		if (ibthData.CacheFile.Read(start+sizeof(IndexBitConnectorHeader),ibthData.Data,sz)==false)
 			break;
-		CacheStart = start;
-		CacheEnd = start+sz;
+		ibthData.CacheStart = start;
+		ibthData.CacheEnd = start+sz;
 		return true;
 	}
-	CacheStart = CacheEnd = INVALID_CACHE_INDEX;
+	ibthData.CacheStart = ibthData.CacheEnd = INVALID_CACHE_INDEX;
 	notifier->Error("[%s] -> Unable to update cache ...",ObjectName);
 	return false;
 }
 bool	IndexBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask)
 {
-	UInt8	*cPoz,*end;
-	UInt32	indexFeat;
-	UInt64	sz,iPoz;
+	UInt8								*cPoz,*end;
+	UInt32								indexFeat;
+	UInt64								sz,iPoz;
+	IndexBitConnectorThreadCacheData	*ibthData;
 
 	if (index>=nrRecords)
 		return false;
@@ -512,12 +534,13 @@ bool	IndexBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 
 	} else {
 		// verific daca e in cache, updatez
 		iPoz = Indexes[index];
-		if ((iPoz<CacheStart) || (iPoz+sz>=CacheEnd))
+		ibthData = (IndexBitConnectorThreadCacheData *)record.ThreadData;
+		if ((iPoz<ibthData->CacheStart) || (iPoz+sz>=ibthData->CacheEnd))
 		{
-			if (UpdateCacheMemory(iPoz,sz)==false)
+			if (UpdateCacheMemory(*ibthData,iPoz,sz)==false)
 				return false;			
 		}
-		cPoz = &Data[iPoz-CacheStart];
+		cPoz = &ibthData->Data[iPoz-ibthData->CacheStart];
 	}
 
 	end = cPoz+sz;
@@ -595,6 +618,13 @@ bool	IndexBitConnector::FreeMLRecord(GML::ML::MLRecord &record)
 	{
 		delete record.Features;
 		record.Features = NULL;
+	}
+	if ((CacheMemory>0) && (record.ThreadData!=NULL))
+	{
+		((IndexBitConnectorThreadCacheData *)record.ThreadData)->CacheFile.Close();
+		delete record.ThreadData;
+		record.ThreadData = NULL;
+		
 	}
 	return true;
 }
