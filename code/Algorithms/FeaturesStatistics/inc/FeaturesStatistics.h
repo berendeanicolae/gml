@@ -5,6 +5,12 @@ struct FeaturesInfo
 {
 	UInt32 PozitiveCount;
 	UInt32 NegativeCount;
+    
+    // for asucila simetric uncertainty algorithm
+    UInt32 FPosLPos;
+    UInt32 FPosLNeg;
+    UInt32 FNegLPos;
+    UInt32 FNegLNeg;
 };
 class FeaturesInformations
 {
@@ -16,6 +22,12 @@ public:
 	double			totalNegative;
 	double			*fnValue;
 	double			compareValue;
+
+    // for asucila simetric uncertainty algorithm
+    double FPosLPos;
+    double FPosLNeg;
+    double FNegLPos;
+    double FNegLNeg;
 
 	//bool			operator< (FeaturesInformations &a);
 	//bool			operator> (FeaturesInformations &a);
