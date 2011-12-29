@@ -241,6 +241,20 @@ double Compute_GProc(FeaturesInformations *f)
 	dif = abs(p_poz-p_neg);
 	return (dif * 100.0)/(p_poz+p_neg);
 }
+double Compute_GProcTotal(FeaturesInformations *f)
+{
+	double p_poz,p_neg,dif,p_total;
+
+	if ((f->totalPozitive==0.0) || (f->totalNegative==0))
+		return 0;	// functioneaza doar daca am de ambele feluri
+	if ((f->countPozitive==0) && (f->countNegative==0))
+		return 0;
+	p_poz = (f->countPozitive*100.0)/f->totalPozitive;
+	p_neg = (f->countNegative*100.0)/f->totalNegative;
+	p_total = ((f->countNegative+f->countPozitive)*100.0)/(f->totalNegative+f->totalPozitive);
+	dif = abs(p_poz-p_neg);
+	return dif*p_total;
+}
 double Compute_ProbPoz(FeaturesInformations *f)
 {
 	if ((f->totalPozitive==0) || (f->totalNegative==0))
@@ -256,6 +270,10 @@ double Compute_ProbNeg(FeaturesInformations *f)
 	double prob_mal = f->countPozitive/f->totalPozitive;
 	double prob_cln = f->countNegative/f->totalNegative;
 	return prob_cln*(1-prob_mal);
+}
+double Compute_MaxProb(FeaturesInformations *f)
+{
+	return max(Compute_ProbPoz(f),Compute_ProbNeg(f));
 }
 double Compute_MedianClosenest(FeaturesInformations *f)
 {
@@ -314,8 +332,10 @@ FeaturesStatistics::FeaturesStatistics()
 	AddNewStatFunction("G3",Compute_G3);
 	AddNewStatFunction("G4",Compute_G4);
 	AddNewStatFunction("GProc",Compute_GProc);
+	AddNewStatFunction("GProcTotal",Compute_GProcTotal);
 	AddNewStatFunction("ProbPoz",Compute_ProbPoz);
 	AddNewStatFunction("ProbNeg",Compute_ProbNeg);
+	AddNewStatFunction("MaxProb",Compute_MaxProb);
 	AddNewStatFunction("MedianClose",Compute_MedianClosenest);
 
 	SortProps.Set("!!LIST:NoSort=0xFFFF");
