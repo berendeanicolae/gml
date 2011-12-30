@@ -1,0 +1,4 @@
+sources = OneSideAdjustPerceptron.cpp GenericPerceptron.cpp
+gmlplugin = yes
+libname = OneSideAdjustPerceptron
+owner = GDT 
