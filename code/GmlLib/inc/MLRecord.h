@@ -16,6 +16,8 @@ namespace GML
 			double				Label;
 			MLRecord*			Parent;
 			void*				ThreadData;
+			
+			MLRecord();
 		};
 	}
 }
