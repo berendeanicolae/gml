@@ -155,7 +155,7 @@ bool MergeConnector::CreateMlRecord( GML::ML::MLRecord &record )
 		GML::ML::MLRecord* recs = new GML::ML::MLRecord[connectorsCount];
 		for (UInt32 tr=0;tr<connectorsCount;tr++)
 		{
-			if (connectors[tr].CreateMlRecord(recs[tr])==false)
+			if (connectors[tr]->CreateMlRecord(recs[tr])==false)
 			{
 				notifier->Error("[%s] -> Unable to create link MLRecord #%d",ObjectName,tr);
 				return false;	
