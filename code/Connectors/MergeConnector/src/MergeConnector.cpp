@@ -9,7 +9,7 @@ MergeConnector::~MergeConnector()
 {
 	Close();
 }
-GML::ML::IConnector* MergeConnector::IndexToConnector(UInt32 &index)
+GML::ML::IConnector* MergeConnector::IndexToConnector(UInt32 &index,UInt32 *indexConnector)
 {
 	GML::Utils::Interval	*t;
 	if (Translate==NULL)
@@ -20,6 +20,8 @@ GML::ML::IConnector* MergeConnector::IndexToConnector(UInt32 &index)
 		if ((index>=t->Start) && (index<t->End))
 		{
 			index-=t->Start;
+			if (indexConnector)
+				(*indexConnector) = tr;
 			return connectors[tr];
 		}		
 	}
@@ -101,13 +103,32 @@ bool MergeConnector::GetRecord( GML::ML::MLRecord &record,UInt32 index,UInt32 re
 		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,nrRecords-1);
 		return false;
 	}
-	GML::ML::IConnector* c = IndexToConnector(index);
+	UInt32				 indexConnector;
+	GML::ML::IConnector* c = IndexToConnector(index,&indexConnector);
 	if (c == NULL)
 	{
 		notifier->Error("[%s] -> index out of range, the maximum allowed is %d",ObjectName,nrRecords-1);
 		return false;	
 	}
-	return c->GetRecord(record,index,recordMask);
+	if (record.ThreadData==NULL)
+	{
+		notifier->Error("[%s] -> Invalid connector -> ThreadData is NULL",ObjectName);
+		return false;	
+	}
+	GML::ML::MLRecord* recs = (GML::ML::MLRecord*)record.ThreadData;
+	GML::ML::MLRecord* cr = &recs[indexConnector];
+	if (c->GetRecord(*cr,index,recordMask)==false)
+	{
+		notifier->Error("[%s] -> Unable to read #%d record from Connector #%d",ObjectName,index,indexConnector);
+		return false;	
+	}
+	// copii datele
+	MEMCOPY(record.Features,cr->Features,sizeof(double)*record.FeatCount);
+	record.Label = cr->Label;
+	record.Weight = cr->Weight;
+	MEMCOPY(&record.Hash,&cr->Hash,sizeof(record.Hash));
+	
+	return true;
 }
 bool MergeConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 {
@@ -128,15 +149,36 @@ bool MergeConnector::GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index)
 
 bool MergeConnector::CreateMlRecord( GML::ML::MLRecord &record )
 {
+	record.ThreadData = NULL;
 	if (this->conector)
-		return this->conector->CreateMlRecord(record);
+	{
+		GML::ML::MLRecord* recs = new GML::ML::MLRecord[connectorsCount];
+		for (UInt32 tr=0;tr<connectorsCount;tr++)
+		{
+			if (connectors[tr].CreateMlRecord(recs[tr])==false)
+			{
+				notifier->Error("[%s] -> Unable to create link MLRecord #%d",ObjectName,tr);
+				return false;	
+			}
+		}
+		// aloc datele pt. mine		
+		record.FeatCount = columns.nrFeatures;	
+		if ((record.Features = new double[columns.nrFeatures])==NULL)
+		{
+			notifier->Error("[%s] -> Unable to create mlRecord: error allocing %d values for features !",ObjectName,columns.nrFeatures);
+			return false;
+		}
+		record.ThreadData = recs;
+		return true;
+	}
 	return false;
 }
 bool MergeConnector::FreeMLRecord( GML::ML::MLRecord &record )
 {
-	if (this->conector)
-		return this->conector->FreeMLRecord(record);
-	return false;
+	//if (this->conector)
+	//	return this->conector->FreeMLRecord(record);
+	//return false;
+	return true;
 }
 bool MergeConnector::Close()
 {

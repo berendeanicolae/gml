@@ -8,7 +8,7 @@ class MergeConnector : public GML::ML::IConnector
 	GML::Utils::Interval	*Translate;
 	bool					OnInitConnectionToConnector();
 	
-	GML::ML::IConnector*	IndexToConnector(UInt32 &index);
+	GML::ML::IConnector*	IndexToConnector(UInt32 &index,UInt32 *indexConnector=NULL);
 public:
 	MergeConnector();
 	~MergeConnector();
