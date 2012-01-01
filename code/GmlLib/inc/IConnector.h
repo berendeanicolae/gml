@@ -119,6 +119,8 @@ namespace GML
 			bool						LoadFeatureNames();
 			bool						SaveRecordHashesAndFeatureNames();
 			bool						LoadRecordHashesAndFeatureNames(CacheHeader *h);
+			
+			bool						UpdateRecordExtraData(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask);
 
 			void						AddTwoClassLabelProperties();
 			void						AddCacheProperties();

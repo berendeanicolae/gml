@@ -1011,3 +1011,21 @@ bool GML::ML::IConnector::LoadRecordHashesAndFeatureNames(CacheHeader *h)
 	}
 	return true;
 }
+bool GML::ML::IConnector::UpdateRecordExtraData(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask)
+{
+	if (recordMask & GML::ML::ConnectorFlags::STORE_HASH)
+	{
+		if (StoreRecordHash)
+			record.Hash.Copy(*Hashes.GetPtrToObject(index));
+		else
+			record.Hash.Reset();
+	}
+	if (recordMask & GML::ML::ConnectorFlags::STORE_RECORD_WEIGHT)
+	{
+		if (StoreRecordWeight)
+			return GetRecordWeight(index,record.Weight);
+		else
+			record.Weight = 0;
+	}
+	return true;
+}
