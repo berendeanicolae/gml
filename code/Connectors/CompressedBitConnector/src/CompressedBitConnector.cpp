@@ -54,6 +54,10 @@ void	CompressedBitConnector::Update(IndexBitCounter &ibt,UInt32 value)
 	
 	ibt.countInt32++;
 	ibt.Last = value;
+	if (index<128)
+		ibt.count7Bit++;
+	if (index<(1<<15))
+		ibt.count15Bit++;	
 	if (index<256)
 		ibt.countInt8++;
 	if (index==255)
@@ -141,6 +145,20 @@ bool	CompressedBitConnector::AddIndex(UInt32 index,UInt64 &poz)
 				poz+=sizeof(UInt16);
 			}
 			return true;
+		case METHOD_INT15_EXTEND_INDEX:
+			if (index<128)
+			{
+				if (poz+1>MemToAlloc)
+					return false;
+				Data[poz] = (UInt8)index;
+				poz++;
+			} else {
+				if (poz+2>MemToAlloc)
+					return false;
+				Data[poz++] = (index & 127)|128;
+				Data[poz++] = (UInt8)((index>>7) & 0xFF);
+			}
+			return true;			
 	};
 	return false;
 }
@@ -165,7 +183,7 @@ void	CompressedBitConnector::ComputeMemory(IndexBitCounter &ibt,UInt64 &memory)
 		Method = METHOD_253_BASE_INDEX;
 		memory = (UInt64)ibt.count253BaseInt8+(UInt64)ibt.count253BaseInt16 * sizeof(UInt16);
 		return;
-	}
+	}	
 	if (ibt.maxIndex <= 0xFFFF)
 	{
 		Method = METHOD_INT16_INDEX;
@@ -175,7 +193,16 @@ void	CompressedBitConnector::ComputeMemory(IndexBitCounter &ibt,UInt64 &memory)
 		{
 			Method = METHOD_255_BASE_INDEX;
 			memory = tmp;
-		} 
+		}
+		if ((ibt.maxIndex < (1<<15)) && (ibt.count7Bit>=0))
+		{			
+			tmp = (UInt64)ibt.count7Bit + ((UInt64)(ibt.count15Bit-ibt.count7Bit))*sizeof(UInt16);
+			if (tmp<memory)
+			{
+				memory = tmp;
+				Method = METHOD_INT15_EXTEND_INDEX;
+			}
+		}		
 		return;
 	}
 	Method = METHOD_INT32_INDEX;
@@ -553,7 +580,18 @@ bool	CompressedBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UI
 					indexFeat = Last+(*((UInt16*)cPoz));
 					cPoz+=sizeof(UInt16);
 				}
-				break;				
+				break;	
+			case METHOD_INT15_EXTEND_INDEX:
+				if ((*cPoz)<128)
+				{
+					indexFeat = (*cPoz);
+					cPoz++;
+				} else {
+					indexFeat = (((UInt32)cPoz[1])<<7)|((*cPoz) & 127);
+					cPoz+=2;
+				}
+				indexFeat+=Last;
+				break;					
 			default:
 				return false;
 		};
@@ -573,15 +611,7 @@ bool	CompressedBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UI
 	else
 		record.Label = OutLabelNegative;
 
-	if (recordMask & GML::ML::ConnectorFlags::STORE_HASH)
-	{
-		if (StoreRecordHash)
-			record.Hash.Copy(*Hashes.GetPtrToObject(index));
-		else
-			record.Hash.Reset();
-	}
-
-	return true;
+	return UpdateRecordExtraData(record,index,recordMask);
 }
 bool	CompressedBitConnector::GetRecordLabel(double &Label,UInt32 index)
 {
