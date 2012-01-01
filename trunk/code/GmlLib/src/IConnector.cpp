@@ -1,5 +1,14 @@
 #include "IConnector.h"
 
+/*
+				RECORD_WEIGHT_UINT8 = 0,
+				RECORD_WEIGHT_UINT16 = 1,
+				RECORD_WEIGHT_UINT32 = 2,
+				RECORD_WEIGHT_UINT64 = 3,
+				RECORD_WEIGHT_DOUBLE = 4,
+*/
+static UInt32 weightDataTypeSize[]= {1,2,4,8,8};
+
 void ConnectorThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
 {
 	GML::ML::IConnector *con = (GML::ML::IConnector *)context;
@@ -18,6 +27,8 @@ GML::ML::IConnector::IConnector()
 	ClearColumnIndexes();
 	nrRecords = 0;
 	dataMemorySize = 0;
+	RecordsWeight = NULL;
+	StoreRecordWeightMode = GML::ML::ConnectorFlags::RECORD_WEIGHT_NONE;
 	tpu = NULL;
 	threadsCount = 1;
 }
@@ -594,6 +605,97 @@ UInt32 GML::ML::IConnector::GetTotalRecordCount()
 UInt32 GML::ML::IConnector::GetFeatureCount()
 {
 	return columns.nrFeatures;
+}
+bool GML::ML::IConnector::AllocRecordsWeight(UInt32 dataWeightType)
+{
+	UInt32 size = weightDataTypeSize[dataWeightType];
+	RecordsWeight = new UInt8[nrRecords *size];
+	if (RecordsWeight == NULL)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Unable to alloc %d records for record weight !",ObjectName,nrRecords);
+		return false;	
+	}
+	MEMSET(RecordsWeight,0,nrRecords *size);
+	StoreRecordWeightMode = dataWeightType;
+	return true;
+}
+bool GML::ML::IConnector::SetRecordWeight(UInt32 index,double weight)
+{
+	if (index>=nrRecords) 
+	{
+		if (notifier)
+			notifier->Error("[%s] -> SetRecordWeight - Invalid index: %d",ObjectName,index);
+		return false;	
+	}
+	if (StoreRecordWeightMode==GML::ML::ConnectorFlags::RECORD_WEIGHT_NONE)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> SetRecordWeight::RecordsWeight has not been initilized !",ObjectName);
+		return false;		
+	}
+	switch (StoreRecordWeightMode)
+	{
+		case GML::ML::ConnectorFlags::RECORD_WEIGHT_UINT8:  
+			((UInt8 *)RecordsWeight)[index] = (UInt8)weight; 
+			break;
+		case GML::ML::ConnectorFlags::RECORD_WEIGHT_UINT16: 
+			((UInt16 *)RecordsWeight)[index] = (UInt16)weight; 
+			break;
+		case GML::ML::ConnectorFlags::RECORD_WEIGHT_UINT32: 
+			((UInt32 *)RecordsWeight)[index] = (UInt32)weight; 
+			break;
+		case GML::ML::ConnectorFlags::RECORD_WEIGHT_UINT64: 
+			((UInt64 *)RecordsWeight)[index] = (UInt64)weight; 
+			break;
+		case GML::ML::ConnectorFlags::RECORD_WEIGHT_DOUBLE: 
+			((double *)RecordsWeight)[index] = (double)weight; 
+			break;
+		default:
+			if (notifier)
+				notifier->Error("[%s] -> SetRecordWeight::Invalid data type %d !",ObjectName,StoreRecordWeightMode);
+			return false;		
+	}
+	return true;
+}
+bool GML::ML::IConnector::GetRecordWeight(UInt32 index,double &weight)
+{
+	if (index>=nrRecords) 
+	{
+		if (notifier)
+			notifier->Error("[%s] -> SetRecordWeight - Invalid index: %d",ObjectName,index);
+		return false;	
+	}
+	if (StoreRecordWeightMode==GML::ML::ConnectorFlags::RECORD_WEIGHT_NONE)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> SetRecordWeight::RecordsWeight has not been initilized !",ObjectName);
+		return false;		
+	}
+	switch (StoreRecordWeightMode)
+	{
+		case GML::ML::ConnectorFlags::RECORD_WEIGHT_UINT8:  
+			weight = ((UInt8 *)RecordsWeight)[index]; 
+			break;
+		case GML::ML::ConnectorFlags::RECORD_WEIGHT_UINT16: 
+			weight = ((UInt16 *)RecordsWeight)[index]; 
+			break;
+		case GML::ML::ConnectorFlags::RECORD_WEIGHT_UINT32: 
+			weight = ((UInt32 *)RecordsWeight)[index]; 
+			break;
+		case GML::ML::ConnectorFlags::RECORD_WEIGHT_UINT64: 
+			weight = ((UInt64 *)RecordsWeight)[index]; 
+			break;
+		case GML::ML::ConnectorFlags::RECORD_WEIGHT_DOUBLE: 
+			weight = ((double *)RecordsWeight)[index]; 
+			break;
+		default:
+			weight = 0;
+			if (notifier)
+				notifier->Error("[%s] -> SetRecordWeight::Invalid data type %d !",ObjectName,StoreRecordWeightMode);
+			return false;		
+	}
+	return true;
 }
 bool GML::ML::IConnector::CreateCacheFile(char *fileName,char *sigName,CacheHeader *header,UInt32 headerSize,UInt32 extraFlags)
 {
