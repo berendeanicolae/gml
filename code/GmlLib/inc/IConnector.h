@@ -18,6 +18,20 @@ namespace GML
 			{
 				STORE_HASH = 1,
 				STORE_FEATURE_NAME = 2,
+				STORE_RECORD_WEIGHT = 4,
+				// 8,16,32 ocupati pt. tipul weight-ului
+			};
+			enum 
+			{
+				RECORD_WEIGHT_NONE = 0,
+				RECORD_WEIGHT_UINT8 = 1,
+				RECORD_WEIGHT_UINT16 = 2,
+				RECORD_WEIGHT_UINT32 = 3,
+				RECORD_WEIGHT_UINT64 = 4,
+				RECORD_WEIGHT_DOUBLE = 5,
+				
+				RECORD_WEIGHT_SHIFT = 3,
+				RECORD_WEIGHT_MASK = 7,
 			};
 		};
 		struct TableColumnIndexes
@@ -68,6 +82,7 @@ namespace GML
 			UInt64										dataMemorySize;
 			bool										StoreRecordHash;
 			bool										StoreFeaturesName;
+			UInt32										StoreRecordWeightMode;
 			GML::Utils::GTFVector<GML::DB::RecordHash>	Hashes;
 			GML::Utils::GTFVector<UInt32>				indexFeatureNames;
 			GML::Utils::GTFVector<UInt8>				dataFeaturesNames;
@@ -75,11 +90,14 @@ namespace GML
 			double										InLabelPositive,OutLabelPositive;
 			double										InLabelNegative,OutLabelNegative;
 			UInt32										LabelConversionMethod;
+			void										*RecordsWeight;
 
 			UInt32										threadsCount;
 			GML::Utils::ThreadParalelUnit				*tpu;
 			
-						
+			bool						AllocRecordsWeight(UInt32 dataWeightType);
+			bool						SetRecordWeight(UInt32 index,double weight);
+			bool						GetRecordWeight(UInt32 index,double &weight);
 			void						ClearColumnIndexes();
 			bool						UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double &value);
 			bool						UpdateTwoClassLabelValue(double value,bool &label);
