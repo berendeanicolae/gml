@@ -27,8 +27,8 @@ GML::ML::IConnector::IConnector()
 	ClearColumnIndexes();
 	nrRecords = 0;
 	dataMemorySize = 0;
-	RecordsWeight = NULL;
-	StoreRecordWeightMode = GML::ML::ConnectorFlags::RECORD_WEIGHT_NONE;
+	RecordsWeight = NULL;	
+	StoreRecordWeightMode = 0;
 	tpu = NULL;
 	threadsCount = 1;
 }
@@ -52,6 +52,7 @@ void GML::ML::IConnector::AddStoreProperties()
 {
 	LinkPropertyToBool  ("StoreRecordHash",StoreRecordHash,false,"Specify if the connector should store records hash or not");
 	LinkPropertyToBool  ("StoreFeatureName",StoreFeaturesName,false,"Specify if the connector should store features name or not");
+	LinkPropertyToBool	("StoreRecordWeight",StoreRecordWeight,false,"Specify if the connector should store record weights or not");
 }
 void GML::ML::IConnector::ClearColumnIndexes()
 {
@@ -608,7 +609,12 @@ UInt32 GML::ML::IConnector::GetFeatureCount()
 }
 bool GML::ML::IConnector::AllocRecordsWeight(UInt32 dataWeightType)
 {
-	UInt32 size = weightDataTypeSize[dataWeightType];
+	if (RecordsWeight!=NULL)
+	{
+		delete RecordsWeight;
+		RecordsWeight = NULL;
+	}
+	UInt32 size = weightDataTypeSize[dataWeightType];	
 	RecordsWeight = new UInt8[nrRecords *size];
 	if (RecordsWeight == NULL)
 	{
@@ -628,7 +634,7 @@ bool GML::ML::IConnector::SetRecordWeight(UInt32 index,double weight)
 			notifier->Error("[%s] -> SetRecordWeight - Invalid index: %d",ObjectName,index);
 		return false;	
 	}
-	if (StoreRecordWeightMode==GML::ML::ConnectorFlags::RECORD_WEIGHT_NONE)
+	if (StoreRecordWeight)
 	{
 		if (notifier)
 			notifier->Error("[%s] -> SetRecordWeight::RecordsWeight has not been initilized !",ObjectName);
@@ -666,7 +672,7 @@ bool GML::ML::IConnector::GetRecordWeight(UInt32 index,double &weight)
 			notifier->Error("[%s] -> SetRecordWeight - Invalid index: %d",ObjectName,index);
 		return false;	
 	}
-	if (StoreRecordWeightMode==GML::ML::ConnectorFlags::RECORD_WEIGHT_NONE)
+	if (StoreRecordWeight)
 	{
 		if (notifier)
 			notifier->Error("[%s] -> SetRecordWeight::RecordsWeight has not been initilized !",ObjectName);
@@ -728,6 +734,12 @@ bool GML::ML::IConnector::CreateCacheFile(char *fileName,char *sigName,CacheHead
 		header->StoreFlags |= GML::ML::ConnectorFlags::STORE_HASH;
 	if (StoreFeaturesName)
 		header->StoreFlags |= GML::ML::ConnectorFlags::STORE_FEATURE_NAME;
+	if (StoreRecordWeight)
+	{
+		header->StoreFlags |= GML::ML::ConnectorFlags::STORE_FEATURE_NAME;
+		header->StoreFlags |= ((StoreRecordWeightMode & 7) << 3); 
+	}
+	
 
 	if (file.Create(fileName)==false)
 	{
@@ -787,8 +799,7 @@ bool GML::ML::IConnector::OpeanCacheFile(char *fileName,char *sigName,CacheHeade
 	}
 	nrRecords = header->nrRecords;
 	columns.nrFeatures = header->nrFeatures;
-	// resetez unele date
-	
+	// resetez unele date	
 	return true;
 }
 void GML::ML::IConnector::CloseCacheFile()
@@ -801,6 +812,14 @@ bool GML::ML::IConnector::SkipRecordHashes()
 	if (file.GetFilePos(cPoz)==false)
 		return false;
 	cPoz += (UInt64)nrRecords*sizeof(GML::DB::RecordHash);
+	return file.SetFilePos(cPoz);
+}
+bool GML::ML::IConnector::SkipRecordWeights()
+{
+	UInt64	cPoz;
+	if (file.GetFilePos(cPoz)==false)
+		return false;
+	cPoz += (UInt64)nrRecords*weightDataTypeSize[StoreRecordWeightMode];
 	return file.SetFilePos(cPoz);
 }
 bool GML::ML::IConnector::SaveRecordHashes()
@@ -838,6 +857,38 @@ bool GML::ML::IConnector::LoadRecordHashes()
 	}
 	return true;
 }
+bool GML::ML::IConnector::SaveRecordWeights()
+{
+	// daca nu trebuie sa salvez astea , ies cu true
+	if (StoreRecordWeight==false)
+		return true;
+	if (RecordsWeight == NULL)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> RecordsWeight is NULL !",ObjectName);
+		return false;
+	}
+	if (file.Write(RecordsWeight,(UInt64)weightDataTypeSize[StoreRecordWeightMode]*nrRecords)==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Unable to write to file total records weights !",ObjectName);
+		return false;
+	}
+	return true;
+}
+bool GML::ML::IConnector::LoadRecordWeights()
+{
+	if (AllocRecordsWeight(StoreRecordWeightMode)==false)
+		return false;
+	if (file.Read(RecordsWeight,(UInt64)weightDataTypeSize[StoreRecordWeightMode]*nrRecords)==false)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Unable to read %d record weights from file",ObjectName,nrRecords);
+		return false;
+	}		
+	return true;
+}
+
 bool GML::ML::IConnector::SaveFeatureNames()
 {
 	UInt32	sz;
@@ -931,6 +982,22 @@ bool GML::ML::IConnector::LoadRecordHashesAndFeatureNames(CacheHeader *h)
 	} else {
 		StoreRecordHash = false;
 	}
+	// record weights
+	if (h->StoreFlags & GML::ML::ConnectorFlags::STORE_RECORD_WEIGHT)
+	{
+		StoreRecordWeightMode = (h->StoreFlags >> 3) & 7;
+		if (StoreRecordWeight)
+		{			
+			if (LoadRecordWeights()==false)
+				return false;
+		} else {
+			if (SkipRecordWeights()==false)
+				return false;;
+		}
+	} else {
+		StoreRecordWeightMode = 0;
+		StoreRecordWeight = false;
+	}	
 	// numele de la date
 	if (h->StoreFlags & GML::ML::ConnectorFlags::STORE_FEATURE_NAME)
 	{
