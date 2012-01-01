@@ -150,7 +150,7 @@ void	IndexBitConnector::ComputeMemory(IndexBitCounter &ibt,UInt64 &memory)
 		memory = (UInt64)ibt.count253BaseInt8+(UInt64)ibt.count253BaseInt16 * sizeof(UInt16);
 		return;
 	}
-	if ((ibt.maxIndex < (1<<15)) && (ibt.count7Bit>=(ibt.count15Bit/4)))
+	if ((ibt.maxIndex < (1<<15)) && (ibt.count7Bit>=0))
 	{
 		Method = METHOD_INT15_EXTEND_INDEX;
 		memory = (UInt64)ibt.count7Bit + ((UInt64)(ibt.count15Bit-ibt.count7Bit))*sizeof(UInt16);
