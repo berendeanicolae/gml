@@ -538,7 +538,10 @@ bool	IndexBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 
 		if ((iPoz<ibthData->CacheStart) || (iPoz+sz>=ibthData->CacheEnd))
 		{
 			if (UpdateCacheMemory(*ibthData,iPoz,sz)==false)
+			{
+				notifier->Error("[%s] -> Unable to update cache memory for location: %d, ",ObjectName,(int)iPoz);
 				return false;			
+			}
 		}
 		cPoz = &ibthData->Data[iPoz-ibthData->CacheStart];
 	}
@@ -582,22 +585,13 @@ bool	IndexBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 
 		record.Features[indexFeat] = 1.0;
 	}
 
-
 	// pun si label-ul
 	if (Labels.Get(index))
 		record.Label = OutLabelPositive;
 	else
 		record.Label = OutLabelNegative;
-
-	if (recordMask & GML::ML::ConnectorFlags::STORE_HASH)
-	{
-		if (StoreRecordHash)
-			record.Hash.Copy(*Hashes.GetPtrToObject(index));
-		else
-			record.Hash.Reset();
-	}
-
-	return true;
+	
+	return UpdateRecordExtraData(record,index,recordMask);
 }
 bool	IndexBitConnector::GetRecordLabel(double &Label,UInt32 index)
 {
