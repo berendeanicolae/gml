@@ -23,15 +23,11 @@ namespace GML
 			};
 			enum 
 			{
-				RECORD_WEIGHT_NONE = 0,
 				RECORD_WEIGHT_UINT8 = 1,
 				RECORD_WEIGHT_UINT16 = 2,
 				RECORD_WEIGHT_UINT32 = 3,
 				RECORD_WEIGHT_UINT64 = 4,
-				RECORD_WEIGHT_DOUBLE = 5,
-				
-				RECORD_WEIGHT_SHIFT = 3,
-				RECORD_WEIGHT_MASK = 7,
+				RECORD_WEIGHT_DOUBLE = 5,			
 			};
 		};
 		struct TableColumnIndexes
@@ -82,6 +78,7 @@ namespace GML
 			UInt64										dataMemorySize;
 			bool										StoreRecordHash;
 			bool										StoreFeaturesName;
+			bool										StoreRecordWeight;
 			UInt32										StoreRecordWeightMode;
 			GML::Utils::GTFVector<GML::DB::RecordHash>	Hashes;
 			GML::Utils::GTFVector<UInt32>				indexFeatureNames;
@@ -115,6 +112,9 @@ namespace GML
 			bool						SkipRecordHashes();
 			bool						SaveRecordHashes();
 			bool						LoadRecordHashes();
+			bool						SkipRecordWeights();
+			bool						SaveRecordWeights();
+			bool						LoadRecordWeights();
 			bool						SaveFeatureNames();
 			bool						LoadFeatureNames();
 			bool						SaveRecordHashesAndFeatureNames();
