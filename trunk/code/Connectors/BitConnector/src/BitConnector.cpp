@@ -109,6 +109,8 @@ bool	BitConnector::OnInitConnectionToConnector()
 		cPoz+=Align8Size;
 	}	
 	notifier->EndProcent();
+	if (DuplicateRecordWeights(conector)==false)
+		return false;
 	// all ok , am incarcat datele
 	dataMemorySize = (UInt64)nrRecords * (UInt64)Align8Size;
 	conector->FreeMLRecord(cRec);
