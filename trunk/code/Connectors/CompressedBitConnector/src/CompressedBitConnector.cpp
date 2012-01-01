@@ -156,7 +156,7 @@ bool	CompressedBitConnector::AddIndex(UInt32 index,UInt64 &poz)
 				if (poz+2>MemToAlloc)
 					return false;
 				Data[poz++] = (index & 127)|128;
-				Data[poz++] = (UInt8)((index>>7) & 0xFF);
+				Data[poz++] = (UInt8)((index>>7) & 0xFF);				
 			}
 			return true;			
 	};
@@ -593,6 +593,7 @@ bool	CompressedBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UI
 				indexFeat+=Last;
 				break;					
 			default:
+				notifier->Error("[%s] -> Unknwon compressed method : %d ",ObjectName,Method);
 				return false;
 		};
 		if (indexFeat>=columns.nrFeatures)
@@ -634,4 +635,4 @@ bool	CompressedBitConnector::FreeMLRecord(GML::ML::MLRecord &record)
 		record.Features = NULL;
 	}
 	return true;
-}
+}
