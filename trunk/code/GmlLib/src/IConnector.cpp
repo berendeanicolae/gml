@@ -495,6 +495,7 @@ bool GML::ML::IConnector::ExecuteParalelCommand(UInt32 command)
 bool GML::ML::IConnector::OnInit()
 {
 	GML::Utils::GString		temp;
+	UInt64					sz;
 	dataMemorySize = 0;
 	if (notifier==NULL)
 	{
@@ -551,6 +552,14 @@ bool GML::ML::IConnector::OnInit()
 		temp.AddFormatedEx("[%{str}] -> Features name memory: %{uint32,dec,G3} bytes",ObjectName,dataFeaturesNames.Len());
 		notifier->Info("%s",temp.GetText());
 
+		temp.Set("");
+		sz = 0;
+		if ((StoreRecordWeight) && (RecordsWeight!=NULL))
+		{
+			sz = (UInt64)weightDataTypeSize[StoreRecordWeight]*(UInt64)nrRecords;
+		}
+		temp.AddFormatedEx("[%{str}] -> Record Weights memory: %{uint64,dec,G3} bytes",ObjectName,sz);
+		notifier->Info("%s",temp.GetText());				
 	}
 	return true;
 }
