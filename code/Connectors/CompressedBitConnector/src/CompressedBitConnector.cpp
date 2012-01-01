@@ -316,6 +316,8 @@ bool	CompressedBitConnector::OnInitConnectionToConnector()
 			notifier->Error("[%s] -> Internal Error computing compressed size ... (cIndex=%d,MemToAlloc=%d)",ObjectName,(UInt32)cIndex,(UInt32)MemToAlloc);
 			return false;
 	}
+	if (DuplicateRecordWeights(conector)==false)
+		return false;	
 	// all ok , am incarcat datele
 	dataMemorySize = (UInt64)nrRecords * (UInt64)sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
 	conector->FreeMLRecord(cRec);
