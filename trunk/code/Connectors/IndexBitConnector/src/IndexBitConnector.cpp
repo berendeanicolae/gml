@@ -542,7 +542,7 @@ bool	IndexBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 
 	UInt32								indexFeat;
 	UInt64								sz,iPoz;
 	IndexBitConnectorThreadCacheData	*ibthData;
-
+	
 	if (index>=nrRecords)
 		return false;
 	if (index+1==nrRecords)
@@ -568,8 +568,7 @@ bool	IndexBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 
 			}
 		}
 		cPoz = &ibthData->Data[iPoz-ibthData->CacheStart];
-	}
-
+	}	
 	end = cPoz+sz;
 	memset(record.Features,0,sizeof(double)*columns.nrFeatures);
 	while (cPoz<end)
@@ -605,10 +604,11 @@ bool	IndexBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 
 					cPoz++;
 				} else {
 					indexFeat = (((UInt32)cPoz[1])<<7)|((*cPoz) & 127);
-					cPoz+=2;
+					cPoz+=2;					
 				}
 				break;			
 			default:
+				notifier->Error("[%s] -> Unknwon compressed method : %d ",ObjectName,Method);
 				return false;
 		};
 		if (indexFeat>=columns.nrFeatures)
