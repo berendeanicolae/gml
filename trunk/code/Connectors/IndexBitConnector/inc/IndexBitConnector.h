@@ -10,6 +10,8 @@ struct IndexBitCounter
 	UInt64		count254BaseInt16;
 	UInt64		count253BaseInt8;
 	UInt64		count253BaseInt16;	
+	UInt64		count7Bit;
+	UInt64		count15Bit;
 	UInt32		maxIndex;
 };
 struct IndexBitConnectorHeader: public GML::ML::CacheHeader
@@ -31,7 +33,8 @@ class IndexBitConnector: public GML::ML::IConnector
 		METHOD_INT16_INDEX,
 		METHOD_INT32_INDEX,
 		METHOD_254_BASE_INDEX,
-		METHOD_253_BASE_INDEX
+		METHOD_253_BASE_INDEX,
+		METHOD_INT15_EXTEND_INDEX,
 	};
 	UInt32				Method;
 	UInt64				MemToAlloc;

@@ -58,6 +58,10 @@ bool	IndexBitConnector::AllocMemory(UInt64 memory)
 void	IndexBitConnector::Update(IndexBitCounter &ibt,UInt32 index)
 {
 	ibt.countInt32++;
+	if (index<128)
+		ibt.count7Bit++;
+	if (index<(1<<15))
+		ibt.count15Bit++;
 	if (index<256)
 		ibt.countInt8++;
 	if (index<=0xFFFF)
@@ -109,6 +113,20 @@ bool	IndexBitConnector::AddIndex(UInt32 index,UInt64 &poz)
 				Data[poz++] = (UInt8)(index-0xFF);
 			}
 			return true;
+		case METHOD_INT15_EXTEND_INDEX:
+			if (index<128)
+			{
+				if (poz+1>MemToAlloc)
+					return false;
+				Data[poz] = (UInt8)index;
+				poz++;
+			} else {
+				if (poz+2>MemToAlloc)
+					return false;
+				Data[poz++] = (index & 127)|128;
+				Data[poz++] = (UInt8)((index>>7) & 0xFF);
+			}
+			return true;
 	};
 	return false;
 }
@@ -130,6 +148,12 @@ void	IndexBitConnector::ComputeMemory(IndexBitCounter &ibt,UInt64 &memory)
 	{
 		Method = METHOD_253_BASE_INDEX;
 		memory = (UInt64)ibt.count253BaseInt8+(UInt64)ibt.count253BaseInt16 * sizeof(UInt16);
+		return;
+	}
+	if ((ibt.maxIndex < (1<<15)) && (ibt.count7Bit>=(ibt.count15Bit/4)))
+	{
+		Method = METHOD_INT15_EXTEND_INDEX;
+		memory = (UInt64)ibt.count7Bit + ((UInt64)(ibt.count15Bit-ibt.count7Bit))*sizeof(UInt16);
 		return;
 	}
 	if (ibt.maxIndex <= 0xFFFF)
@@ -574,6 +598,16 @@ bool	IndexBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 
 					cPoz+=2;
 				}
 				break;
+			case METHOD_INT15_EXTEND_INDEX:
+				if ((*cPoz)<128)
+				{
+					indexFeat = (*cPoz);
+					cPoz++;
+				} else {
+					indexFeat = (((UInt32)cPoz[1])<<7)|((*cPoz) & 127);
+					cPoz+=2;
+				}
+				break;			
 			default:
 				return false;
 		};
