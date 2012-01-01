@@ -888,7 +888,28 @@ bool GML::ML::IConnector::LoadRecordWeights()
 	}		
 	return true;
 }
-
+bool GML::ML::IConnector::DuplicateRecordWeights(GML::ML::IConnector *con)
+{
+	if (StoreRecordWeight==false)
+		return true;
+	if (con==NULL)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Invalid connector pointer",ObjectName);
+		return false;	
+	}
+	if (nrRecords!=con->nrRecords)
+	{
+		if (notifier)
+			notifier->Error("[%s] -> Invalid nrRecords (curent=%d, conector=%d)",ObjectName,nrRecords,con->nrRecords);
+		return false;	
+	}
+	if (AllocRecordsWeight(con->StoreRecordWeightMode)==false)
+		return false;
+	MEMCOPY(RecordsWeight,con->RecordsWeight,weightDataTypeSize[con->StoreRecordWeightMode]*nrRecords);
+	StoreRecordWeightMode = con->StoreRecordWeightMode;
+	return true;
+}
 bool GML::ML::IConnector::SaveFeatureNames()
 {
 	UInt32	sz;
