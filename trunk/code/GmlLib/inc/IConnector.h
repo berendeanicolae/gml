@@ -120,6 +120,8 @@ namespace GML
 			bool						SaveRecordHashesAndFeatureNames();
 			bool						LoadRecordHashesAndFeatureNames(CacheHeader *h);
 			
+			bool						DuplicateRecordWeights(GML::ML::IConnector *con);
+			
 			bool						UpdateRecordExtraData(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask);
 
 			void						AddTwoClassLabelProperties();
