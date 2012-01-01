@@ -147,6 +147,9 @@ template <class DataType> bool	DataTypeTemplateConnector<DataType>::OnInitConnec
 		cPoz+=columns.nrFeatures;
 	}	
 	notifier->EndProcent();
+
+	if (DuplicateRecordWeights(conector)==false)
+		return false;
 	// all ok , am incarcat datele
 	dataMemorySize = (UInt64)nrRecords * sizeof(DataType) * columns.nrFeatures;
 	if (LabelIsBool)
