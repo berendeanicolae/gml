@@ -2,6 +2,41 @@
 
 #define CACHE_SIG_NAME  "CompressedBitConnectorV1"
 
+#define COMPUTE_INDEX_FEAT(base) \
+				if ((*cPoz)<=base) \
+				{ \
+					indexFeat = Last + (*cPoz); \
+					cPoz++; \
+				} else { \
+					indexFeat = Last + (UInt32)((UInt32)base+1+(UInt32)((*cPoz)-(base+1))*256+(UInt32)(cPoz[1])); \
+					cPoz+=2; \
+				}
+#define ADD_INDEX_FEAT(base) \
+			if (index<=base) \
+			{ \
+				if (poz+1>MemToAlloc) \
+					return false; \
+				Data[poz] = (UInt8)index; \
+				poz++; \
+			} else { \
+				if (poz+2>MemToAlloc) \
+					return false; \
+				Data[poz++] = (UInt8)(base+1) + (UInt8)((index-(base+1))>>8); \
+				Data[poz++] = (UInt8)((index-(base+1)) & 0xFF); \
+			} \
+			return true; 
+#define UPDATE_INDEX_FEAT(base,counterLo,counterHi) \
+			if (index<=base) { counterLo++; } \
+			if ((index>base) && (index<=((256-(UInt32)base)*255))) { counterHi++; }
+
+#define COMPUTE_MEMORY(base,maxValue,methodID,counterLo,counterHi) \
+			if (maxValue<=(UInt32)((256-(UInt32)base)*255)) \
+			{ \
+				Method = methodID; \
+				memory = (UInt64)counterLo + ((UInt64)counterHi)*2; \
+				return; \
+			}
+
 CompressedBitConnector::CompressedBitConnector()
 {
 	Data = NULL;
@@ -64,14 +99,12 @@ void	CompressedBitConnector::Update(IndexBitCounter &ibt,UInt32 value)
 		ibt.countValue255++;
 	if (index<=0xFFFF)
 		ibt.countInt16++;	
-	if (index<255)
-		ibt.count254BaseInt8++;
-	if ((index>=255) && (index<=255+255))
-		ibt.count254BaseInt16++;
-	if (index<253)
-		ibt.count253BaseInt8++;
-	if ((index>=254) && (index<=254+255+255))
-		ibt.count253BaseInt16++;
+	UPDATE_INDEX_FEAT(254,ibt.count254BaseLo,ibt.count254BaseHi);
+	UPDATE_INDEX_FEAT(253,ibt.count253BaseLo,ibt.count253BaseHi);
+	UPDATE_INDEX_FEAT(252,ibt.count252BaseLo,ibt.count252BaseHi);
+	UPDATE_INDEX_FEAT(251,ibt.count251BaseLo,ibt.count251BaseHi);
+	UPDATE_INDEX_FEAT(250,ibt.count250BaseLo,ibt.count250BaseHi);
+		
 	if (index>ibt.maxIndex)
 		ibt.maxIndex = index;
 }
@@ -98,37 +131,19 @@ bool	CompressedBitConnector::AddIndex(UInt32 index,UInt64 &poz)
 			poz+=sizeof(UInt32);
 			return true;
 		case METHOD_254_BASE_INDEX:
-			if (index<255)
-			{
-				if (poz+1>MemToAlloc)
-					return false;
-				Data[poz] = (UInt8)index;
-				poz++;
-			} else {
-				if (poz+2>MemToAlloc)
-					return false;
-				Data[poz++] = 0xFF;
-				Data[poz++] = (UInt8)(index-0xFF);
-			}
+			ADD_INDEX_FEAT(254);
+			return true;
 		case METHOD_253_BASE_INDEX:
-			if (index<254)
-			{
-				if (poz+1>MemToAlloc)
-					return false;
-				Data[poz] = (UInt8)index;
-				poz++;
-			} else {			
-				if (poz+2>MemToAlloc)
-					return false;
-				if (index<=254+255)
-				{
-					Data[poz++] = 254;
-					Data[poz++] = index-254;
-				} else {
-					Data[poz++] = 255;
-					Data[poz++] = index-(254+255);
-				}				
-			}		
+			ADD_INDEX_FEAT(253);
+			return true;
+		case METHOD_252_BASE_INDEX:
+			ADD_INDEX_FEAT(252);
+			return true;
+		case METHOD_251_BASE_INDEX:
+			ADD_INDEX_FEAT(251);
+			return true;
+		case METHOD_250_BASE_INDEX:
+			ADD_INDEX_FEAT(250);
 			return true;
 		case METHOD_255_BASE_INDEX:
 			if (index<255)
@@ -172,23 +187,17 @@ void	CompressedBitConnector::ComputeMemory(IndexBitCounter &ibt,UInt64 &memory)
 		memory = (UInt64)ibt.countInt8;
 		return;
 	}
-	if (ibt.maxIndex <=255+255)
-	{
-		Method = METHOD_254_BASE_INDEX;
-		memory = (UInt64)ibt.count254BaseInt8+(UInt64)ibt.count254BaseInt16 * sizeof(UInt16);
-		return;
-	}
-	if (ibt.maxIndex <=254+255+255)
-	{
-		Method = METHOD_253_BASE_INDEX;
-		memory = (UInt64)ibt.count253BaseInt8+(UInt64)ibt.count253BaseInt16 * sizeof(UInt16);
-		return;
-	}	
+	COMPUTE_MEMORY(254,ibt.maxIndex,METHOD_254_BASE_INDEX,ibt.count254BaseLo,ibt.count254BaseHi);
+	COMPUTE_MEMORY(253,ibt.maxIndex,METHOD_253_BASE_INDEX,ibt.count253BaseLo,ibt.count253BaseHi);
+	COMPUTE_MEMORY(252,ibt.maxIndex,METHOD_252_BASE_INDEX,ibt.count252BaseLo,ibt.count252BaseHi);
+	COMPUTE_MEMORY(251,ibt.maxIndex,METHOD_251_BASE_INDEX,ibt.count251BaseLo,ibt.count251BaseHi);
+	COMPUTE_MEMORY(250,ibt.maxIndex,METHOD_250_BASE_INDEX,ibt.count250BaseLo,ibt.count250BaseHi);
+	
 	if (ibt.maxIndex <= 0xFFFF)
 	{
 		Method = METHOD_INT16_INDEX;
 		memory = (UInt64)ibt.countInt16 * sizeof(UInt16);
-		tmp = ((UInt64)(ibt.countInt16-ibt.count254BaseInt8))*3+ibt.count254BaseInt8;
+		tmp = ((UInt64)(ibt.countInt16-ibt.count254BaseLo))*3+ibt.count254BaseLo;
 		if (tmp<memory)
 		{
 			Method = METHOD_255_BASE_INDEX;
@@ -550,27 +559,19 @@ bool	CompressedBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UI
 				cPoz+=sizeof(UInt32);
 				break;
 			case METHOD_254_BASE_INDEX:
-				if ((*cPoz)<255)
-				{
-					indexFeat = Last+(*cPoz);
-					cPoz++;
-				} else {
-					indexFeat = Last+255+cPoz[1];
-					cPoz+=2;
-				}
+				COMPUTE_INDEX_FEAT(254);
 				break;
 			case METHOD_253_BASE_INDEX:
-				if ((*cPoz)<254)
-				{
-					indexFeat = Last+(*cPoz);
-					cPoz++;
-				} else {
-					if ((*cPoz)==254)
-						indexFeat = Last+254+cPoz[1];
-					else 
-						indexFeat = Last+254+255+cPoz[1];
-					cPoz+=2;
-				}
+				COMPUTE_INDEX_FEAT(253);
+				break;
+			case METHOD_252_BASE_INDEX:
+				COMPUTE_INDEX_FEAT(252);
+				break;
+			case METHOD_251_BASE_INDEX:
+				COMPUTE_INDEX_FEAT(251);
+				break;
+			case METHOD_250_BASE_INDEX:
+				COMPUTE_INDEX_FEAT(250);
 				break;		
 			case METHOD_255_BASE_INDEX:
 				if ((*cPoz)<255)
