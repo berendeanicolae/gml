@@ -1,0 +1,3 @@
+sources = GpuCentroid.cpp
+gmlplugin = yes
+libname = GpuCentroid
