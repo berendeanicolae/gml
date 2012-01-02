@@ -6,10 +6,16 @@ struct IndexBitCounter
 	UInt64		countInt8;
 	UInt64		countInt16;
 	UInt64		countInt32;
-	UInt64		count254BaseInt8;
-	UInt64		count254BaseInt16;
-	UInt64		count253BaseInt8;
-	UInt64		count253BaseInt16;	
+	UInt64		count254BaseLo;
+	UInt64		count254BaseHi;
+	UInt64		count253BaseLo;
+	UInt64		count253BaseHi;	
+	UInt64		count252BaseLo;
+	UInt64		count252BaseHi;	
+	UInt64		count251BaseLo;
+	UInt64		count251BaseHi;	
+	UInt64		count250BaseLo;
+	UInt64		count250BaseHi;	
 	UInt64		count7Bit;
 	UInt64		count15Bit;
 	UInt32		maxIndex;
@@ -35,6 +41,9 @@ class IndexBitConnector: public GML::ML::IConnector
 		METHOD_254_BASE_INDEX,
 		METHOD_253_BASE_INDEX,
 		METHOD_INT15_EXTEND_INDEX,
+		METHOD_252_BASE_INDEX,
+		METHOD_251_BASE_INDEX,
+		METHOD_250_BASE_INDEX,
 	};
 	UInt32				Method;
 	UInt64				MemToAlloc;
