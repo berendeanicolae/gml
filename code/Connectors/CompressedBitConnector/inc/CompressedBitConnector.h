@@ -5,7 +5,7 @@
 
 struct IndexBitCounter
 {
-	UInt64		Last;
+	UInt32		Last;
 	UInt64		countValue255;
 	UInt64		countInt8;
 	UInt64		countInt16;
