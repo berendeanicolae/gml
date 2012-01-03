@@ -43,6 +43,7 @@ class CascadeFeatureSelection: public GML::Algorithm::IMLAlgorithm
 	bool*									RemovedRecords;	
 	bool*									RemovedFeatures;	
 	GML::Utils::GTFVector<FeatureScore>		FeatScores;	
+	GML::Utils::GTFVector<UInt32>			BTree;
 	GML::Utils::GString						ResultFileName;
 	
 	// variable inter thread
@@ -59,6 +60,7 @@ class CascadeFeatureSelection: public GML::Algorithm::IMLAlgorithm
 	void									Compute();
 	void									CreateWorkingList();
 	double									ComputeScore(FeatureCounters &counter);	
+	bool									CreatePath(UInt32 index);
 public:
 	CascadeFeatureSelection();
 

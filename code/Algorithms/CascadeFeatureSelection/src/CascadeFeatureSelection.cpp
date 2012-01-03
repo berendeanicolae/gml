@@ -66,6 +66,11 @@ bool CascadeFeatureSelection::Init()
 		notif->Error("[%s] -> Unable to create RemovedFeatures list !",ObjectName);
 		return false;	
 	}
+	if (BTree.Create(256)==false)
+	{
+		notif->Error("[%s] -> Unable to create BTree !",ObjectName);
+		return false;		
+	}
 	TreePathSize = 0;
 	return true;
 }
@@ -214,6 +219,27 @@ void CascadeFeatureSelection::CreateWorkingList()
 			workingRecordsCount += ((CascadeFeatureSelectionThreadData *)ThData[gr].Context)->workingRecordsCount;
 	}
 }
+bool CascadeFeatureSelection::CreatePath(UInt32 index)
+{
+	UInt32	*bTree = BTree.GetPtrToObject(0);
+	UInt32	remove;
+	
+	TreePathSize = 0;
+	if (index==0)
+		return true;
+	while (index>0)
+	{
+		if (TreePathSize>=MAX_PATH_DEPTH)
+		{
+			notif->Error("[%s] -> Depth to hi (>%d) in BTree for index:%d",ObjectName,MAX_PATH_DEPTH,index);
+			return false;
+		}
+		remove = (((index-1) & 1)<<31);
+		index = (index-1)>>1;
+		TreePath[TreePathSize++] = bTree[index] | remove;		
+	}
+	return true;
+}
 void CascadeFeatureSelection::Compute()
 {
 	UInt32				tr,gr;
@@ -227,17 +253,29 @@ void CascadeFeatureSelection::Compute()
 		return;
 	}
 	tmp.Create(2048);
+	BTree.DeleteAll();
 	workingRecordsCount = con->GetRecordCount();
-	
-	// refac indexii
-	for (tr=0;tr<con->GetRecordCount();tr++)
-	{
-		RemovedRecords[tr] = false;
-	}	
-	
+
 	while (true)
 	{
 		// calculez counterele
+	
+		if (CreatePath(BTree.Len())==false)
+			return;
+		CreateWorkingList();
+		// afisez working list
+		tmp.SetFormated("Working List (%d):",TreePathSize);
+		for (tr=0;tr<TreePathSize;tr++)
+		{
+			if (TreePath[tr] & 0x80000000)
+				tmp.Add("-");
+			else
+				tmp.Add("+");
+			tmp.AddFormated("%d",TreePath[tr] & 0x7FFFFFFF);
+			tmp.Add(",");
+		}
+		notif->Info("[%s] -> %s",ObjectName,tmp.GetText());
+		// calculez
 		ExecuteParalelCommand(THREAD_COMMAND_COMPUTE_FEATURES_COUNTERS);
 		// adun
 		FeatScores.DeleteAll();
@@ -247,7 +285,7 @@ void CascadeFeatureSelection::Compute()
 			for (gr=0;gr<threadsCount;gr++)
 				FeatCounters[tr].Add(((CascadeFeatureSelectionThreadData *)ThData[gr].Context)->Counters[tr]);
 			// calculez si o valoare
-			if ((FeatCounters[tr].CountPozitive+FeatCounters[tr].CountNegative)>0)
+			if (RemovedFeatures[tr]==false)
 			{
 				fscor.Index = tr;
 				fscor.Score = ComputeScore(FeatCounters[tr]);
@@ -264,20 +302,13 @@ void CascadeFeatureSelection::Compute()
 			notif->Info("[%s] -> No more features left ... ending",ObjectName);
 			break;
 		}
-		FeatScores.Sort(cmpFunction,false);
+		FeatScores.Sort(cmpFunction,false);	
 		featToRemove = FeatScores[0].Index;
-		if (con->GetFeatureName(featName,featToRemove)==false)
-		{
-			notif->Error("[%s] -> Unable to read feature name for index #d",ObjectName,featToRemove);
-			break;	
-		}		
-		
-
-
+		BTree.PushByRef(FeatScores[0].Index);
 		
 		// afisez
-		tmp.SetFormated("%s|Scor:%lf|Poz:%d|Neg:%d|TotalPoz:%d|TotalNeg:%d\n",
-						featName.GetText(),
+		tmp.SetFormated("%d|Scor:%lf|Poz:%d|Neg:%d|TotalPoz:%d|TotalNeg:%d\n",
+						featToRemove,
 						FeatScores[0].Score,
 						FeatCounters[featToRemove].CountPozitive,
 						FeatCounters[featToRemove].CountNegative,
