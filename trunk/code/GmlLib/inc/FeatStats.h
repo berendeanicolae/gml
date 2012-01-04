@@ -14,12 +14,13 @@ namespace GML
 			double			totalPozitive;
 			double			totalNegative;
 		};
+		typedef double (__cdecl *FeatStatComputeFunction)(GML::ML::FeatureInformation *f);
 		class EXPORT FeatStatsFunctions
 		{
 		public:
-			static unsigned int GetFunctionsCount();
-			static char* GetFunctionName(unsigned int index);
-			static void* GetFuncPointer(unsigned int index);
+			static unsigned int 						GetFunctionsCount();
+			static char* 								GetFunctionName(unsigned int index);
+			static GML::ML::FeatStatComputeFunction 	GetFunctionPointer(unsigned int index);
 			
 			//Functions
 			static double Pozitive(FeatureInformation *f);
