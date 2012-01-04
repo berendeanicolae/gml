@@ -60,6 +60,7 @@ class CascadeFeatureSelection: public GML::Algorithm::IMLAlgorithm
 	void									Compute();
 	void									CreateWorkingList();
 	double									ComputeScore(FeatureCounters &counter);	
+	void									ComputeScoresAndSort();
 	bool									CreatePath(UInt32 index);
 public:
 	CascadeFeatureSelection();
