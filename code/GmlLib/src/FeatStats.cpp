@@ -1,11 +1,9 @@
 #include "FeatStats.h"
 
-typedef double(* pt2Func)(GML::ML::FeatureInformation *f);
-
 struct FunctionInfo
 {
-	char* 		Name;
-	pt2Func		Addr;	
+	char* 									Name;
+	GML::ML::FeatStatComputeFunction		Addr;	
 };
 
 enum BTM_DATA
@@ -43,35 +41,35 @@ enum BTM_DATA
 };
 
 FunctionInfo fi[BTM_DATA::nrData] = {
-			{"TotalPoz", &(GML::ML::FeatStatsFunctions::Pozitive)},
-			{"TotalNeg", &(GML::ML::FeatStatsFunctions::TotalPozitive)},
-			{"PozCount", &(GML::ML::FeatStatsFunctions::ProcPozitive)},
-			{"NegCount", &(GML::ML::FeatStatsFunctions::Negative)},
-			{"PozProc", &(GML::ML::FeatStatsFunctions::TotalNegative)},
-			{"NegProc", &(GML::ML::FeatStatsFunctions::ProcNegative)},
-			{"ProcAverage", &(GML::ML::FeatStatsFunctions::RapPozNeg)},
-			{"ProcTotal", &(GML::ML::FeatStatsFunctions::ProcDiff)},
-			{"Poz/Neg", &(GML::ML::FeatStatsFunctions::ProcAverage)},
-			{"ProcDiff", &(GML::ML::FeatStatsFunctions::ProcTotal)},
-			{"AbsProcDiff)", &(GML::ML::FeatStatsFunctions::AbsProcDiff)},
-			{"Diff", &(GML::ML::FeatStatsFunctions::Diff)},
-			{"AbsDiff)", &(GML::ML::FeatStatsFunctions::AbsDiff)},
-			{"F1", &(GML::ML::FeatStatsFunctions::F1)},
-			{"F2", &(GML::ML::FeatStatsFunctions::F2)},
-			{"InformationGain", &(GML::ML::FeatStatsFunctions::ProcTo100)},
-			{"ProcTo100", &(GML::ML::FeatStatsFunctions::AbsProcTo100)},
-			{"AbsProcTo100)", &(GML::ML::FeatStatsFunctions::InformationGain)},
-			{"G1", &(GML::ML::FeatStatsFunctions::G1)},
-			{"G2", &(GML::ML::FeatStatsFunctions::G2)},
-			{"G3", &(GML::ML::FeatStatsFunctions::G3)},
-			{"G4", &(GML::ML::FeatStatsFunctions::G4)},
-			{"GProc", &(GML::ML::FeatStatsFunctions::GProc)},
-			{"GProcTotal", &(GML::ML::FeatStatsFunctions::GProcTotal)},
-			{"ProbPoz", &(GML::ML::FeatStatsFunctions::ProbPoz)},
-			{"ProbNeg", &(GML::ML::FeatStatsFunctions::ProbNeg)},
-			{"MaxProb", &(GML::ML::FeatStatsFunctions::MaxProb)},
-			{"MedianClose", &(GML::ML::FeatStatsFunctions::MedianClosenest)},
-			{"AsymUncertain", &(GML::ML::FeatStatsFunctions::AsymetricUncertainty)}
+			{"TotalPoz", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::Pozitive)},
+			{"TotalNeg", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::TotalPozitive)},
+			{"PozCount", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::ProcPozitive)},
+			{"NegCount", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::Negative)},
+			{"PozProc", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::TotalNegative)},
+			{"NegProc", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::ProcNegative)},
+			{"ProcAverage", 	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::RapPozNeg)},
+			{"ProcTotal", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::ProcDiff)},
+			{"Poz/Neg", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::ProcAverage)},
+			{"ProcDiff", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::ProcTotal)},
+			{"AbsProcDiff)", 	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::AbsProcDiff)},
+			{"Diff", 			(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::Diff)},
+			{"AbsDiff)", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::AbsDiff)},
+			{"F1", 				(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::F1)},
+			{"F2", 				(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::F2)},
+			{"InformationGain", (GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::ProcTo100)},
+			{"ProcTo100", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::AbsProcTo100)},
+			{"AbsProcTo100)", 	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::InformationGain)},
+			{"G1", 				(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::G1)},
+			{"G2", 				(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::G2)},
+			{"G3", 				(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::G3)},
+			{"G4", 				(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::G4)},
+			{"GProc", 			(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::GProc)},
+			{"GProcTotal", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::GProcTotal)},
+			{"ProbPoz", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::ProbPoz)},
+			{"ProbNeg", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::ProbNeg)},
+			{"MaxProb", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::MaxProb)},
+			{"MedianClose", 	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::MedianClosenest)},
+			{"AsymUncertain", 	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::AsymetricUncertainty)}
 		};
 
 unsigned int GML::ML::FeatStatsFunctions::GetFunctionsCount()
@@ -86,7 +84,7 @@ char* GML::ML::FeatStatsFunctions::GetFunctionName(unsigned int index)
 	return fi[index].Name;	
 }
 
-void* GML::ML::FeatStatsFunctions::GetFuncPointer(unsigned int index)
+GML::ML::FeatStatComputeFunction GML::ML::FeatStatsFunctions::GetFunctionPointer(unsigned int index)
 {
 	if (index >= BTM_DATA::nrData)
 		return NULL;
