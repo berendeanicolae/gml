@@ -6,41 +6,7 @@ struct FunctionInfo
 	GML::ML::FeatStatComputeFunction		Addr;	
 };
 
-enum BTM_DATA
-{
-	Pozitive = 0,
-	TotalPozitive,
-	ProcPozitive,
-	Negative,
-	TotalNegative,
-	ProcNegative,
-	RapPozNeg,
-	ProcDiff,
-	ProcAverage,
-	ProcTotal,
-	AbsProcDiff,
-	Diff,
-	AbsDiff,
-	F1,
-	F2,
-	ProcTo100,
-	AbsProcTo100,
-	InformationGain,
-	G1,
-	G2,
-	G3,
-	G4,
-	GProc,
-	GProcTotal,
-	ProbPoz,
-	ProbNeg,
-	MaxProb,
-	MedianClosenest,
-	AsymetricUncertainty,
-	nrData
-};
-
-FunctionInfo fi[BTM_DATA::nrData] = {
+FunctionInfo fi[] = {
 			{"TotalPoz", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::Pozitive)},
 			{"TotalNeg", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::TotalPozitive)},
 			{"PozCount", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::ProcPozitive)},
@@ -74,19 +40,19 @@ FunctionInfo fi[BTM_DATA::nrData] = {
 
 unsigned int GML::ML::FeatStatsFunctions::GetFunctionsCount()
 {
-	return BTM_DATA::nrData;
+	return sizeof(fi)/sizeof(FunctionInfo);
 }
 
 char* GML::ML::FeatStatsFunctions::GetFunctionName(unsigned int index)
 {
-	if (index >= BTM_DATA::nrData)
+	if (index >= (sizeof(fi)/sizeof(FunctionInfo)))
 		return NULL;
 	return fi[index].Name;	
 }
 
 GML::ML::FeatStatComputeFunction GML::ML::FeatStatsFunctions::GetFunctionPointer(unsigned int index)
 {
-	if (index >= BTM_DATA::nrData)
+	if (index >= (sizeof(fi)/sizeof(FunctionInfo)))
 		return NULL;
 	return fi[index].Addr;	
 }
