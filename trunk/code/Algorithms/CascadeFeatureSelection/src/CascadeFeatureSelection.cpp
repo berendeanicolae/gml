@@ -240,11 +240,39 @@ bool CascadeFeatureSelection::CreatePath(UInt32 index)
 	}
 	return true;
 }
+void CascadeFeatureSelection::ComputeScoresAndSort()
+{
+	UInt32				tr,gr;
+	FeatureScore		fscor;
+	// calculez
+	ExecuteParalelCommand(THREAD_COMMAND_COMPUTE_FEATURES_COUNTERS);
+	// adun
+	FeatScores.DeleteAll();
+	for (tr=0;tr<con->GetFeatureCount();tr++)
+	{
+		FeatCounters[tr].Reset();
+		for (gr=0;gr<threadsCount;gr++)
+			FeatCounters[tr].Add(((CascadeFeatureSelectionThreadData *)ThData[gr].Context)->Counters[tr]);
+		// calculez si o valoare
+		if (RemovedFeatures[tr]==false)
+		{
+			fscor.Index = tr;
+			fscor.Score = ComputeScore(FeatCounters[tr]);
+			if (FeatScores.PushByRef(fscor)==false)
+			{
+				notif->Error("[%s] -> Unable to add data to features score: %s",ObjectName);
+				return;	
+			}				
+		}
+	}
+	// sortez
+	FeatScores.Sort(cmpFunction,false);		
+}
 void CascadeFeatureSelection::Compute()
 {
 	UInt32				tr,gr;
 	GML::Utils::File	out;
-	FeatureScore		fscor;
+	
 	GML::Utils::GString tmp;
 	
 	if (out.Create(ResultFileName.GetText(),true)==false)
@@ -275,34 +303,15 @@ void CascadeFeatureSelection::Compute()
 			tmp.Add(",");
 		}
 		notif->Info("[%s] -> %s",ObjectName,tmp.GetText());
-		// calculez
-		ExecuteParalelCommand(THREAD_COMMAND_COMPUTE_FEATURES_COUNTERS);
-		// adun
-		FeatScores.DeleteAll();
-		for (tr=0;tr<con->GetFeatureCount();tr++)
-		{
-			FeatCounters[tr].Reset();
-			for (gr=0;gr<threadsCount;gr++)
-				FeatCounters[tr].Add(((CascadeFeatureSelectionThreadData *)ThData[gr].Context)->Counters[tr]);
-			// calculez si o valoare
-			if (RemovedFeatures[tr]==false)
-			{
-				fscor.Index = tr;
-				fscor.Score = ComputeScore(FeatCounters[tr]);
-				if (FeatScores.PushByRef(fscor)==false)
-				{
-					notif->Error("[%s] -> Unable to add data to features score: %s",ObjectName);
-					return;	
-				}				
-			}
-		}
-		// sortez
+
+		ComputeScoresAndSort();
 		if (FeatScores.Len()==0)
 		{
 			notif->Info("[%s] -> No more features left ... ending",ObjectName);
 			break;
 		}
-		FeatScores.Sort(cmpFunction,false);	
+		
+		
 		featToRemove = FeatScores[0].Index;
 		BTree.PushByRef(FeatScores[0].Index);
 		
