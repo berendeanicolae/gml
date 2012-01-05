@@ -1,0 +1,3 @@
+sources = DecisionTreeFeatureStatistics.cpp GenericFeatureStatistics.cpp 
+gmlplugin = yes
+libname = DecisionTreeFeatureStatistics
