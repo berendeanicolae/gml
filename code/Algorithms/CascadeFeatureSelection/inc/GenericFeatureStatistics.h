@@ -52,7 +52,7 @@ protected:
 	UInt32									workingRecordsCount;
 	UInt32									TreePath[MAX_PATH_DEPTH];
 	UInt32									TreePathSize;
-	bool									callThreadExtraDataFunction;
+	bool									callThreadComputeExtraDataFunction;
 	
 	void									OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
 	bool									OnInitThreadData(GML::Algorithm::MLThreadData &thData);
