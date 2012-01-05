@@ -31,6 +31,8 @@ GenericFeatureStatistics::GenericFeatureStatistics()
 	//Add extra commands here
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");	
 	LinkPropertyToString("ResultFile",ResultFileName,"","Name of the output file");
+	
+	callThreadExtraDataFunction = false;
 }
 bool GenericFeatureStatistics::Init()
 {
@@ -126,6 +128,11 @@ bool GenericFeatureStatistics::OnComputeFeatureCounters(GML::Algorithm::MLThread
 					obj_td->Counters[gr].CountTotalNegative++;
 			}
 		}
+		if (callThreadExtraDataFunction)
+		{
+			if (OnThreadComputeExtraData(tr,thData)==false)
+				return false;
+		}
 		if ((thData.ThreadID==0) && ((tr%1000)==0))
 			notif->SetProcent(tr,nrRecords);
 	}
@@ -133,6 +140,10 @@ bool GenericFeatureStatistics::OnComputeFeatureCounters(GML::Algorithm::MLThread
 		notif->EndProcent();
 	
 	return true;
+}
+bool GenericFeatureStatistics::OnThreadComputeExtraData(UInt32 recordIndex,GML::Algorithm::MLThreadData &thData)
+{
+	return false;
 }
 bool GenericFeatureStatistics::OnComputeRemoveIndexes(GML::Algorithm::MLThreadData &thData)
 {
