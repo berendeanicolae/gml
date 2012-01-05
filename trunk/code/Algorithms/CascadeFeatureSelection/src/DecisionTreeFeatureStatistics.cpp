@@ -3,7 +3,10 @@
 
 DecisionTreeFeatureStatistics::DecisionTreeFeatureStatistics()
 {
-	ObjectName = "DecisionTreeFeatureStatistics";
+	ObjectName 							= "DecisionTreeFeatureStatistics";
+	callThreadComputeExtraDataFunction 	= true;
+	
+	LinkPropertyToUInt32("MaximumDepth",MaxDepth,0x0,"Maximum depth for the binary tree");
 }
 bool DecisionTreeFeatureStatistics::Init()
 {
@@ -16,6 +19,12 @@ bool DecisionTreeFeatureStatistics::Init()
 		return false;		
 	}
 	TreePathSize = 0;
+	if (HashesForRecord.Create(con->GetRecordCount(),true)==false)
+	{
+		notif->Error("[%s] -> Unable to create HashesForRecord !",ObjectName);
+		return false;		
+	}
+	MEMSET(HashesForRecord.GetPtrToObject(0), 0, sizeof(UInt64)*con->GetRecordCount());
 	return true;
 }
 bool DecisionTreeFeatureStatistics::CreatePath(UInt32 index)
@@ -55,7 +64,7 @@ void DecisionTreeFeatureStatistics::OnCompute()
 	BTree.DeleteAll();
 	workingRecordsCount = con->GetRecordCount();
 
-	while (true)
+	while (TreePathSize<=MaxDepth)
 	{
 		// calculez counterele
 	
@@ -74,7 +83,7 @@ void DecisionTreeFeatureStatistics::OnCompute()
 			tmp.Add(",");
 		}
 		notif->Info("[%s] -> %s",ObjectName,tmp.GetText());
-
+		
 		ComputeScoresAndSort();
 		if (FeatScores.Len()==0)
 		{
@@ -98,4 +107,50 @@ void DecisionTreeFeatureStatistics::OnCompute()
 		out.Write(tmp.GetText(),tmp.Len());
 	}	
 	out.Close();
+	GML::Utils::GString	temp, 	hash;
+	GML::DB::RecordHash			rHash;
+	for (tr=0;tr<con->GetRecordCount();tr++)
+	{
+		if (con->GetRecordHash(rHash,tr)==false)
+		{
+			notif->Error("[%s] -> Unable to read record hash for #%d",ObjectName,tr);
+			//return false;
+		}
+		if (rHash.ToString(hash)==false)
+		{
+			notif->Error("[%s] -> Unable to convert record hash for #%d",ObjectName,tr);
+			//return false;
+		}
+		temp.Set("");
+		temp.AddFormatedEx("%{uint64,bin}", HashesForRecord[tr]);
+		notif->Info("[%s] -> %s|%s",ObjectName, hash.GetText(), temp.GetText());
+	}
+	
+	
+}
+
+bool DecisionTreeFeatureStatistics::OnThreadComputeExtraData(UInt32 recordIndex,GML::Algorithm::MLThreadData &thData)
+{
+	if ((TreePathSize) && (TreePath[0] & 0x80000000))
+	{
+		HashesForRecord[recordIndex] |= (1<<(TreePathSize-1));
+	}
+	/*
+	if ((TreePathSize) && (thData.Record.Features[TreePath[0] & 0x7FFFFFFF] != 0))
+	{
+		UInt64 tmp;
+		tmp = 1;
+		tmp = tmp<<(64-TreePathSize);
+		HashesForRecord[recordIndex] = HashesForRecord[recordIndex] | tmp;
+	}
+	/*
+	if ((TreePathSize) && (thData.Record.Features[TreePath[0] & 0x7FFFFFFF] == 0) && (TreePath[0] & 0x80000000))
+	{
+		UInt64 tmp;
+		tmp = 1;
+		tmp = tmp<<(64-TreePathSize);
+		HashesForRecord[recordIndex] = HashesForRecord[recordIndex] | tmp;
+	}
+	*/
+	return true;
 }

@@ -26,6 +26,15 @@ struct CascadeFeatureSelectionThreadData
 	UInt32									workingRecordsCount;
 	// add thread specific data here
 };
+class Stats
+{
+public:
+	GML::Utils::GString		Name;
+	GML::ML::FeatStatComputeFunction fnCompute;
+	
+	Stats();
+	Stats(Stats &ref);
+};
 
 class GenericFeatureStatistics: public GML::Algorithm::IMLAlgorithm
 {
@@ -45,9 +54,13 @@ protected:
 	bool*									RemovedFeatures;	
 	GML::Utils::GTFVector<FeatureScore>		FeatScores;		
 	GML::Utils::GString						ResultFileName;
+	GML::Utils::GTVector<Stats>				StatsData;
+	GML::ML::FeatureInformation				finf;	
 	
 	// variable inter thread
-	GML::Utils::GString						featName;	
+	GML::Utils::GString						featName;
+	GML::Utils::GString						computeMethod;	
+	UInt32									computeMethodIndex;
 	UInt32									featToRemove;
 	UInt32									workingRecordsCount;
 	UInt32									TreePath[MAX_PATH_DEPTH];
@@ -58,6 +71,7 @@ protected:
 	bool									OnInitThreadData(GML::Algorithm::MLThreadData &thData);
 	bool									OnComputeFeatureCounters(GML::Algorithm::MLThreadData &thData);
 	bool									OnComputeRemoveIndexes(GML::Algorithm::MLThreadData &thData);	
+	bool									AddNewStatFunction(char *name,GML::ML::FeatStatComputeFunction);
 	void									CreateWorkingList();
 	double									ComputeScore(FeatureCounters &counter);	
 	void									ComputeScoresAndSort();
