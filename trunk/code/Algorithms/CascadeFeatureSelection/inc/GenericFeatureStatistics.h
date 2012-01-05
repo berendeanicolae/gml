@@ -1,5 +1,5 @@
-#ifndef __CascadeFeatureSelection__
-#define __CascadeFeatureSelection__
+#ifndef __GenericFeatureStatistics__
+#define __GenericFeatureStatistics__
 
 #include "gmllib.h"
 
