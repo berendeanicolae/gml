@@ -36,7 +36,7 @@ class Stats
 {
 public:
 	GML::Utils::GString		Name;
-	double					(*fnCompute) ( FeaturesInformations *info);	
+	GML::ML::FeatStatComputeFunction fnCompute;
 	
 	Stats();
 	Stats(Stats &ref);
@@ -80,7 +80,7 @@ private:
 	bool							showFeatureName;
 	double							multiplyFactor;
 
-	bool							AddNewStatFunction(char *name,double (*_fnCompute) ( FeaturesInformations *info));
+	bool							AddNewStatFunction(char *name,GML::ML::FeatStatComputeFunction);
 	bool							CreateFeaturesInfo(FeaturesThreadData *fInfo);
 	bool							Compute();
 	void							PrintStats();
