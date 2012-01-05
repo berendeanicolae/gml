@@ -45,332 +45,11 @@ Stats::Stats(Stats &ref)
 	fnCompute = ref.fnCompute;
 	this->Name.Set(ref.Name.GetText());
 }
-//====================================================================================================
-double log2(double x)
-{
-	if (x==0) return 0;
-	return log10(x) / (log10((double)2));
-}
-double entropy(double v_true,double v_false)
-{
-	if ((v_true+v_false)==0) return 0;
-	double v1=((double)v_true)/((double)(v_true+v_false));
-	double v2=((double)v_false)/((double)(v_true+v_false));
-	return -(v1*log2(v1)) - (v2*log2(v2));
-}
-
-double Compute_Pozitive(FeaturesInformations *f)
-{
-	return f->countPozitive;
-}
-double Compute_TotalPozitive(FeaturesInformations *f)
-{
-	return f->totalPozitive;
-}
-double Compute_ProcPozitive(FeaturesInformations *f)
-{
-	if (f->totalPozitive==0)
-		return 0;
-	return (f->countPozitive*100.0)/f->totalPozitive;
-}
-double Compute_Negative(FeaturesInformations *f)
-{
-	return f->countNegative;
-}
-double Compute_TotalNegative(FeaturesInformations *f)
-{
-	return f->totalNegative;
-}
-double Compute_ProcNegative(FeaturesInformations *f)
-{
-	if (f->totalNegative==0)
-		return 0;
-	return (f->countNegative*100.0)/f->totalNegative;
-}
-double Compute_RapPozNeg(FeaturesInformations *f)
-{
-	if (f->countPozitive==f->countNegative)
-		return 0;
-	if (f->countPozitive>f->countNegative)
-		return f->countPozitive/(f->countNegative+1);
-	else
-		return -(f->countNegative/(f->countPozitive+1));
-}
-double Compute_ProcDiff(FeaturesInformations *f)
-{
-	return ((f->countPozitive*100)/f->totalPozitive)-((f->countNegative*100)/f->totalNegative);
-}
-double Compute_ProcAverage(FeaturesInformations *f)
-{
-	if ((f->totalNegative==0) || (f->totalPozitive==0))
-		return 0;		
-	return (((f->countPozitive*100)/f->totalPozitive)+((f->countNegative*100)/f->totalNegative))/2;
-}
-double Compute_ProcTotal(FeaturesInformations *f)
-{
-	if ((f->totalNegative+f->totalPozitive)==0)
-		return 0;		
-	return ((f->countPozitive+f->countNegative)*100)/(f->totalNegative+f->totalPozitive);	
-}
-double Compute_AbsProcDiff(FeaturesInformations *f)
-{
-	if ((f->countPozitive==0) && (f->countNegative==0))
-		return 0;
-	if ((f->totalNegative==0) || (f->totalPozitive==0))
-		return 100;
-	return abs(((f->countPozitive*100)/f->totalPozitive)-((f->countNegative*100)/f->totalNegative));
-}
-double Compute_Diff(FeaturesInformations *f)
-{
-	return f->countPozitive-f->countNegative;
-}
-double Compute_AbsDiff(FeaturesInformations *f)
-{
-	if (f->countPozitive>f->countNegative)
-		return f->countPozitive-f->countNegative;
-	else
-		return f->countNegative-f->countPozitive;
-}
-double Compute_F1(FeaturesInformations *f)
-{
-	double t_mal = f->countPozitive;
-	double f_mal = f->totalPozitive - t_mal;
-	double t_clean = f->countNegative;
-	double f_clean = f->totalNegative - t_clean;
-
-	double all_mal = f->totalPozitive;
-	double all_clean = f->totalNegative;
-	double miu_pl = (double)t_mal / all_mal;
-	double miu_min = (double)t_clean / all_clean;
-	double sigma_pl = sqrt((double)(t_mal * (1 - miu_pl) * (1 - miu_pl) + f_mal * miu_pl * miu_pl));
-	double sigma_min = sqrt((double)(t_clean * (1 - miu_min) * (1 - miu_min) + f_clean * miu_min * miu_min));
-	double v1 = miu_pl - miu_min;
-	double v2 = sigma_pl + sigma_min;
-	//if (v1 < 0) v1 = -v1;
-	//if (v2 < 0) v2 = -v2;
-	if (t_mal + t_clean == 0) return 0;
-	return (v1*1000000) / v2;
-	//double precision = (double)(f.t_mal) / ((double)f.t_mal);
-}
-double Compute_F2(FeaturesInformations *f)
-{
-	double t_mal = f->countPozitive;
-	double f_mal = f->totalPozitive - t_mal;
-	double t_clean = f->countNegative;
-	double f_clean = f->totalNegative - t_clean;
-
-	if ((t_mal==0) && (t_clean == 0)) return 0;
-	if ((f->totalPozitive==0) || (f->totalNegative==0)) return 0;
-
-	double all_mal = f->totalPozitive;
-	double all_clean = f->totalNegative;
-    double miu_pl = (double)t_mal / all_mal;
-    double miu_min = (double)t_clean / all_clean;
-    double miu_total = (double)(t_mal + t_clean) / (all_mal + all_clean);
-    double sigma_pl = sqrt((double)(t_mal * (1 - miu_pl) * (1 - miu_pl) + f_mal * miu_pl * miu_pl));
-    double sigma_min = sqrt((double)(t_clean * (1 - miu_min) * (1 - miu_min) + f_clean * miu_min * miu_min));
-    double v1 = (miu_pl - miu_total) * (miu_pl - miu_total) + (miu_min - miu_total) * (miu_min - miu_total);
-    double v2 = sigma_pl*sigma_pl + sigma_min*sigma_min;
-    
-	if (v2==0) return 0;
-    return (v1 *1000000)/ v2;
-}
-double Compute_ProcTo100(FeaturesInformations *f)
-{
-	if (f->countPozitive>f->countNegative)
-		return 100-(f->countNegative/f->countPozitive)*100;
-	if (f->countPozitive<f->countNegative)
-		return -(100-(f->countPozitive/f->countNegative)*100);
-	return 0;
-}
-double Compute_AbsProcTo100(FeaturesInformations *f)
-{
-	if (f->countPozitive>f->countNegative)
-		return 100-(f->countNegative/f->countPozitive)*100;
-	if (f->countPozitive<f->countNegative)
-		return 100-(f->countPozitive/f->countNegative)*100;
-	return 0;
-}
-
-double Compute_InformationGain(FeaturesInformations *f)
-{
-	double e, e1, e2;
-	double total = f->totalPozitive+f->totalNegative;
-	e = entropy(f->countPozitive + (f->totalNegative-f->countNegative), f->countNegative + (f->totalNegative-f->countNegative));
-	e1 = entropy(f->countPozitive, f->countNegative);
-	e2 = entropy(f->countPozitive, (f->totalNegative-f->countNegative));
-
-	return e - ((double)(f->countPozitive + f->countNegative) / total) * e1 - ((double)((f->totalPozitive-f->countPozitive) + (f->totalNegative-f->countNegative)) / total) * e2;
-}
-double Compute_G1(FeaturesInformations *f)
-{
-	double total = f->countPozitive+f->countNegative;
-	double dif = abs(f->countPozitive - f->countNegative);
-	
-	if (total==0)
-		return 0;
-	return (dif * 100)/total;
-}
-double Compute_G2(FeaturesInformations *f)
-{
-	double all = f->totalPozitive+f->totalNegative;
-	double total = f->countPozitive+f->countNegative;
-	double dif = abs(f->countPozitive - f->countNegative);
-	
-	if (total==0)
-		return 0;
-	return ((dif * 100)/total)*((dif*100)/all);
-}
-double Compute_G3(FeaturesInformations *f)
-{
-	double all = f->totalPozitive+f->totalNegative;
-	double total = f->countPozitive+f->countNegative;
-	double dif = abs(f->countPozitive - f->countNegative);
-	
-	if (total==0)
-		return 0;
-	return (((dif * 100)/total)+((dif*100)/all));
-}
-double Compute_G4(FeaturesInformations *f)
-{
-	double total = f->totalPozitive+f->totalNegative;
-	double dif = abs(f->countPozitive - f->countNegative);
-	
-	if (total==0)
-		return 0;
-	return (dif * 100)/total;
-}
-double Compute_GProc(FeaturesInformations *f)
-{
-	double p_poz,p_neg,dif;
-
-	if ((f->totalPozitive==0.0) || (f->totalNegative==0))
-		return 0;	// functioneaza doar daca am de ambele feluri
-	if ((f->countPozitive==0) && (f->countNegative==0))
-		return 0;
-	p_poz = (f->countPozitive*100.0)/f->totalPozitive;
-	p_neg = (f->countNegative*100.0)/f->totalNegative;
-	dif = abs(p_poz-p_neg);
-	return (dif * 100.0)/(p_poz+p_neg);
-}
-double Compute_GProcTotal(FeaturesInformations *f)
-{
-	double p_poz,p_neg,dif,p_total;
-
-	if ((f->totalPozitive==0.0) || (f->totalNegative==0))
-		return 0;	// functioneaza doar daca am de ambele feluri
-	if ((f->countPozitive==0) && (f->countNegative==0))
-		return 0;
-	p_poz = (f->countPozitive*100.0)/f->totalPozitive;
-	p_neg = (f->countNegative*100.0)/f->totalNegative;
-	p_total = ((f->countNegative+f->countPozitive)*100.0)/(f->totalNegative+f->totalPozitive);
-	dif = abs(p_poz-p_neg);
-	return dif*p_total;
-}
-double Compute_ProbPoz(FeaturesInformations *f)
-{
-	if ((f->totalPozitive==0) || (f->totalNegative==0))
-		return 0;
-	double prob_mal = f->countPozitive/f->totalPozitive;
-	double prob_cln = f->countNegative/f->totalNegative;
-	return prob_mal*(1-prob_cln);
-}
-double Compute_ProbNeg(FeaturesInformations *f)
-{
-	if ((f->totalPozitive==0) || (f->totalNegative==0))
-		return 0;
-	double prob_mal = f->countPozitive/f->totalPozitive;
-	double prob_cln = f->countNegative/f->totalNegative;
-	return prob_cln*(1-prob_mal);
-}
-double Compute_MaxProb(FeaturesInformations *f)
-{
-	return max(Compute_ProbPoz(f),Compute_ProbNeg(f));
-}
-double Compute_MedianClosenest(FeaturesInformations *f)
-{
-	if ((f->totalPozitive==0) || (f->totalNegative==0))
-		return 0;
-	double prob_mal = f->countPozitive/f->totalPozitive-0.5;
-	double prob_cln = f->countNegative/f->totalNegative-0.5;
-	if (prob_mal<0)
-		prob_mal = -prob_mal;
-	if (prob_cln<0)
-		prob_cln = -prob_cln;
-	return ((1-prob_mal)+(1-prob_cln))/2;
-}
-
-//====================================================================================================
-
-double GetBooleanEntropy(double pos_count, double neg_count)
-{
-    double pos_prob, neg_prob, ret_val = 0.0;
-    double sum = pos_count + neg_count;
-
-    if (sum < 1) sum = 1;
-
-    pos_prob = (double)pos_count / (double)sum;
-    neg_prob = (double)neg_count / (double)sum;
-
-    if(neg_count > 0)
-        ret_val -= neg_prob * log(neg_prob);
-
-    if(pos_count > 0)
-        ret_val -= pos_prob * log(pos_prob);
-
-    return ret_val;
-}
-
-double GetJointBooleanEntropy(double lposfpos,double  lposfneg,double  lnegfpos,double  lnegfneg)
-{
-    double prob, ret_val = 0.0, sum = 0.0;
-
-    sum += lposfpos;
-    sum += lposfneg;
-    sum += lnegfpos;
-    sum += lnegfneg;
-
-    if (sum < 1) sum = 1;
-    
-    prob = (double)lposfpos / (double)sum;
-    if (prob) ret_val -= prob * log(prob);		
-
-    prob = (double)lposfneg / (double)sum;
-    if (prob) ret_val -= prob * log(prob);		
-
-    prob = (double)lnegfpos / (double)sum;
-    if (prob)ret_val -= prob * log(prob);		
-
-    prob = (double)lnegfneg / (double)sum;
-    if (prob)ret_val -= prob * log(prob);		
-
-    return ret_val;
-}
-
-double Compute_AsymetricUncertainty(FeaturesInformations *f) 
-{
-    double feature_entropy, label_entropy, joint_entropy, ret_val;
-    
-    double lposfpos = f->countPozitive;
-    double lposfneg = f->totalPozitive - f->countPozitive;
-    double lnegfpos = f->countNegative;
-    double lnegfneg = f->totalNegative - f->countNegative;
-
-    feature_entropy = GetBooleanEntropy(f->countPozitive+f->countNegative, f->totalNegative+f->totalPozitive);
-    label_entropy   = GetBooleanEntropy(f->totalPozitive, f->totalNegative);
-    joint_entropy   = GetJointBooleanEntropy(lposfpos, lposfneg, lnegfpos, lnegfneg);
-
-    ret_val = feature_entropy + label_entropy;
-    if (ret_val < 1e-10) ret_val = 1e-10;
-    ret_val = 2.0 * (ret_val - joint_entropy) / ret_val;
-    return ret_val;
-}
-//====================================================================================================
-
 FeaturesStatistics::FeaturesStatistics()
 {
 	GML::Utils::GString		tmp;
 	UInt32					tr;
+	UInt32					funcCount;
 
 	ObjectName = "FeaturesStatistics";
 
@@ -387,38 +66,11 @@ FeaturesStatistics::FeaturesStatistics()
 	LinkPropertyToUInt32("MinNegativeElements"		,MinNeg					,0,"Minimum number of negative elements (for filtering)");
 	LinkPropertyToUInt32("MaxNegativeElements"		,MaxNeg					,0xFFFFFFFF,"Maximum number of negative elements (for filtering)");	
 
-	AddNewStatFunction("TotalPoz",Compute_TotalPozitive);
-	AddNewStatFunction("TotalNeg",Compute_TotalNegative);
-	AddNewStatFunction("PozCount",Compute_Pozitive);
-	AddNewStatFunction("NegCount",Compute_Negative);
-
-	AddNewStatFunction("PozProc",Compute_ProcPozitive);
-	AddNewStatFunction("NegProc",Compute_ProcNegative);
-	AddNewStatFunction("ProcAverage",Compute_ProcAverage);
-	AddNewStatFunction("ProcTotal",Compute_ProcTotal);
-
-	AddNewStatFunction("Poz/Neg",Compute_RapPozNeg);
-	AddNewStatFunction("ProcDiff",Compute_ProcDiff);
-	AddNewStatFunction("Abs(ProcDiff)",Compute_AbsProcDiff);
-	AddNewStatFunction("Diff",Compute_Diff);
-	AddNewStatFunction("Abs(Diff)",Compute_AbsDiff);
-	AddNewStatFunction("F1",Compute_F1);
-	AddNewStatFunction("F2",Compute_F2);
-	AddNewStatFunction("InformationGain",Compute_InformationGain);
-	AddNewStatFunction("ProcTo100",Compute_ProcTo100);
-	AddNewStatFunction("Abs(ProcTo100)",Compute_AbsProcTo100);
-	AddNewStatFunction("G1",Compute_G1);
-	AddNewStatFunction("G2",Compute_G2);
-	AddNewStatFunction("G3",Compute_G3);
-	AddNewStatFunction("G4",Compute_G4);
-	AddNewStatFunction("GProc",Compute_GProc);
-	AddNewStatFunction("GProcTotal",Compute_GProcTotal);
-	AddNewStatFunction("ProbPoz",Compute_ProbPoz);
-	AddNewStatFunction("ProbNeg",Compute_ProbNeg);
-	AddNewStatFunction("MaxProb",Compute_MaxProb);
-	AddNewStatFunction("MedianClose",Compute_MedianClosenest);
-    AddNewStatFunction("AsymUncertain",Compute_AsymetricUncertainty);
-
+	//Add MeasureFunctions from FeatStats from GmlLib
+	funcCount = GML::ML::FeatStatsFunctions::GetFunctionsCount();
+	for (tr=0;tr<funcCount;tr++)
+		AddNewStatFunction(GML::ML::FeatStatsFunctions::GetFunctionName(tr), GML::ML::FeatStatsFunctions::GetFunctionPointer(tr));
+	
 	SortProps.Set("!!LIST:NoSort=0xFFFF");
 	WeightFileType.Set("!!LIST:None=0xFFFF");
 	for (tr=0;tr<StatsData.Len();tr++)
@@ -435,7 +87,8 @@ FeaturesStatistics::FeaturesStatistics()
 	LinkPropertyToUInt32("SaveFeaturesWeight"		,saveFeatureWeightFile	,0xFFFF,WeightFileType.GetText());
 	LinkPropertyToString("FeaturesWeightFile"		,FeaturesWeightFile		,"");
 }
-bool FeaturesStatistics::AddNewStatFunction(char *name,double (*_fnCompute) ( FeaturesInformations *info))
+//====================================================================================================
+bool FeaturesStatistics::AddNewStatFunction(char *name,GML::ML::FeatStatComputeFunction _fnCompute)
 {
 	Stats	tmp;
 
@@ -820,8 +473,9 @@ void FeaturesStatistics::SaveFeatureWeightFile()
 }
 bool FeaturesStatistics::Compute()
 {
-	UInt32					tr,gr;
-	FeaturesInformations	info;
+	UInt32							tr,gr;
+	FeaturesInformations			info;
+	GML::ML::FeatureInformation		finf;	
 	
 
 	notif->Info("[%s] -> Computing statistics ...",ObjectName);
@@ -855,11 +509,11 @@ bool FeaturesStatistics::Compute()
 	for (tr=0;tr<con->GetFeatureCount();tr++)
 	{
 		info.Index = tr;
-		info.totalPozitive = All.totalPozitive;
-		info.totalNegative = All.totalNegative;
+		info.totalPozitive = finf.totalPozitive = All.totalPozitive; 
+		info.totalNegative = finf.totalNegative = All.totalNegative;
 
-		info.countNegative = All.FI[tr].NegativeCount;
-		info.countPozitive = All.FI[tr].PozitiveCount;
+		info.countNegative = finf.countNegative = All.FI[tr].NegativeCount;
+		info.countPozitive = finf.countPozitive = All.FI[tr].PozitiveCount;
         
 		if ((info.fnValue = new double[StatsData.Len()])==NULL)
 		{
@@ -867,7 +521,7 @@ bool FeaturesStatistics::Compute()
 			return false;
 		}
 		for (gr=0;gr<StatsData.Len();gr++)
-			info.fnValue[gr] = StatsData[gr].fnCompute(&info) * multiplyFactor;
+			info.fnValue[gr] = StatsData[gr].fnCompute(&finf) * multiplyFactor;
 
 		if (ComputedData.PushByRef(info)==false)
 		{
