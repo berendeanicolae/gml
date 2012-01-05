@@ -24,13 +24,47 @@ void FeatureCounters::Add(FeatureCounters &fc)
 	CountTotalNegative += fc.CountTotalNegative;
 }
 //===================================
+void FeatureInformationFromFeatureCounters(FeatureCounters &fc, GML::ML::FeatureInformation &fi)
+{
+	fi.totalPozitive = fc.CountTotalPozitive;
+	fi.totalNegative = fc.CountTotalNegative;
+	fi.countNegative = fc.CountNegative;
+	fi.countPozitive = fc.CountPozitive;
+}
+//===================================
+Stats::Stats()
+{
+	fnCompute = NULL;
+}
+Stats::Stats(Stats &ref)
+{
+	fnCompute = ref.fnCompute;
+	this->Name.Set(ref.Name.GetText());
+}
 GenericFeatureStatistics::GenericFeatureStatistics()
 {
+	UInt32					tr;
+	UInt32					funcCount;
+
 	ObjectName = "GenericFeatureStatistics";
 
 	//Add extra commands here
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");	
 	LinkPropertyToString("ResultFile",ResultFileName,"","Name of the output file");
+	
+	//Add MeasureFunctions from FeatStats from GmlLib
+	funcCount = GML::ML::FeatStatsFunctions::GetFunctionsCount();
+	for (tr=0;tr<funcCount;tr++)
+		AddNewStatFunction(GML::ML::FeatStatsFunctions::GetFunctionName(tr),GML::ML::FeatStatsFunctions::GetFunctionPointer(tr));
+		
+	computeMethod.Set("!!LIST:None=0xFFFF");
+	for (tr=0;tr<StatsData.Len();tr++)
+	{
+		char *text = StatsData[tr].Name.GetText();
+		computeMethod.AddFormated(",%s=%d",text,tr);
+	}
+	computeMethod.Add("!!");
+	LinkPropertyToUInt32("FeatStatMethod",computeMethodIndex,0xFFFF,computeMethod.GetText());
 	
 	callThreadComputeExtraDataFunction = false;
 }
@@ -69,6 +103,15 @@ bool GenericFeatureStatistics::Init()
 	}
 	TreePathSize = 0;
 	return true;
+}
+bool GenericFeatureStatistics::AddNewStatFunction(char *name,GML::ML::FeatStatComputeFunction _fnCompute)
+{
+	Stats	tmp;
+
+	if (tmp.Name.Set(name)==false)
+		return false;
+	tmp.fnCompute = _fnCompute;
+	return StatsData.PushByRef(tmp);
 }
 void GenericFeatureStatistics::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand)
 {
@@ -132,7 +175,8 @@ bool GenericFeatureStatistics::OnComputeFeatureCounters(GML::Algorithm::MLThread
 		{
 			if (OnThreadComputeExtraData(tr,thData)==false)
 				return false;
-		}
+		}			
+
 		if ((thData.ThreadID==0) && ((tr%1000)==0))
 			notif->SetProcent(tr,nrRecords);
 	}
@@ -176,7 +220,7 @@ bool GenericFeatureStatistics::OnComputeRemoveIndexes(GML::Algorithm::MLThreadDa
 					break;
 			}
 		}
-		if (gr==TreePathSize) 
+		if (gr!=TreePathSize) 
 		{
 			RemovedRecords[tr] = true;
 		} else {
@@ -203,7 +247,9 @@ bool GenericFeatureStatistics::OnInitThreadData(GML::Algorithm::MLThreadData &th
 }
 double GenericFeatureStatistics::ComputeScore(FeatureCounters &counter)
 {
-	return abs((double)counter.CountPozitive-(double)counter.CountNegative);
+	FeatureInformationFromFeatureCounters(counter, finf);
+	//return abs((double)counter.CountPozitive-(double)counter.CountNegative);
+	return StatsData[computeMethodIndex].fnCompute(&finf);
 }
 void GenericFeatureStatistics::CreateWorkingList()
 {
