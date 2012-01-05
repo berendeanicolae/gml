@@ -32,7 +32,7 @@ GenericFeatureStatistics::GenericFeatureStatistics()
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");	
 	LinkPropertyToString("ResultFile",ResultFileName,"","Name of the output file");
 	
-	callThreadExtraDataFunction = false;
+	callThreadComputeExtraDataFunction = false;
 }
 bool GenericFeatureStatistics::Init()
 {
@@ -128,7 +128,7 @@ bool GenericFeatureStatistics::OnComputeFeatureCounters(GML::Algorithm::MLThread
 					obj_td->Counters[gr].CountTotalNegative++;
 			}
 		}
-		if (callThreadExtraDataFunction)
+		if (callThreadComputeExtraDataFunction)
 		{
 			if (OnThreadComputeExtraData(tr,thData)==false)
 				return false;
