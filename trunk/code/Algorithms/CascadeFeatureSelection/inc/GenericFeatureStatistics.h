@@ -52,6 +52,7 @@ protected:
 	UInt32									workingRecordsCount;
 	UInt32									TreePath[MAX_PATH_DEPTH];
 	UInt32									TreePathSize;
+	bool									callThreadExtraDataFunction;
 	
 	void									OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
 	bool									OnInitThreadData(GML::Algorithm::MLThreadData &thData);
@@ -60,7 +61,8 @@ protected:
 	void									CreateWorkingList();
 	double									ComputeScore(FeatureCounters &counter);	
 	void									ComputeScoresAndSort();
-
+	
+	virtual bool							OnThreadComputeExtraData(UInt32 recordIndex,GML::Algorithm::MLThreadData &thData);
 	virtual void							OnCompute()=0;
 public:
 	GenericFeatureStatistics();
