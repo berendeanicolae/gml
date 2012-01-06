@@ -6,6 +6,10 @@ CascadeFeatureSelection::CascadeFeatureSelection()
 }
 bool CascadeFeatureSelection::OnProcessRecord(UInt32 recordIndex,GML::Algorithm::MLThreadData &thData)
 {
+	if (thData.Record.Features[featToRemove]!=0.0)
+	{
+		RemovedRecords[recordIndex] = true;
+	}
 	return true;
 }
 void CascadeFeatureSelection::OnCompute()
@@ -23,6 +27,9 @@ void CascadeFeatureSelection::OnCompute()
 	tmp.Create(2048);	
 	workingRecordsCount = con->GetRecordCount();
 
+	ClearRemovedRecordsList();
+	ClearRemovedFeaturesList();
+	
 	while (true)
 	{
 		ComputeScoresAndSort();
@@ -32,10 +39,9 @@ void CascadeFeatureSelection::OnCompute()
 			break;
 		}
 		featToRemove = FeatScores[0].Index;
+		RemovedFeatures[featToRemove] = true;
 		ProcessRecords();
-		TreePath[TreePathSize++] = featToRemove;
-		
-		
+				
 		// afisez
 		tmp.SetFormated("%d|Scor:%lf|Poz:%d|Neg:%d|TotalPoz:%d|TotalNeg:%d\n",
 						featToRemove,

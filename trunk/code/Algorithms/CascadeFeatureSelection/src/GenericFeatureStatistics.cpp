@@ -32,20 +32,12 @@ void FeatureInformationFromFeatureCounters(FeatureCounters &fc, GML::ML::Feature
 	fi.countPozitive = fc.CountPozitive;
 }
 //===================================
-Stats::Stats()
-{
-	fnCompute = NULL;
-}
-Stats::Stats(Stats &ref)
-{
-	fnCompute = ref.fnCompute;
-	this->Name.Set(ref.Name.GetText());
-}
 GenericFeatureStatistics::GenericFeatureStatistics()
 {
 	UInt32					tr;
 	UInt32					funcCount;
-
+	GML::Utils::GString		computeMethod;	
+	
 	ObjectName = "GenericFeatureStatistics";
 
 	//Add extra commands here
@@ -54,17 +46,13 @@ GenericFeatureStatistics::GenericFeatureStatistics()
 	
 	//Add MeasureFunctions from FeatStats from GmlLib
 	funcCount = GML::ML::FeatStatsFunctions::GetFunctionsCount();
-	for (tr=0;tr<funcCount;tr++)
-		AddNewStatFunction(GML::ML::FeatStatsFunctions::GetFunctionName(tr),GML::ML::FeatStatsFunctions::GetFunctionPointer(tr));
-		
-	computeMethod.Set("!!LIST:None=0xFFFF");
-	for (tr=0;tr<StatsData.Len();tr++)
-	{
-		char *text = StatsData[tr].Name.GetText();
-		computeMethod.AddFormated(",%s=%d",text,tr);
-	}
+	computeMethod.Set("!!LIST:");
+	for (tr=0;tr<funcCount;tr++)	
+		computeMethod.AddFormated("%s=%d,",GML::ML::FeatStatsFunctions::GetFunctionName(tr),tr);
+	if (funcCount>0)
+		computeMethod.Truncate(computeMethod.Len()-1);
 	computeMethod.Add("!!");
-	LinkPropertyToUInt32("FeatStatMethod",computeMethodIndex,0xFFFF,computeMethod.GetText());
+	LinkPropertyToUInt32("FeatStatMethod",computeMethodIndex,0,computeMethod.GetText());
 	
 	callThreadComputeExtraDataFunction = false;
 }
@@ -101,18 +89,11 @@ bool GenericFeatureStatistics::Init()
 		notif->Error("[%s] -> Unable to create RemovedFeatures list !",ObjectName);
 		return false;	
 	}
+	fnCompute = GML::ML::FeatStatsFunctions::GetFunctionPointer(computeMethodIndex);
 	TreePathSize = 0;
 	return true;
 }
-bool GenericFeatureStatistics::AddNewStatFunction(char *name,GML::ML::FeatStatComputeFunction _fnCompute)
-{
-	Stats	tmp;
 
-	if (tmp.Name.Set(name)==false)
-		return false;
-	tmp.fnCompute = _fnCompute;
-	return StatsData.PushByRef(tmp);
-}
 void GenericFeatureStatistics::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand)
 {
 	switch (threadCommand)
@@ -292,9 +273,12 @@ bool GenericFeatureStatistics::OnInitThreadData(GML::Algorithm::MLThreadData &th
 }
 double GenericFeatureStatistics::ComputeScore(FeatureCounters &counter)
 {
+	GML::ML::FeatureInformation				finf;
+	
 	FeatureInformationFromFeatureCounters(counter, finf);
-	//return abs((double)counter.CountPozitive-(double)counter.CountNegative);
-	return StatsData[computeMethodIndex].fnCompute(&finf);
+	if (fnCompute)
+		return fnCompute(&finf);
+	return 0.0;
 }
 void GenericFeatureStatistics::CreateWorkingList()
 {
