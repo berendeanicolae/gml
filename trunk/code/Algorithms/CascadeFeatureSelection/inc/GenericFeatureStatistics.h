@@ -56,6 +56,7 @@ protected:
 	UInt32									TreePathSize;
 	bool									callThreadComputeExtraDataFunction;
 	bool									skipRemovedRecords;
+	GML::Utils::GString						computeMethod;	
 	
 	void									OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
 	bool									OnInitThreadData(GML::Algorithm::MLThreadData &thData);
