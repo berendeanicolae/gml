@@ -15,6 +15,9 @@ public:
 	bool				Init();
 	void				OnCompute();
 	bool				OnThreadComputeExtraData(UInt32 recordIndex,GML::Algorithm::MLThreadData &thData);
+	bool				WriteData(GML::Utils::File& out);
+	bool				WritePaths(GML::Utils::File& out);
+	bool				WriteFlags(GML::Utils::File& out);
 };
 
 #endif
