@@ -78,6 +78,8 @@ protected:
 	double									ComputeScore(FeatureCounters &counter);	
 	void									ComputeScoresAndSort();
 	void									ProcessRecords(bool skipRemovedRecords=true,bool clearRemoveRecordsList = false);
+	void									ClearRemovedRecordsList();
+	void									ClearRemovedFeaturesList();
 	
 	virtual bool							OnProcessRecord(UInt32 recordIndex,GML::Algorithm::MLThreadData &thData);
 	virtual bool							OnThreadComputeExtraData(UInt32 recordIndex,GML::Algorithm::MLThreadData &thData);

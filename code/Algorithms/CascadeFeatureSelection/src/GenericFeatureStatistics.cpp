@@ -356,7 +356,14 @@ void GenericFeatureStatistics::ComputeScoresAndSort()
 	// sortez
 	FeatScores.Sort(cmpFunction,false);		
 }
-
+void GenericFeatureStatistics::ClearRemovedRecordsList()
+{
+	MEMSET(RemovedRecords,0,sizeof(bool)*con->GetRecordCount());
+}
+void GenericFeatureStatistics::ClearRemovedFeaturesList()
+{
+	MEMSET(RemovedFeatures,0,sizeof(bool)*con->GetFeatureCount());
+}
 void GenericFeatureStatistics::OnExecute()
 {
 	switch (Command)
