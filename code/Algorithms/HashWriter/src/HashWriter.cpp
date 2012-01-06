@@ -257,7 +257,7 @@ bool HashWriter::SaveAll()
 	GML::Utils::GString		temp,hash,curent;
 	UInt32					tr,gr;
 
-	if (temp.Create(0x1000)==false)
+	if (temp.Create(0x10000)==false)
 	{
 		notif->Error("[%s] -> Unable to alloc memory for cache",ObjectName);
 		return false;
