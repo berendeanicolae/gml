@@ -4,6 +4,10 @@ CascadeFeatureSelection::CascadeFeatureSelection()
 {
 	ObjectName = "CascadeFeatureSelection";
 }
+bool CascadeFeatureSelection::OnProcessRecord(UInt32 recordIndex,GML::Algorithm::MLThreadData &thData)
+{
+	return true;
+}
 void CascadeFeatureSelection::OnCompute()
 {
 	UInt32				tr,gr;
@@ -28,6 +32,7 @@ void CascadeFeatureSelection::OnCompute()
 			break;
 		}
 		featToRemove = FeatScores[0].Index;
+		ProcessRecords();
 		TreePath[TreePathSize++] = featToRemove;
 		
 		
