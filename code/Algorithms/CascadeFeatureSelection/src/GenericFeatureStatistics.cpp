@@ -36,7 +36,6 @@ GenericFeatureStatistics::GenericFeatureStatistics()
 {
 	UInt32					tr;
 	UInt32					funcCount;
-	GML::Utils::GString		computeMethod;	
 	
 	ObjectName = "GenericFeatureStatistics";
 
