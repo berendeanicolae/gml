@@ -125,6 +125,9 @@ void GenericFeatureStatistics::OnRunThreadCommand(GML::Algorithm::MLThreadData &
 		case THREAD_COMMAND_REMOVE_RECORDS:
 			OnComputeRemoveIndexes(thData);
 			return;
+		case THREAD_COMMAND_PROCESS_RECORDS:
+			OnComputeProcessedRecords(thData);
+			return;
 	};
 }
 bool GenericFeatureStatistics::OnComputeFeatureCounters(GML::Algorithm::MLThreadData &thData)
@@ -189,6 +192,10 @@ bool GenericFeatureStatistics::OnThreadComputeExtraData(UInt32 recordIndex,GML::
 {
 	return false;
 }
+bool GenericFeatureStatistics::OnProcessRecord(UInt32 recordIndex,GML::Algorithm::MLThreadData &thData)
+{
+	return false;
+}
 bool GenericFeatureStatistics::OnComputeRemoveIndexes(GML::Algorithm::MLThreadData &thData)
 {
 	UInt32								tr,gr,nrRecords,nrFeatures,idFeat;
@@ -235,6 +242,44 @@ bool GenericFeatureStatistics::OnComputeRemoveIndexes(GML::Algorithm::MLThreadDa
 	
 	return true;
 }
+bool GenericFeatureStatistics::OnComputeProcessedRecords(GML::Algorithm::MLThreadData &thData)
+{
+	UInt32								tr,gr,nrRecords,nrFeatures,idFeat;
+	CascadeFeatureSelectionThreadData	*obj_td = (CascadeFeatureSelectionThreadData* )thData.Context;
+	
+	nrRecords = con->GetRecordCount();
+	nrFeatures = con->GetFeatureCount();
+	obj_td->workingRecordsCount = 0;
+	
+	if (thData.ThreadID==0)
+		notif->StartProcent("[%s] -> Removing records ",ObjectName);
+		
+	for (tr=thData.ThreadID;tr<nrRecords;tr+=threadsCount)
+	{
+		if ((skipRemovedRecords) && (RemovedRecords[tr]))
+			continue;
+		if (con->GetRecord(thData.Record,tr)==false)
+		{
+			notif->Error("[%s] -> Unable to read record #%d",ObjectName,tr);
+			return false;
+		}
+		if (OnProcessRecord(tr,thData)==false)
+		{
+			notif->Error("[%s] -> OnProcessRecord returned false for record #%d -> exiting!",ObjectName,tr);
+			return false;		
+		}
+		if (RemovedRecords[tr]==false)
+			obj_td->workingRecordsCount++;
+
+		if ((thData.ThreadID==0) && ((tr%1000)==0))
+			notif->SetProcent(tr,nrRecords);				
+	}
+	if (thData.ThreadID==0)
+		notif->EndProcent();
+	
+	return true;
+}
+
 bool GenericFeatureStatistics::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
 {
 	CascadeFeatureSelectionThreadData	*obj_td = new CascadeFeatureSelectionThreadData();
@@ -270,7 +315,19 @@ void GenericFeatureStatistics::CreateWorkingList()
 			workingRecordsCount += ((CascadeFeatureSelectionThreadData *)ThData[gr].Context)->workingRecordsCount;
 	}
 }
+void GenericFeatureStatistics::ProcessRecords(bool _skipRemovedRecords,bool clearRemoveRecordsList)
+{
 
+	if (clearRemoveRecordsList)
+	{
+		MEMSET(RemovedRecords,0,sizeof(bool)*con->GetRecordCount());
+	}
+	skipRemovedRecords = _skipRemovedRecords;
+	ExecuteParalelCommand(THREAD_COMMAND_PROCESS_RECORDS);
+	workingRecordsCount = 0;
+	for (UInt32 gr=0;gr<threadsCount;gr++)
+		workingRecordsCount += ((CascadeFeatureSelectionThreadData *)ThData[gr].Context)->workingRecordsCount;	
+}
 void GenericFeatureStatistics::ComputeScoresAndSort()
 {
 	UInt32				tr,gr;

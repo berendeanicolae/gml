@@ -47,6 +47,7 @@ protected:
 		THREAD_COMMAND_NONE = 0,
 		THREAD_COMMAND_COMPUTE_FEATURES_COUNTERS,
 		THREAD_COMMAND_REMOVE_RECORDS,
+		THREAD_COMMAND_PROCESS_RECORDS,
 	};
 	GML::ML::MLRecord						MainRecord;	
 	GML::Utils::GTFVector<FeatureCounters>	FeatCounters;
@@ -57,8 +58,7 @@ protected:
 	GML::Utils::GTVector<Stats>				StatsData;
 	GML::ML::FeatureInformation				finf;	
 	
-	// variable inter thread
-	GML::Utils::GString						featName;
+	// variable inter thread	
 	GML::Utils::GString						computeMethod;	
 	UInt32									computeMethodIndex;
 	UInt32									featToRemove;
@@ -66,18 +66,23 @@ protected:
 	UInt32									TreePath[MAX_PATH_DEPTH];
 	UInt32									TreePathSize;
 	bool									callThreadComputeExtraDataFunction;
+	bool									skipRemovedRecords;
 	
 	void									OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
 	bool									OnInitThreadData(GML::Algorithm::MLThreadData &thData);
 	bool									OnComputeFeatureCounters(GML::Algorithm::MLThreadData &thData);
 	bool									OnComputeRemoveIndexes(GML::Algorithm::MLThreadData &thData);	
+	bool									OnComputeProcessedRecords(GML::Algorithm::MLThreadData &thData);	
 	bool									AddNewStatFunction(char *name,GML::ML::FeatStatComputeFunction);
 	void									CreateWorkingList();
 	double									ComputeScore(FeatureCounters &counter);	
 	void									ComputeScoresAndSort();
+	void									ProcessRecords(bool skipRemovedRecords=true,bool clearRemoveRecordsList = false);
 	
+	virtual bool							OnProcessRecord(UInt32 recordIndex,GML::Algorithm::MLThreadData &thData);
 	virtual bool							OnThreadComputeExtraData(UInt32 recordIndex,GML::Algorithm::MLThreadData &thData);
 	virtual void							OnCompute()=0;
+	
 public:
 	GenericFeatureStatistics();
 
