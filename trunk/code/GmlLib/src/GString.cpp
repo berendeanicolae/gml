@@ -585,24 +585,44 @@ TCHAR* ConvertUIntegerNumberToString(DataConvertInfo *dci,TYPE_UINT64 data,TCHAR
 
 	if (dci->Flags & DataConvertInfo::FLAG_UPPER)
 		letters = convert_array_upper;
-
-	do
+	if (dci->Flags & DataConvertInfo::FLAG_BE)
 	{
-		tempBuffer[poz--] = letters[data % dci->Base];
-		data = data / dci->Base;
-		gPoz++;
-		if ((gPoz==dci->Group) && (data>0))
+		poz = 0;
+		do
 		{
-			tempBuffer[poz--]=',';
-			gPoz=0;
-		}		
-	} while ((data>0) && (poz>=2));
-	if (data!=0)
-		return NULL;
-	// totul e ok
-	poz++;
-	(*resultSize) = (tempBufferSize-1)-poz;
-	return &tempBuffer[poz];
+			tempBuffer[poz++] = letters[data % dci->Base];
+			data = data / dci->Base;
+			gPoz++;
+			if ((gPoz==dci->Group) && (data>0))
+			{
+				tempBuffer[poz++]=',';
+				gPoz=0;
+			}		
+		} while ((data>0) && (poz+2<tempBufferSize));
+		if (data!=0)
+			return NULL;
+		tempBuffer[poz] = 0;
+		(*resultSize) = poz;
+		return &tempBuffer[0];		
+	} else {
+		do
+		{
+			tempBuffer[poz--] = letters[data % dci->Base];
+			data = data / dci->Base;
+			gPoz++;
+			if ((gPoz==dci->Group) && (data>0))
+			{
+				tempBuffer[poz--]=',';
+				gPoz=0;
+			}		
+		} while ((data>0) && (poz>=2));
+		if (data!=0)
+			return NULL;
+		// totul e ok
+		poz++;
+		(*resultSize) = (tempBufferSize-1)-poz;
+		return &tempBuffer[poz];
+	}
 }
 TCHAR* ConvertDoubleNumberToString(DataConvertInfo *dci,double data,TCHAR *tempBuffer,int tempBufferSize,int *resultSize)
 {
