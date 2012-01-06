@@ -43,6 +43,7 @@ struct DataConvertInfo
 	enum {
 		FLAG_UPPER = 1,
 		FLAG_TRUNCATE = 2,
+		FLAG_BE = 4,
 	};
 	enum {
 		EXTVALUE_AlignSize = 0,
@@ -452,6 +453,13 @@ bool UpdateDataConvertInfo(DataConvertInfo *dci,char *info,int infoSize)
 		dci->Align = DataConvertInfo::ALIGN_CENTER;
 		return true;
 	}
+	// flag de BigEndia
+	
+	if ((__StrEq(info,infoSize,"be",true)) || (__StrEq(info,infoSize,"bigendian",true)))
+	{
+		dci->Flags |= DataConvertInfo::FLAG_BE;
+		return true;
+	}
 	// flag de trunchiere
 	if (__StrEq(info,infoSize,"trunc",true))
 	{
@@ -509,8 +517,7 @@ TCHAR* ConvertIntegerNumberToString(DataConvertInfo *dci,TYPE_INT64 data,TCHAR *
 	int				poz = tempBufferSize-1;
 	unsigned int	gPoz=0;
 	
-	tempBuffer[poz]=0;
-	poz--;
+
 
 	if (dci->Flags & DataConvertInfo::FLAG_UPPER)
 		letters = convert_array_upper;
@@ -520,25 +527,53 @@ TCHAR* ConvertIntegerNumberToString(DataConvertInfo *dci,TYPE_INT64 data,TCHAR *
 		data = -data;
 		negativ = true;
 	}
-	do
+	if (dci->Flags & DataConvertInfo::FLAG_BE)
 	{
-		tempBuffer[poz--] = letters[data % dci->Base];
-		data = data / dci->Base;
-		gPoz++;
-		if ((gPoz==dci->Group) && (data>0))
+		poz = 0;
+		if (negativ)
 		{
-			tempBuffer[poz--]=',';
-			gPoz=0;
-		}		
-	} while ((data>0) && (poz>=2));
-	if (data!=0)
-		return NULL;
-	if (negativ)
-		tempBuffer[poz--] = '-';
-	// totul e ok
-	poz++;
-	(*resultSize) = (tempBufferSize-1)-poz;
-	return &tempBuffer[poz];
+			tempBuffer[0] = '-';
+			poz++;
+		}
+		do
+		{
+			tempBuffer[poz++] = letters[data % dci->Base];
+			data = data / dci->Base;
+			gPoz++;
+			if ((gPoz==dci->Group) && (data>0))
+			{
+				tempBuffer[poz++]=',';
+				gPoz=0;
+			}		
+		} while ((data>0) && (poz+2<tempBufferSize));
+		if (data!=0)
+			return NULL;
+		tempBuffer[poz] = 0;
+		(*resultSize) = poz;
+		return &tempBuffer[0];		
+	} else {
+		tempBuffer[poz]=0;
+		poz--;	
+		do
+		{
+			tempBuffer[poz--] = letters[data % dci->Base];
+			data = data / dci->Base;
+			gPoz++;
+			if ((gPoz==dci->Group) && (data>0))
+			{
+				tempBuffer[poz--]=',';
+				gPoz=0;
+			}		
+		} while ((data>0) && (poz>=2));
+		if (data!=0)
+			return NULL;
+		if (negativ)
+			tempBuffer[poz--] = '-';
+		// totul e ok
+		poz++;
+		(*resultSize) = (tempBufferSize-1)-poz;
+		return &tempBuffer[poz];		
+	}
 }
 TCHAR* ConvertUIntegerNumberToString(DataConvertInfo *dci,TYPE_UINT64 data,TCHAR *tempBuffer,int tempBufferSize,int *resultSize)
 {
