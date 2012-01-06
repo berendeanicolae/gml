@@ -48,11 +48,167 @@ bool DecisionTreeFeatureStatistics::CreatePath(UInt32 index)
 	}
 	return true;
 }
+bool DecisionTreeFeatureStatistics::WriteData(GML::Utils::File& out)
+{
+	GML::Utils::GString		md5,temp,raw;
+	UInt32					tr;
+	GML::DB::RecordHash		rHash;
+	double					label;
+	
+	if (temp.Create(0x10000)==false)
+	{
+		notif->Error("[%s] -> Unable to alloc memory for cache",ObjectName);
+		return false;
+	}
+	temp.Set("");
+	for (tr=0;tr<con->GetRecordCount();tr++)
+	{
+		if (con->GetRecordLabel(label,tr)==false)
+		{
+			notif->Error("[%s] -> Unable to read label for #%d",ObjectName,tr);
+			return false;
+		}
+		if (con->GetRecordHash(rHash,tr)==false)
+		{
+			notif->Error("[%s] -> Unable to read record hash for #%d",ObjectName,tr);
+			return false;
+		}
+		if (rHash.ToString(md5)==false)
+		{
+			notif->Error("[%s] -> Unable to convert record hash for #%d",ObjectName,tr);
+			return false;
+		}
+		raw.Set(md5);
+		raw.AddFormated("|%d|",(label==1.0?1:0));
+		raw.AddFormatedEx("%{uint64,bin,L%%,F0,be}|0x%{uint64,Hex}\n", HashesForRecord[tr], TreePathSize-1,HashesForRecord[tr]);
+		temp.Add(raw);
+		if (temp.Len()>64000)
+		{						
+			if (out.Write(temp.GetText(),temp.Len())==false)
+			{
+				notif->Error("[%s] -> Unable to write data",ObjectName);
+				return false;
+			}
+			temp.Truncate(0);
+			temp.Set("");
+		}
+	}
+	if (temp.Len()>0)
+	{			
+		if (out.Write(temp.GetText(),temp.Len())==false)
+		{
+			notif->Error("[%s] -> Unable to write data",ObjectName);
+			return false;
+		}
+	}
+	
+	return true;
+}
+bool DecisionTreeFeatureStatistics::WritePaths(GML::Utils::File& out)
+{
+	UInt64					leafsCount,tr;
+	GML::Utils::GString 	tmp,tmp2,toPrint,buff;
+	UInt32					gr;
+	
+	if (buff.Create(0x10000)==false)
+	{
+		notif->Error("[%s] -> Unable to alloc memory for cache",ObjectName);
+		return false;
+	}
+	buff.Set("");
+	leafsCount = 1<<(TreePathSize-1);
+	for (tr=0;tr<leafsCount;tr++)
+	{
+		toPrint.Set("");
+		tmp2.Set("");
+		if (CreatePath(BTree.Len()-tr-2)==false)
+			return false;
+		for (gr=0;gr<TreePathSize;gr++)
+		{
+			tmp.Set("");
+			if (TreePath[gr] & 0x80000000)
+			{
+				tmp.Add("-");
+				tmp2.Insert("1",0);
+			} else {
+				tmp.Add("+");
+				tmp2.Insert("0",0);
+			}
+			tmp.AddFormated("%d",TreePath[gr] & 0x7FFFFFFF);
+			tmp.Add("|");
+			toPrint.Insert(tmp,0);
+		}
+		toPrint.Add("\n");
+		tmp2.Add("|");
+		toPrint.Insert(tmp2,0);
+		buff.Add(toPrint);
+		if (buff.Len()>64000)
+		{						
+			if (out.Write(buff.GetText(),buff.Len())==false)
+			{
+				notif->Error("[%s] -> Unable to write data",ObjectName);
+				return false;
+			}
+			buff.Truncate(0);
+			buff.Set("");
+		}
+	}
+	if (buff.Len()>0)
+	{			
+		if (out.Write(buff.GetText(),buff.Len())==false)
+		{
+			notif->Error("[%s] -> Unable to write data",ObjectName);
+			return false;
+		}
+	}
+	return true;
+}
+bool DecisionTreeFeatureStatistics::WriteFlags(GML::Utils::File& out)
+{
+	GML::Utils::GString		feats,featName;
+	UInt32					tr;
+	UInt32					*bTree = BTree.GetPtrToObject(0);
+	
+	if (feats.Create(0x10000)==false)
+	{
+		notif->Error("[%s] -> Unable to alloc memory for cache",ObjectName);
+		return false;
+	}
+	feats.Set("");
+	for (tr=0;tr<con->GetFeatureCount();tr++)
+	{
+		if (con->GetFeatureName(featName, tr) == false)
+		{
+			notif->Error("[%s] -> Unable to get feature name for feature with index: %d",ObjectName, tr);
+			return false;
+		}		
+		feats.AddFormated("%d|%s\n",tr,featName.GetText());
+		if (feats.Len()>64000)
+		{						
+			if (out.Write(feats.GetText(),feats.Len())==false)
+			{
+				notif->Error("[%s] -> Unable to write data",ObjectName);
+				return false;
+			}
+			feats.Truncate(0);
+			feats.Set("");
+		}
+	}
+	if (feats.Len()>0)
+	{			
+		if (out.Write(feats.GetText(),feats.Len())==false)
+		{
+			notif->Error("[%s] -> Unable to write data",ObjectName);
+			return false;
+		}
+	}
+	
+	return true;
+}
 void DecisionTreeFeatureStatistics::OnCompute()
 {
 	UInt32				tr,gr;
-	GML::Utils::File	out;
-	
+	GML::Utils::File	out;	
 	GML::Utils::GString tmp;
 	
 	if (out.Create(ResultFileName.GetText(),true)==false)
@@ -71,7 +227,7 @@ void DecisionTreeFeatureStatistics::OnCompute()
 		if (CreatePath(BTree.Len())==false)
 			return;
 		CreateWorkingList();
-		// afisez working list
+		// afisez working list;
 		tmp.SetFormated("Working List (%d):",TreePathSize);
 		for (tr=0;tr<TreePathSize;tr++)
 		{
@@ -104,29 +260,34 @@ void DecisionTreeFeatureStatistics::OnCompute()
 						FeatCounters[featToRemove].CountTotalPozitive,
 						FeatCounters[featToRemove].CountTotalNegative);
 		
-		out.Write(tmp.GetText(),tmp.Len());
+		//out.Write(tmp.GetText(),tmp.Len());
 	}	
-	out.Close();
-	GML::Utils::GString	temp, 	hash;
-	GML::DB::RecordHash			rHash;
-	for (tr=0;tr<con->GetRecordCount();tr++)
+	if (WriteData(out) == false)
 	{
-		if (con->GetRecordHash(rHash,tr)==false)
-		{
-			notif->Error("[%s] -> Unable to read record hash for #%d",ObjectName,tr);
-			//return false;
-		}
-		if (rHash.ToString(hash)==false)
-		{
-			notif->Error("[%s] -> Unable to convert record hash for #%d",ObjectName,tr);
-			//return false;
-		}
-		temp.Set("");
-		temp.AddFormatedEx("%{uint64,bin}", HashesForRecord[tr]);
-		notif->Info("[%s] -> %s|%s",ObjectName, hash.GetText(), temp.GetText());
+		notif->Error("[%s] -> Unable to write hashes to file: %s",ObjectName,ResultFileName.GetText());
+		return;
 	}
-	
-	
+	tmp.Set("=========================================================\n");
+	tmp.Add("==========================FLAGS==========================\n");
+	tmp.Add("=========================================================\n");
+	out.Write(tmp.GetText(),tmp.Len());
+	if (WriteFlags(out) == false)
+	{
+		notif->Error("[%s] -> Unable to write leafs to file: %s",ObjectName,ResultFileName.GetText());
+		return;		
+	}
+	tmp.Set("=========================================================\n");
+	tmp.Add("==========================LEAFS==========================\n");
+	tmp.Add("=========================================================\n");
+	out.Write(tmp.GetText(),tmp.Len());
+	if (WritePaths(out) == false)
+	{
+		notif->Error("[%s] -> Unable to write leafs to file: %s",ObjectName,ResultFileName.GetText());
+		return;		
+	}
+	tmp.Set("=========================================================\n");
+	out.Write(tmp.GetText(),tmp.Len());
+	out.Close();
 }
 
 bool DecisionTreeFeatureStatistics::OnThreadComputeExtraData(UInt32 recordIndex,GML::Algorithm::MLThreadData &thData)
@@ -135,22 +296,5 @@ bool DecisionTreeFeatureStatistics::OnThreadComputeExtraData(UInt32 recordIndex,
 	{
 		HashesForRecord[recordIndex] |= (1<<(TreePathSize-1));
 	}
-	/*
-	if ((TreePathSize) && (thData.Record.Features[TreePath[0] & 0x7FFFFFFF] != 0))
-	{
-		UInt64 tmp;
-		tmp = 1;
-		tmp = tmp<<(64-TreePathSize);
-		HashesForRecord[recordIndex] = HashesForRecord[recordIndex] | tmp;
-	}
-	/*
-	if ((TreePathSize) && (thData.Record.Features[TreePath[0] & 0x7FFFFFFF] == 0) && (TreePath[0] & 0x80000000))
-	{
-		UInt64 tmp;
-		tmp = 1;
-		tmp = tmp<<(64-TreePathSize);
-		HashesForRecord[recordIndex] = HashesForRecord[recordIndex] | tmp;
-	}
-	*/
 	return true;
 }
