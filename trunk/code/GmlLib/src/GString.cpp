@@ -384,6 +384,12 @@ bool UpdateDataConvertInfo(DataConvertInfo *dci,char *info,int infoSize)
 			dci->Flags |= DataConvertInfo::FLAG_UPPER;
 		return true;
 	}
+	// flag de BigEndia	
+	if ((__StrEq(info,infoSize,"be",true)) || (__StrEq(info,infoSize,"bigendian",true)))
+	{
+		dci->Flags |= DataConvertInfo::FLAG_BE;
+		return true;
+	}
 	if ((info[0]|0x20)=='b')
 	{
 		if ((infoSize==3) && (info[1]=='%') && (info[2]=='%'))
@@ -451,13 +457,6 @@ bool UpdateDataConvertInfo(DataConvertInfo *dci,char *info,int infoSize)
 			}
 		}
 		dci->Align = DataConvertInfo::ALIGN_CENTER;
-		return true;
-	}
-	// flag de BigEndia
-	
-	if ((__StrEq(info,infoSize,"be",true)) || (__StrEq(info,infoSize,"bigendian",true)))
-	{
-		dci->Flags |= DataConvertInfo::FLAG_BE;
 		return true;
 	}
 	// flag de trunchiere
