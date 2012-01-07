@@ -1,76 +1,36 @@
+#ifndef __FeaturesStatistics__
+#define __FeaturesStatistics__
+
 #include "gmllib.h"
 
-
-struct FeaturesInfo
+struct FeaturesInformations
 {
-	UInt32 PozitiveCount;
-	UInt32 NegativeCount;
-    
-    // for asucila simetric uncertainty algorithm
-    UInt32 FPosLPos;
-    UInt32 FPosLNeg;
-    UInt32 FNegLPos;
-    UInt32 FNegLNeg;
-};
-class FeaturesInformations
-{
-public:
-	UInt32			Index;
-	double			countPozitive;
-	double			countNegative;
-	double			totalPozitive;
-	double			totalNegative;
+	UInt32			Index;	
 	double			*fnValue;
 	double			compareValue;
-
-    // for asucila simetric uncertainty algorithm
-    double FPosLPos;
-    double FPosLNeg;
-    double FNegLPos;
-    double FNegLNeg;
-
-	//bool			operator< (FeaturesInformations &a);
-	//bool			operator> (FeaturesInformations &a);
 };
-class Stats
+struct FeaturesStatisticsThreadData
 {
-public:
-	GML::Utils::GString		Name;
-	GML::ML::FeatStatComputeFunction fnCompute;
-	
-	Stats();
-	Stats(Stats &ref);
+	GML::ML::FeatureInformation		*Feats;
 };
-struct FeaturesThreadData
-{
-	GML::ML::MLRecord				Record;
-	GML::Utils::Interval			Range;
-	FeaturesInfo					*FI;
-	UInt32							totalNegative;
-	UInt32							totalPozitive;
-public:
-	FeaturesThreadData() { FI=NULL; }
-};
+
 class FeaturesStatistics: public GML::Algorithm::IMLAlgorithm
 {
-	enum
-	{
+	enum {
 		COMMAND_NONE = 0,
-		COMMAND_COMPUTE
+		COMMAND_COMPUTE,		
 	};
-	GML::Utils::ThreadParalelUnit				*tpu;
-	FeaturesThreadData							All;
-	GML::Utils::GTVector<Stats>					StatsData;
+	enum {
+		THREAD_COMMAND_NONE = 0,
+		THREAD_COMMAND_COMPUTE,
+	};
 	GML::Utils::GTFVector<FeaturesInformations>	ComputedData;
-	GML::Utils::GString							SortProps,WeightFileType;
-	UInt32										MinPoz,MaxPoz,MinNeg,MaxNeg;
-public:
-	FeaturesThreadData				*fData;
-private:
-	// proprietati
+	GML::Utils::GTFVector<GML::ML::FeatureInformation> Feats;
+	GML::ML::MLRecord				MainRecord;
+	GML::Utils::GString				SortProps,WeightFileType;
+	UInt32							MinPoz,MaxPoz,MinNeg,MaxNeg;
 	GML::Utils::GString				ResultFile;
 	GML::Utils::GString				FeaturesWeightFile;
-
 	UInt32							columnWidth;
 	UInt32							featureColumnWidth;
 	UInt32							sortBy;
@@ -78,24 +38,27 @@ private:
 	UInt32							sortDirection;
 	bool							notifyResults;
 	bool							showFeatureName;
+	bool							AdjustToNumberOfFeatures;
 	double							multiplyFactor;
 
-	bool							AddNewStatFunction(char *name,GML::ML::FeatStatComputeFunction);
-	bool							CreateFeaturesInfo(FeaturesThreadData *fInfo);
-	bool							Compute();
-	void							PrintStats();
-	void							SaveToFile();
-	void							SaveFeatureWeightFile();
-	bool							CreateHeaders(GML::Utils::GString &str);
-	bool							CreateRecordInfo(FeaturesInformations &finf,GML::Utils::GString &str);
-	void							Sort();
-	bool							Validate(FeaturesInformations *fi);
+	UInt32							statFuncCount;
+	
+	bool 				CreateHeaders(GML::Utils::GString &str);
+	bool 				CreateRecordInfo(FeaturesInformations &finf,GML::Utils::GString &str);
+	bool 				Validate(GML::ML::FeatureInformation *fi);
+	void 				PrintStats();
+	void 				SaveToFile();
+	void 				SaveFeatureWeightFile();
+	void				OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
+	bool 				OnComputeFeatureCounters(GML::Algorithm::MLThreadData &thData);
+	bool				OnInitThreadData(GML::Algorithm::MLThreadData &thData);
+	void				Compute();
 public:
 	FeaturesStatistics();
 
-	void							OnRunThreadCommand(FeaturesThreadData &ftd,UInt32 command);
-	bool							Init();
-	void							OnExecute();
+	bool				Init();
+	void				OnExecute();
 };
 
+#endif
 

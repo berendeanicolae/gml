@@ -1,23 +1,6 @@
 #include "FeaturesStatistics.h"
-#include <math.h>
 
-void ThreadRedirectFunction(GML::Utils::IParalelUnit *paralel,void *context)
-{
-	FeaturesStatistics *fs = (FeaturesStatistics *)context;
-	fs->OnRunThreadCommand(fs->fData[paralel->GetID()],paralel->GetCodeID());
-}
-//====================================================================================================
-int  Compare_FeaturesInformations(FeaturesInformations &f1,FeaturesInformations &f2,void *context)
-{
-	UInt32	column = *((UInt32 *)context);
-	
-	if (f1.fnValue[column]>f2.fnValue[column])
-		return 1;
-	if (f1.fnValue[column]<f2.fnValue[column])
-		return -1;
-	return 0;
-}
-int  Compare_FeaturesInformations2(FeaturesInformations &f1,FeaturesInformations &f2)
+int  Compare_FeaturesInformations(FeaturesInformations &f1,FeaturesInformations &f2)
 {
 	if (f1.compareValue>f2.compareValue)
 		return 1;
@@ -25,41 +8,23 @@ int  Compare_FeaturesInformations2(FeaturesInformations &f1,FeaturesInformations
 		return -1;
 	return 0;
 }
-/*
-bool FeaturesInformations::operator< (FeaturesInformations &a)
-{
-	return (bool)(Index<a.Index);
-}
-bool FeaturesInformations::operator> (FeaturesInformations &a)
-{
-	return (bool)(Index>a.Index);
-}
-*/
-//====================================================================================================
-Stats::Stats()
-{
-	fnCompute = NULL;
-}
-Stats::Stats(Stats &ref)
-{
-	fnCompute = ref.fnCompute;
-	this->Name.Set(ref.Name.GetText());
-}
+//==============================================================================
 FeaturesStatistics::FeaturesStatistics()
 {
 	GML::Utils::GString		tmp;
 	UInt32					tr;
-	UInt32					funcCount;
-
+		
 	ObjectName = "FeaturesStatistics";
 
+	//Add extra commands here
 	SetPropertyMetaData("Command","!!LIST:None=0,Compute!!");
-
+	
 	LinkPropertyToUInt32("ColumnWidth"				,columnWidth			,12,"Sets the column width (0 for no aligniation)");
 	LinkPropertyToUInt32("FeatureColumnWidth"		,featureColumnWidth		,20,"Sets the feature name column width (0 for no aligniation)");
 	LinkPropertyToString("ResultFile"				,ResultFile				,"","Name of the file to save the result table or none if no save is requared");
 	LinkPropertyToBool  ("NotifyResult"				,notifyResults			,true);
 	LinkPropertyToBool  ("ShowFeatureName"			,showFeatureName		,true,"Shows feature name in the result list");
+	LinkPropertyToBool  ("AdjustToNumberOfFeatures"	,AdjustToNumberOfFeatures,false,"Adjust each feature to the number of features that are set in each record");
 	LinkPropertyToDouble("MultiplyFactor"			,multiplyFactor			,1.0);
 	LinkPropertyToUInt32("MinPositiveElements"		,MinPoz					,0,"Minimum number of positive elements (for filtering)");
 	LinkPropertyToUInt32("MaxPositiveElements"		,MaxPoz					,0xFFFFFFFF,"Maximum number of positive elements (for filtering)");
@@ -67,17 +32,14 @@ FeaturesStatistics::FeaturesStatistics()
 	LinkPropertyToUInt32("MaxNegativeElements"		,MaxNeg					,0xFFFFFFFF,"Maximum number of negative elements (for filtering)");	
 
 	//Add MeasureFunctions from FeatStats from GmlLib
-	funcCount = GML::ML::FeatStatsFunctions::GetFunctionsCount();
-	for (tr=0;tr<funcCount;tr++)
-		AddNewStatFunction(GML::ML::FeatStatsFunctions::GetFunctionName(tr), GML::ML::FeatStatsFunctions::GetFunctionPointer(tr));
-	
+	statFuncCount = GML::ML::FeatStatsFunctions::GetFunctionsCount();
 	SortProps.Set("!!LIST:NoSort=0xFFFF");
 	WeightFileType.Set("!!LIST:None=0xFFFF");
-	for (tr=0;tr<StatsData.Len();tr++)
+	for (tr=0;tr<statFuncCount;tr++)
 	{
-		char *text = StatsData[tr].Name.GetText();
+		char *text = GML::ML::FeatStatsFunctions::GetFunctionName(tr);
 		SortProps.AddFormated(",%s=%d",text,tr);
-		WeightFileType.AddFormated(",%s=%d",StatsData[tr].Name.GetText(),tr);
+		WeightFileType.AddFormated(",%s=%d",text,tr);
 	}
 	SortProps.Add("!!");
 	WeightFileType.Add("!!");
@@ -85,122 +47,162 @@ FeaturesStatistics::FeaturesStatistics()
 	LinkPropertyToUInt32("SortBy"					,sortBy					,0xFFFF,SortProps.GetText());
 	LinkPropertyToUInt32("SortDirection"			,sortDirection			,0,"!!LIST:Ascendent=0,Descendent!!");
 	LinkPropertyToUInt32("SaveFeaturesWeight"		,saveFeatureWeightFile	,0xFFFF,WeightFileType.GetText());
-	LinkPropertyToString("FeaturesWeightFile"		,FeaturesWeightFile		,"");
-}
-//====================================================================================================
-bool FeaturesStatistics::AddNewStatFunction(char *name,GML::ML::FeatStatComputeFunction _fnCompute)
-{
-	Stats	tmp;
-
-	if (tmp.Name.Set(name)==false)
-		return false;
-	tmp.fnCompute = _fnCompute;
-	return StatsData.PushByRef(tmp);
-}
-bool FeaturesStatistics::CreateFeaturesInfo(FeaturesThreadData *fInfo)
-{
-	UInt32	tr;
-	if (con->CreateMlRecord(fInfo->Record)==false)
-	{
-		notif->Error("[%s] -> Unable to create MLRecord",ObjectName);
-		return false;
-	}
-
-	if ((fInfo->FI = new FeaturesInfo[con->GetFeatureCount()])==NULL)
-	{
-		notif->Error("[%s] -> Unable to allocate space for FeaturesInfo (%d)",ObjectName,con->GetFeatureCount());
-		return false;
-	}
-	for (tr=0;tr<con->GetFeatureCount();tr++)
-	{
-		fInfo->FI[tr].NegativeCount = 0;
-		fInfo->FI[tr].PozitiveCount = 0;
-	}
-	fInfo->totalNegative = 0;
-	fInfo->totalPozitive = 0;
-
-	return true;
+	LinkPropertyToString("FeaturesWeightFile"		,FeaturesWeightFile		,"");		
 }
 bool FeaturesStatistics::Init()
 {
-	UInt32		tr,rap;
-
 	if (InitConnections()==false)
 		return false;
-	// creez obiectele:
-	if ((fData = new FeaturesThreadData[threadsCount])==NULL)
+	if (InitThreads()==false)
+		return false;
+	if (SplitMLThreadDataRange(con->GetRecordCount())==false)
+		return false;
+	if (con->CreateMlRecord(MainRecord)==false)
 	{
-		notif->Error("[%s] -> Unable to create %d FeaturesThreadData ",ObjectName,threadsCount);
+		notif->Error("[%s] -> Unable to create MainRecord",ObjectName);
 		return false;
 	}
-	if (CreateFeaturesInfo(&All)==false)
-		return false;
-	// pornesc threadPool-ul
-	if ((tpu = new GML::Utils::ThreadParalelUnit[threadsCount])==NULL)
+	if (ComputedData.Create(con->GetFeatureCount(),true)==false)
 	{
-		notif->Error("[%s] -> Unable to create %d threads ",ObjectName,threadsCount);
-		return false;
+		notif->Error("[%s] -> Unable to create ComputedData",ObjectName);
+		return false;	
 	}
-	for (tr=0;tr<threadsCount;tr++)
+	if (Feats.Create(con->GetFeatureCount(),true)==false)
 	{
-		if (tpu[tr].Init(tr,this,ThreadRedirectFunction)==false)
+		notif->Error("[%s] -> Unable to create Feats Global information",ObjectName);
+		return false;	
+	}
+	for (UInt32 tr=0;tr<con->GetFeatureCount();tr++)
+	{
+		if ((ComputedData[tr].fnValue = new double[statFuncCount])==NULL)
 		{
-			notif->Error("[%s] -> Unable to start thread #%d",ObjectName,tr);
-			return false;
+			notif->Error("[%s] -> Unable to alloc data for CompuedData Values",ObjectName);
+			return false;		
 		}
-		if (CreateFeaturesInfo(&fData[tr])==false)
-			return false;
 	}
-	// splituim
-	rap = (con->GetRecordCount()/threadsCount)+1;
-
-	// aloc memorie pentru indexi
-	for (tr=0;tr<threadsCount;tr++)
-	{
-		if (tr+1==threadsCount)
-			fData[tr].Range.Set(tr*rap,con->GetRecordCount());
-		else
-			fData[tr].Range.Set(tr*rap,(tr+1)*rap);
-	}
-
 	return true;
 }
-void FeaturesStatistics::OnRunThreadCommand(FeaturesThreadData &ftd,UInt32 command)
+void FeaturesStatistics::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand)
 {
-	UInt32	tr,gr,count,size,index;
-
-	count = con->GetFeatureCount();
-	// citesc datele asociate range-ului
-	
-	size = ftd.Range.End-ftd.Range.Start;
-	
-	if (ftd.Range.Start==0)
-		notif->StartProcent("[%s] -> Computing ... ",ObjectName);	
-	for (tr=ftd.Range.Start,index=0;(tr<ftd.Range.End) && (StopAlgorithm==false);tr++,index++)
+	switch (threadCommand)
 	{
-		if (con->GetRecord(ftd.Record,tr)==false)
-		{
-			notif->Error("[%s] -> Unable to read record %d",ObjectName,tr);
+		case THREAD_COMMAND_NONE:
+			// do nothing
 			return;
-		}
-		if (ftd.Record.Label==1)
-			ftd.totalPozitive++;
-		else
-			ftd.totalNegative++;
-		for (gr=0;(gr<count) && (StopAlgorithm==false);gr++)
-			if (ftd.Record.Features[gr]!=0)
-            {
-				if (ftd.Record.Label==1)
-					ftd.FI[gr].PozitiveCount++;
-      			else 
-					ftd.FI[gr].NegativeCount++;
-            }
-		if ((ftd.Range.Start==0) && ((index % 1000)==0))
-			notif->SetProcent(index,size);
-	}
-	if (ftd.Range.Start==0)
-		notif->EndProcent();	
+		case THREAD_COMMAND_COMPUTE:
+			OnComputeFeatureCounters(thData);
+			return;
+	};
+}
+bool FeaturesStatistics::OnComputeFeatureCounters(GML::Algorithm::MLThreadData &thData)
+{
+	UInt32							tr,gr,nrRecords,nrFeatures;
+	FeaturesStatisticsThreadData	*obj_td = (FeaturesStatisticsThreadData* )thData.Context;
 	
+	nrRecords = con->GetRecordCount();
+	nrFeatures = con->GetFeatureCount();
+	// curatam datele
+	MEMSET(obj_td->Feats,0,sizeof(GML::ML::FeatureInformation)*nrFeatures);
+	
+	if (thData.ThreadID==0)
+		notif->StartProcent("[%s] -> Analyzing (%d record) ",ObjectName,nrRecords);
+		
+	for (tr=thData.ThreadID;tr<nrRecords;tr+=threadsCount)
+	{		
+		if (con->GetRecord(thData.Record,tr)==false)
+		{
+			notif->Error("[%s] -> Unable to read record #%d",ObjectName,tr);
+			return false;
+		}
+		for (gr=0;gr<nrFeatures;gr++)
+		{
+			if (thData.Record.Features[gr]!=0)
+			{
+				if (thData.Record.Label>0)
+				{
+					obj_td->Feats[gr].countPozitive++;
+					obj_td->Feats[gr].totalPozitive++;
+				} else {
+					obj_td->Feats[gr].countNegative++;
+					obj_td->Feats[gr].totalNegative++;
+				}
+			} else {
+				if (thData.Record.Label>0)
+					obj_td->Feats[gr].totalPozitive++;
+				else
+					obj_td->Feats[gr].totalNegative++;
+			}
+		}
+		if ((thData.ThreadID==0) && ((tr%10000)==0))
+			notif->SetProcent(tr,nrRecords);
+	}
+	if (thData.ThreadID==0)
+		notif->EndProcent();
+	
+	return true;
+}
+void FeaturesStatistics::Compute()
+{
+	UInt32							tr,gr;
+	
+	ExecuteParalelCommand(THREAD_COMMAND_COMPUTE);	
+	MEMSET(Feats.GetPtrToObject(0),0,sizeof(GML::ML::FeatureInformation)*con->GetFeatureCount());
+	
+	for (tr=0;tr<threadsCount;tr++)
+	{		
+		for (gr=0;gr<con->GetFeatureCount();gr++)
+		{
+			Feats[gr].countPozitive += ((FeaturesStatisticsThreadData *)ThData[tr].Context)->Feats[gr].countPozitive;
+			Feats[gr].totalPozitive += ((FeaturesStatisticsThreadData *)ThData[tr].Context)->Feats[gr].totalPozitive;
+			Feats[gr].countNegative += ((FeaturesStatisticsThreadData *)ThData[tr].Context)->Feats[gr].countNegative;
+			Feats[gr].totalNegative += ((FeaturesStatisticsThreadData *)ThData[tr].Context)->Feats[gr].totalNegative;
+		}
+	}
+	notif->Info("[%s] -> DataBase processed ok",ObjectName);
+	for (tr=0;tr<con->GetFeatureCount();tr++)
+	{
+		ComputedData[tr].Index = tr;
+		for (gr=0;gr<statFuncCount;gr++)
+			ComputedData[tr].fnValue[gr] = GML::ML::FeatStatsFunctions::GetFunctionPointer(gr)(Feats.GetPtrToObject(tr)) * multiplyFactor;
+		if (sortBy<0xFFFF)
+			ComputedData[tr].compareValue = ComputedData[tr].fnValue[sortBy];
+	}
+	// am calculat si valorile
+	// verific daca am vreun weight de salvat
+	if (saveFeatureWeightFile<statFuncCount)
+	{
+		if (FeaturesWeightFile.Len()==0)
+		{
+			notif->Error("[%s] In order to save '%s' values for a feature you have to complete 'FeaturesWeightFile' property with the name of the file where the features will be saved",
+					ObjectName,
+					GML::ML::FeatStatsFunctions::GetFunctionName(saveFeatureWeightFile));
+		} else {
+			SaveFeatureWeightFile();
+		}
+	}
+	// sortez
+	if (sortBy!=0xFFFF)
+	{
+		notif->Info("[%s] -> Sorting data ... ",ObjectName);
+		ComputedData.Sort(Compare_FeaturesInformations,sortDirection==0);
+	}
+	notif->Info("[%s] -> Saving result ... ",ObjectName);
+	// printez
+	if (notifyResults)
+		PrintStats();
+	// salvez
+	if (ResultFile.Len()>0)
+		SaveToFile();	
+}
+bool FeaturesStatistics::OnInitThreadData(GML::Algorithm::MLThreadData &thData)
+{
+	FeaturesStatisticsThreadData	*obj_td = new FeaturesStatisticsThreadData();
+	if (obj_td==NULL)
+		return false;
+	if ((obj_td->Feats = new GML::ML::FeatureInformation[con->GetFeatureCount()])==NULL)
+		return false;
+	thData.Context = obj_td;
+	return true;
 }
 bool FeaturesStatistics::CreateHeaders(GML::Utils::GString &str)
 {
@@ -210,8 +212,8 @@ bool FeaturesStatistics::CreateHeaders(GML::Utils::GString &str)
 	if (notif->SuportsObjects())
 	{
 		tmp.Set("Type=List;Column_0=FeatureName;Column_1=Positive;Column_2=Negative;");
-		for (tr=0;tr<StatsData.Len();tr++)
-			tmp.AddFormated("Column_%d=%s;",tr+3,StatsData[tr].Name.GetText());
+		for (tr=0;tr<statFuncCount;tr++)
+			tmp.AddFormated("Column_%d=%s;",tr+3,GML::ML::FeatStatsFunctions::GetFunctionName(tr));
 		notif->CreateObject("FeatTable",tmp.GetText());
 	}
 	tmp.Set("");
@@ -243,14 +245,14 @@ bool FeaturesStatistics::CreateHeaders(GML::Utils::GString &str)
 			return false;
 	}
 
-	for (tr=0;tr<StatsData.Len();tr++)
+	for (tr=0;tr<statFuncCount;tr++)
 	{
 		if (columnWidth==0)
 		{
-			if (str.AddFormatedEx("%{str}|",StatsData[tr].Name.GetText())==false)
+			if (str.AddFormatedEx("%{str}|",GML::ML::FeatStatsFunctions::GetFunctionName(tr))==false)
 				return false;
 		} else {
-			if (str.AddFormatedEx("%{str,L%%,F ,trunc}|",StatsData[tr].Name.GetText(),columnWidth)==false)
+			if (str.AddFormatedEx("%{str,L%%,F ,trunc}|",GML::ML::FeatStatsFunctions::GetFunctionName(tr),columnWidth)==false)
 				return false;
 		}
 	}
@@ -290,7 +292,7 @@ bool FeaturesStatistics::CreateRecordInfo(FeaturesInformations &finf,GML::Utils:
 		if (str.SetFormated("%s|",tmp.GetText())==false)
 			return false;
 	}
-	for (tr=0;tr<StatsData.Len();tr++)
+	for (tr=0;tr<statFuncCount;tr++)
 	{
 		if (tmp.Set("")==false)
 			return false;
@@ -327,7 +329,8 @@ bool FeaturesStatistics::CreateRecordInfo(FeaturesInformations &finf,GML::Utils:
 	}
 	return true;
 }
-bool FeaturesStatistics::Validate(FeaturesInformations *fi)
+
+bool FeaturesStatistics::Validate(GML::ML::FeatureInformation *fi)
 {
 	if ((fi->countNegative<MinNeg) || (fi->countNegative>MaxNeg))
 		return false;
@@ -358,7 +361,7 @@ void FeaturesStatistics::PrintStats()
 	}
 	for (tr=0;tr<con->GetFeatureCount();tr++)
 	{
-		if (!Validate(&ComputedData[tr]))
+		if (!Validate(&Feats[ComputedData[tr].Index]))
 			continue;
 		if (CreateRecordInfo(ComputedData[tr],str)==false)
 		{
@@ -411,7 +414,7 @@ void FeaturesStatistics::SaveToFile()
 
 	for (tr=0;tr<con->GetFeatureCount();tr++)
 	{
-		if (!Validate(&ComputedData[tr]))
+		if (!Validate(&Feats[ComputedData[tr].Index]))
 			continue;
 		if (CreateRecordInfo(ComputedData[tr],str)==false)
 		{
@@ -433,6 +436,7 @@ void FeaturesStatistics::SaveToFile()
 	f.Close();
 	notif->Info("[%s] -> %s table saved !",ObjectName,ResultFile.GetText());
 }
+
 void FeaturesStatistics::SaveFeatureWeightFile()
 {
 	GML::Utils::GTFVector<double>	list;
@@ -454,7 +458,7 @@ void FeaturesStatistics::SaveFeatureWeightFile()
 		notif->Error("[%s] -> Unable to create AttributeList in file : %s",ObjectName,FeaturesWeightFile.GetText());
 		return;
 	}
-	if (attr.AddString("Method",StatsData[saveFeatureWeightFile].Name)==false)
+	if (attr.AddString("Method",GML::ML::FeatStatsFunctions::GetFunctionName(saveFeatureWeightFile))==false)
 	{
 		notif->Error("[%s] -> Unable to create AttributeList in file : %s",ObjectName,FeaturesWeightFile.GetText());
 		return;
@@ -469,107 +473,20 @@ void FeaturesStatistics::SaveFeatureWeightFile()
 		notif->Error("[%s] -> Unable to save file : %s",ObjectName,FeaturesWeightFile.GetText());
 		return;
 	}
-	notif->Info("[%s] -> File (%s) with '%s' features saved",ObjectName,FeaturesWeightFile.GetText(),StatsData[saveFeatureWeightFile].Name);
-}
-bool FeaturesStatistics::Compute()
-{
-	UInt32							tr,gr;
-	FeaturesInformations			info;
-	GML::ML::FeatureInformation		finf;	
-	
-
-	notif->Info("[%s] -> Computing statistics ...",ObjectName);
-	// executie
-	for (tr=0;tr<threadsCount;tr++)
-		if (tpu[tr].Execute(1)==false)
-		{
-			notif->Error("Error on runnig thread #%d",tr);
-			return false;
-		}
-	// asteptare
-	for (tr=0;tr<threadsCount;tr++)
-		if (tpu[tr].WaitToFinish()==false)
-		{
-			notif->Error("WaitToFinish failed on thread #%d",tr);
-			return false;
-		}
-	// fac aditia
-	for (tr=0;tr<threadsCount;tr++)
-	{
-		for (gr=0;gr<con->GetFeatureCount();gr++)
-		{
-			All.FI[gr].PozitiveCount+=fData[tr].FI[gr].PozitiveCount;
-			All.FI[gr].NegativeCount+=fData[tr].FI[gr].NegativeCount;
-		}
-		All.totalNegative+=fData[tr].totalNegative;
-		All.totalPozitive+=fData[tr].totalPozitive;
-	}
-	notif->Info("[%s] -> DataBase processed ok",ObjectName);
-	// calculez si functiile
-	for (tr=0;tr<con->GetFeatureCount();tr++)
-	{
-		info.Index = tr;
-		info.totalPozitive = finf.totalPozitive = All.totalPozitive; 
-		info.totalNegative = finf.totalNegative = All.totalNegative;
-
-		info.countNegative = finf.countNegative = All.FI[tr].NegativeCount;
-		info.countPozitive = finf.countPozitive = All.FI[tr].PozitiveCount;
-        
-		if ((info.fnValue = new double[StatsData.Len()])==NULL)
-		{
-			notif->Error("[%s] Unable to allocate info.fnValue[%d] !",ObjectName,StatsData.Len());
-			return false;
-		}
-		for (gr=0;gr<StatsData.Len();gr++)
-			info.fnValue[gr] = StatsData[gr].fnCompute(&finf) * multiplyFactor;
-
-		if (ComputedData.PushByRef(info)==false)
-		{
-			notif->Error("[%s] Unable to add informations to vector !",ObjectName);
-			return false;
-		}
-	}
-	// verific daca am vreun weight de salvat
-	if (saveFeatureWeightFile<StatsData.Len())
-	{
-		if (FeaturesWeightFile.Len()==0)
-		{
-			notif->Error("[%s] In order to save '%s' values for a feature you have to complete 'FeaturesWeightFile' property with the name of the file where the features will be saved",ObjectName,StatsData[saveFeatureWeightFile].Name);
-		} else {
-			SaveFeatureWeightFile();
-		}
-	}
-
-	// sortez
-	if (sortBy!=0xFFFF)
-	{
-		notif->Info("[%s] -> Sorting data ... ",ObjectName);
-		for (UInt32 tr=0;tr<con->GetFeatureCount();tr++)
-			ComputedData[tr].compareValue = ComputedData[tr].fnValue[sortBy];
-		//ComputedData.Sort(sortDirection==0,Compare_FeaturesInformations,&sortBy);
-		ComputedData.Sort(Compare_FeaturesInformations2,sortDirection==0);
-	}
-	notif->Info("[%s] -> Saving result ... ",ObjectName);
-	// printez
-	if (notifyResults)
-		PrintStats();
-	// salvez
-	if (ResultFile.Len()>0)
-		SaveToFile();
-	return true;
+	notif->Info("[%s] -> File (%s) with '%s' features saved",ObjectName,FeaturesWeightFile.GetText(),GML::ML::FeatStatsFunctions::GetFunctionName(saveFeatureWeightFile));
 }
 void FeaturesStatistics::OnExecute()
 {
-	StopAlgorithm = false;
-	
 	switch (Command)
 	{
 		case COMMAND_NONE:
-			notif->Info("[%s] -> Nothing to do ... ",ObjectName);
-			return;
+			notif->Error("[%s] -> Nothing to do , select another command ",ObjectName);
+			break;
 		case COMMAND_COMPUTE:
 			Compute();
-			return;
-	};
-	notif->Error("[%s] -> Unkwnown command ID : %d",ObjectName,Command);
+			break;
+		default:
+			notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);
+			break;
+	}	
 }
