@@ -52,6 +52,7 @@ namespace GML
 			static double MaxProb(FeatureInformation *f);
 			static double MedianClosenest(FeatureInformation *f);
 			static double AsymetricUncertainty(FeatureInformation *f);
+			static double AbsWeightedDiff(FeatureInformation *f);
 		};
 	}
 }

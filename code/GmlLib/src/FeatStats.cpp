@@ -35,7 +35,8 @@ FunctionInfo fi[] = {
 			{"ProbNeg", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::ProbNeg)},
 			{"MaxProb", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::MaxProb)},
 			{"MedianClose", 	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::MedianClosenest)},
-			{"AsymUncertain", 	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::AsymetricUncertainty)}
+			{"AsymUncertain", 	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::AsymetricUncertainty)},
+			{"AbsWeightedDiff",	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::AbsWeightedDiff)}			
 		};
 
 unsigned int GML::ML::FeatStatsFunctions::GetFunctionsCount()
@@ -374,4 +375,19 @@ double GML::ML::FeatStatsFunctions::AsymetricUncertainty(FeatureInformation *f)
     if (ret_val < 1e-10) ret_val = 1e-10;
     ret_val = 2.0 * (ret_val - joint_entropy) / ret_val;
     return ret_val;
+}
+double  GML::ML::FeatStatsFunctions::AbsWeightedDiff(FeatureInformation *f)
+{
+	double rap;
+	if (f->countPozitive>f->countNegative)
+	{
+		rap = f->totalNegative/(f->totalPozitive+f->totalNegative);
+		return rap*(f->countPozitive-f->countNegative);
+	}
+	if (f->countPozitive<f->countNegative)
+	{
+		rap = f->totalPozitive/(f->totalPozitive+f->totalNegative);
+		return rap*(f->countNegative-f->countPozitive);
+	}
+	return 0;
 }
