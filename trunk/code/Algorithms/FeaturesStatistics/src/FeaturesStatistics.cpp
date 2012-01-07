@@ -129,16 +129,16 @@ bool FeaturesStatistics::OnComputeFeatureCounters(GML::Algorithm::MLThreadData &
 					if (thData.Record.Label>0)
 					{
 						obj_td->Feats[gr].countPozitive+=featCountInRec;
-						obj_td->Feats[gr].totalPozitive++;
+						obj_td->Feats[gr].totalPozitive+=featCountInRec;
 					} else {
 						obj_td->Feats[gr].countNegative+=featCountInRec;
-						obj_td->Feats[gr].totalNegative++;
+						obj_td->Feats[gr].totalNegative+=featCountInRec;
 					}
 				} else {
 					if (thData.Record.Label>0)
-						obj_td->Feats[gr].totalPozitive++;
+						obj_td->Feats[gr].totalPozitive+=featCountInRec;
 					else
-						obj_td->Feats[gr].totalNegative++;
+						obj_td->Feats[gr].totalNegative+=featCountInRec;
 				}
 			}				
 		} else {		
