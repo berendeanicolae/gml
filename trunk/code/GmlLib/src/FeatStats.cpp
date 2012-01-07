@@ -36,7 +36,8 @@ FunctionInfo fi[] = {
 			{"MaxProb", 		(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::MaxProb)},
 			{"MedianClose", 	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::MedianClosenest)},
 			{"AsymUncertain", 	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::AsymetricUncertainty)},
-			{"AbsWeightedDiff",	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::AbsWeightedDiff)}			
+			{"AbsWeightedDiff",	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::AbsWeightedDiff)},
+			{"DiffFromTotal",	(GML::ML::FeatStatComputeFunction)&(GML::ML::FeatStatsFunctions::DiffFromTotal)},
 		};
 
 unsigned int GML::ML::FeatStatsFunctions::GetFunctionsCount()
@@ -388,6 +389,19 @@ double  GML::ML::FeatStatsFunctions::AbsWeightedDiff(FeatureInformation *f)
 	{
 		rap = f->totalPozitive/(f->totalPozitive+f->totalNegative);
 		return rap*(f->countNegative-f->countPozitive);
+	}
+	return 0;
+}
+double  GML::ML::FeatStatsFunctions::DiffFromTotal(FeatureInformation *f)
+{
+	double rap;
+	if (f->countPozitive>f->countNegative)
+	{
+		return (f->countPozitive-f->countNegative)/f->totalPozitive;
+	}
+	if (f->countPozitive<f->countNegative)
+	{
+		return (f->countNegative-f->countPozitive)/f->totalNegative;
 	}
 	return 0;
 }

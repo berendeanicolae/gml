@@ -53,6 +53,7 @@ namespace GML
 			static double MedianClosenest(FeatureInformation *f);
 			static double AsymetricUncertainty(FeatureInformation *f);
 			static double AbsWeightedDiff(FeatureInformation *f);
+			static double DiffFromTotal(FeatureInformation *f);
 		};
 	}
 }
