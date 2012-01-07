@@ -98,6 +98,7 @@ bool FeaturesStatistics::OnComputeFeatureCounters(GML::Algorithm::MLThreadData &
 {
 	UInt32							tr,gr,nrRecords,nrFeatures;
 	FeaturesStatisticsThreadData	*obj_td = (FeaturesStatisticsThreadData* )thData.Context;
+	double							featCountInRec;
 	
 	nrRecords = con->GetRecordCount();
 	nrFeatures = con->GetFeatureCount();
@@ -114,23 +115,51 @@ bool FeaturesStatistics::OnComputeFeatureCounters(GML::Algorithm::MLThreadData &
 			notif->Error("[%s] -> Unable to read record #%d",ObjectName,tr);
 			return false;
 		}
-		for (gr=0;gr<nrFeatures;gr++)
+		if (AdjustToNumberOfFeatures)
 		{
-			if (thData.Record.Features[gr]!=0)
+			featCountInRec = 0;
+			for (gr=0;gr<nrFeatures;gr++)
+				if (thData.Record.Features[gr]!=0)
+					featCountInRec++;
+			featCountInRec = 1/featCountInRec;
+			for (gr=0;gr<nrFeatures;gr++)
 			{
-				if (thData.Record.Label>0)
+				if (thData.Record.Features[gr]!=0)
 				{
-					obj_td->Feats[gr].countPozitive++;
-					obj_td->Feats[gr].totalPozitive++;
+					if (thData.Record.Label>0)
+					{
+						obj_td->Feats[gr].countPozitive+=featCountInRec;
+						obj_td->Feats[gr].totalPozitive++;
+					} else {
+						obj_td->Feats[gr].countNegative+=featCountInRec;
+						obj_td->Feats[gr].totalNegative++;
+					}
 				} else {
-					obj_td->Feats[gr].countNegative++;
-					obj_td->Feats[gr].totalNegative++;
+					if (thData.Record.Label>0)
+						obj_td->Feats[gr].totalPozitive++;
+					else
+						obj_td->Feats[gr].totalNegative++;
 				}
-			} else {
-				if (thData.Record.Label>0)
-					obj_td->Feats[gr].totalPozitive++;
-				else
-					obj_td->Feats[gr].totalNegative++;
+			}				
+		} else {		
+			for (gr=0;gr<nrFeatures;gr++)
+			{
+				if (thData.Record.Features[gr]!=0)
+				{
+					if (thData.Record.Label>0)
+					{
+						obj_td->Feats[gr].countPozitive++;
+						obj_td->Feats[gr].totalPozitive++;
+					} else {
+						obj_td->Feats[gr].countNegative++;
+						obj_td->Feats[gr].totalNegative++;
+					}
+				} else {
+					if (thData.Record.Label>0)
+						obj_td->Feats[gr].totalPozitive++;
+					else
+						obj_td->Feats[gr].totalNegative++;
+				}
 			}
 		}
 		if ((thData.ThreadID==0) && ((tr%10000)==0))
