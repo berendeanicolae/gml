@@ -1,0 +1,3 @@
+sources = FeatureReorderConnector.cpp
+gmlplugin = yes
+libname = FeatureReorderConnector
