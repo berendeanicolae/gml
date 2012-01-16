@@ -12,7 +12,7 @@ DistancesStatistics::DistancesStatistics()
 	LinkPropertyToDouble("HistogramStep",HistogramStep,1.0,"Step in Histogram (must be bigger than 0.0)");
 	LinkPropertyToString("ResultFile",ResultFile,"","Name of the where the results will be written");
 	LinkPropertyToBool  ("UseWeightsForFeatures",UseWeightsForFeatures,false,"Specifyes if weights for features should be used.");
-	LinkPropertyToUInt32("Method",Method,0,"!!LIST:PositiveToNegative=0,PositiveToPositive,NegativeToPositive,NegativeToNegative,MinPositiveToNegative,MinPositiveToPositive,MinNegativeToPositive,MinNegativeToNegative!!");
+	LinkPropertyToUInt32("Method",Method,0,"!!LIST:PositiveToNegative=0,PositiveToPositive,NegativeToPositive,NegativeToNegative,MinPositiveToNegative,MinPositiveToPositive,MinNegativeToPositive,MinNegativeToNegative,FeaturesCount!!");
 	LinkPropertyToString("FeaturesWeightFile",FeaturesWeightFile,"","Name of the file that contains the weights for features!");
 	LinkPropertyToBool  ("Ignore0ValuesInHistogram",Ignore0ValuesInHistogram,true,"If set , 0 values in histogram will not be saved in the result file");
 	AddDistanceProperties();
@@ -157,6 +157,51 @@ bool DistancesStatistics::ComputeHistogram(GML::Algorithm::MLThreadData &thData,
 		}
 		if (thData.ThreadID==0)
 			notif->SetProcent(tr,class1Count);
+	}
+	if (thData.ThreadID==0)
+		notif->EndProcent();
+	return true;
+}
+
+bool DistancesStatistics::ComputeFeatureCountHistogram(GML::Algorithm::MLThreadData &thData)
+{
+	UInt32								tr,gr,featuresCount,histoIndex,recCount,count,id;
+	DistancesStatisticsThreadData*		dt = (DistancesStatisticsThreadData *)thData.Context;
+	double*								ptrFeat;
+	
+	
+
+	featuresCount = con->GetFeatureCount();
+	recCount = con->GetRecordCount();
+	
+	for (tr=0;tr<dt->Histogram.Len();tr++)
+		dt->Histogram[tr]=0;
+		
+	if (thData.ThreadID==0)
+		notif->StartProcent("[%s] -> Computing ... ",ObjectName);
+	id = 0;
+	for (tr=thData.ThreadID;tr<recCount;tr+=threadsCount,id++)
+	{		
+		if (con->GetRecord(thData.Record,tr)==false)
+		{
+			notif->Error("[%s] -> Unable to read record #%d",ObjectName,tr);
+			return false;
+		}
+		count = 0;
+		ptrFeat = thData.Record.Features;
+		gr = featuresCount;
+		while (gr>0)		
+		{
+			if ((*ptrFeat)!=0.0)
+				count++;
+			ptrFeat++;
+			gr--;
+		}
+		histoIndex = ValueToHistogramIndex(count);
+		dt->Histogram[histoIndex]++;		
+		
+		if ((thData.ThreadID==0) && ((id % 10000)==0))
+			notif->SetProcent(tr,recCount);
 	}
 	if (thData.ThreadID==0)
 		notif->EndProcent();
@@ -325,6 +370,10 @@ void DistancesStatistics::OnRunThreadCommand(GML::Algorithm::MLThreadData &thDat
 		case THREAD_COMMAND_COMPUTE_MinNegativeToNegative:
 			ComputeHistogramMin(thData,indexesNegative,indexesNegative);
 			break;			
+			
+		case THREAD_COMMAND_COMPUTE_FeaturesCount:
+			ComputeFeatureCountHistogram(thData);
+			break;
 		// add extra thread command processes here
 	};
 }
@@ -459,7 +508,13 @@ void DistancesStatistics::Compute()
 			ExecuteParalelCommand(THREAD_COMMAND_COMPUTE_MinNegativeToNegative);
 			MergeThreadHistograms();
 			SaveHistogram();
-			break;			
+			break;	
+		
+		case METHOD_ComputeFeaturesCount:
+			ExecuteParalelCommand(THREAD_COMMAND_COMPUTE_FeaturesCount);
+			MergeThreadHistograms();
+			SaveHistogram();
+			break;				
 	}
 }
 void DistancesStatistics::OnExecute()
