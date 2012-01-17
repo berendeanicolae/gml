@@ -52,6 +52,8 @@ Distances::Distances()
 	
 	LinkPropertyToString("FeaturesWeightFile",FeaturesWeightFile,"","Name of the file that contains the weights for features!");
 	LinkPropertyToString("PlanFile",PlanFile,"","Name of the file that contains the informations about the plan");
+	
+	LinkPropertyToUInt32("MemoryCache",MemoryCache,64000,"Memory cache size for each thread");
 
 	AddDistanceProperties();
 
@@ -255,18 +257,23 @@ bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::U
 	double				dist;
 	UInt8				*ptr = RecordsStatus.GetVector();
 	GML::Utils::File	f;
-	GML::Utils::GString	buf,tmp;
+	GML::Utils::GString	buf,tmp,hash1;
 
-	if (buf.Create(32000)==false)
+	if (buf.Create(MemoryCache+1024)==false)
 	{
 		notif->Error("[%s] -> Thread %d was unable to alloc data for internal bufferes ",ObjectName,thData.ThreadID);
 		return false;
 	}
+	if (hash1.Create(1024)==false)
+	{
+		notif->Error("[%s] -> Thread %d was unable to alloc data for internal bufferes (local hash1)",ObjectName,thData.ThreadID);
+		return false;
+	}	
 	if (buf.SetFormated("%s.%d",DistanceTableFileName.GetText(),thData.ThreadID)==false)
 	{
 		notif->Error("[%s] -> Thread %d was unable to create table file : %s ",ObjectName,thData.ThreadID,DistanceTableFileName.GetText());
 		return false;
-	}
+	}	
 	if (f.Create(buf.GetText(),true)==false)
 	{
 		notif->Error("[%s] -> Unable to create file : %s ",ObjectName,buf.GetText());
@@ -289,6 +296,7 @@ bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::U
 			notif->Error("[%s] -> Unable to read record #%d",ObjectName,i1Poz);
 			return false;
 		}
+		hash1.Truncate(0);
 		for (gr=0;gr<i2Count;gr++)
 		{
 			i2Poz = i2.Get(gr);
@@ -303,12 +311,21 @@ bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::U
 			{		
 				ptr[i1Poz] = 1;
 				ptr[i2Poz] = 1;
-				if (thData.Record.Hash.ToString(tmp)==false)
+				if (hash1.Len()==0)
 				{
-					notif->Error("[%s] -> Unable to convert hash to string",ObjectName);
-					return false;
-				}
-				if (buf.AddFormated("%s|%s|",Type,tmp.GetText())==false)
+					if (thData.Record.Hash.ToString(tmp)==false)
+					{
+						notif->Error("[%s] -> Unable to convert hash to string",ObjectName);
+						return false;
+					}
+					if ((hash1.Add(Type)==false) || (hash1.AddChar('|')==false) ||
+						(hash1.Add(&tmp)==false) || (hash1.AddChar('|')==false))
+					{
+						notif->Error("[%s] -> Unable to add data to string",ObjectName);
+						return false;
+					}					
+				} 
+				if (buf.Add(&hash1)==false)
 				{
 					notif->Error("[%s] -> Unable to add data to string",ObjectName);
 					return false;
@@ -317,14 +334,14 @@ bool Distances::ComputeDistanceTable(GML::Algorithm::MLThreadData &thData,GML::U
 				{
 					notif->Error("[%s] -> Unable to convert hash to string",ObjectName);
 					return false;
-				}
+				}				
 				if (buf.AddFormated("%s|%lf\n",tmp.GetText(),dist)==false)
 				{
 					notif->Error("[%s] -> Unable to add data to string",ObjectName);
 					return false;
 				}
 				// scriu datele
-				if (buf.Len()>30000)
+				if (buf.Len()>MemoryCache)
 				{
 					if (f.Write(buf.GetText(),buf.Len())==false)
 					{
