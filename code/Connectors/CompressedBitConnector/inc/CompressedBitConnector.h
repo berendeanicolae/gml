@@ -2,7 +2,7 @@
 #define __CONNECTOR_CompressedBitConnector__
 
 #include "gmllib.h"
-
+#define INVALID_CACHE_INDEX	0xFFFFFFFFFFFFFFFF
 struct IndexBitCounter
 {
 	UInt32		Last;
@@ -34,6 +34,12 @@ struct CompressedBitConnectorHeader: public GML::ML::CacheHeader
 {
 	UInt64		MemToAlloc;
 };
+struct CompressedBitConnectorThreadCacheData
+{
+	GML::Utils::File	CacheFile;
+	UInt64				CacheStart,CacheEnd;
+	UInt8				Data[1];
+};
 class CompressedBitConnector: public GML::ML::IConnector
 {
 	enum
@@ -54,6 +60,9 @@ class CompressedBitConnector: public GML::ML::IConnector
 	UInt8				*Data;	
 	UInt64				*Indexes;	
 	GML::Utils::BitSet	Labels;
+	UInt32				CacheMemory;
+	
+	GML::Utils::GString	CacheFileName;
 
 	void				Update(IndexBitCounter &ibt,UInt32 index);
 	void				ComputeMemory(IndexBitCounter &ibt,UInt64 &memory);
@@ -61,6 +70,7 @@ class CompressedBitConnector: public GML::ML::IConnector
 	bool				OnInitConnectionToDataBase();
 	bool				OnInitConnectionToConnector();
 	bool				AllocMemory(UInt64 memory);
+	bool				UpdateCacheMemory(CompressedBitConnectorThreadCacheData &ibthData,UInt64 start,UInt64 szBuffer);
 public:
 	CompressedBitConnector();
 	

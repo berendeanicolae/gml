@@ -45,6 +45,8 @@ CompressedBitConnector::CompressedBitConnector()
 	AddTwoClassLabelProperties();
 	AddCacheProperties();
 	AddStoreProperties();	
+	
+	LinkPropertyToUInt32("CacheMemorySize",CacheMemory,0,"Memory allocated to cache the records.\nIf 0 all the records will be loaded in memory.\nWorks only if the records are loaded from a cache!");
 }
 bool	CompressedBitConnector::AllocMemory(UInt64 memory)
 {
@@ -485,6 +487,8 @@ bool	CompressedBitConnector::Load(char *fileName)
 	CompressedBitConnectorHeader	h;
 	while (true)
 	{
+		if (CacheFileName.Set(fileName)==false)
+			break;	
 		if (OpeanCacheFile(fileName,CACHE_SIG_NAME,&h,sizeof(h))==false)
 			break;
 		if (Data!=NULL)
@@ -496,13 +500,25 @@ bool	CompressedBitConnector::Load(char *fileName)
 		MemToAlloc = h.MemToAlloc;
 		Method = h.Flags; 
 	
-		if (AllocMemory(h.MemToAlloc)==false)
+		if (CacheMemory!=0)
 		{
-			notifier->Error("[%s] -> Unable to allocate space for cache initialization",ObjectName);
-			break;
-		}
-		if (file.Read(Data,(UInt64)MemToAlloc)==false)
-			break;
+			notifier->Info("[%s] -> Using %d bytes for cache",ObjectName,CacheMemory);
+			if (AllocMemory(CacheMemory)==false)
+			{
+				notifier->Error("[%s] -> Unable to allocate space for cache memory (%d)",ObjectName,CacheMemory);
+				break;
+			}
+			if (file.SetFilePos((UInt64)sizeof(h)+(UInt64)MemToAlloc)==false)
+				break;			
+		} else {
+			if (AllocMemory(h.MemToAlloc)==false)
+			{
+				notifier->Error("[%s] -> Unable to allocate space for cache initialization",ObjectName);
+				break;
+			}
+			if (file.Read(Data,(UInt64)MemToAlloc)==false)
+				break;
+		}	
 		if (file.Read(Indexes,sizeof(UInt64)*(UInt64)nrRecords)==false)
 			break;
 		if (file.Read(Labels.GetData(),Labels.GetAllocated())==false)
@@ -510,7 +526,13 @@ bool	CompressedBitConnector::Load(char *fileName)
 		if (LoadRecordHashesAndFeatureNames(&h)==false)
 			break;
 		CloseCacheFile();
-		dataMemorySize = (UInt64)nrRecords * sizeof(UInt32) + MemToAlloc+Labels.GetAllocated();
+		if (CacheMemory!=0)
+		{
+			dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + CacheMemory+Labels.GetAllocated();
+		} else {
+			dataMemorySize = (UInt64)nrRecords * sizeof(UInt64) + MemToAlloc+Labels.GetAllocated();
+		}		
+		
 		return true;		
 	}
 	ClearColumnIndexes();
@@ -518,27 +540,91 @@ bool	CompressedBitConnector::Load(char *fileName)
 	notifier->Error("[%s] -> Error read data from %s",ObjectName,fileName);
 	return false;
 }
-
+bool	CompressedBitConnector::UpdateCacheMemory(CompressedBitConnectorThreadCacheData &ibthData,UInt64 start,UInt64 szBuffer)
+{
+	UInt64	sz = 0;
+	
+	while (true)
+	{		
+		if (start>MemToAlloc)
+			break;
+		sz = CacheMemory;
+		if (start+sz>MemToAlloc)
+			sz = MemToAlloc-start;
+		if (sz<szBuffer)
+			break;
+		//notifier->Info("[%s] -> Updateing cache : [%d-%d]",ObjectName,(int)start,(int)(start+sz));
+		if (ibthData.CacheFile.Read(start+sizeof(CompressedBitConnectorHeader),ibthData.Data,sz)==false)
+			break;
+		ibthData.CacheStart = start;
+		ibthData.CacheEnd = start+sz;
+		return true;
+	}
+	ibthData.CacheStart = ibthData.CacheEnd = INVALID_CACHE_INDEX;
+	notifier->Error("[%s] -> Unable to update cache ...",ObjectName);
+	return false;
+}
 bool	CompressedBitConnector::CreateMlRecord (GML::ML::MLRecord &record)
 {
+	record.ThreadData = NULL;
 	record.FeatCount = columns.nrFeatures;	
-	return ((record.Features = new double[columns.nrFeatures])!=NULL);
+	if ((record.Features = new double[columns.nrFeatures])==NULL)
+	{
+		notifier->Error("[%s] -> Unable to create mlRecord: error allocing %d values for features !",ObjectName,columns.nrFeatures);
+		return false;
+	}
+	if (CacheMemory>0)
+	{
+		if ((record.ThreadData = new UInt8[sizeof(CompressedBitConnectorThreadCacheData)+CacheMemory])==NULL)
+		{
+			notifier->Error("[%s] -> Unable to create mlRecord: error allocing %d bytes for cache",ObjectName,(UInt32)CacheMemory);
+			return false;
+		}
+		CompressedBitConnectorThreadCacheData *ibthData = (CompressedBitConnectorThreadCacheData *)record.ThreadData;
+		ibthData->CacheStart = INVALID_CACHE_INDEX;
+		ibthData->CacheEnd = INVALID_CACHE_INDEX;
+		if (ibthData->CacheFile.OpenRead(CacheFileName.GetText(),true)==false)
+		{
+			DWORD err = GetLastError();
+			notifier->Error("[%s] -> Unable to create mlRecord: error opening %s for caching - %d",ObjectName,CacheFileName.GetText(),err);
+			return false;
+		}
+	}
+	return true;	
 }
 bool	CompressedBitConnector::GetRecord(GML::ML::MLRecord &record,UInt32 index,UInt32 recordMask)
 {
-	UInt8	*cPoz,*end;
-	UInt64	sz;
-	UInt32	indexFeat,Last;
+	UInt8									*cPoz,*end;
+	UInt32									indexFeat,Last;
+	UInt64									sz,iPoz;	
+	CompressedBitConnectorThreadCacheData	*ibthData;
 
 	if (index>=nrRecords)
 		return false;
-	cPoz = &Data[Indexes[index]];
+	
 	if (index+1==nrRecords)
 	{
 		sz = MemToAlloc -Indexes[index];
 	} else {
 		sz = Indexes[index+1]-Indexes[index];
 	}
+	if (CacheMemory==0)
+	{
+		cPoz = &Data[Indexes[index]];
+	} else {
+		// verific daca e in cache, updatez
+		iPoz = Indexes[index];
+		ibthData = (CompressedBitConnectorThreadCacheData *)record.ThreadData;
+		if ((iPoz<ibthData->CacheStart) || (iPoz+sz>=ibthData->CacheEnd))
+		{
+			if (UpdateCacheMemory(*ibthData,iPoz,sz)==false)
+			{
+				notifier->Error("[%s] -> Unable to update cache memory for location: %d, ",ObjectName,(int)iPoz);
+				return false;			
+			}
+		}
+		cPoz = &ibthData->Data[iPoz-ibthData->CacheStart];
+	}	
 	end = cPoz+sz;
 	memset(record.Features,0,sizeof(double)*columns.nrFeatures);
 	Last = 0;
@@ -636,6 +722,13 @@ bool	CompressedBitConnector::FreeMLRecord(GML::ML::MLRecord &record)
 	{
 		delete record.Features;
 		record.Features = NULL;
+	}
+	if ((CacheMemory>0) && (record.ThreadData!=NULL))
+	{
+		((CompressedBitConnectorThreadCacheData *)record.ThreadData)->CacheFile.Close();
+		delete record.ThreadData;
+		record.ThreadData = NULL;
+		
 	}
 	return true;
 }
