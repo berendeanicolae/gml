@@ -43,6 +43,7 @@ class Distances: public GenericDistAlgorithm
 	bool							MergeDistanceTableFiles;
 	bool							UseWeightsForFeatures;
 	UInt32							DistanceFunction;
+	UInt32							MemoryCache;
 	UInt32							ClosestPointArrayLen;
 	GML::ML::MLRecord				MainRecord;
 
