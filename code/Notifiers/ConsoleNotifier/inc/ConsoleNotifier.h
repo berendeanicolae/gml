@@ -5,9 +5,18 @@
 
 class ConsoleNotifier: public GML::Utils::INotifier
 {
+	enum 
+	{
+		TIMER_NONE = 0,
+		TIMER_ETA,
+		TIMER_ELAPSED,
+	};
 	COORD					savedCursorCoord;
 	GML::Utils::GString		tempStr;
 	GML::Utils::Timer		timer;
+	UInt32					showProgressRounds,showProgressTimer;
+	UInt32					procentRound;
+	
 	bool					useColors;
 	void					SetColor(unsigned char fore,unsigned char back);
 	void					SaveCursorCoord();

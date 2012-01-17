@@ -4,7 +4,9 @@
 ConsoleNotifier::ConsoleNotifier()
 {
 	ObjectName = "ConsoleNotifier";
-	LinkPropertyToBool("UseColors",useColors,false,"Specifies if colors should be used when showing mesages");
+	LinkPropertyToBool	("UseColors",useColors,false,"Specifies if colors should be used when showing mesages");
+	LinkPropertyToUInt32("ShowProgressRounds",showProgressRounds,1,"Number of rounds where the procent information will be show. 0 to skip showing procent informations");
+	LinkPropertyToUInt32("ShowProgressTimer",showProgressTimer,TIMER_ETA,"!!LIST:None=0,ETA,Elapsed!!");
 }
 void ConsoleNotifier::SetColor(unsigned char Fore, unsigned char Back)
 {
@@ -61,22 +63,40 @@ bool ConsoleNotifier::Notify(UInt32 messageID,void *Data,UInt32 DataSize)
 		case GML::Utils::INotifier::NOTIFY_START_PROCENT:
 			PrintText(text,9,0,false);
 			SaveCursorCoord();
-			timer.Start();
+			procentRound = 0;
+			timer.Start();			
 			break;
 		case GML::Utils::INotifier::NOTIFY_PROCENT:
-			RestoreCursorCoord();
-			if (useColors)
-				SetColor(15,0);
-			p = *(double *)Data;
-			if (p<0) 
-				p = 0;
-			if (p>1)
-				p = 1;
-			p = p * 100;
-			printf("[%.2lf%%]   ",p);
-			timer.Stop();
-			p*=1000;
-			printf("ETA:%s  ",timer.EstimateETA(tempStr,(UInt32)(p),100000));
+			if (showProgressRounds>0)
+			{
+				procentRound++;
+				if (procentRound>=showProgressRounds)
+				{
+					procentRound = 0;
+					RestoreCursorCoord();
+					if (useColors)
+						SetColor(15,0);
+					p = *(double *)Data;
+					if (p<0) 
+						p = 0;
+					if (p>1)
+						p = 1;
+					p = p * 100;
+					printf("[%.2lf%%]   ",p);
+					if (showProgressTimer!=TIMER_NONE)
+					{
+						if (showProgressTimer==TIMER_ETA)
+						{
+							timer.Stop();
+							p*=1000;
+							printf("ETA:%s  ",timer.EstimateETA(tempStr,(UInt32)(p),100000));
+						} else { // Elapsed
+							timer.Stop();
+							printf("Elapsed:%s  ",timer.GetPeriodAsString(tempStr));					
+						}
+					}
+				}
+			}
 			break;
 		case GML::Utils::INotifier::NOTIFY_END_PROCENT:
 			RestoreCursorCoord();
