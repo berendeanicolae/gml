@@ -1,4 +1,4 @@
 sources = CSV.CPP
-gmlplugin = yes
+gmlplugin = yes  
 libname = CSV
 owner = GDT 
