@@ -1,0 +1,3 @@
+sources = ProbVectorMachine.cpp
+gmlplugin = yes
+libname = ProbVectorMachine
