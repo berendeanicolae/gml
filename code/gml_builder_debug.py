@@ -33,7 +33,8 @@ def BuildGmlLib_h(c_path,f_path):
 		"IConnector.h",
 		"IAlgorithm.h",	
 		"Builder.h",
-		"IMLAlgorithm.h",		
+		"IMLAlgorithm.h",
+		"FeatStats.h",		
 	]
 	print("Creating ... "+os.path.join(f_path,"gmllib.h"))
 	try:
