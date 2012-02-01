@@ -94,7 +94,7 @@ int  Run(char *templateName)
 	}
 	if (alg->SetProperty(config)==false)
 	{
-		printf("[ERROR] -> Error updateing configuration to '%s'\n",algName.GetText());
+		printf("[ERROR] -> Error updating configuration to '%s'\n",algName.GetText());
 		return 5;
 	}
 	if (alg->Init()==false)
