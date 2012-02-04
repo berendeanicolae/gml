@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\ProbVectorMachine.cpp" />
+    <ClCompile Include="dllmain.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\ProbVectorMachine.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesTypes.h">
+      <Filter>PVMDefines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesInclude.h">
+      <Filter>PVMDefines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionInclude.h">
+      <Filter>Working Andrei\KernelFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPoly.h">
+      <Filter>Working Andrei\KernelFunctions</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Working Andrei">
+      <UniqueIdentifier>{2875c734-1883-4df9-856c-55835352ff05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Working Mihai">
+      <UniqueIdentifier>{b38b914b-be59-4cd9-81e2-e4c9dcabfe0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PVMDefines">
+      <UniqueIdentifier>{5f21d05e-8e0f-4daa-ae1f-7d8eb131d347}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Working Andrei\KernelFunctions">
+      <UniqueIdentifier>{3554545b-f63b-44d7-9d07-94b39f0bcc00}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
