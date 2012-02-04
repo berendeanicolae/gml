@@ -18,6 +18,9 @@
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPoly.h">
       <Filter>Working Andrei\KernelFunctions</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMMacros.h">
+      <Filter>PVMDefines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Working Andrei">

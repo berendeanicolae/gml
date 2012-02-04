@@ -7,7 +7,7 @@
     <LocalDebuggerCommandArguments>run $(ProjectDir)\pvm.ini</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerWorkingDirectory>$(ProjectDir)\..\..\bin</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>D:\GML\bin</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -17,7 +17,7 @@
     <LocalDebuggerCommandArguments>run $(ProjectDir)\pvm.ini</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerWorkingDirectory>D:\GML\bin\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>D:\GML\bin</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>
