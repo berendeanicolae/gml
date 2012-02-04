@@ -193,6 +193,7 @@
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\ProbVectorMachine.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesInclude.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesTypes.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMMacros.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
