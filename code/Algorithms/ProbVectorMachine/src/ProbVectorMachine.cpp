@@ -1,11 +1,12 @@
 #include "ProbVectorMachine.h"
+#include "KernelFunctionDBG.h"
 
 ProbVectorMachine::ProbVectorMachine()
 {
 	ObjectName = "ProbVectorMachine";
 
 	//Add extra commands here
-	SetPropertyMetaData("Command","!!LIST:None=0,TestMachineSpeed!!");    
+	SetPropertyMetaData("Command","!!LIST:None=0,TestMachineSpeed,TempTestKernel!!");    
 }
 bool ProbVectorMachine::Init()
 {
@@ -43,6 +44,10 @@ void ProbVectorMachine::OnExecute()
         case COMNAND_TEST_MACHINE_SPEED:
             INFOMSG("Computing machine speed");            
             TestMachineSpeed();
+            break;
+        case COMMAND_TEMP_KERNEL_FNCTS:
+            INFOMSG("Andrei testing");            
+			ker_f_dbg::exec_kernel_func_dbg(con);
             break;
 		default:
 			notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);

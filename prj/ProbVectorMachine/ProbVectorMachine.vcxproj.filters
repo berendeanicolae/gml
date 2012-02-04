@@ -3,6 +3,12 @@
   <ItemGroup>
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\ProbVectorMachine.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionPoly.cpp">
+      <Filter>Working Andrei\KernelFunctions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionPolyParametrized.cpp">
+      <Filter>Working Andrei\KernelFunctions</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\ProbVectorMachine.h" />
@@ -18,8 +24,23 @@
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPoly.h">
       <Filter>Working Andrei\KernelFunctions</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesKeywords.h">
+      <Filter>PVMDefines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\MathFunctions.h">
+      <Filter>Working Andrei\MathFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPolyParametrized.h">
+      <Filter>Working Andrei\KernelFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionRBF.h">
+      <Filter>Working Andrei\KernelFunctions</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMMacros.h">
       <Filter>PVMDefines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionDBG.h">
+      <Filter>Working Andrei\KernelFunctions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -34,6 +55,9 @@
     </Filter>
     <Filter Include="Working Andrei\KernelFunctions">
       <UniqueIdentifier>{3554545b-f63b-44d7-9d07-94b39f0bcc00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Working Andrei\MathFunctions">
+      <UniqueIdentifier>{fcacdd0a-afb8-459c-bef8-4fac70d6e0fc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

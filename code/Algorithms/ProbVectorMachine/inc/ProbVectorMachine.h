@@ -17,6 +17,7 @@ class ProbVectorMachine: public GML::Algorithm::IMLAlgorithm
 	enum {
 		COMMAND_NONE = 0,
         COMNAND_TEST_MACHINE_SPEED,
+        COMMAND_TEMP_KERNEL_FNCTS,
 		//Add extra commands here
 	};
 	enum {
