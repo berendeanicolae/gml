@@ -1,9 +1,13 @@
-#ifndef __PVM_KERNEL_FUNCTION_INCLUDE_H__
-#define __PVM_KERNEL_FUNCTION_INCLUDE_H__
 //-----------------------------------------------------------------------------
 #include "KernelFunctionPoly.h"
-#include "KernelFunctionPolyParametrized.h"
-#include "KernelFunctionRBF.h"
 //-----------------------------------------------------------------------------
+ker_f_poly::ker_f_poly()
+{
+	memset(this, 0, sizeof(ker_f_poly));
+}
 //-----------------------------------------------------------------------------
-#endif//__PVM_KERNEL_FUNCTION_INCLUDE_H__
+ker_f_poly::~ker_f_poly()
+{
+	//nothing to do
+}
+//-----------------------------------------------------------------------------

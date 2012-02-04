@@ -171,6 +171,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionPoly.cpp" />
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionPolyParametrized.cpp" />
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\ProbVectorMachine.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -188,10 +190,15 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionDBG.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionInclude.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPoly.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPolyParametrized.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionRBF.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\MathFunctions.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\ProbVectorMachine.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesInclude.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesKeywords.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesTypes.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMMacros.h" />
   </ItemGroup>
