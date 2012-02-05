@@ -14,8 +14,8 @@ ker_f_poly_param::~ker_f_poly_param()
 	params.DeleteAll();
 }
 //-----------------------------------------------------------------------------
-void ker_f_poly_param::set_parameters(pvm_float &src_t, int &src_d, 
-											GML::Utils::GTVector<pvm_float> &src_params)
+void ker_f_poly_param::set_parameters(pvm_double &src_t, int &src_d, 
+											GML::Utils::GTVector<pvm_double> &src_params)
 {
 	DBGSTOP_CHECK((src_t < 0 || src_d < 1));
 	t = src_t, d = src_d;

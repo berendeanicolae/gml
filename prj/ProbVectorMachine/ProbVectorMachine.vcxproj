@@ -196,6 +196,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunction.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionDBG.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionInclude.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPoly.h" />

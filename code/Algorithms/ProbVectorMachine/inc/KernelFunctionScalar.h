@@ -1,11 +1,9 @@
 #ifndef __PVM_KERNEL_FUNCTION_SCALAR_H__
 #define __PVM_KERNEL_FUNCTION_SCALAR_H__
 //-----------------------------------------------------------------------------
-#include "gmllib.h"
-#include "PVMDefinesInclude.h"
-#include "MathFunctions.h"
+#include "KernelFunction.h"
 //-----------------------------------------------------------------------------
-class ker_f_scalar : public GML::Utils::GMLObject
+class ker_f_scalar : public GML::Utils::GMLObject, public ker_f
 {
 public:
 	GML::Utils::INotifier *notif;
@@ -13,16 +11,18 @@ public:
 	ker_f_scalar();
 	~ker_f_scalar();
 
-	void compute_for(pvm_float *x, pvm_float *y, int count, pvm_float &res);
+	pvm_double compute_for(pvm_double *x, pvm_double *y, int count);
 };
 //-----------------------------------------------------------------------------
-pvm_inline void ker_f_scalar::compute_for(pvm_float *x, pvm_float *y, int count, pvm_float &res)
+pvm_inline pvm_double ker_f_scalar::compute_for(pvm_double *x, pvm_double *y, int count)
 {
 	int i;
-	res = 0.0;
+	pvm_double res = 0.0;
 	DBGSTOP_CHECK((!x || !y));
 	for (i = 0; i < count; i++)
 		res += x[i] * y[i];
+
+	return res;
 }
 //-----------------------------------------------------------------------------
 #endif// __PVM_KERNEL_FUNCTION_SCALAR_H__
