@@ -58,4 +58,31 @@ void ker_f_wrapper::compute_for_many(pvm_float **xs, pvm_float *results,
 	}
 }
 //-----------------------------------------------------------------------------
+void ker_f_wrapper::set_params(pvm_float src_fl0, int src_i0,  GML::Utils::GTVector<pvm_float> *src_weights, KerFuncType kf_type)
+{
+	switch(kf_type)	
+	{
+		case KERPOLY: 			
+			kf_poly.set_parameters(src_fl0, src_i0); break;
+		case KERSCALAR: 
+			break; 
+		case KERRBF: 
+			kf_rbf.set_parameters(src_fl0); break;
+		case KERPOLYPARAM: 
+			DBGSTOP_CHECK(!src_weights);
+			kf_poly_param.set_parameters(src_fl0, src_i0, *src_weights);
+			break;
+		case KERSCALARPARAM: 
+			DBGSTOP_CHECK(!src_weights);
+			kf_scalar_param.set_parameters(*src_weights);
+			break;
+		case KERRBFPARAM: 
+			DBGSTOP_CHECK(!src_weights);
+			kf_rbf_param.set_parameters(src_fl0, *src_weights);
+			break;
+
+		default : break;
+	}
+}
+//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
