@@ -1,25 +1,23 @@
 //-----------------------------------------------------------------------------
-#include "KernelFunctionPolyParametrized.h"
+#include "KernelFunctionRBFParametrized.h"
 //-----------------------------------------------------------------------------
-ker_f_poly_param::ker_f_poly_param()
+ker_f_rbf_param::ker_f_rbf_param()
 {
-	t = 0.0;
-	d = 0;
+	gamma = 0.0;
 	notif = NULL;
 	ObjectName = "ProbVectorMachine_KF";
 }
 //-----------------------------------------------------------------------------
-ker_f_poly_param::~ker_f_poly_param()
+ker_f_rbf_param::~ker_f_rbf_param()
 {
-	params.DeleteAll();
+	//nothing to do
 }
 //-----------------------------------------------------------------------------
-void ker_f_poly_param::set_parameters(pvm_float &src_t, int &src_d, 
-											GML::Utils::GTVector<pvm_float> &src_params)
+void ker_f_rbf_param::set_parameters(pvm_float &src_gamma, GML::Utils::GTVector<pvm_float> &src_params)
 {
-	DBGSTOP_CHECK((src_t < 0 || src_d < 1));
-	t = src_t, d = src_d;
+	DBGSTOP_CHECK((src_gamma < 0));
+	gamma = src_gamma;
 	params.Copy(src_params, 0, src_params.GetCount());
 }
 //-----------------------------------------------------------------------------
-
+//-----------------------------------------------------------------------------

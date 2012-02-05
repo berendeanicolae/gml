@@ -5,12 +5,12 @@
 #include "PVMDefinesInclude.h"
 #include "MathFunctions.h"
 //-----------------------------------------------------------------------------
-typedef struct ker_f_poly_param
+class ker_f_poly_param : public GML::Utils::GMLObject
 {
-	pvm_float							t;
-	int										d;
-
+	pvm_float	t;
+	int			d;
 	GML::Utils::GTVector<pvm_float> params;
+
 	GML::Utils::INotifier *notif;
 
 	ker_f_poly_param();
@@ -18,8 +18,8 @@ typedef struct ker_f_poly_param
 
 	void compute_for(pvm_float *x, pvm_float *y, int count, pvm_float &res);
 	void set_parameters(pvm_float &src_t, int &src_d, 
-											GML::Utils::GTVector<pvm_float> &src_params);
-}ker_f_poly_param;
+						GML::Utils::GTVector<pvm_float> &src_params);
+};
 //-----------------------------------------------------------------------------
 //----------------------------------INLINES------------------------------------
 //-----------------------------------------------------------------------------
@@ -27,7 +27,8 @@ pvm_inline void ker_f_poly_param::compute_for(pvm_float *x, pvm_float *y, int co
 {
 	int i;
 	res = t;
-
+	DBGSTOP_CHECK((count != params.GetCount()));
+	DBGSTOP_CHECK((!x || !y));
 	for (i = 0; i < count; i++)	
 		res += x[i] * y[i] * params[i];
 

@@ -171,8 +171,13 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionDBG.cpp" />
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionPoly.cpp" />
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionPolyParametrized.cpp" />
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionRBF.cpp" />
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionRBFParametrized.cpp" />
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionScalar.cpp" />
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionScalarParametrized.cpp" />
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\ProbVectorMachine.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -195,6 +200,9 @@
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPoly.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPolyParametrized.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionRBF.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionRBFParametrized.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionScalar.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionScalarParametrized.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\MathFunctions.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\ProbVectorMachine.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesInclude.h" />
