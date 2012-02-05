@@ -7,6 +7,7 @@
 //-----------------------------------------------------------------------------
 class ker_f_rbf_param : public GML::Utils::GMLObject
 {
+public:
 	pvm_float gamma;
 
 	GML::Utils::GTVector<pvm_float> params;
