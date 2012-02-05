@@ -24,6 +24,9 @@
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionDBG.cpp">
       <Filter>Working Andrei\KernelFunctions</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelWrapper.cpp">
+      <Filter>Working Andrei\KernelFunctions\KernelWrapper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\ProbVectorMachine.h" />
@@ -66,6 +69,9 @@
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPoly.h">
       <Filter>Working Andrei\KernelFunctions\Poly</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelWrapper.h">
+      <Filter>Working Andrei\KernelFunctions\KernelWrapper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Working Andrei">
@@ -91,6 +97,9 @@
     </Filter>
     <Filter Include="Working Andrei\KernelFunctions\Poly">
       <UniqueIdentifier>{b7f07680-1954-4bd2-9796-beeea212344e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Working Andrei\KernelFunctions\KernelWrapper">
+      <UniqueIdentifier>{ee47b58d-46df-424e-b513-8a3c323b059c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

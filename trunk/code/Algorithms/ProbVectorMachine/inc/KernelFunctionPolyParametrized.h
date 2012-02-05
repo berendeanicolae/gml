@@ -7,6 +7,7 @@
 //-----------------------------------------------------------------------------
 class ker_f_poly_param : public GML::Utils::GMLObject
 {
+public:
 	pvm_float	t;
 	int			d;
 	GML::Utils::GTVector<pvm_float> params;
