@@ -15,34 +15,42 @@ public:
 	ker_f_scalar_param	kf_scalar_param;
 	ker_f_poly_param	kf_poly_param;
 	ker_f_rbf_param		kf_rbf_param;
+
+	ker_f				*kf;
+
+	KerFuncType			kf_type;
+
 	
 
 	ker_f_wrapper();
 	~ker_f_wrapper();
 
-	void compute_for(pvm_float *x, pvm_float *y, int count, KerFuncType kf_type, pvm_float &res);
-	void compute_for_many(pvm_float **xs, pvm_float *results, //the ker result for (xs[i], xs[j]) will be found at position = (i * entries_count + j)
+	double compute_for(pvm_double *x, pvm_double *y, int count);
+	double compute_for(GML::ML::MLRecord &ml_rec0, GML::ML::MLRecord &ml_rec1);
+
+	void compute_for_many(pvm_double **xs, pvm_double *results, //the ker result for (xs[i], xs[j]) will be found at position = (i * entries_count + j)
 						  int entries_count, int feat_count, KerFuncType kf_type);
 
 	//because each kernel type has at most one float, one int and the vector coresponding to weights
 	//we use this less transparent form of parameter setting
-	void set_params(pvm_float src_fl0, int src_i0,  GML::Utils::GTVector<pvm_float> *src_weights, KerFuncType kf_type);
+	void set_params(pvm_double src_fl0, int src_i0,  GML::Utils::GTVector<pvm_double> *src_weights, KerFuncType kf_type);
+	void set_ker_type(KerFuncType src_kf_type);
 };
 //-----------------------------------------------------------------------------
-pvm_inline void ker_f_wrapper::compute_for(pvm_float *x, pvm_float *y, int count, KerFuncType kf_type, pvm_float &res)
+//--------------------------INLINES--------------------------------------------
+//-----------------------------------------------------------------------------
+pvm_inline double ker_f_wrapper::compute_for(pvm_double *x, pvm_double *y, int count)
 {
-	switch(kf_type)
-	{
-		case KERPOLY: kf_poly.compute_for(x, y, count, res); break;
-		case KERSCALAR: kf_scalar.compute_for(x, y, count, res); break;
-		case KERRBF: kf_rbf.compute_for(x, y, count, res); break;
-		case KERPOLYPARAM: kf_poly_param.compute_for(x, y, count, res); break;
-		case KERSCALARPARAM: kf_scalar_param.compute_for(x, y, count, res); break;
-		case KERRBFPARAM: kf_rbf_param.compute_for(x, y, count, res); break;
-
-		default : res = 0; break;
-	}
+	DBGSTOP_CHECK(!kf);
+	return kf->compute_for(x, y, count);
 }
+//-----------------------------------------------------------------------------
+pvm_inline double ker_f_wrapper::compute_for(GML::ML::MLRecord &ml_rec0, GML::ML::MLRecord &ml_rec1)
+{
+	DBGSTOP_CHECK(ml_rec0.FeatCount != ml_rec1.FeatCount);	
+	return compute_for(ml_rec0.Features, ml_rec1.Features, ml_rec1.FeatCount);
+}
+//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 #endif// __PVM_KERNEL_WRAPPER_H__
 

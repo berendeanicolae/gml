@@ -72,6 +72,9 @@
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelWrapper.h">
       <Filter>Working Andrei\KernelFunctions\KernelWrapper</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunction.h">
+      <Filter>Working Andrei\KernelFunctions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Working Andrei">
