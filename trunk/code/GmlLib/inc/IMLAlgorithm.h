@@ -49,7 +49,7 @@ namespace GML
 		public:
 			MLThreadData					*ThData;
 
-		protected:
+		//protected:
 			// properties
 			UInt32							threadsCount;
 			UInt32							HashFileType;
