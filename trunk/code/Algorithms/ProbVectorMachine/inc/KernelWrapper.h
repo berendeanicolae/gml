@@ -7,6 +7,7 @@ typedef enum KerFuncType {KERPOLY, KERSCALAR, KERRBF, KERPOLYPARAM, KERSCALARPAR
 //-----------------------------------------------------------------------------
 class ker_f_wrapper : public GML::Utils::GMLObject
 {
+public:
 	ker_f_scalar		kf_scalar;
 	ker_f_poly			kf_poly;
 	ker_f_rbf			kf_rbf;
@@ -28,7 +29,7 @@ class ker_f_wrapper : public GML::Utils::GMLObject
 	void set_params(pvm_float src_fl0, int src_i0,  GML::Utils::GTVector<pvm_float> *src_weights, KerFuncType kf_type);
 };
 //-----------------------------------------------------------------------------
-void ker_f_wrapper::compute_for(pvm_float *x, pvm_float *y, int count, KerFuncType kf_type, pvm_float &res)
+pvm_inline void ker_f_wrapper::compute_for(pvm_float *x, pvm_float *y, int count, KerFuncType kf_type, pvm_float &res)
 {
 	switch(kf_type)
 	{
