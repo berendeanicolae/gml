@@ -3,10 +3,25 @@
   <ItemGroup>
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\ProbVectorMachine.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionScalar.cpp">
+      <Filter>Working Andrei\KernelFunctions\Scalar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionScalarParametrized.cpp">
+      <Filter>Working Andrei\KernelFunctions\Scalar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionRBF.cpp">
+      <Filter>Working Andrei\KernelFunctions\RBF</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionRBFParametrized.cpp">
+      <Filter>Working Andrei\KernelFunctions\RBF</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionPoly.cpp">
-      <Filter>Working Andrei\KernelFunctions</Filter>
+      <Filter>Working Andrei\KernelFunctions\Poly</Filter>
     </ClCompile>
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionPolyParametrized.cpp">
+      <Filter>Working Andrei\KernelFunctions\Poly</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionDBG.cpp">
       <Filter>Working Andrei\KernelFunctions</Filter>
     </ClCompile>
   </ItemGroup>
@@ -21,26 +36,35 @@
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionInclude.h">
       <Filter>Working Andrei\KernelFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPoly.h">
-      <Filter>Working Andrei\KernelFunctions</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesKeywords.h">
       <Filter>PVMDefines</Filter>
     </ClInclude>
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\MathFunctions.h">
       <Filter>Working Andrei\MathFunctions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPolyParametrized.h">
-      <Filter>Working Andrei\KernelFunctions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionRBF.h">
-      <Filter>Working Andrei\KernelFunctions</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMMacros.h">
       <Filter>PVMDefines</Filter>
     </ClInclude>
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionDBG.h">
       <Filter>Working Andrei\KernelFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionScalarParametrized.h">
+      <Filter>Working Andrei\KernelFunctions\Scalar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionScalar.h">
+      <Filter>Working Andrei\KernelFunctions\Scalar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionRBFParametrized.h">
+      <Filter>Working Andrei\KernelFunctions\RBF</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionRBF.h">
+      <Filter>Working Andrei\KernelFunctions\RBF</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPolyParametrized.h">
+      <Filter>Working Andrei\KernelFunctions\Poly</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionPoly.h">
+      <Filter>Working Andrei\KernelFunctions\Poly</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -58,6 +82,15 @@
     </Filter>
     <Filter Include="Working Andrei\MathFunctions">
       <UniqueIdentifier>{fcacdd0a-afb8-459c-bef8-4fac70d6e0fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Working Andrei\KernelFunctions\Scalar">
+      <UniqueIdentifier>{916ccc92-acb6-45a0-b08e-89c4db9bf2f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Working Andrei\KernelFunctions\RBF">
+      <UniqueIdentifier>{0510a1b3-72f1-4285-9672-f9fc3d191971}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Working Andrei\KernelFunctions\Poly">
+      <UniqueIdentifier>{b7f07680-1954-4bd2-9796-beeea212344e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

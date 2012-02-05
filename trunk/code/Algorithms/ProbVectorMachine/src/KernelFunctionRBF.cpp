@@ -1,13 +1,13 @@
 //-----------------------------------------------------------------------------
-#include "KernelFunctionPoly.h"
+#include "KernelFunctionRBF.h"
 //-----------------------------------------------------------------------------
-ker_f_poly::ker_f_poly()
+ker_f_rbf::ker_f_rbf()
 {
-	memset(this, 0, sizeof(ker_f_poly));
+	memset(this, 0, sizeof(ker_f_rbf));
 	ObjectName = "ProbVectorMachine_KF";
 }
 //-----------------------------------------------------------------------------
-ker_f_poly::~ker_f_poly()
+ker_f_rbf::~ker_f_rbf()
 {
 	//nothing to do
 }

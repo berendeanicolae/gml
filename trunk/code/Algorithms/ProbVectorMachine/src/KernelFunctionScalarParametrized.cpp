@@ -1,25 +1,20 @@
 //-----------------------------------------------------------------------------
-#include "KernelFunctionPolyParametrized.h"
+#include "KernelFunctionScalarParametrized.h"
 //-----------------------------------------------------------------------------
-ker_f_poly_param::ker_f_poly_param()
+ker_f_scalar_param::ker_f_scalar_param()
 {
-	t = 0.0;
-	d = 0;
 	notif = NULL;
 	ObjectName = "ProbVectorMachine_KF";
 }
 //-----------------------------------------------------------------------------
-ker_f_poly_param::~ker_f_poly_param()
+ker_f_scalar_param::~ker_f_scalar_param()
 {
-	params.DeleteAll();
+//
 }
 //-----------------------------------------------------------------------------
-void ker_f_poly_param::set_parameters(pvm_float &src_t, int &src_d, 
-											GML::Utils::GTVector<pvm_float> &src_params)
+void ker_f_scalar_param::set_parameters(GML::Utils::GTVector<pvm_float> &src_params)
 {
-	DBGSTOP_CHECK((src_t < 0 || src_d < 1));
-	t = src_t, d = src_d;
 	params.Copy(src_params, 0, src_params.GetCount());
 }
 //-----------------------------------------------------------------------------
-
+//-----------------------------------------------------------------------------
