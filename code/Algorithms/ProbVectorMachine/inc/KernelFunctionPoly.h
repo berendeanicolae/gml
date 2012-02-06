@@ -28,8 +28,8 @@ pvm_inline pvm_double ker_f_poly::compute_for(pvm_double *x, pvm_double *y, int 
 	int i;
 	pvm_double res = t;
 	DBGSTOP_CHECK((!x || !y));
-	for (i = 0; i < count; i++) 
-		res += x[i] * y[i];
+	for (i = 0; i < count; i++, x++, y++) 
+		res += (*x) * (*y);
 	
 	return PVMMathFunctions::pow_i(res, d);;
 }

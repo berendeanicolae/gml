@@ -29,8 +29,8 @@ pvm_inline pvm_double ker_f_rbf_param::compute_for(pvm_double *x, pvm_double *y,
 	DBGSTOP_CHECK((params.GetCount() != count));
 	DBGSTOP_CHECK((!x || !y));
 												 
-	for (i = 0; i < count; i++)
-		temp = x[i] - y[i], res += temp * temp * params[i];
+	for (i = 0; i < count; i++, x++, y++)
+		temp = (*x) - (*y), res += temp * temp * params[i];
 
 	return exp(- gamma * res * res);
 }
