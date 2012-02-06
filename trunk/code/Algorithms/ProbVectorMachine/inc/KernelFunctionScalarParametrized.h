@@ -24,8 +24,8 @@ pvm_inline pvm_double ker_f_scalar_param::compute_for(pvm_double *x, pvm_double 
 	DBGSTOP_CHECK((params.GetCount() != count));
 	DBGSTOP_CHECK((!x || !y));
 
-	for (i = 0; i < count; i++)
-		res += x[i] * y[i] * params[i];
+	for (i = 0; i < count; i++, x++, y++)
+		res += (*x) * (*y) * params[i];
 
 	return res;
 }

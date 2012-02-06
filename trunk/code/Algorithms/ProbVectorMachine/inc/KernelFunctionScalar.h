@@ -19,8 +19,8 @@ pvm_inline pvm_double ker_f_scalar::compute_for(pvm_double *x, pvm_double *y, in
 	int i;
 	pvm_double res = 0.0;
 	DBGSTOP_CHECK((!x || !y));
-	for (i = 0; i < count; i++)
-		res += x[i] * y[i];
+	for (i = 0; i < count; i++, x++, y++)
+		res += (*x) * (*y);
 
 	return res;
 }
