@@ -18,7 +18,7 @@ public:
 	~ker_f_poly();
 	
 	pvm_double compute_for(pvm_double *x, pvm_double *y, int count);
-	void set_parameters(pvm_double src_t, int src_d);
+	bool set_parameters(pvm_double src_t, int src_d);
 };
 //-----------------------------------------------------------------------------
 //---------------------INLINES-------------------------------------------------
@@ -34,10 +34,14 @@ pvm_inline pvm_double ker_f_poly::compute_for(pvm_double *x, pvm_double *y, int 
 	return PVMMathFunctions::pow_i(res, d);;
 }
 //-----------------------------------------------------------------------------
-pvm_inline void ker_f_poly::set_parameters(pvm_double src_t, int src_d)
+pvm_inline bool ker_f_poly::set_parameters(pvm_double src_t, int src_d)
 {
 	DBGSTOP_CHECK((src_t < 0 || src_d < 1), "File %s | Line %d", __FILE__, __LINE__);
+	if (src_t < 0 || src_d < 1 || !(src_d % 2))
+		return false;
+		
 	t = src_t, d = src_d;
+	return true;
 }
 //-----------------------------------------------------------------------------
 #endif//__PVM_KERNEL_FUNCTION_POLY_H__

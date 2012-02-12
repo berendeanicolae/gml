@@ -13,7 +13,7 @@ public:
 	~ker_f_scalar_param();
 
 	pvm_double compute_for(pvm_double *x, pvm_double *y, int count);
-	void set_parameters(GML::Utils::GTVector<pvm_double> &src_params);
+	bool set_parameters(GML::Utils::GTVector<pvm_double> &src_params);
 };
 //-----------------------------------------------------------------------------
 pvm_inline pvm_double ker_f_scalar_param::compute_for(pvm_double *x, pvm_double *y, int count)

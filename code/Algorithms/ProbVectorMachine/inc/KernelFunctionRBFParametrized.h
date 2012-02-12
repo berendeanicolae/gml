@@ -15,7 +15,7 @@ public:
 	~ker_f_rbf_param();
 
 	pvm_double compute_for(pvm_double *x, pvm_double *y, int count);
-	void set_parameters(pvm_double &src_gamma, GML::Utils::GTVector<pvm_double> &src_params);
+	bool set_parameters(pvm_double &src_gamma, GML::Utils::GTVector<pvm_double> &src_params);
 };
 //-----------------------------------------------------------------------------
 //--------------------------INLINES--------------------------------------------
