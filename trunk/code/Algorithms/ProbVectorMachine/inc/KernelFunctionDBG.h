@@ -5,7 +5,7 @@
 //-----------------------------------------------------------------------------
 namespace ker_f_dbg
 {
-	bool exec_kernel_func_dbg(GML::ML::IConnector *connector);
+	bool exec_kernel_func_dbg(GML::ML::IConnector *connector, GML::Utils::INotifier *notif);
 }
 //-----------------------------------------------------------------------------
 #endif//__PVM_KERNEL_FUNCTION_DEBUG_H__

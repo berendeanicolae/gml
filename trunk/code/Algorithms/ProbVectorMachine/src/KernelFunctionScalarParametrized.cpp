@@ -18,7 +18,7 @@ bool ker_f_scalar_param::set_parameters(GML::Utils::GTVector<pvm_double> &src_pa
 	
 	for (i = 0; i < src_params.GetCount(); i++)
 	{
-		DBGSTOP_CHECK(src_params[i] < 0);
+		DBGSTOP_CHECKMSG(src_params[i] >= 0, "Weights should be positive");
 		if (src_params[i] < 0)
 			return false;
 	}

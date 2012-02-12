@@ -2,7 +2,7 @@
 #include "KernelFunctionDBG.h"
 #include "KernelWrapper.h"
 //-----------------------------------------------------------------------------
-bool ker_f_dbg::exec_kernel_func_dbg(GML::ML::IConnector *connector)
+bool ker_f_dbg::exec_kernel_func_dbg(GML::ML::IConnector *connector, GML::Utils::INotifier *notif)
 {
 	int i, j, k, rec_count, feat_count;
 	pvm_double ker_res;
@@ -10,7 +10,8 @@ bool ker_f_dbg::exec_kernel_func_dbg(GML::ML::IConnector *connector)
 	ker_f_rbf kf_rbf;
 	ker_f_scalar kf_scalar;
 	pvm_double *x, *y;
-	ker_f_wrapper kf_wrap;
+
+	ker_f_wrapper kf_wrap(connector, notif);
 
 
 	GML::ML::MLRecord ml_rec;

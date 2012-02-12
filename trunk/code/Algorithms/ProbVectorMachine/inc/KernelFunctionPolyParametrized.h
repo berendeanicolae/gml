@@ -28,8 +28,8 @@ pvm_inline pvm_double ker_f_poly_param::compute_for(pvm_double *x, pvm_double *y
 	int i;
 	pvm_double res = t;
 
-	DBGSTOP_CHECK((count != params.GetCount()));
-	DBGSTOP_CHECK((!x || !y));
+	DBGSTOP_CHECKMSG((count == params.GetCount()), "Weight count should equal feature count");
+	DBGSTOP_CHECKMSG((x && y), "One of the pointers is NULL");
 	for (i = 0; i < count; i++, x++, y++)	
 		res += (*x) * (*y) * params[i];
 	

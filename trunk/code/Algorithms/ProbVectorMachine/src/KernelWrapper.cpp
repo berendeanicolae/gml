@@ -71,13 +71,13 @@ bool ker_f_wrapper::set_params(pvm_double src_fl0, int src_i0,  GML::Utils::GTVe
 		case KERRBF: 
 			ret = kf_rbf.set_parameters(src_fl0); break;
 		case KERPOLYPARAM: 
-			DBGSTOP_CHECK(!src_weights);
+			DBGSTOP_CHECKMSG(src_weights, "Should not be NULL pointer");
 			ret = kf_poly_param.set_parameters(src_fl0, src_i0, *src_weights); break;
 		case KERSCALARPARAM: 
-			DBGSTOP_CHECK(!src_weights);
+			DBGSTOP_CHECKMSG(src_weights, "Should not be NULL pointer");
 			ret = kf_scalar_param.set_parameters(*src_weights); break;
 		case KERRBFPARAM: 
-			DBGSTOP_CHECK(!src_weights);
+			DBGSTOP_CHECKMSG(src_weights, "Should not be NULL pointer");
 			ret = kf_rbf_param.set_parameters(src_fl0, *src_weights); break;
 
 		default : ret = false;
@@ -104,4 +104,15 @@ void ker_f_wrapper::set_ker_type(KerFuncType src_kf_type)
 		default : kf = NULL; break;	
 	}
 }
+//-----------------------------------------------------------------------------
+ker_f_wrapper::ker_f_wrapper(GML::ML::IConnector *src_con, GML::Utils::INotifier *src_notif)
+{
+	set_inherit_data(src_con, src_notif);
+}
+//-----------------------------------------------------------------------------
+ker_f_wrapper::ker_f_wrapper(ker_f_wrapper &src_wrapper)
+{
+	set_inherit_data(src_wrapper.con, src_wrapper.notif);
+}
+//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

@@ -116,7 +116,7 @@ bool PreCache::ThreadPrecomputeBatch(GML::Algorithm::MLThreadData &thData)
 
 	if (ThreadId == 0) id.notif->StartProcent("[%s] -> Computing batch number %03d ... ",ObjectName, pccb.CurrBatchNr);	
 
-	ker_f_wrapper kernel;
+	ker_f_wrapper kernel(con, notif);
 	// todo: add a check here for return value of function, when it will be BOOL
 	kernel.set_params(id.VarKernelParamDouble, id.VarKernelParamInt, NULL, (KerFuncType)id.VarKernelType);
 	
