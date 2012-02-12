@@ -59,31 +59,34 @@ void ker_f_wrapper::compute_for_many(pvm_double **xs, pvm_double *results,
 	}
 }
 //-----------------------------------------------------------------------------
-void ker_f_wrapper::set_params(pvm_double src_fl0, int src_i0,  GML::Utils::GTVector<pvm_double> *src_weights, KerFuncType kf_type)
+bool ker_f_wrapper::set_params(pvm_double src_fl0, int src_i0,  GML::Utils::GTVector<pvm_double> *src_weights, KerFuncType kf_type)
 {
+	bool ret;
 	switch(kf_type)	
 	{
 		case KERPOLY: 			
-			kf_poly.set_parameters(src_fl0, src_i0); break;
+			ret = kf_poly.set_parameters(src_fl0, src_i0); break;
 		case KERSCALAR: 
-			break; 
+			ret =  true; break;
 		case KERRBF: 
-			kf_rbf.set_parameters(src_fl0); break;
+			ret = kf_rbf.set_parameters(src_fl0); break;
 		case KERPOLYPARAM: 
 			DBGSTOP_CHECK(!src_weights);
-			kf_poly_param.set_parameters(src_fl0, src_i0, *src_weights);
-			break;
+			ret = kf_poly_param.set_parameters(src_fl0, src_i0, *src_weights); break;
 		case KERSCALARPARAM: 
 			DBGSTOP_CHECK(!src_weights);
-			kf_scalar_param.set_parameters(*src_weights);
-			break;
+			ret = kf_scalar_param.set_parameters(*src_weights); break;
 		case KERRBFPARAM: 
 			DBGSTOP_CHECK(!src_weights);
-			kf_rbf_param.set_parameters(src_fl0, *src_weights);
-			break;
+			ret = kf_rbf_param.set_parameters(src_fl0, *src_weights); break;
 
-		default : break;
+		default : ret = false;
 	}
+
+	if (ret)
+		set_ker_type(kf_type);
+
+	return ret;
 }
 //-----------------------------------------------------------------------------
 void ker_f_wrapper::set_ker_type(KerFuncType src_kf_type)

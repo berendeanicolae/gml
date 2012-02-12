@@ -14,7 +14,7 @@ public:
 	~ker_f_rbf();
 	
 	pvm_double compute_for(pvm_double *x, pvm_double *y, int count);
-	void set_parameters(pvm_double src_gamma);
+	bool set_parameters(pvm_double src_gamma);
 };
 //-----------------------------------------------------------------------------
 pvm_inline pvm_double ker_f_rbf::compute_for(pvm_double *x, pvm_double *y, int count)
@@ -29,10 +29,14 @@ pvm_inline pvm_double ker_f_rbf::compute_for(pvm_double *x, pvm_double *y, int c
 	return exp(- gamma * res);
 }
 //-----------------------------------------------------------------------------
-pvm_inline void ker_f_rbf::set_parameters(pvm_double src_gamma)
+pvm_inline bool ker_f_rbf::set_parameters(pvm_double src_gamma)
 {
 	DBGSTOP_CHECK(src_gamma <= 0);
+	if (src_gamma <= 0)
+		return false;
+
 	gamma = src_gamma;
+	return true;
 }
 //-----------------------------------------------------------------------------
 #endif//__PVM_KERNEL_FUNCTION_RADIAL_BASIS_H__

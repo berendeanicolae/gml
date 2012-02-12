@@ -46,7 +46,7 @@ public:
 	If the ker type is PARAM type, then it will use the weights supplied in the src_weights vector, which will alter the 
 	base scalar product : <X, Y> = sum(Xi * Yi * weight_i)
 	*/
-	void set_params(pvm_double src_fl0, int src_i0,  GML::Utils::GTVector<pvm_double> *src_weights, KerFuncType kf_type);
+	bool set_params(pvm_double src_fl0, int src_i0,  GML::Utils::GTVector<pvm_double> *src_weights, KerFuncType kf_type);
 	void set_ker_type(KerFuncType src_kf_type);
 };
 //-----------------------------------------------------------------------------

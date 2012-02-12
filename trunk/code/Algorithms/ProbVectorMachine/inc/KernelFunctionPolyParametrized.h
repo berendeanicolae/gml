@@ -17,7 +17,7 @@ public:
 	~ker_f_poly_param();
 
 	pvm_double compute_for(pvm_double *x, pvm_double *y, int count);
-	void set_parameters(pvm_double &src_t, int &src_d, 
+	bool set_parameters(pvm_double &src_t, int &src_d, 
 						GML::Utils::GTVector<pvm_double> &src_params);
 };
 //-----------------------------------------------------------------------------
