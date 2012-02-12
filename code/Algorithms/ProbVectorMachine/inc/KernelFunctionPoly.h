@@ -27,7 +27,7 @@ pvm_inline pvm_double ker_f_poly::compute_for(pvm_double *x, pvm_double *y, int 
 {
 	int i;
 	pvm_double res = t;
-	DBGSTOP_CHECK((!x || !y));
+	DBGSTOP_CHECKMSG((x && y), "One of the pointers is NULL");
 	for (i = 0; i < count; i++, x++, y++) 
 		res += (*x) * (*y);
 	
@@ -36,7 +36,7 @@ pvm_inline pvm_double ker_f_poly::compute_for(pvm_double *x, pvm_double *y, int 
 //-----------------------------------------------------------------------------
 pvm_inline bool ker_f_poly::set_parameters(pvm_double src_t, int src_d)
 {
-	DBGSTOP_CHECK((src_t < 0 || src_d < 1), "File %s | Line %d", __FILE__, __LINE__);
+	DBGSTOP_CHECKMSG((src_t >= 0 && src_d >= 1 && (src_d % 2)), "Bad params sent to ker function");
 	if (src_t < 0 || src_d < 1 || !(src_d % 2))
 		return false;
 		

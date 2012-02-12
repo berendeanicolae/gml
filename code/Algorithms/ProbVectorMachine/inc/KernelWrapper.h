@@ -7,6 +7,7 @@ typedef enum KerFuncType {KERPOLY, KERSCALAR, KERRBF, KERPOLYPARAM, KERSCALARPAR
 //-----------------------------------------------------------------------------
 class ker_f_wrapper : public GML::Utils::GMLObject
 {
+	ker_f_wrapper();//this is set here to avoid usage of the constructor without setting the notifier
 public:
 	ker_f_scalar		kf_scalar;
 	ker_f_poly			kf_poly;
@@ -20,9 +21,12 @@ public:
 
 	KerFuncType			kf_type;
 
+	GML::ML::IConnector*	con;
+	GML::Utils::INotifier*	notif;	
 	
 
-	ker_f_wrapper();
+	ker_f_wrapper(GML::ML::IConnector *src_con, GML::Utils::INotifier *src_notif);
+	ker_f_wrapper(ker_f_wrapper &src_wrapper);
 	~ker_f_wrapper();
 
 	double compute_for(pvm_double *x, pvm_double *y, int count);
@@ -45,23 +49,41 @@ public:
 	Note that every kernel type is based on the KERSCALAR kernel type. For every ker type there's a coresponding weighted kernel.
 	If the ker type is PARAM type, then it will use the weights supplied in the src_weights vector, which will alter the 
 	base scalar product : <X, Y> = sum(Xi * Yi * weight_i)
-	*/
+	*/	
 	bool set_params(pvm_double src_fl0, int src_i0,  GML::Utils::GTVector<pvm_double> *src_weights, KerFuncType kf_type);
-	void set_ker_type(KerFuncType src_kf_type);
+
+	//must be called with a valid notifier, otherwise it will generate access violations in case of assertion fails
+	bool set_inherit_data(GML::ML::IConnector *src_con, GML::Utils::INotifier *src_notif);
+	void set_ker_type(KerFuncType src_kf_type);	
 };
 //-----------------------------------------------------------------------------
 //--------------------------INLINES--------------------------------------------
 //-----------------------------------------------------------------------------
 pvm_inline double ker_f_wrapper::compute_for(pvm_double *x, pvm_double *y, int count)
 {
-	DBGSTOP_CHECK(!kf);
+	DBGSTOP_CHECKMSG(kf, "Should have been set by calling set_params");
 	return kf->compute_for(x, y, count);
 }
 //-----------------------------------------------------------------------------
 pvm_inline double ker_f_wrapper::compute_for(GML::ML::MLRecord &ml_rec0, GML::ML::MLRecord &ml_rec1)
 {
-	DBGSTOP_CHECK(ml_rec0.FeatCount != ml_rec1.FeatCount);	
+	DBGSTOP_CHECKMSG(ml_rec0.FeatCount = ml_rec1.FeatCount, "Records must have same number of features");	
 	return compute_for(ml_rec0.Features, ml_rec1.Features, ml_rec1.FeatCount);
+}
+//-----------------------------------------------------------------------------
+pvm_inline bool ker_f_wrapper::set_inherit_data(GML::ML::IConnector *src_con, GML::Utils::INotifier *src_notif)
+{
+	bool ret = true;
+	con = src_con, notif = src_notif;
+
+	ret = ret && kf_scalar.set_inherit_data(src_con, src_notif);
+	ret = ret && kf_scalar_param.set_inherit_data(src_con, src_notif);
+	ret = ret && kf_poly.set_inherit_data(src_con, src_notif);
+	ret = ret && kf_poly_param.set_inherit_data(src_con, src_notif);
+	ret = ret && kf_rbf.set_inherit_data(src_con, src_notif);
+	ret = ret && kf_rbf_param.set_inherit_data(src_con, src_notif);
+
+	return ret;
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

@@ -22,7 +22,7 @@ pvm_inline pvm_double ker_f_rbf::compute_for(pvm_double *x, pvm_double *y, int c
 	int i;
 	pvm_double temp;
 	pvm_double res = 0.0;
-	DBGSTOP_CHECK((!x || !y));
+	DBGSTOP_CHECKMSG((x && y), "One of the pointers is NULL");
 	for (i = 0; i < count; i++, x++, y++)
 		temp = (*x) - (*y), res += temp * temp;
 
@@ -31,7 +31,7 @@ pvm_inline pvm_double ker_f_rbf::compute_for(pvm_double *x, pvm_double *y, int c
 //-----------------------------------------------------------------------------
 pvm_inline bool ker_f_rbf::set_parameters(pvm_double src_gamma)
 {
-	DBGSTOP_CHECK(src_gamma <= 0);
+	DBGSTOP_CHECKMSG(src_gamma > 0, "Gamma should be positive");
 	if (src_gamma <= 0)
 		return false;
 

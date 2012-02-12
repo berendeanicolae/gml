@@ -27,6 +27,9 @@
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelWrapper.cpp">
       <Filter>Working Andrei\KernelFunctions\KernelWrapper</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\PreCache.cpp">
+      <Filter>Working Mihai</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\ProbVectorMachine.h" />
@@ -74,6 +77,9 @@
     </ClInclude>
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunction.h">
       <Filter>Working Andrei\KernelFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PreCache.h">
+      <Filter>Working Mihai</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

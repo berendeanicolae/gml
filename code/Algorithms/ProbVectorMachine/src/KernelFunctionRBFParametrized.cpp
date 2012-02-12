@@ -17,15 +17,15 @@ bool ker_f_rbf_param::set_parameters(pvm_double &src_gamma, GML::Utils::GTVector
 {
 	int i;
 
-	DBGSTOP_CHECK((src_gamma < 0));
-	if (src_gamma < 0)
+	DBGSTOP_CHECKMSG((src_gamma > 0), "Gamma should be positive");
+	if (src_gamma <= 0)
 		return false;
 
 	gamma = src_gamma;
 
 	for (i = 0; i < src_params.GetCount(); i++)
 	{
-		DBGSTOP_CHECK(src_params[i] < 0)
+		DBGSTOP_CHECKMSG(src_params[i] >= 0, "Weights should all be positive")
 		if (src_params[i] < 0)
 			return false;
 	}

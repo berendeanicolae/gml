@@ -71,7 +71,7 @@ void ProbVectorMachine::OnExecute()
 			break;
 		case COMMAND_TEMP_KERNEL_FNCTS:
             INFOMSG("Andrei testing");            
-			ker_f_dbg::exec_kernel_func_dbg(con);
+			ker_f_dbg::exec_kernel_func_dbg(con, notif);
             break;
 		default:
 			notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);
