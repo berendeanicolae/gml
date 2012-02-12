@@ -72,6 +72,8 @@ bool PreCache::PreCompute()
 		}
 		BatchFileObj.Close();
 	}
+	// free the buffer
+	free(Buffer);
 
 	return true;
 }
@@ -79,9 +81,9 @@ bool PreCache::PreCompute()
 int PreCache::GetNrRecPerBatch(int MinNr, int MaxNr)
 {
 	// binary search for the nr of records per batch
-	unsigned int MidNr = MinNr + (MaxNr-MinNr)/2;
-	unsigned int SzForMid = (MidNr*NrRec - (MidNr*(MidNr-1))/2)*sizeof(pvm_float);
-	unsigned int SzPerBatch = id.VarPreCacheFileSize*UNMEGA;
+	UInt32 MidNr = MinNr + (MaxNr-MinNr)/2;
+	UInt32 SzForMid = (MidNr*NrRec - (MidNr*(MidNr-1))/2)*sizeof(pvm_float);
+	UInt32 SzPerBatch = id.VarPreCacheFileSize*UNMEGA;
 
 	// the searched element condition
 	if (SzForMid > SzPerBatch-SizePerLine && SzForMid <= SzPerBatch) return MidNr;
@@ -113,6 +115,10 @@ bool PreCache::ThreadPrecomputeBatch(GML::Algorithm::MLThreadData &thData)
 	DBG_CHECKMSG(id.con->CreateMlRecord(two),"could not create MLRecord");
 
 	if (ThreadId == 0) id.notif->StartProcent("[%s] -> Computing batch number %03d ... ",ObjectName, pccb.CurrBatchNr);	
+
+	ker_f_wrapper kernel;
+	// todo: add a check here for return value of function, when it will be BOOL
+	kernel.set_params(id.VarKernelParamDouble, id.VarKernelParamInt, NULL, (KerFuncType)id.VarKernelType);
 	
 	// the outer loop where every thread alternated and takes a record
 	for (UInt32 i=pccb.RecStart+ThreadId; i<pccb.RecStart+pccb.RecCount; i+=alg->threadsCount) {
@@ -129,9 +135,7 @@ bool PreCache::ThreadPrecomputeBatch(GML::Algorithm::MLThreadData &thData)
 			DBG_CHECKMSG(id.con->GetRecord(two, j),"could not get ml record from connector");
 			
 			// insert kernel here; placeholder now
-			sum = 0;
-			for (UInt32 k=0;k<NrFts;k++) 
-				sum += (pvm_float)((one.Features[k]-two.Features[k])*(one.Features[k]-two.Features[k]));
+			sum = (pvm_float)kernel.compute_for(one, two);
 
 			// put the kernel value to its out place			
 			OutPos = (NrLines*NrRec - NrLines*(NrLines-1)/2) + j-NrLines;

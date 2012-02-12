@@ -34,12 +34,7 @@ private:
 		COMMAND_PRECOMPUTE,
 		COMMAND_TEMP_KERNEL_FNCTS,
 		//Add extra commands here
-	};
-	enum {
-		KERN_TYPE_POLY = 0,
-		KERN_TYPE_GAUS,
-		//todo: asucila: add here mode kernel types
-	};
+	};	
 
 private:
 	GML::ML::MLRecord		MainRecord;	
@@ -61,12 +56,16 @@ public:
     bool	ThreadTestCompSpeed(GML::Algorithm::MLThreadData & thData);
 
 	// variables to control the algorithm flow
-	unsigned int VarKernelType;
-	unsigned int VarPreCacheFileSize;
-	unsigned int VarPreCacheBatchStart;
-	unsigned int VarPreCacheBatchCount;
+	UInt32 VarKernelType;
+	UInt32 VarPreCacheFileSize;
+	UInt32 VarPreCacheBatchStart;
+	UInt32 VarPreCacheBatchCount;
+
+	Int32		VarKernelParamInt;
+	pvm_double  VarKernelParamDouble;
 
 	GML::Utils::GString	VarPreCacheFilePattern;
+	GML::Utils::GString	VarFeatureWeightFile;
 };
 
 #endif

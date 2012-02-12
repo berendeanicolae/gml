@@ -1,6 +1,8 @@
 #include "ProbVectorMachine.h"
 #include "KernelFunctionDBG.h"
 
+#include "KernelWrapper.h"
+
 ProbVectorMachine::ProbVectorMachine()
 {
 	ObjectName = "ProbVectorMachine";
@@ -8,17 +10,17 @@ ProbVectorMachine::ProbVectorMachine()
 	//Add extra commands here
 	SetPropertyMetaData("Command","!!LIST:None=0,TestMachineSpeed,PreCompute!!");
 	
-	// kernel choice related variabiles
-	// todo: asucila: add here mode kernel types
-	LinkPropertyToUInt32("KernelType",VarKernelType,KERN_TYPE_GAUS,"!!LIST:Gaussian=0,Polynomial!!");
+	// kernel choice related variabiles	
+	LinkPropertyToUInt32("KernelType",VarKernelType,KerFuncType::KERPOLY,"!!LIST:Poly=0,Scalar,Rbf,PolyParam,ScalarParam,RbfParam!!");
+	LinkPropertyToInt32("KernelParamInt",VarKernelParamInt,0,"The Integer parameter of the kernel function");
+	LinkPropertyToDouble("KernelParamDouble",VarKernelParamDouble,0,"The Double parameter of the kernel");
+	LinkPropertyToString("FeatureWeightFile",VarFeatureWeightFile, "feature-weight.txt", "File name to hold feature weights; comma separated values");	
 
 	// precompute related variables 	
 	LinkPropertyToUInt32("PreCacheFileSize",VarPreCacheFileSize,1024,"The PreCache file size in MB");
 	LinkPropertyToUInt32("PreCacheBatchStart",VarPreCacheBatchStart,0,"The PreCache start batch index");
 	LinkPropertyToUInt32("PreCacheBatchNumber",VarPreCacheBatchCount,0,"The PreCache number of bathes to compute here");
 	LinkPropertyToString("PreCacheFilePattern",VarPreCacheFilePattern, "pre-cache-data.", "File pattern where precomputed data to be saved; ex: pre-cache-data.000, pre-cache-data.001");	
-
-	//LinkPropertyToUInt32("BestClassifMethod", bestClassifMethod, BEST_NONE, "!!LIST:Gaussian=0,Polynomial!!");
 }
 bool ProbVectorMachine::Init()
 {
@@ -177,6 +179,9 @@ bool ProbVectorMachine::PreComputeKernelValues()
 	id.notif = this->notif;
 	
 	id.VarKernelType = this->VarKernelType;
+	id.VarKernelParamInt = this->VarKernelParamInt;
+	id.VarKernelParamDouble = this->VarKernelParamDouble;
+
 	id.VarPreCacheBatchCount = this->VarPreCacheBatchCount;
 	id.VarPreCacheBatchStart = this->VarPreCacheBatchStart;
 	id.VarPreCacheFileSize = this->VarPreCacheFileSize;
