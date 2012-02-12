@@ -24,8 +24,8 @@
 
 	#define DBGSTOP_NULLCHECKMSG(val,...)    { if (val==NULL) {ERRORMSG(__VA_ARGS__); DebugBreak();} }
 	#define DBGSTOP_NULLCHECK(val,...)       { if (val==NULL) DebugBreak(); } 
-	#define DBGSTOP_CHECKMSG(val,...)        { if (val==TRUE) {ERRORMSG(__VA_ARGS__); DebugBreak();} }
-	#define DBGSTOP_CHECK(val,...)           { if (val==TRUE) DebugBreak(); } 
+	#define DBGSTOP_CHECKMSG(val,...)        { if (val==false) {ERRORMSG(__VA_ARGS__); DebugBreak();} }
+	#define DBGSTOP_CHECK(val,...)           { if (val==false) DebugBreak(); } 
 #else
 	#define DBG_NULLCHECKMSG    //
 	#define DBG_NULLCHECK       //

@@ -6,6 +6,8 @@
 #include "PVMDefinesInclude.h"
 #include "PVMDefinesTypes.h"
 
+#include "KernelWrapper.h"
+
 #include <cstring>
 
 using namespace GML::Utils;
@@ -18,10 +20,13 @@ public:
 		GML::ML::IConnector*	con;
 		GML::Utils::INotifier*	notif;	
 
-		unsigned int VarKernelType;
-		unsigned int VarPreCacheFileSize;
-		unsigned int VarPreCacheBatchStart;
-		unsigned int VarPreCacheBatchCount;
+		UInt32		VarKernelType;
+		pvm_float	VarKernelParamDouble;
+		Int32		VarKernelParamInt;
+
+		UInt32 VarPreCacheFileSize;
+		UInt32 VarPreCacheBatchStart;
+		UInt32 VarPreCacheBatchCount;
 
 		GML::Utils::GString	VarPreCacheFilePattern;
 		
