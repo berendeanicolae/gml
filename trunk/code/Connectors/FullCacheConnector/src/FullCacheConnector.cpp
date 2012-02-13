@@ -178,6 +178,26 @@ bool   FullCacheConnector::Load(char *fileName)
 			notifier->Error("[%s] -> Unable to allocate %ud bytes for labels !",ObjectName,nrRecords*sizeof(double));
 			break;
 		}
+
+		// actually read from file 
+		UInt64 ReadSz;
+		if (file.Read(Records, nrRecords*columns.nrFeatures*sizeof(double), &ReadSz)==false) {
+			notifier->Error("[%s] -> Unable to read records data!",ObjectName);
+			break;
+		}
+		if (ReadSz!=nrRecords*columns.nrFeatures*sizeof(double)) {
+			notifier->Error("[%s] -> Unable to read enough from file!",ObjectName);
+			break;
+		}
+		if (file.Read(Labels, nrRecords*sizeof(double), &ReadSz)==false) {
+			notifier->Error("[%s] -> Unable to read labels data!",ObjectName);
+			break;
+		}
+		if (ReadSz!=nrRecords*sizeof(double)) {
+			notifier->Error("[%s] -> Unable to read enough from file!",ObjectName);
+			break;
+		}
+		
 		if (LoadRecordHashesAndFeatureNames(&h)==false)
 			break;
 		CloseCacheFile();
