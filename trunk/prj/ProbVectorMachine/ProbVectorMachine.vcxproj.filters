@@ -1,8 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\ProbVectorMachine.cpp" />
-    <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionScalar.cpp">
       <Filter>Working Andrei\KernelFunctions\Scalar</Filter>
     </ClCompile>
@@ -27,12 +25,17 @@
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelWrapper.cpp">
       <Filter>Working Andrei\KernelFunctions\KernelWrapper</Filter>
     </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Main Algorithm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\ProbVectorMachine.cpp">
+      <Filter>Main Algorithm</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\PreCache.cpp">
-      <Filter>Working Mihai</Filter>
+      <Filter>Working Mihai\PreCache</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\ProbVectorMachine.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesTypes.h">
       <Filter>PVMDefines</Filter>
     </ClInclude>
@@ -78,8 +81,11 @@
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunction.h">
       <Filter>Working Andrei\KernelFunctions</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\ProbVectorMachine.h">
+      <Filter>Main Algorithm</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PreCache.h">
-      <Filter>Working Mihai</Filter>
+      <Filter>Working Mihai\PreCache</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -109,6 +115,12 @@
     </Filter>
     <Filter Include="Working Andrei\KernelFunctions\KernelWrapper">
       <UniqueIdentifier>{ee47b58d-46df-424e-b513-8a3c323b059c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Working Mihai\PreCache">
+      <UniqueIdentifier>{a9740a97-b6c5-4586-a8d3-4ef414b4cbe2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Main Algorithm">
+      <UniqueIdentifier>{07698e43-f005-4fb6-9f85-fb069e3d1c47}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
