@@ -67,7 +67,7 @@ pvm_inline double ker_f_wrapper::compute_for(pvm_double *x, pvm_double *y, int c
 //-----------------------------------------------------------------------------
 pvm_inline double ker_f_wrapper::compute_for(GML::ML::MLRecord &ml_rec0, GML::ML::MLRecord &ml_rec1)
 {
-	DBGSTOP_CHECKMSG(ml_rec0.FeatCount = ml_rec1.FeatCount, "Records must have same number of features");	
+	DBGSTOP_CHECKMSG(ml_rec0.FeatCount == ml_rec1.FeatCount, "Records must have same number of features");	
 	return compute_for(ml_rec0.Features, ml_rec1.Features, ml_rec1.FeatCount);
 }
 //-----------------------------------------------------------------------------
