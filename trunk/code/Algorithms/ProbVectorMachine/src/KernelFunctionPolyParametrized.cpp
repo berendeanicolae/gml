@@ -24,7 +24,7 @@ bool ker_f_poly_param::set_parameters(pvm_double &src_t, int &src_d,
 
 	t = src_t, d = src_d;
 
-	for (i = 0; i < src_params.GetCount(); i++)
+	for (i = 0; i < (int)src_params.GetCount(); i++)
 	{
 		DBGSTOP_CHECKMSG(src_params[i] >= 0, "Weights should be positive");
 		if (src_params[i] < 0)
@@ -32,7 +32,7 @@ bool ker_f_poly_param::set_parameters(pvm_double &src_t, int &src_d,
 	}
 			
 
-	params.Copy(src_params, 0, src_params.GetCount());
+	params.Copy(src_params, 0, (int)src_params.GetCount());
 	return true;
 }
 //-----------------------------------------------------------------------------
