@@ -20,7 +20,7 @@ ProbVectorMachine::ProbVectorMachine()
 	LinkPropertyToUInt32("PreCacheFileSize",VarPreCacheFileSize,1024,"The PreCache file size in MB");
 	LinkPropertyToUInt32("PreCacheBatchStart",VarPreCacheBatchStart,0,"The PreCache start batch index");
 	LinkPropertyToUInt32("PreCacheBatchNumber",VarPreCacheBatchCount,0,"The PreCache number of bathes to compute here");
-	LinkPropertyToString("PreCacheFilePattern",VarPreCacheFilePattern, "pre-cache-data.", "File pattern where precomputed data to be saved; ex: pre-cache-data.000, pre-cache-data.001");	
+	LinkPropertyToString("PreCacheFilePrefix",VarPreCacheFilePrefix, "precache", "File pattern where precomputed data to be saved; ex: pre-cache-data.000, pre-cache-data.001");	
 }
 bool ProbVectorMachine::Init()
 {
@@ -185,7 +185,7 @@ bool ProbVectorMachine::PreComputeKernelValues()
 	id.VarPreCacheBatchCount = this->VarPreCacheBatchCount;
 	id.VarPreCacheBatchStart = this->VarPreCacheBatchStart;
 	id.VarPreCacheFileSize = this->VarPreCacheFileSize;
-	id.VarPreCacheFilePattern.Add(this->VarPreCacheFilePattern);
+	id.VarPreCacheFilePrefix.Add(this->VarPreCacheFilePrefix);
 	
 	// set PreCache needed information
 	InstPreCache.SetInheritData(id);

@@ -64,7 +64,7 @@ public:
 	Int32		VarKernelParamInt;
 	pvm_double  VarKernelParamDouble;
 
-	GML::Utils::GString	VarPreCacheFilePattern;
+	GML::Utils::GString	VarPreCacheFilePrefix;
 	GML::Utils::GString	VarFeatureWeightFile;
 };
 
