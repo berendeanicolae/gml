@@ -881,7 +881,11 @@ by each of its unsatisfied constraints.
 	\begin{itemize}
 		\item 0 RHS : \(u = \frac{-<a,x>}{||a||^2}a\)
 		\item 1 RHS : \(u = \frac{1 - <a,x>}{||a||^2}a\)
-	\end{itemize}
+	\end{itemize}	
+	where \(||a||\) denotes the norm of the constraint, which, for \(a = (a^0, a^1, \ldots, a^n)\) is 
+	\[
+		||a|| = \sqrt{(a^0)^2 + (a^n)^2 + \ldots (a^n)^2} = \sqrt{\sum_i {(a^i)^2}}
+	\]
 	
 	Note that the suggested update would take the current solution to its projection on the constraint hyperplane.
 	
@@ -914,23 +918,28 @@ in our system), then we can detail the procedure even further.
 	\begin{itemize}
 		\item If \(x_j\) has a positive label : 
 			\begin{itemize}
-				\item \(\sigma^j_+ - \sum_i {\alpha_i (K(x_i, x_j) - K^i_+)} \geq 0\)
-				\item \(\sigma^j_+ + \sum_i {\alpha_i (K(x_i, x_j) - K^i_+)} \geq 0\)
+				\item Define its norm as : \(norm_j = 1 + \sum_{x_i\in S} {(K(x_i, x_j) - K^i_+)^2}\)
+				\item \(\sigma^j_+ - \sum_{x_i\in S} {\alpha_i (K(x_i, x_j) - K^i_+)} \geq 0\)
+				\item \(\sigma^j_+ + \sum_{x_i\in S} {\alpha_i (K(x_i, x_j) - K^i_+)} \geq 0\)
 			\end{itemize}
 			
 		\item If \(x_j\) has a negative label : 
 			\begin{itemize}
-				\item \(\sigma^j_- - \sum_i {\alpha_i (K(x_i, x_j) - K^i_-)} \geq 0\)
-				\item \(\sigma^j_- + \sum_i {\alpha_i (K(x_i, x_j) - K^i_-)} \geq 0\)
+				\item Define its norm as : \(norm_j = 1 + \sum_{x_i\in S} {(K(x_i, x_j) - K^i_-)^2}\)
+				\item \(\sigma^j_- - \sum_{x_i\in S} {\alpha_i (K(x_i, x_j) - K^i_-)} \geq 0\)
+				\item \(\sigma^j_- + \sum_{x_i\in S} {\alpha_i (K(x_i, x_j) - K^i_-)} \geq 0\)
 			\end{itemize}			
 	\end{itemize}
+	
+	Note that the norms may be precomputed, as they do not change in the course of the algorithm.
+	
 	
 	We can check whether the equations associated are satisfied by computing:
 	
 	\begin{itemize}
 		\item For \(x_j\) with a positive label : 
 			\begin{enumerate}
-				\item Compute \(s_j = \sum_i {\alpha_i (K(x_i, x_j) - K^i_+)}\)
+				\item Compute \(s_j = \sum_{x_i\in S} {\alpha_i (K(x_i, x_j) - K^i_+)}\)
 				\item If \(\sigma^j_+ - s_j < 0\), then record the suggested update 
 							\[u_{j_0} = \frac{s_j - \sigma^j_+}{norm_j^2} \cdot (K(x_0, x_j) - K^0_+, K(x_1, x_j) - K^1_+, \ldots, K(x_n, x_j) - K^n_+, 0, 0, \ldots, 1, 0, \ldots, 0)\]							
 							with score \(S_{j_0} = \frac{s_j - \sigma^j_+}{norm_j}\), where the 1 corresponds to the position of \(\sigma^j_+\).
