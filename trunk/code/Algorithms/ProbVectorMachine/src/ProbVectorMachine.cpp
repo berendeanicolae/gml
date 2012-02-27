@@ -8,18 +8,18 @@ ProbVectorMachine::ProbVectorMachine()
 	ObjectName = "ProbVectorMachine";
 
 	//Add extra commands here
-	SetPropertyMetaData("Command","!!LIST:None=0,TestMachineSpeed,PreCompute!!");
+	SetPropertyMetaData("Command","!!LIST:None=0,DebugTest,PreCompute,MergeKprimeFiles!!");
 	
 	// kernel choice related variabiles	
-	LinkPropertyToUInt32("KernelType",VarKernelType,KerFuncType::KERPOLY,"!!LIST:Poly=0,Scalar,Rbf,PolyParam,ScalarParam,RbfParam!!");
+	LinkPropertyToUInt32("KernelType",VarKernelType,KERPOLY,"!!LIST:Poly=0,Scalar,Rbf,PolyParam,ScalarParam,RbfParam!!");
 	LinkPropertyToInt32("KernelParamInt",VarKernelParamInt,0,"The Integer parameter of the kernel function");
 	LinkPropertyToDouble("KernelParamDouble",VarKernelParamDouble,0,"The Double parameter of the kernel");
 	LinkPropertyToString("FeatureWeightFile",VarFeatureWeightFile, "feature-weight.txt", "File name to hold feature weights; comma separated values");	
 
 	// precompute related variables 	
 	LinkPropertyToUInt32("PreCacheFileSize",VarPreCacheFileSize,1024,"The PreCache file size in MB");
-	LinkPropertyToUInt32("PreCacheBatchStart",VarPreCacheBatchStart,0,"The PreCache start batch index");
-	LinkPropertyToUInt32("PreCacheBatchNumber",VarPreCacheBatchCount,0,"The PreCache number of bathes to compute here");
+	LinkPropertyToUInt32("PreCacheBlockStart",VarPreCacheBlockStart,0,"The PreCache start Block index");
+	LinkPropertyToUInt32("PreCacheBlockNumber",VarPreCacheBlockCount,0,"The PreCache number of bathes to compute here");
 	LinkPropertyToString("PreCacheFilePrefix",VarPreCacheFilePrefix, "precache", "File pattern where precomputed data to be saved; ex: pre-cache-data.000, pre-cache-data.001");	
 }
 bool ProbVectorMachine::Init()
@@ -38,8 +38,8 @@ void ProbVectorMachine::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,
         case THREAD_COMMAND_TEST_PROC_SPEED:
             ThreadTestCompSpeed(thData);            
 			return;
-		case THREAD_COMMAND_PRECOMPUTE_BATCH:
-			InstPreCache.ThreadPrecomputeBatch(thData);
+		case THREAD_COMMAND_PRECOMPUTE_BLOCK:
+			InstPreCache.ThreadPrecomputeBlock(thData);
 			return;
 		default:
 			ERRORMSG("could not find thread comment");
@@ -61,13 +61,17 @@ void ProbVectorMachine::OnExecute()
 		case COMMAND_NONE:
 			INFOMSG("Nothing to do, select another command");
 			break;
-        case COMNAND_TEST_MACHINE_SPEED:
+        case COMMAND_DEBUG_TESTS:
             INFOMSG("Computing machine speed");            
-            TestMachineSpeed();
+            PreCacheCall(Command);
             break;
 		case COMMAND_PRECOMPUTE:
 			INFOMSG("Precomputing Kernel Values");
-			PreComputeKernelValues();
+			PreCacheCall(Command);
+			break;
+		case COMMAND_MERGE_KPRIME:
+			INFOMSG("Merging Kprime files");
+			PreCacheCall(Command);
 			break;
 		case COMMAND_TEMP_KERNEL_FNCTS:
             INFOMSG("Andrei testing");            
@@ -171,7 +175,7 @@ bool ProbVectorMachine::ThreadTestCompSpeed(GML::Algorithm::MLThreadData & thDat
     return true;
 }
 
-bool ProbVectorMachine::PreComputeKernelValues()
+bool ProbVectorMachine::PreCacheCall(UInt32 cmd)
 {
 	PreCache::InheritData id;
 	
@@ -182,8 +186,8 @@ bool ProbVectorMachine::PreComputeKernelValues()
 	id.VarKernelParamInt = this->VarKernelParamInt;
 	id.VarKernelParamDouble = this->VarKernelParamDouble;
 
-	id.VarPreCacheBatchCount = this->VarPreCacheBatchCount;
-	id.VarPreCacheBatchStart = this->VarPreCacheBatchStart;
+	id.VarPreCacheBlockCount = this->VarPreCacheBlockCount;
+	id.VarPreCacheBlockStart = this->VarPreCacheBlockStart;
 	id.VarPreCacheFileSize = this->VarPreCacheFileSize;
 	id.VarPreCacheFilePrefix.Add(this->VarPreCacheFilePrefix);
 	
@@ -191,6 +195,19 @@ bool ProbVectorMachine::PreComputeKernelValues()
 	InstPreCache.SetInheritData(id);
 	InstPreCache.SetParentAlg(this);
 
-	CHECKMSG(InstPreCache.PreCompute(),"failed to compute precache");
+	switch (cmd) {
+	case COMMAND_MERGE_KPRIME:
+		CHECKMSG(InstPreCache.MergeKPrimeFiles(),"failed to merge kprime files");
+		break;
+	case COMMAND_DEBUG_TESTS:
+		CHECKMSG(InstPreCache.TestAtLoading(),"failed to execute debug tests");
+		break;
+	case COMMAND_PRECOMPUTE:
+		CHECKMSG(InstPreCache.PreCompute(),"failed to compute precache");
+		break;
+	default:
+		CHECKMSG(false, "nothing to compute here, returning");
+	}
+
 	return true;
 }

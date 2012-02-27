@@ -11,6 +11,9 @@
 
 #define PRECACHE_FILE_HEADER_MAGIC	 "PVM-PRECACHE-V1"
 #define KPRIME_FILE_HEADER_MAGIC	 "PVM-KPRIME-V1"
+#define PRECACHE_FILE_HEADER_MAGIC_SZ 32
+
+#define PRECACHE_NR_WORK_BUFFERS	2
 
 using namespace GML::Utils;
 
@@ -23,26 +26,35 @@ public:
 		GML::Utils::INotifier*	notif;	
 
 		UInt32		VarKernelType;
-		pvm_float	VarKernelParamDouble;
+		double		VarKernelParamDouble;
 		Int32		VarKernelParamInt;
 
 		UInt32 VarPreCacheFileSize;
-		UInt32 VarPreCacheBatchStart;
-		UInt32 VarPreCacheBatchCount;
+		UInt32 VarPreCacheBlockStart;
+		UInt32 VarPreCacheBlockCount;
 
-		GML::Utils::GString	VarPreCacheFilePrefix;
-		
-		~InheritData() {}
+		GML::Utils::GString	VarPreCacheFilePrefix;				
 	};
 
 private:
 
+	struct PcThreadInfo {
+		void*   Object;
+		UInt32 	FuncId;
+	};
+	enum PcThreadFuncId {
+		LoadBlock=0,
+	};
+
+	static DWORD WINAPI ThreadWrapper(LPVOID args);
+
 	struct PreCacheFileHeader {
-		unsigned char Magic[32];
+		char Magic[PRECACHE_FILE_HEADER_MAGIC_SZ];
 		UInt32 NrRecordsTotal;
 		UInt32 NrFeatures;
 		UInt32 RecordStart;
 		UInt32 NrRecords;
+		UInt64 BlockSize;
 	};
 
 	struct KPrimePair {
@@ -50,16 +62,16 @@ private:
 		pvm_float neg;
 	};
 
-	struct Map_PreCacheComputeBatch {
-		UInt32 CurrBatchNr;
-		UInt32 RecPerBatch;
+	struct Map_PreCacheComputeBlock {
+		UInt32 CurrBlockNr;
+		UInt32 RecPerBlock;
 		UInt32 RecStart;
 		UInt32 RecCount;
-		UInt32 BatchNr;
+		UInt32 BlockNr;
 		pvm_float* KernelBuffer;
 		KPrimePair* KPrimeBuffer;
 	};
-	Map_PreCacheComputeBatch pccb;
+	Map_PreCacheComputeBlock pccb;
 
 	// configuration data
 	InheritData id;
@@ -68,17 +80,27 @@ private:
 	GML::Utils::INotifier*	notif;
 
 	UInt32 NrRec, NrFts;
+	UInt32 NrPosRec, NrNegRec;
 
-	UInt32 TotalNrBatches;
-	UInt32 RecPerBatch;
+	UInt32 TotalNrBlockes;
+	UInt32 RecPerBlock;
 
 	UInt32 SizePerLine;
 
 	// internal procs
-	int GetNrRecPerBatch(int MinNr, int MaxNr);
-	int GetSizeOfBatch(int BatchNr);
-	bool GetKernelAt(int line, int row, pvm_float* KernelStorage, int NrRecInBatch, pvm_float *KVal);
+	int GetNrRecPerBlock(int MinNr, int MaxNr);
+	int GetSizeOfBlock(int BlockNr);
+	bool GetKernelAt(int line, int row, pvm_float* KernelStorage, int NrRecInBlock, pvm_float *KVal);
+	bool GetBlockFileName (UInt32 BlockId, bool KernelValues, GML::Utils::GString &BlockFileName);
 	
+	// asynchronous block loading procedure
+	DWORD AtLoadNextBlock();
+	UInt32 AtBlockId; 
+	bool AtKillThread;
+	HANDLE AtEventWorking, AtEventWaiting;
+	unsigned char *AtBuffer[PRECACHE_NR_WORK_BUFFERS];
+	UInt32 AtIdxLoading, AtIdxExecuting;
+		
 public:
 	// constructors
 	PreCache();
@@ -90,7 +112,10 @@ public:
 	bool SetInheritData(PreCache::InheritData &InhData);
 	bool SetParentAlg(GML::Algorithm::IMLAlgorithm* _alg);
 	bool PreCompute();
-	bool ThreadPrecomputeBatch(GML::Algorithm::MLThreadData &thData);
+	bool ThreadPrecomputeBlock(GML::Algorithm::MLThreadData &thData);
+	bool TestAtLoading();
+	// merge kprime files 
+	bool MergeKPrimeFiles();
 };
 
 #endif //__PRE_CACHE_H_

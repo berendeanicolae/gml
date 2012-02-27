@@ -12,7 +12,7 @@ public:
 	enum {
 		THREAD_COMMAND_NONE = 0,
 		THREAD_COMMAND_TEST_PROC_SPEED,
-		THREAD_COMMAND_PRECOMPUTE_BATCH,
+		THREAD_COMMAND_PRECOMPUTE_BLOCK,
 		//Add extra thread commands here
 	};
 
@@ -30,8 +30,9 @@ private:
 
 	enum {
 		COMMAND_NONE = 0,
-        COMNAND_TEST_MACHINE_SPEED,
+        COMMAND_DEBUG_TESTS,
 		COMMAND_PRECOMPUTE,
+		COMMAND_MERGE_KPRIME,
 		COMMAND_TEMP_KERNEL_FNCTS,
 		//Add extra commands here
 	};	
@@ -46,7 +47,7 @@ private:
 	bool	OnInitThreadData(GML::Algorithm::MLThreadData &thData);
 
     bool    TestMachineSpeed();
-	bool	PreComputeKernelValues();
+	bool	PreCacheCall(UInt32 cmd);
 
 public:
 	ProbVectorMachine();
@@ -58,8 +59,8 @@ public:
 	// variables to control the algorithm flow
 	UInt32 VarKernelType;
 	UInt32 VarPreCacheFileSize;
-	UInt32 VarPreCacheBatchStart;
-	UInt32 VarPreCacheBatchCount;
+	UInt32 VarPreCacheBlockStart;
+	UInt32 VarPreCacheBlockCount;
 
 	Int32		VarKernelParamInt;
 	pvm_double  VarKernelParamDouble;

@@ -16,6 +16,8 @@
 #define CHECKMSG(val, ...){ if (val==false) { ERRORMSG(__VA_ARGS__); return false; }; };
 #define CHECK(val){ if (val==false) return false;}; 
 
+#define ATCHECKMSG(val, ...){ if (val==false) { ERRORMSG(__VA_ARGS__); AtKillThread=true; SetEvent(AtEventWorking); return 0xffFFffFF; }; };
+
 #ifdef PVM_DEBUG_MODE
 	#define DBG_NULLCHECKMSG    NULLCHECKMSG
 	#define DBG_NULLCHECK       NULLCHECK
