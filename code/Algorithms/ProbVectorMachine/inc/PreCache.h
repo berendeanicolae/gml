@@ -8,9 +8,12 @@
 #include "KernelWrapper.h"
 
 #include <cstring>
+#include <cmath>
 
 #define PRECACHE_FILE_HEADER_MAGIC	 "PVM-PRECACHE-V1"
 #define KPRIME_FILE_HEADER_MAGIC	 "PVM-KPRIME-V1"
+#define EQNORM_FILE_HEADER_MAGIC	 "PVM-EQNORM-V1"
+
 #define PRECACHE_FILE_HEADER_MAGIC_SZ 32
 
 #define PRECACHE_NR_WORK_BUFFERS	2
@@ -25,15 +28,15 @@ public:
 		GML::ML::IConnector*	con;
 		GML::Utils::INotifier*	notif;	
 
-		UInt32		VarKernelType;
-		double		VarKernelParamDouble;
-		Int32		VarKernelParamInt;
+		UInt32		varKernelType;
+		double		varKernelParamDouble;
+		Int32		varKernelParamInt;
 
-		UInt32 VarPreCacheFileSize;
-		UInt32 VarPreCacheBlockStart;
-		UInt32 VarPreCacheBlockCount;
+		UInt32 varPreCacheFileSize;
+		UInt32 varPreCacheBlockStart;
+		UInt32 varPreCacheBlockCount;
 
-		GML::Utils::GString	VarPreCacheFilePrefix;				
+		GML::Utils::GString	varPreCacheFilePrefix;				
 	};
 
 private:
@@ -44,6 +47,11 @@ private:
 	};
 	enum PcThreadFuncId {
 		LoadBlock=0,
+	};
+	enum FileType {
+		FileTypeKernel,
+		FileTypeKPrime,
+		FileTypeNorm
 	};
 
 	static DWORD WINAPI ThreadWrapper(LPVOID args);
@@ -90,8 +98,8 @@ private:
 	// internal procs
 	int GetNrRecPerBlock(int MinNr, int MaxNr);
 	int GetSizeOfBlock(int BlockNr);
-	bool GetKernelAt(int line, int row, pvm_float* KernelStorage, int NrRecInBlock, pvm_float *KVal);
-	bool GetBlockFileName (UInt32 BlockId, bool KernelValues, GML::Utils::GString &BlockFileName);
+	bool GetKernelAt(UInt32 line,UInt32 row, pvm_float* KernelStorage,UInt32 NrRecInBlock, pvm_float *KVal);
+	bool GetBlockFileName (UInt32 BlockId, FileType fType, GML::Utils::GString &BlockFileName);
 	
 	// asynchronous block loading procedure
 	DWORD AtLoadNextBlock();
@@ -116,6 +124,7 @@ public:
 	bool TestAtLoading();
 	// merge kprime files 
 	bool MergeKPrimeFiles();
+	bool PreComputeNorm();
 };
 
 #endif //__PRE_CACHE_H_

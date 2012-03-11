@@ -8,19 +8,19 @@ ProbVectorMachine::ProbVectorMachine()
 	ObjectName = "ProbVectorMachine";
 
 	//Add extra commands here
-	SetPropertyMetaData("Command","!!LIST:None=0,DebugTest,PreCompute,MergeKprimeFiles!!");
+	SetPropertyMetaData("Command","!!LIST:None=0,DebugTest,PreCompGramMatrix,MergeKprimeFiles,PreCompEqNorm!!");
 	
 	// kernel choice related variabiles	
-	LinkPropertyToUInt32("KernelType",VarKernelType,KERPOLY,"!!LIST:Poly=0,Scalar,Rbf,PolyParam,ScalarParam,RbfParam!!");
-	LinkPropertyToInt32("KernelParamInt",VarKernelParamInt,0,"The Integer parameter of the kernel function");
-	LinkPropertyToDouble("KernelParamDouble",VarKernelParamDouble,0,"The Double parameter of the kernel");
-	LinkPropertyToString("FeatureWeightFile",VarFeatureWeightFile, "feature-weight.txt", "File name to hold feature weights; comma separated values");	
+	LinkPropertyToUInt32("KernelType",varKernelType,KERPOLY,"!!LIST:Poly=0,Scalar,Rbf,PolyParam,ScalarParam,RbfParam!!");
+	LinkPropertyToInt32("KernelParamInt",varKernelParamInt,0,"The Integer parameter of the kernel function");
+	LinkPropertyToDouble("KernelParamDouble",varKernelParamDouble,0,"The Double parameter of the kernel");
+	LinkPropertyToString("FeatureWeightFile",varFeatureWeightFile, "feature-weight.txt", "File name to hold feature weights; comma separated values");	
 
 	// precompute related variables 	
-	LinkPropertyToUInt32("PreCacheFileSize",VarPreCacheFileSize,1024,"The PreCache file size in MB");
-	LinkPropertyToUInt32("PreCacheBlockStart",VarPreCacheBlockStart,0,"The PreCache start Block index");
-	LinkPropertyToUInt32("PreCacheBlockNumber",VarPreCacheBlockCount,0,"The PreCache number of bathes to compute here");
-	LinkPropertyToString("PreCacheFilePrefix",VarPreCacheFilePrefix, "precache", "File pattern where precomputed data to be saved; ex: pre-cache-data.000, pre-cache-data.001");	
+	LinkPropertyToUInt32("PreCacheFileSize",varPreCacheFileSize,1024,"The PreCache file size in MB");
+	LinkPropertyToUInt32("PreCacheBlockStart",varPreCacheBlockStart,0,"The PreCache start Block index");
+	LinkPropertyToUInt32("PreCacheBlockNumber",varPreCacheBlockCount,0,"The PreCache number of bathes to compute here");
+	LinkPropertyToString("PreCacheFilePrefix",varPreCacheFilePrefix, "precache", "File pattern where precomputed data to be saved; ex: pre-cache-data.000, pre-cache-data.001");	
 }
 bool ProbVectorMachine::Init()
 {
@@ -65,12 +65,16 @@ void ProbVectorMachine::OnExecute()
             INFOMSG("Computing machine speed");            
             PreCacheCall(Command);
             break;
-		case COMMAND_PRECOMPUTE:
+		case COMMAND_PRECOMP_GRAM:
 			INFOMSG("Precomputing Kernel Values");
 			PreCacheCall(Command);
 			break;
 		case COMMAND_MERGE_KPRIME:
 			INFOMSG("Merging Kprime files");
+			PreCacheCall(Command);
+			break;
+		case COMMAND_PRECOMP_NORM:
+			INFOMSG("Precomputing the norm for each equation");
 			PreCacheCall(Command);
 			break;
 		case COMMAND_TEMP_KERNEL_FNCTS:
@@ -86,7 +90,7 @@ void ProbVectorMachine::OnExecute()
 bool ProbVectorMachine::TestMachineSpeed()
 {
     INFOMSG("Testing computational power with all threads for 1GB of dist");    
-    //DBGSTOP_NULLCHECKMSG(NULL, "this is a NULL test");
+    //NULLCHECKMSG(NULL, "this is a NULL test");
 
     int nrOuts = UNGIGA/sizeof(pvm_float);
     int nrRec  = con->GetRecordCount();
@@ -113,7 +117,7 @@ bool ProbVectorMachine::TestMachineSpeed()
 	
 	notif->StartProcent("[%s] -> Writing to disk 1GB of dist... ",ObjectName);	
 	while (iter < 1024) {
-		DBG_CHECKMSG(file.Write(tmpBuf, UNMEGA), "could not write to file");		
+		CHECKMSG(file.Write(tmpBuf, UNMEGA), "could not write to file");		
 		tmpBuf  += UNMEGA;
 		iter++;
 		notif->SetProcent(iter, 1024);
@@ -128,7 +132,7 @@ bool ProbVectorMachine::TestMachineSpeed()
 	notif->StartProcent("[%s] -> Reading disk 1GB of dist... ",ObjectName);	
 	iter = 0;
 	while (iter < 1024) {
-		DBG_CHECKMSG(file.Read(tmpBuf, UNMEGA),"could not read from file");
+		CHECKMSG(file.Read(tmpBuf, UNMEGA),"could not read from file");
 		tmpBuf  += UNMEGA;
 		iter++;
 		notif->SetProcent(iter, 1024);
@@ -182,14 +186,14 @@ bool ProbVectorMachine::PreCacheCall(UInt32 cmd)
 	id.con = this->con;
 	id.notif = this->notif;
 	
-	id.VarKernelType = this->VarKernelType;
-	id.VarKernelParamInt = this->VarKernelParamInt;
-	id.VarKernelParamDouble = this->VarKernelParamDouble;
+	id.varKernelType = this->varKernelType;
+	id.varKernelParamInt = this->varKernelParamInt;
+	id.varKernelParamDouble = this->varKernelParamDouble;
 
-	id.VarPreCacheBlockCount = this->VarPreCacheBlockCount;
-	id.VarPreCacheBlockStart = this->VarPreCacheBlockStart;
-	id.VarPreCacheFileSize = this->VarPreCacheFileSize;
-	id.VarPreCacheFilePrefix.Add(this->VarPreCacheFilePrefix);
+	id.varPreCacheBlockCount = this->varPreCacheBlockCount;
+	id.varPreCacheBlockStart = this->varPreCacheBlockStart;
+	id.varPreCacheFileSize = this->varPreCacheFileSize;
+	id.varPreCacheFilePrefix.Add(this->varPreCacheFilePrefix);
 	
 	// set PreCache needed information
 	InstPreCache.SetInheritData(id);
@@ -202,8 +206,11 @@ bool ProbVectorMachine::PreCacheCall(UInt32 cmd)
 	case COMMAND_DEBUG_TESTS:
 		CHECKMSG(InstPreCache.TestAtLoading(),"failed to execute debug tests");
 		break;
-	case COMMAND_PRECOMPUTE:
-		CHECKMSG(InstPreCache.PreCompute(),"failed to compute precache");
+	case COMMAND_PRECOMP_GRAM:
+		CHECKMSG(InstPreCache.PreCompute(),"failed to compute gram matrix");
+		break;
+	case COMMAND_PRECOMP_NORM:
+		CHECKMSG(InstPreCache.PreComputeNorm(),"failed to precompute the form for each equation");
 		break;
 	default:
 		CHECKMSG(false, "nothing to compute here, returning");

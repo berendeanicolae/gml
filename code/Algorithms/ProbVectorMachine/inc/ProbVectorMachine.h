@@ -31,8 +31,9 @@ private:
 	enum {
 		COMMAND_NONE = 0,
         COMMAND_DEBUG_TESTS,
-		COMMAND_PRECOMPUTE,
+		COMMAND_PRECOMP_GRAM,
 		COMMAND_MERGE_KPRIME,
+		COMMAND_PRECOMP_NORM,
 		COMMAND_TEMP_KERNEL_FNCTS,
 		//Add extra commands here
 	};	
@@ -57,16 +58,16 @@ public:
     bool	ThreadTestCompSpeed(GML::Algorithm::MLThreadData & thData);
 
 	// variables to control the algorithm flow
-	UInt32 VarKernelType;
-	UInt32 VarPreCacheFileSize;
-	UInt32 VarPreCacheBlockStart;
-	UInt32 VarPreCacheBlockCount;
+	UInt32 varKernelType;
+	UInt32 varPreCacheFileSize;
+	UInt32 varPreCacheBlockStart;
+	UInt32 varPreCacheBlockCount;
 
-	Int32		VarKernelParamInt;
-	pvm_double  VarKernelParamDouble;
+	Int32		varKernelParamInt;
+	pvm_double  varKernelParamDouble;
 
-	GML::Utils::GString	VarPreCacheFilePrefix;
-	GML::Utils::GString	VarFeatureWeightFile;
+	GML::Utils::GString	varPreCacheFilePrefix;
+	GML::Utils::GString	varFeatureWeightFile;
 };
 
 #endif
