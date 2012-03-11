@@ -36,7 +36,7 @@ bool PreCache::PreCompute()
 	// number of posibive/negative elements
 	NrPosRec = NrNegRec = 0;
 	double label;
-	for (int i=0;i<NrRec;i++) {
+	for (UInt32 i=0;i<NrRec;i++) {
 		CHECKMSG(con->GetRecordLabel(label, i), "error getting record label: %d", i);
 		if (label == 1) NrPosRec++;
 		else NrNegRec++;
@@ -46,14 +46,14 @@ bool PreCache::PreCompute()
 	RecPerBlock = GetNrRecPerBlock(0, NrRec);
 	TotalNrBlockes = NrRec/RecPerBlock+1;
 
-	if (id.VarPreCacheBlockCount>=TotalNrBlockes)
-		id.VarPreCacheBlockCount = TotalNrBlockes;
+	if (id.varPreCacheBlockCount>=TotalNrBlockes)
+		id.varPreCacheBlockCount = TotalNrBlockes;
 
 	// allocate memory for output buffer
-	kernelBuffer = (unsigned char*) malloc (id.VarPreCacheFileSize*UNMEGA);
+	kernelBuffer = (unsigned char*) malloc (id.varPreCacheFileSize*UNMEGA);
 	NULLCHECKMSG(kernelBuffer, "could not allocate enough memory for kernel output buffer");
 	pccb.KernelBuffer = (pvm_float*) kernelBuffer;
-	memset(kernelBuffer, 0, id.VarPreCacheFileSize*UNMEGA);
+	memset(kernelBuffer, 0, id.varPreCacheFileSize*UNMEGA);
 
 	kprimeBuffer = (KPrimePair*) malloc (RecPerBlock*sizeof(KPrimePair));
 	NULLCHECKMSG(kprimeBuffer, "could not allocate enough memory for kprime output buffer");
@@ -64,11 +64,11 @@ bool PreCache::PreCompute()
 	pccb.RecPerBlock = RecPerBlock;
 
 	// iterate through the Blockes that need to be computed
-	for (UInt32 i=id.VarPreCacheBlockStart;i<id.VarPreCacheBlockStart+id.VarPreCacheBlockCount && i*RecPerBlock<NrRec;i++) {
+	for (UInt32 i=id.varPreCacheBlockStart;i<id.varPreCacheBlockStart+id.varPreCacheBlockCount && i*RecPerBlock<NrRec;i++) {
 		
 		// create the current output file
-		CHECKMSG(GetBlockFileName(i, true, kernelFileName),"could not compose kernel file name");		
-		CHECKMSG(GetBlockFileName(i, false, kprimeFileName),"could not compose kprime file name");		
+		CHECKMSG(GetBlockFileName(i, FileTypeKernel, kernelFileName),"could not compose kernel file name");		
+		CHECKMSG(GetBlockFileName(i, FileTypeKPrime, kprimeFileName),"could not compose kprime file name");		
 
 		CHECKMSG(kernelFileObj.Create(kernelFileName), "could not create file: %s", kernelFileName.GetText());
 		CHECKMSG(kprimeFileObj.Create(kprimeFileName), "could not create file: %s", kprimeFileName.GetText());
@@ -99,7 +99,7 @@ bool PreCache::PreCompute()
 		pcfh.BlockSize = sizeOfBlock;
 
 		//write the header of the PreCache file
-		DBG_CHECKMSG(kernelFileObj.Write(0, &pcfh, sizeof(PreCacheFileHeader), &written), "failed to write kernel values file header");
+		CHECKMSG(kernelFileObj.Write(0, &pcfh, sizeof(PreCacheFileHeader), &written), "failed to write kernel values file header");
 
 		// the write loop
 		writtenSoFar = written;
@@ -109,7 +109,7 @@ bool PreCache::PreCompute()
 			//else BlockSize = UNMEGA;
 		
 			// the write operation
-			DBG_CHECKMSG(kernelFileObj.Write(writtenSoFar, writeBuffer, UNMEGA, &written), "failed to write kernel values buffer");
+			CHECKMSG(kernelFileObj.Write(writtenSoFar, writeBuffer, UNMEGA, &written), "failed to write kernel values buffer");
 			writtenSoFar += written;
 		}
 
@@ -121,9 +121,9 @@ bool PreCache::PreCompute()
 		pcfh.BlockSize = pccb.RecCount*sizeof(KPrimePair);
 
 		//write the header of the PreCache file
-		DBG_CHECKMSG(kprimeFileObj.Write(0, &pcfh, sizeof(PreCacheFileHeader), &written), "failed to write kprime values file header");
+		CHECKMSG(kprimeFileObj.Write(0, &pcfh, sizeof(PreCacheFileHeader), &written), "failed to write kprime values file header");
 		// write kprim buffer
-		DBG_CHECKMSG(kprimeFileObj.Write(written, kprimeBuffer, pccb.RecCount*sizeof(KPrimePair), &written), "failed to write kprime buffer");
+		CHECKMSG(kprimeFileObj.Write(written, kprimeBuffer, pccb.RecCount*sizeof(KPrimePair), &written), "failed to write kprime buffer");
 
 		kernelFileObj.Close();
 		kprimeFileObj.Close();
@@ -142,7 +142,7 @@ int PreCache::GetNrRecPerBlock(int MinNr, int MaxNr)
 	// binary search for the nr of records per Block
 	UInt32 MidNr = MinNr + (MaxNr-MinNr)/2;
 	UInt32 SzForMid = (MidNr*NrRec - (MidNr*(MidNr-1))/2)*sizeof(pvm_float);
-	UInt32 SzPerBlock = id.VarPreCacheFileSize*UNMEGA;
+	UInt32 SzPerBlock = id.varPreCacheFileSize*UNMEGA;
 	UInt32 SzForAll = (NrRec*NrRec - (NrRec*(NrRec-1))/2)*sizeof(pvm_float);
 
 	// what if we the database is smaller than UNMEGA
@@ -174,13 +174,13 @@ bool PreCache::ThreadPrecomputeBlock(GML::Algorithm::MLThreadData &thData)
 	GML::ML::MLRecord one, two;
 	pvm_float sum;
 
-	DBG_CHECKMSG(id.con->CreateMlRecord(one),"could not create MLRecord");
-	DBG_CHECKMSG(id.con->CreateMlRecord(two),"could not create MLRecord");
+	CHECKMSG(id.con->CreateMlRecord(one),"could not create MLRecord");
+	CHECKMSG(id.con->CreateMlRecord(two),"could not create MLRecord");
 
 	if (ThreadId == 0) id.notif->StartProcent("[%s] -> Computing Block number %03d ... ",ObjectName, pccb.CurrBlockNr);	
 
 	ker_f_wrapper kernel(con, notif);	
-	CHECKMSG(kernel.set_params(id.VarKernelParamDouble, id.VarKernelParamInt, NULL, (KerFuncType)id.VarKernelType),"could not set kernel parameters");
+	CHECKMSG(kernel.set_params(id.varKernelParamDouble, id.varKernelParamInt, NULL, (KerFuncType)id.varKernelType),"could not set kernel parameters");
 	
 	// the outer loop where every thread alternated and takes a record
 	for (UInt32 i=pccb.RecStart+ThreadId; i<pccb.RecStart+pccb.RecCount; i+=alg->threadsCount) {
@@ -188,13 +188,13 @@ bool PreCache::ThreadPrecomputeBlock(GML::Algorithm::MLThreadData &thData)
 		LineNr = i-pccb.RecStart;
 
 		// get ml record from connector
-		DBG_CHECKMSG(id.con->GetRecord(one, i),"could not get ml record from connector");
+		CHECKMSG(id.con->GetRecord(one, i),"could not get ml record from connector");
 
 		// iterate through all records
 		for (UInt32 j=LineNr;j<NrRec;j++) {
 
 			// get second ml record here
-			DBG_CHECKMSG(id.con->GetRecord(two, j),"could not get ml record from connector");
+			CHECKMSG(id.con->GetRecord(two, j),"could not get ml record from connector");
 			
 			// the kernel computation
 			sum = (pvm_float)kernel.compute_for(one, two);
@@ -239,10 +239,10 @@ int PreCache::GetSizeOfBlock(int BlockNr)
 	return (RecHere*NrRec - (RecHere*(RecHere-1))/2)*sizeof(pvm_float);
 }
 
-bool PreCache::GetKernelAt(int line, int row, pvm_float* KernelStorage, int NrRecInBlock, pvm_float *KVal)
+bool PreCache::GetKernelAt(UInt32 line,UInt32 row, pvm_float* KernelStorage,UInt32 NrRecInBlock, pvm_float *KVal)
 {
-	DBGSTOP_CHECKMSG(line<NrRecInBlock, "GetKernelAt line nr out of bounds");
-	DBGSTOP_CHECKMSG(row<NrRec,"GetKernelAt row out of bounds");
+	CHECKMSG(line<NrRecInBlock, "GetKernelAt line nr out of bounds");
+	CHECKMSG(row<NrRec,"GetKernelAt row out of bounds");
 	if (line>row) { int aux = line; line = row; row=aux; }
 	
 	int OutPos = (line*NrRec - line*(line-1)/2) + row-line;
@@ -266,7 +266,7 @@ DWORD PreCache::AtLoadNextBlock()
 		// reset event stating that we are working
 		ResetEvent(AtEventWorking);
 
-		CHECKMSG(GetBlockFileName(AtBlockId, true, atBlockFileName), "could not compose block file name");
+		CHECKMSG(GetBlockFileName(AtBlockId, FileTypeKernel, atBlockFileName), "could not compose block file name");
 		INFOMSG("loading block file: %s", atBlockFileName.GetText());
 
 		// read header
@@ -296,6 +296,7 @@ DWORD PreCache::AtLoadNextBlock()
 		ResetEvent(AtEventWaiting);
 		SetEvent(AtEventWorking);
 	}	
+	return 0;
 }
 
 DWORD WINAPI PreCache::ThreadWrapper(LPVOID args)
@@ -323,12 +324,12 @@ bool PreCache::TestAtLoading()
 	HANDLE hThread = CreateThread(NULL, 0, &PreCache::ThreadWrapper, &pti, 0, NULL);
 	CHECKMSG(hThread!=INVALID_HANDLE_VALUE, "could not create thread");
 
-	AtBuffer[0] = (unsigned char*) malloc(id.VarPreCacheFileSize*UNMEGA);
+	AtBuffer[0] = (unsigned char*) malloc(id.varPreCacheFileSize*UNMEGA);
 	CHECKMSG(AtBuffer[0]!=NULL, "could not allocate enough memory");
-	AtBuffer[1] = (unsigned char*) malloc(id.VarPreCacheFileSize*UNMEGA);
+	AtBuffer[1] = (unsigned char*) malloc(id.varPreCacheFileSize*UNMEGA);
 	CHECKMSG(AtBuffer[1]!=NULL, "could not allocate enough memory");
 
-	for (int i=id.VarPreCacheBlockStart;i<id.VarPreCacheBlockStart+id.VarPreCacheBlockCount;i++) {
+	for (UInt32 i=id.varPreCacheBlockStart;i<id.varPreCacheBlockStart+id.varPreCacheBlockCount;i++) {
 		if (i%2==0) {AtIdxLoading=0; AtIdxExecuting=1;} 
 		else {AtIdxLoading=1; AtIdxExecuting=0;}
 		AtBlockId = i;
@@ -342,17 +343,27 @@ bool PreCache::TestAtLoading()
 	return true;	
 }
 
-bool PreCache::GetBlockFileName (UInt32 BlockId, bool KernelValues, GML::Utils::GString &BlockFileName)
+bool PreCache::GetBlockFileName(UInt32 BlockId, FileType fType, GML::Utils::GString &BlockFileName)
 {
 	BlockFileName.Truncate(0);
-	CHECKMSG(BlockFileName.Add(id.VarPreCacheFilePrefix),"could not add prefix file name");
-	if (KernelValues) {
+	CHECKMSG(BlockFileName.Add(id.varPreCacheFilePrefix),"could not add prefix file name");
+
+	switch (fType) {
+	case FileTypeKernel:
 		CHECKMSG(BlockFileName.AddFormated(".kernel.%02d", BlockId),"could not add .kernel.NR to file name");
-	} else {
+		return true;
+	case FileTypeKPrime:
 		CHECKMSG(BlockFileName.AddFormated(".kprime.%02d", BlockId),"could not add .kprime.NR to file name");
+		return true;
+	case FileTypeNorm:
+		CHECKMSG(BlockFileName.AddFormated(".eqnorm.%02d", BlockId),"could not add .eqnorm.NR to file name");
+		return true;
+	default:
+		ERRORMSG(false, "please give me a valid file type");
+		return false;
 	}
 
-	return true;
+	return false;
 }
 
 bool PreCache::MergeKPrimeFiles() 
@@ -361,6 +372,7 @@ bool PreCache::MergeKPrimeFiles()
 	GML::Utils::File blockFileObj, outFileObj;
 	GML::Utils::GString blockFileName, outFileName;
 	PreCacheFileHeader pcfh;
+	PreCacheFileHeader finalPcfh;
 
 	UInt64	readNow, written, totalSize;
 
@@ -369,15 +381,25 @@ bool PreCache::MergeKPrimeFiles()
 	CHECKMSG(buffer, "could not alloc enough memory for merged files");
 
 	outFileName.Truncate(0);
-	outFileName.Add(id.VarPreCacheFilePrefix);
+	outFileName.Add(id.varPreCacheFilePrefix);
 	outFileName.Add(".kprime.all");
 	CHECKMSG(outFileObj.Create(outFileName.GetText()), "could not open file output file for writing");
 
+	// set finalPcfh header fields
+	finalPcfh.NrRecords = NrRec;
+	finalPcfh.NrRecordsTotal = NrRec;
+	finalPcfh.NrFeatures = NrFts;
+	finalPcfh.RecordStart = 0;	
+	finalPcfh.BlockSize = 0; // to be added to this value later
+		
+	memset(finalPcfh.Magic, 0, PRECACHE_FILE_HEADER_MAGIC_SZ);
+	sprintf_s((char*)finalPcfh.Magic,strlen(KPRIME_FILE_HEADER_MAGIC)+1,KPRIME_FILE_HEADER_MAGIC);
+
 	iterBuf = buffer;
 	totalSize = 0;
-	for (int i=id.VarPreCacheBlockStart;i<id.VarPreCacheBlockStart+id.VarPreCacheBlockCount;i++) {
+	for (UInt32 i=id.varPreCacheBlockStart;i<id.varPreCacheBlockStart+id.varPreCacheBlockCount;i++) {
 		
-		CHECKMSG(GetBlockFileName(i, false, blockFileName),"could not compose block file name");
+		CHECKMSG(GetBlockFileName(i, FileTypeKPrime, blockFileName),"could not compose block file name");
 		INFOMSG("reading from file: %s", blockFileName.GetText());
 
 		// read header
@@ -386,7 +408,7 @@ bool PreCache::MergeKPrimeFiles()
 
 		// checks
 		CHECKMSG(readNow==sizeof(pcfh), "could not read from file: %s", blockFileName.GetText());
-		CHECKMSG(strcmp(pcfh.Magic,KPRIME_FILE_HEADER_MAGIC)==0,"could not verify file magic header for file: %s", blockFileName.GetText());
+		CHECKMSG(strcmp(pcfh.Magic,KPRIME_FILE_HEADER_MAGIC)==0,"could not verify file magic header for file: %s", blockFileName.GetText());		
 		
 		CHECKMSG(blockFileObj.Read(iterBuf, pcfh.BlockSize, &readNow),"error reading from file");
 		CHECKMSG(pcfh.BlockSize==readNow, "could not read enough from file");
@@ -395,10 +417,133 @@ bool PreCache::MergeKPrimeFiles()
 		totalSize += pcfh.BlockSize;
 	}
 
-	// write to output file
+	finalPcfh.BlockSize = totalSize;
+
+	// write the header
+	CHECKMSG(outFileObj.Write(&finalPcfh, sizeof(finalPcfh), &written), "error writing to file");
+	CHECKMSG(sizeof(finalPcfh)==written, "could not write enough to output file");
+
+	// write the contents
 	CHECKMSG(outFileObj.Write(buffer, totalSize, &written), "error writing to file");
 	CHECKMSG(totalSize==written, "could not write enough to output file");
-	outFileObj.Close();
+	outFileObj.Close();	
+
+	return true;
+}
+
+bool PreCache::PreComputeNorm()
+{
+	GML::Utils::GString kprimeFn;
+	GML::Utils::File    kprimeFo;
+
+	GML::Utils::GString blockFn;
+	GML::Utils::File    blockFo;
+
+	GML::Utils::GString normFn;
+	GML::Utils::File    normFo;
+	
+	PreCacheFileHeader kpFh;
+	PreCacheFileHeader blockFh;
+	PreCacheFileHeader normFh;
+
+	UInt64	read, readUnow, readSz, written;
+	pvm_float  *blkBuf, *blkBufIt, *normBuf;
+	KPrimePair *kpBuf;
+
+	double  recLabel;
+	pvm_float sum, tsum, kval;
+	
+
+	INFOMSG("Loading kprime.all file");
+
+	kprimeFn.Truncate(0);
+	kprimeFn.Add(id.varPreCacheFilePrefix);
+	kprimeFn.Add(".kprime.all");
+
+	// read kprime file header to establish the size of the buffer we need to alloc here
+	CHECKMSG(kprimeFo.OpenRead(kprimeFn),"could not open %s for reading", kprimeFn.GetText());
+	CHECKMSG(kprimeFo.Read(&kpFh, sizeof(kpFh),&read), "could not read from file");
+	CHECKMSG(sizeof(kpFh)==read, "could not read enough");
+
+	// alloc memory for kpBuf
+	kpBuf = (KPrimePair*) malloc((UInt32)kpFh.BlockSize);
+	NULLCHECKMSG(kpBuf, "could not alloc enough memory");
+
+	CHECKMSG(kprimeFo.Read(kpBuf, kpFh.BlockSize, &read),"could not read from file");
+	CHECKMSG(kpFh.BlockSize==read, "could not read enough");
+
+	blkBuf = normBuf =NULL;
+
+	// loop through the block files that we need to process and compute the norms
+	for (UInt32 blockIdx = id.varPreCacheBlockStart; blockIdx < id.varPreCacheBlockStart+id.varPreCacheBlockCount; blockIdx ++) 
+	{		
+		CHECKMSG(GetBlockFileName(blockIdx, FileTypeKernel, blockFn), "could not make block file name");
+		
+		CHECKMSG(blockFo.OpenRead(blockFn),"could not open file: %s",blockFn.GetText());
+		CHECKMSG(blockFo.Read(&blockFh, sizeof(blockFh), &read), "could not read from file");
+		CHECKMSG(sizeof(blockFh)==read, "could not read enough");
+
+		// we need to alloc mem now?
+		if (blkBuf==NULL || normBuf==NULL) {
+			blkBuf = (pvm_float*) malloc((UInt32)blockFh.BlockSize);
+			NULLCHECKMSG(blkBuf, "could not alloc enough memory");
+
+			// alloc memory for norms
+			normBuf = (pvm_float*) malloc(blockFh.NrRecords*sizeof(pvm_float));
+			NULLCHECKMSG(normBuf, "could not alloc enough memory");
+		}
+
+		// read the block file
+		readUnow = 0;
+		blkBufIt = blkBuf;
+		while (readUnow < blockFh.BlockSize) {
+			readSz = UNMEGA;
+			if (blockFh.BlockSize-readUnow < UNMEGA) readSz = blockFh.BlockSize-readUnow;
+			
+			CHECKMSG(blockFo.Read(blkBufIt, readSz, &read), "could not read from file");
+			CHECKMSG(readSz==read, "could not read enough");
+
+			readUnow += read;
+		}
+
+		// compute the norm of the equations associated with this block
+		for (UInt32 blkRecIdx = blockFh.RecordStart; blkRecIdx < blockFh.RecordStart+blockFh.NrRecords; blkRecIdx++)
+		{
+			CHECKMSG(con->GetRecordLabel(recLabel, blkRecIdx), "could not get record label");
+			tsum = 1;
+			sum  = 0;
+			for (UInt32 recIdx=0;recIdx<kpFh.NrRecordsTotal;recIdx++) 
+			{
+				CHECKMSG(GetKernelAt(blkRecIdx, recIdx, blkBuf, blockFh.NrRecords, &kval),"could not get kernel value");
+				sum = kval - (recLabel==1) ?kpBuf[recIdx].pos :kpBuf[recIdx].neg;
+				tsum += sum*sum;
+			}
+			normBuf[blkRecIdx] = sqrt(tsum);
+		}
+
+		// make the eq norm file header
+		normFh.BlockSize = sizeof(blockFh.NrRecords*sizeof(pvm_float));
+		normFh.NrFeatures = blockFh.NrFeatures;
+		normFh.NrRecords  = blockFh.NrRecords;
+		normFh.NrRecordsTotal = blockFh.NrRecordsTotal;
+		normFh.RecordStart = blockFh.RecordStart;
+
+		// set the file header fields
+		memset(normFh.Magic, 0, PRECACHE_FILE_HEADER_MAGIC_SZ);		
+		sprintf_s((char*)normFh.Magic,strlen(EQNORM_FILE_HEADER_MAGIC)+1,EQNORM_FILE_HEADER_MAGIC);	
+
+		// create output file
+		CHECKMSG(GetBlockFileName(blockIdx, FileTypeNorm, normFn), "could not make block file name");
+		CHECKMSG(normFo.Create(normFn.GetText()),"could not create output file");
+
+		// write file header				
+		CHECKMSG(normFo.Write(&normFh, sizeof(normFh),&written),"could not write to file");
+		CHECKMSG(sizeof(normFh)==written, "could not read enough");
+
+		CHECKMSG(normFo.Write(normBuf, normFh.BlockSize,&written),"could not write to file");
+		CHECKMSG(normFh.BlockSize==written, "could not read enough");
+		normFo.Close();
+	}
 
 	return true;
 }
