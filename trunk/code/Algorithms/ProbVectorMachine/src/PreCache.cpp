@@ -507,14 +507,15 @@ bool PreCache::PreComputeNorm()
 		}
 
 		// compute the norm of the equations associated with this block
-		for (UInt32 blkRecIdx = blockFh.RecordStart; blkRecIdx < blockFh.RecordStart+blockFh.NrRecords; blkRecIdx++)
+		for (UInt32 blkRecIdx = 0; blkRecIdx < blockFh.NrRecords; blkRecIdx++)
 		{
-			CHECKMSG(con->GetRecordLabel(recLabel, blkRecIdx), "could not get record label");
+			CHECKMSG(con->GetRecordLabel(recLabel, blkRecIdx+blockFh.RecordStart), "could not get record label");
 			tsum = 1;
 			sum  = 0;
 			for (UInt32 recIdx=0;recIdx<kpFh.NrRecordsTotal;recIdx++) 
 			{
 				CHECKMSG(GetKernelAt(blkRecIdx, recIdx, blkBuf, blockFh.NrRecords, &kval),"could not get kernel value");
+			
 				sum = kval - (recLabel==1) ?kpBuf[recIdx].pos :kpBuf[recIdx].neg;
 				tsum += sum*sum;
 			}
@@ -522,7 +523,7 @@ bool PreCache::PreComputeNorm()
 		}
 
 		// make the eq norm file header
-		normFh.BlockSize = sizeof(blockFh.NrRecords*sizeof(pvm_float));
+		normFh.BlockSize = blockFh.NrRecords*sizeof(pvm_float);
 		normFh.NrFeatures = blockFh.NrFeatures;
 		normFh.NrRecords  = blockFh.NrRecords;
 		normFh.NrRecordsTotal = blockFh.NrRecordsTotal;
