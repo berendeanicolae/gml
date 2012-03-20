@@ -12,9 +12,22 @@ PreCache::PreCache()
 
 }
 
-bool PreCache::SetInheritData(PreCache::InheritData &InhData)
-{
-	this->id = InhData;
+bool PreCache::SetInheritData(PreCache::InheritData &inhData)
+{	
+	this->id.con = inhData.con;
+	this->id.notif = inhData.notif;
+	
+	this->id.varBlockCount = inhData.varBlockCount;
+	this->id.varBlockFileSize = inhData.varBlockFileSize;
+	this->id.varBlockStart = inhData.varBlockStart;
+	
+	this->id.varKernelParamDouble = inhData.varKernelParamDouble;
+	this->id.varKernelParamInt = inhData.varKernelParamInt;
+	this->id.varKernelType = inhData.varKernelType;
+	
+	this->id.varBlockFilePrefix.Truncate(0);
+	this->id.varBlockFilePrefix.Add(inhData.varBlockFilePrefix);
+
 	this->con = id.con;
 	this->notif = id.notif;
 
@@ -24,7 +37,7 @@ bool PreCache::SetInheritData(PreCache::InheritData &InhData)
 	return true;
 }
 
-bool PreCache::PreCompute()
+bool PreCache::PreComputeGram()
 {
 	GML::Utils::File kernelFileObj, kprimeFileObj;
 	GML::Utils::GString kernelFileName, kprimeFileName; 
@@ -44,16 +57,16 @@ bool PreCache::PreCompute()
 
 	SizePerLine = sizeof(pvm_float)*NrRec;
 	RecPerBlock = GetNrRecPerBlock(0, NrRec);
-	TotalNrBlockes = NrRec/RecPerBlock+1;
+	TotalNrBlocks = NrRec/RecPerBlock+1;
 
-	if (id.varPreCacheBlockCount>=TotalNrBlockes)
-		id.varPreCacheBlockCount = TotalNrBlockes;
+	if (id.varBlockCount>=TotalNrBlocks)
+		id.varBlockCount = TotalNrBlocks;
 
 	// allocate memory for output buffer
-	kernelBuffer = (unsigned char*) malloc (id.varPreCacheFileSize*UNMEGA);
+	kernelBuffer = (unsigned char*) malloc (id.varBlockFileSize*UNMEGA);
 	NULLCHECKMSG(kernelBuffer, "could not allocate enough memory for kernel output buffer");
 	pccb.KernelBuffer = (pvm_float*) kernelBuffer;
-	memset(kernelBuffer, 0, id.varPreCacheFileSize*UNMEGA);
+	memset(kernelBuffer, 0, id.varBlockFileSize*UNMEGA);
 
 	kprimeBuffer = (KPrimePair*) malloc (RecPerBlock*sizeof(KPrimePair));
 	NULLCHECKMSG(kprimeBuffer, "could not allocate enough memory for kprime output buffer");
@@ -64,7 +77,7 @@ bool PreCache::PreCompute()
 	pccb.RecPerBlock = RecPerBlock;
 
 	// iterate through the Blockes that need to be computed
-	for (UInt32 i=id.varPreCacheBlockStart;i<id.varPreCacheBlockStart+id.varPreCacheBlockCount && i*RecPerBlock<NrRec;i++) {
+	for (UInt32 i=id.varBlockStart;i<id.varBlockStart+id.varBlockCount && i*RecPerBlock<NrRec;i++) {
 		
 		// create the current output file
 		CHECKMSG(GetBlockFileName(i, FileTypeKernel, kernelFileName),"could not compose kernel file name");		
@@ -76,7 +89,7 @@ bool PreCache::PreCompute()
 		// set the current Block number for the map operation
 		pccb.CurrBlockNr = i;
 		pccb.RecStart = i*RecPerBlock;
-		if (i==TotalNrBlockes-1) pccb.RecCount = NrRec - i*RecPerBlock;
+		if (i==TotalNrBlocks-1) pccb.RecCount = NrRec - i*RecPerBlock;
 		else pccb.RecCount = RecPerBlock;
 					  
 		// run the actual map command on threads
@@ -142,7 +155,7 @@ int PreCache::GetNrRecPerBlock(int MinNr, int MaxNr)
 	// binary search for the nr of records per Block
 	UInt32 MidNr = MinNr + (MaxNr-MinNr)/2;
 	UInt32 SzForMid = (MidNr*NrRec - (MidNr*(MidNr-1))/2)*sizeof(pvm_float);
-	UInt32 SzPerBlock = id.varPreCacheFileSize*UNMEGA;
+	UInt32 SzPerBlock = id.varBlockFileSize*UNMEGA;
 	UInt32 SzForAll = (NrRec*NrRec - (NrRec*(NrRec-1))/2)*sizeof(pvm_float);
 
 	// what if we the database is smaller than UNMEGA
@@ -231,7 +244,7 @@ bool PreCache::ThreadPrecomputeBlock(GML::Algorithm::MLThreadData &thData)
 int PreCache::GetSizeOfBlock(int BlockNr)
 {
 	int RecHere = 0;
-	if (BlockNr == TotalNrBlockes-1) 
+	if (BlockNr == TotalNrBlocks-1) 
 		RecHere = NrRec - BlockNr * RecPerBlock;
 	else
 		RecHere = RecPerBlock;
@@ -256,8 +269,8 @@ DWORD PreCache::AtLoadNextBlock()
 	GML::Utils::GString atBlockFileName;
 
 	UInt64	readUntilNow, readNow, readSz;
-	unsigned char* iterBuf;
-	PreCacheFileHeader pcfh;
+	pvm_float* iterBuf;
+	PreCacheFileHeader blockHeader, normHeader;
 
 	// looping until somebody requests to terminate by setting KillThread = true
 	while (!AtKillThread) {
@@ -266,23 +279,26 @@ DWORD PreCache::AtLoadNextBlock()
 		// reset event stating that we are working
 		ResetEvent(AtEventWorking);
 
+		//
+		// read the block file from disk
+		// 
+
 		CHECKMSG(GetBlockFileName(AtBlockId, FileTypeKernel, atBlockFileName), "could not compose block file name");
-		INFOMSG("loading block file: %s", atBlockFileName.GetText());
 
 		// read header
 		ATCHECKMSG(fileObj.OpenRead(atBlockFileName.GetText(), true), "could not load file: %s", atBlockFileName.GetText());
-		ATCHECKMSG(fileObj.Read(&pcfh, sizeof(pcfh),&readNow), "could not read from file: %s", atBlockFileName.GetText());		
+		ATCHECKMSG(fileObj.Read(&blockHeader, sizeof(blockHeader),&readNow), "could not read from file: %s", atBlockFileName.GetText());		
 
 		// checks
-		ATCHECKMSG(readNow==sizeof(pcfh), "could not read from file: %s", atBlockFileName.GetText());
-		ATCHECKMSG(strcmp(pcfh.Magic,PRECACHE_FILE_HEADER_MAGIC)==0,"could not verify file magic header for file: %s", atBlockFileName.GetText());
-		// todo: check that the size of the block does not exceed the allocated size of the buffer
+		ATCHECKMSG(readNow==sizeof(blockHeader), "could not read from file: %s", atBlockFileName.GetText());
+		ATCHECKMSG(strcmp(blockHeader.Magic,PRECACHE_FILE_HEADER_MAGIC)==0,"could not verify file magic header for file: %s", atBlockFileName.GetText());		
+		ATCHECKMSG(blockHeader.BlockSize<=id.varBlockFileSize*UNMEGA, "the block size in file: %s exceeds declared size", atBlockFileName.GetText());
 
 		// reading file from disk
-		readUntilNow = 0;
-		iterBuf = AtBuffer[AtIdxLoading];
-		while (readUntilNow<pcfh.BlockSize) {
-			if (pcfh.BlockSize-readUntilNow<UNMEGA) readSz = pcfh.BlockSize-readUntilNow;
+		readUntilNow = 0;		
+		iterBuf = blockHandle[AtIdxLoading].K;
+		while (readUntilNow<blockHeader.BlockSize) {
+			if (blockHeader.BlockSize-readUntilNow<UNMEGA) readSz = blockHeader.BlockSize-readUntilNow;
 			else readSz = UNMEGA;
 
 			ATCHECKMSG(fileObj.Read(iterBuf, readSz,&readNow), "could not read from file: %s", atBlockFileName.GetText());		
@@ -291,6 +307,37 @@ DWORD PreCache::AtLoadNextBlock()
 			readUntilNow += readNow;
 			iterBuf += readSz;
 		}
+		fileObj.Close();
+
+		//
+		// read the eqnorm file from disk
+		// 
+
+		// alloc memory for norm buf because we needed to know the record number per block
+		if (blockHandle[0].N==NULL) {
+			for (int i=0;i<PRECACHE_NR_WORK_BUFFERS;i++) {
+				blockHandle[i].N = (pvm_float*) malloc(sizeof(pvm_float)*blockHeader.NrRecords);
+				NULLCHECKMSG(blockHandle[i].N, "could not alloc memory for eq norm buffer");
+			}				
+		} 
+
+		CHECKMSG(GetBlockFileName(AtBlockId, FileTypeNorm, atBlockFileName), "could not compose block file name");
+
+		// read header
+		ATCHECKMSG(fileObj.OpenRead(atBlockFileName.GetText(), true), "could not load file: %s", atBlockFileName.GetText());
+		ATCHECKMSG(fileObj.Read(&normHeader, sizeof(normHeader),&readNow), "could not read from file: %s", atBlockFileName.GetText());		
+
+		// checks
+		ATCHECKMSG(readNow==sizeof(normHeader), "could not read from file: %s", atBlockFileName.GetText());
+		ATCHECKMSG(strcmp(normHeader.Magic,EQNORM_FILE_HEADER_MAGIC)==0,"could not verify file header magic for file: %s", atBlockFileName.GetText());		
+
+		// the data read
+		ATCHECKMSG(fileObj.Read(blockHandle[AtIdxLoading].N, sizeof(pvm_float)*blockHeader.NrRecords,&readNow), "could not read from file: %s", atBlockFileName.GetText());		
+		ATCHECKMSG(readNow==sizeof(pvm_float)*blockHeader.NrRecords, "could not read from file: %s", atBlockFileName.GetText());
+
+		// fill in the other fields of the handle and return
+		blockHandle[AtIdxLoading].blkNr = AtBlockId;
+		blockHandle[AtIdxLoading].nrRec = blockHeader.NrRecords;		
 
 		// reset events 
 		ResetEvent(AtEventWaiting);
@@ -301,52 +348,75 @@ DWORD PreCache::AtLoadNextBlock()
 
 DWORD WINAPI PreCache::ThreadWrapper(LPVOID args)
 {
-	PcThreadInfo * pti = (PcThreadInfo*) args;
-	switch (pti->FuncId) {
-	case LoadBlock: {
-		PreCache* MyObject = (PreCache*)pti->Object;			
-		return MyObject->AtLoadNextBlock();
-		}
-	default:
-		return 0xffFFffFF;
-	}		
+	PreCache* MyObject = (PreCache*)args;			
+	return MyObject->AtLoadNextBlock();	
 }
 
-bool PreCache::TestAtLoading()
+bool PreCache::AtInitLoading()
 {
-	PcThreadInfo pti;
-	pti.FuncId = LoadBlock;
-	pti.Object = this;
+	INFOMSG("Init thread and data for asynchronous block loading");
 
 	ResetEvent(AtEventWaiting);
 	SetEvent(AtEventWorking);
 
-	HANDLE hThread = CreateThread(NULL, 0, &PreCache::ThreadWrapper, &pti, 0, NULL);
+	// set all data to zero
+	memset((void*)blockHandle, 0, sizeof(BlockLoadHandle)*PRECACHE_NR_WORK_BUFFERS);
+
+	// create the worker thread responsible for block loading
+	HANDLE hThread = CreateThread(NULL, 0, &PreCache::ThreadWrapper, this, 0, NULL);
 	CHECKMSG(hThread!=INVALID_HANDLE_VALUE, "could not create thread");
 
-	AtBuffer[0] = (unsigned char*) malloc(id.varPreCacheFileSize*UNMEGA);
-	CHECKMSG(AtBuffer[0]!=NULL, "could not allocate enough memory");
-	AtBuffer[1] = (unsigned char*) malloc(id.varPreCacheFileSize*UNMEGA);
-	CHECKMSG(AtBuffer[1]!=NULL, "could not allocate enough memory");
+	for (int i=0;i<PRECACHE_NR_WORK_BUFFERS;i++) 
+	{
+		// alloc memory 
+		blockHandle[i].K = (pvm_float*) malloc(id.varBlockFileSize*UNMEGA);
+		CHECKMSG(blockHandle[i].K!=NULL, "could not allocate enough memory");	
 
-	for (UInt32 i=id.varPreCacheBlockStart;i<id.varPreCacheBlockStart+id.varPreCacheBlockCount;i++) {
-		if (i%2==0) {AtIdxLoading=0; AtIdxExecuting=1;} 
-		else {AtIdxLoading=1; AtIdxExecuting=0;}
-		AtBlockId = i;
-		// signal thread to start working
-		SetEvent(AtEventWaiting);
-		Sleep(100);
-		// wait for thread to finish
-		CHECKMSG(WaitForSingleObject(AtEventWorking, INFINITE)==WAIT_OBJECT_0,"thread waiting error");
+		// memory for blockHandle[i].N - eqnorm will be alloc on first encounter
+	}
+	
+	return true;
+}
+
+bool PreCache::AtSignalStartLoading(UInt32 blockId)
+{
+	INFOMSG("Signaled loading of block: %d", blockId);
+
+	// determine which buffer to use now
+	if (blockId%2==0) {AtIdxLoading=0; AtIdxExecuting=1;} 
+	else {AtIdxLoading=1; AtIdxExecuting=0;}
+
+	// which block to load now?
+	AtBlockId = blockId;
+
+	// signal thread to start working
+	SetEvent(AtEventWaiting);
+	return true;	
+}
+
+PreCache::BlockLoadHandle* PreCache::AtWaitForCompletion()
+{
+	INFOMSG("Waiting for block: %d to complete the loading process", AtBlockId);
+
+	// sleep for sync reasons
+	Sleep(100);
+
+	// wait for thread to finish
+	CHECKMSG(WaitForSingleObject(AtEventWorking, INFINITE)==WAIT_OBJECT_0,"thread waiting error");
+	
+	if (AtKillThread) {
+		INFOMSG("There was an error somewhere, somebody signaled the thread to finish; returning null");
+		return NULL;
 	}
 
-	return true;	
+	// return the handle 
+	return &blockHandle[AtIdxLoading];
 }
 
 bool PreCache::GetBlockFileName(UInt32 BlockId, FileType fType, GML::Utils::GString &BlockFileName)
 {
 	BlockFileName.Truncate(0);
-	CHECKMSG(BlockFileName.Add(id.varPreCacheFilePrefix),"could not add prefix file name");
+	CHECKMSG(BlockFileName.Add(id.varBlockFilePrefix),"could not add prefix file name");
 
 	switch (fType) {
 	case FileTypeKernel:
@@ -381,7 +451,7 @@ bool PreCache::MergeKPrimeFiles()
 	CHECKMSG(buffer, "could not alloc enough memory for merged files");
 
 	outFileName.Truncate(0);
-	outFileName.Add(id.varPreCacheFilePrefix);
+	outFileName.Add(id.varBlockFilePrefix);
 	outFileName.Add(".kprime.all");
 	CHECKMSG(outFileObj.Create(outFileName.GetText()), "could not open file output file for writing");
 
@@ -397,7 +467,7 @@ bool PreCache::MergeKPrimeFiles()
 
 	iterBuf = buffer;
 	totalSize = 0;
-	for (UInt32 i=id.varPreCacheBlockStart;i<id.varPreCacheBlockStart+id.varPreCacheBlockCount;i++) {
+	for (UInt32 i=id.varBlockStart;i<id.varBlockStart+id.varBlockCount;i++) {
 		
 		CHECKMSG(GetBlockFileName(i, FileTypeKPrime, blockFileName),"could not compose block file name");
 		INFOMSG("reading from file: %s", blockFileName.GetText());
@@ -457,7 +527,7 @@ bool PreCache::PreComputeNorm()
 	INFOMSG("Loading kprime.all file");
 
 	kprimeFn.Truncate(0);
-	kprimeFn.Add(id.varPreCacheFilePrefix);
+	kprimeFn.Add(id.varBlockFilePrefix);
 	kprimeFn.Add(".kprime.all");
 
 	// read kprime file header to establish the size of the buffer we need to alloc here
@@ -475,7 +545,7 @@ bool PreCache::PreComputeNorm()
 	blkBuf = normBuf =NULL;
 
 	// loop through the block files that we need to process and compute the norms
-	for (UInt32 blockIdx = id.varPreCacheBlockStart; blockIdx < id.varPreCacheBlockStart+id.varPreCacheBlockCount; blockIdx ++) 
+	for (UInt32 blockIdx = id.varBlockStart; blockIdx < id.varBlockStart+id.varBlockCount; blockIdx ++) 
 	{		
 		CHECKMSG(GetBlockFileName(blockIdx, FileTypeKernel, blockFn), "could not make block file name");
 		
@@ -532,10 +602,10 @@ bool PreCache::PreComputeNorm()
 		// set the file header fields
 		memset(normFh.Magic, 0, PRECACHE_FILE_HEADER_MAGIC_SZ);		
 		sprintf_s((char*)normFh.Magic,strlen(EQNORM_FILE_HEADER_MAGIC)+1,EQNORM_FILE_HEADER_MAGIC);	
-
+		
 		// create output file
 		CHECKMSG(GetBlockFileName(blockIdx, FileTypeNorm, normFn), "could not make block file name");
-		CHECKMSG(normFo.Create(normFn.GetText()),"could not create output file");
+		CHECKMSG(normFo.Create(normFn.GetText()),"could not create output file");		
 
 		// write file header				
 		CHECKMSG(normFo.Write(&normFh, sizeof(normFh),&written),"could not write to file");

@@ -14,9 +14,8 @@
 #define KPRIME_FILE_HEADER_MAGIC	 "PVM-KPRIME-V1"
 #define EQNORM_FILE_HEADER_MAGIC	 "PVM-EQNORM-V1"
 
-#define PRECACHE_FILE_HEADER_MAGIC_SZ 32
-
-#define PRECACHE_NR_WORK_BUFFERS	2
+#define PRECACHE_FILE_HEADER_MAGIC_SZ	32
+#define PRECACHE_NR_WORK_BUFFERS		2
 
 using namespace GML::Utils;
 
@@ -32,22 +31,22 @@ public:
 		double		varKernelParamDouble;
 		Int32		varKernelParamInt;
 
-		UInt32 varPreCacheFileSize;
-		UInt32 varPreCacheBlockStart;
-		UInt32 varPreCacheBlockCount;
+		UInt32 varBlockFileSize;
+		UInt32 varBlockStart;
+		UInt32 varBlockCount;
 
-		GML::Utils::GString	varPreCacheFilePrefix;				
+		GML::Utils::GString	varBlockFilePrefix;				
+	};
+
+	struct BlockLoadHandle {
+		UInt32 blkNr;
+		UInt32 nrRec;
+		pvm_float* K;
+		pvm_float* N;
 	};
 
 private:
 
-	struct PcThreadInfo {
-		void*   Object;
-		UInt32 	FuncId;
-	};
-	enum PcThreadFuncId {
-		LoadBlock=0,
-	};
 	enum FileType {
 		FileTypeKernel,
 		FileTypeKPrime,
@@ -68,7 +67,7 @@ private:
 	struct KPrimePair {
 		pvm_float pos;
 		pvm_float neg;
-	};
+	};	
 
 	struct Map_PreCacheComputeBlock {
 		UInt32 CurrBlockNr;
@@ -90,12 +89,12 @@ private:
 	UInt32 NrRec, NrFts;
 	UInt32 NrPosRec, NrNegRec;
 
-	UInt32 TotalNrBlockes;
+	UInt32 TotalNrBlocks;
 	UInt32 RecPerBlock;
 
 	UInt32 SizePerLine;
 
-	// internal procs
+	// internal procedures
 	int GetNrRecPerBlock(int MinNr, int MaxNr);
 	int GetSizeOfBlock(int BlockNr);
 	bool GetKernelAt(UInt32 line,UInt32 row, pvm_float* KernelStorage,UInt32 NrRecInBlock, pvm_float *KVal);
@@ -103,28 +102,36 @@ private:
 	
 	// asynchronous block loading procedure
 	DWORD AtLoadNextBlock();
+	
+
 	UInt32 AtBlockId; 
 	bool AtKillThread;
 	HANDLE AtEventWorking, AtEventWaiting;
+	
 	unsigned char *AtBuffer[PRECACHE_NR_WORK_BUFFERS];
+	PreCache::BlockLoadHandle blockHandle[PRECACHE_NR_WORK_BUFFERS];
+
 	UInt32 AtIdxLoading, AtIdxExecuting;
 		
 public:
 	// constructors
 	PreCache();
-
-	// destructor
-	~PreCache();	
+	~PreCache();
 
 	// main procedure
 	bool SetInheritData(PreCache::InheritData &InhData);
 	bool SetParentAlg(GML::Algorithm::IMLAlgorithm* _alg);
-	bool PreCompute();
+	bool PreComputeGram();
 	bool ThreadPrecomputeBlock(GML::Algorithm::MLThreadData &thData);
-	bool TestAtLoading();
+
+	// asynchronous block loading interface
+	bool AtInitLoading();
+	bool AtSignalStartLoading(UInt32 blockId);
+	BlockLoadHandle* AtWaitForCompletion();
+
 	// merge kprime files 
 	bool MergeKPrimeFiles();
-	bool PreComputeNorm();
+	bool PreComputeNorm();	
 };
 
 #endif //__PRE_CACHE_H_

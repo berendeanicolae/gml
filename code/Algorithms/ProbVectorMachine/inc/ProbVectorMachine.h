@@ -18,8 +18,7 @@ public:
 
 private:
 	// structures use for thread map actions
-	struct Map_TestSpeedCompute
-	{
+	struct Map_TestSpeedCompute {
 		int nrLines;
 		int nrRecords;
 		pvm_float * buffer;
@@ -34,21 +33,26 @@ private:
 		COMMAND_PRECOMP_GRAM,
 		COMMAND_MERGE_KPRIME,
 		COMMAND_PRECOMP_NORM,
-		COMMAND_TEMP_KERNEL_FNCTS,
+		COMMAND_BLOCK_TRAINING,
 		//Add extra commands here
 	};	
+
+	// state of the algorithm read from the disk, or initialized here
+	pvm_float*	alphaOrig,*sigmaPOrig,*sigmaMOrig;
 
 private:
 	GML::ML::MLRecord		MainRecord;	
 
 	// related class instances
 	PreCache InstPreCache;
+	void ProbVectorMachine::PreCacheInstInit();
 
 	void	OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
 	bool	OnInitThreadData(GML::Algorithm::MLThreadData &thData);
 
     bool    TestMachineSpeed();
 	bool	PreCacheCall(UInt32 cmd);
+	bool	IterateBlockTraining();
 
 public:
 	ProbVectorMachine();
@@ -56,18 +60,20 @@ public:
 	bool	Init();
 	void	OnExecute();    
     bool	ThreadTestCompSpeed(GML::Algorithm::MLThreadData & thData);
+	bool PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHandle *handle);
 
 	// variables to control the algorithm flow
 	UInt32 varKernelType;
-	UInt32 varPreCacheFileSize;
-	UInt32 varPreCacheBlockStart;
-	UInt32 varPreCacheBlockCount;
+	UInt32 varBlockFileSize;
+	UInt32 varBlockStart;
+	UInt32 varBlockCount;
 
 	Int32		varKernelParamInt;
 	pvm_double  varKernelParamDouble;
 
-	GML::Utils::GString	varPreCacheFilePrefix;
+	GML::Utils::GString	varBlockFilePrefix;
 	GML::Utils::GString	varFeatureWeightFile;
+	GML::Utils::GString varAlgoIterationState;
 };
 
 #endif
