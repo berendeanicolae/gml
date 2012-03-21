@@ -24,6 +24,8 @@ ProbVectorMachine::ProbVectorMachine()
 
 	// algorithm related variables
 	LinkPropertyToString("AlgoIterationState",varAlgoIterationState, "", "File from where the current iteration state will be read or none if it's the first iteration");
+	LinkPropertyToDouble("Lambda",varLambda,1.0,"The Lambda parameter for this iteration");
+	LinkPropertyToUInt32("WindowSize",varWindowSize,10,"The Windows size the block solver works with");
 }
 bool ProbVectorMachine::Init()
 {
@@ -43,6 +45,9 @@ void ProbVectorMachine::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,
 			return;
 		case THREAD_COMMAND_PRECOMPUTE_BLOCK:
 			InstPreCache.ThreadPrecomputeBlock(thData);
+			return;
+		case THREAD_COMMAND_WINDOW_UPDATE:
+			PerformWindowUpdate(thData);
 			return;
 		default:
 			ERRORMSG("could not find thread comment");
@@ -100,13 +105,13 @@ bool ProbVectorMachine::TestMachineSpeed()
     int nrLines = nrOuts/nrRec;
 
     // initialize thread data 
-    MapTsc.nrLines = nrLines;
-    MapTsc.nrRecords = nrRec;
+    mapTsc.nrLines = nrLines;
+    mapTsc.nrRecords = nrRec;
 
     // allocated the necessary memory
     pvm_float* Buffer = (pvm_float*) malloc(UNGIGA);
     NULLCHECKMSG(Buffer, "Could not allocate enough memory");
-    MapTsc.buffer = Buffer;  
+    mapTsc.buffer = Buffer;  
 
     // the actual computing
     ExecuteParalelCommand(THREAD_COMMAND_TEST_PROC_SPEED);
@@ -158,12 +163,12 @@ bool ProbVectorMachine::ThreadTestCompSpeed(GML::Algorithm::MLThreadData & thDat
 	if (threadId==0) notif->StartProcent("[%s] -> Computing 1GB of distances ... ",ObjectName);
 
     // the first for is for lines, every thread takes one line at a time
-    for (int i=threadId;i<MapTsc.nrLines;i+=threadsCount) {
+    for (int i=threadId;i<mapTsc.nrLines;i+=threadsCount) {
         // get the first record data
         con->GetRecord(first, i);
 
         // the second for computed a single line
-        for (int j=0;j<MapTsc.nrRecords;j++) {
+        for (int j=0;j<mapTsc.nrRecords;j++) {
             // get the second record data    
             con->GetRecord(second, j);
 
@@ -173,9 +178,9 @@ bool ProbVectorMachine::ThreadTestCompSpeed(GML::Algorithm::MLThreadData & thDat
                 sum += (pvm_float)((first.Features[k]-second.Features[k])*(first.Features[k]-second.Features[k]));
 
             // put the output in the buffer
-            MapTsc.buffer[i*MapTsc.nrRecords+j] = sum;
+            mapTsc.buffer[i*mapTsc.nrRecords+j] = sum;
         }
-		if (threadId==0) notif->SetProcent(i,MapTsc.nrLines);
+		if (threadId==0) notif->SetProcent(i,mapTsc.nrLines);
     }
 	if (threadId==0) notif->EndProcent();
 
@@ -244,23 +249,24 @@ bool ProbVectorMachine::IterateBlockTraining()
 	UInt64 read;
 
 	PreCache::BlockLoadHandle *handle;
+	PreCache::KPrimePair	  *kprime;
+	
+	GML::Utils::File				fileObj;
+	GML::Utils::GString				fileName;
+	PreCache::PreCacheFileHeader	kpHeader;
 	
 	alphaOrig = (pvm_float*) malloc(vectSz);
 	NULLCHECKMSG(alphaOrig, "could not alloc memory for alphaOrig");
 
-	sigmaPOrig = (pvm_float*) malloc(vectSz);
-	NULLCHECKMSG(sigmaPOrig, "could not alloc memory for sigmaPOrig");
-
-	sigmaMOrig = (pvm_float*) malloc(vectSz);
-	NULLCHECKMSG(sigmaMOrig, "could not alloc memory for sigmaMOrig");
+	sigmaOrig = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(sigmaOrig, "could not alloc memory for sigmaPOrig");
 
 	// initialize state variables with values read from disk or init here
 
 	if (varAlgoIterationState.Equals("")) {
 		// this is the first iteration, we init here
 		memset(alphaOrig, 0, vectSz);
-		memset(sigmaPOrig, 0, vectSz);
-		memset(sigmaMOrig, 0, vectSz);
+		memset(sigmaOrig, 0, vectSz);		
 	} else {
 		// read state variables from disk
 		GML::Utils::File stateFo;
@@ -269,12 +275,29 @@ bool ProbVectorMachine::IterateBlockTraining()
 		CHECKMSG(stateFo.Read(alphaOrig, vectSz, &read), "could not read from state file");
 		CHECKMSG(read==vectSz, "could not read enough from state file");
 
-		CHECKMSG(stateFo.Read(sigmaPOrig, vectSz, &read), "could not read from state file");
-		CHECKMSG(read==vectSz, "could not read enough from state file");
-
-		CHECKMSG(stateFo.Read(sigmaMOrig, vectSz, &read), "could not read from state file");
+		CHECKMSG(stateFo.Read(sigmaOrig, vectSz, &read), "could not read from state file");
 		CHECKMSG(read==vectSz, "could not read enough from state file");
 	}
+
+	// read kprime file
+	fileName.Truncate(0);
+	fileName.Add(varBlockFilePrefix);
+	fileName.Add(".kprime.all");
+
+	CHECKMSG(fileObj.OpenRead(fileName),"could not open file for reading: %s",fileName.GetText());
+	CHECKMSG(fileObj.Read(&kpHeader, sizeof(PreCache::PreCacheFileHeader), &read), "could not read from file");
+	CHECKMSG(sizeof(PreCache::PreCacheFileHeader)==read,"could not read enough from file");
+	CHECKMSG(strcmp(kpHeader.Magic,KPRIME_FILE_HEADER_MAGIC)==0, "could not verify kprime header magic");
+	CHECKMSG(sizeof(PreCache::KPrimePair)*nrRec==kpHeader.BlockSize, "kprime block size does not have the correct size");
+
+	// alloc memory for kprime buffer
+	kprime = (PreCache::KPrimePair*) malloc((size_t)kpHeader.BlockSize);
+	NULLCHECKMSG(kprime, "could not alloc memory for sigmaPOrig");
+
+	CHECKMSG(fileObj.Read(kprime, kpHeader.BlockSize, &read), "could not read from file");
+	CHECKMSG(kpHeader.BlockSize==read,"could not read enough from file");
+
+	// start processing blocks
 
 	PreCacheInstInit();
 	InstPreCache.AtInitLoading();
@@ -285,20 +308,21 @@ bool ProbVectorMachine::IterateBlockTraining()
 	for (UInt32 blkIdx=varBlockStart+1; blkIdx<varBlockStart+varBlockCount; blkIdx++)
 	{
 		handle = InstPreCache.AtWaitForCompletion();						
-		NULLCHECKMSG(handle,"could not load block file:%d exiting", blkIdx-1);
+		NULLCHECKMSG(handle,"could not load block file:%d exiting", blkIdx-1);		
+		handle->KPRM = kprime;
 
 		CHECKMSG(InstPreCache.AtSignalStartLoading(blkIdx),"could not signal loading of block:%d ", blkIdx);
 		CHECKMSG(PerfomBlockTraining(blkIdx, handle), "error performing training on block: %d", blkIdx);
 	}
 
 	return true;
-
 }
 
-bool ProbVectorMachine::PerfomBlockTraining( UInt32 blkIdx, PreCache::BlockLoadHandle *handle )
+bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHandle *handle)
 {
 	// algorithm state variables
-	pvm_float *alpha, *sigmaPlus, *sigmaMinus;
+	pvm_float *alpha, *sigma, scoreSum, update;
+	UInt32	  i, w, k;
 
 	UInt32 nrRec = con->GetRecordCount();
 	UInt32 vectSz = sizeof(pvm_float)*nrRec;
@@ -307,18 +331,112 @@ bool ProbVectorMachine::PerfomBlockTraining( UInt32 blkIdx, PreCache::BlockLoadH
 	alpha = (pvm_float*) malloc(vectSz);
 	NULLCHECKMSG(alpha, "could not alloc memory for alpha");
 
-	sigmaPlus = (pvm_float*) malloc(vectSz);
-	NULLCHECKMSG(sigmaPlus, "could not alloc memory for sigmaPlus");
-
-	sigmaMinus = (pvm_float*) malloc(vectSz);
-	NULLCHECKMSG(sigmaMinus, "could not alloc memory for sigmaMinus");
+	sigma = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(sigma, "could not alloc memory for sigmaPlus");
 
 	// copy the contents of the state variables read from disk
 	memcpy(alpha, alphaOrig, vectSz);
-	memcpy(sigmaPlus, sigmaPOrig, vectSz);
-	memcpy(sigmaMinus, sigmaMOrig, vectSz);
+	memcpy(sigma, sigmaOrig, vectSz);	
 
+	// put state vars in map structure
+	wu.ALPH = alpha;
+	wu.SIGM = sigma;
 
+	// alloc memory for window update structure
+	wu.uALPH  = (pvm_float*) malloc(nrRec*varWindowSize*sizeof(pvm_float));	
+	wu.uSIGM  = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
+	wu.san    = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
+	wu.pn     = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
+	NULLCHECKMSG(wu.uALPH && wu.uSIGM && wu.san && wu.pn, "could not alloc enough memory");
+
+	wu.bHandle = handle;
+	for (w=0;w<handle->recCount;w+=varWindowSize)
+	{
+		wu.winStart = w;
+		if (handle->recCount-w < varWindowSize) wu.winSize = handle->recCount-w;
+		else wu.winSize = varWindowSize;
+
+		// compute window update 		
+		ExecuteParalelCommand(THREAD_COMMAND_WINDOW_UPDATE);
+
+		// compute shares for every score
+		scoreSum = 0;
+		for (i=0;i<wu.winSize;i++)		
+			scoreSum += wu.san[i];
+
+		for (i=0;i<wu.winSize;i++)
+			wu.pn[i] = wu.san[i]/scoreSum;
+
+		// update alphas
+		for (i=0;i<nrRec;i++) {			
+			update = 0;
+			for (k=0;k<wu.winSize;k++) 
+				update = wu.pn[k] * wu.uALPH[nrRec*k + i];					
+			
+			update *= (pvm_float)varLambda;
+			alpha[i] = update;
+		}
+
+		// update sigmas
+		for (k=0;k<wu.winSize;k++)
+			sigma[handle->recStart+w+k] = (pvm_float)varLambda * wu.pn[k] * wu.uSIGM[k];
+		
+	}
 
 	return true;
+}
+
+bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData)
+{
+	UInt32		recIdxGlob, recIdxBlock, i;
+	double		label;
+	pvm_float	sj, ker, kpr, frac;
+
+	INFOTHDMSG("perform window update");
+	
+	UInt32 nrRec = con->GetRecordCount();
+
+	for (UInt32 winIt=thData.ThreadID; winIt<wu.winSize; winIt+=threadsCount)
+	{
+		recIdxBlock = wu.winStart + winIt;
+		recIdxGlob = wu.bHandle->recStart + recIdxBlock; 		
+		
+		CHECKMSG(con->GetRecordLabel(label, recIdxGlob),"could not get record label");				
+		
+		sj = 0;
+		for (i=0;i<nrRec;i++) {							
+			ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+			kpr = (label==1)?wu.bHandle->KPRM[i].pos : wu.bHandle->KPRM[i].neg;
+			sj += wu.ALPH[i] * (ker - kpr);
+		}
+
+		if (wu.SIGM[recIdxGlob] - sj < 0) 
+		{
+			frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+			for (i=0;i<nrRec;i++) {
+				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+				kpr = (label==1)?wu.bHandle->KPRM[i].pos : wu.bHandle->KPRM[i].neg;
+				wu.uALPH[winIt*nrRec + i] = frac * (ker-kpr);
+			}
+			wu.uSIGM[winIt] = frac;
+			wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+		} else 
+		{
+			frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+			for (i=0;i<nrRec;i++) {
+				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+				kpr = (label==1)?wu.bHandle->KPRM[i].pos : wu.bHandle->KPRM[i].neg;
+				wu.uALPH[winIt*nrRec + i] = frac * (kpr-ker);
+			}
+			wu.uSIGM[winIt] = frac;
+			wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+		}
+	}
+	return true;
+}
+
+inline pvm_float ProbVectorMachine::KerAt(UInt32 line,UInt32 row, pvm_float* ker, UInt32 nrRec)
+{
+	if (line>row) { UInt32 aux = line; line = row; row=aux; }
+	return ker[(line*nrRec - line*(line-1)/2) + row-line];
 }
