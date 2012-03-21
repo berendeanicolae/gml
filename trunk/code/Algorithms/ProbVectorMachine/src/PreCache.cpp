@@ -76,7 +76,7 @@ bool PreCache::PreComputeGram()
 	// records per Block, useful for computing where we are right now
 	pccb.RecPerBlock = RecPerBlock;
 
-	// iterate through the Blockes that need to be computed
+	// iterate through the Blocks that need to be computed
 	for (UInt32 i=id.varBlockStart;i<id.varBlockStart+id.varBlockCount && i*RecPerBlock<NrRec;i++) {
 		
 		// create the current output file
@@ -135,7 +135,7 @@ bool PreCache::PreComputeGram()
 
 		//write the header of the PreCache file
 		CHECKMSG(kprimeFileObj.Write(0, &pcfh, sizeof(PreCacheFileHeader), &written), "failed to write kprime values file header");
-		// write kprim buffer
+		// write kprime buffer
 		CHECKMSG(kprimeFileObj.Write(written, kprimeBuffer, pccb.RecCount*sizeof(KPrimePair), &written), "failed to write kprime buffer");
 
 		kernelFileObj.Close();
@@ -296,7 +296,7 @@ DWORD PreCache::AtLoadNextBlock()
 
 		// reading file from disk
 		readUntilNow = 0;		
-		iterBuf = blockHandle[AtIdxLoading].K;
+		iterBuf = blockHandle[AtIdxLoading].KERN;
 		while (readUntilNow<blockHeader.BlockSize) {
 			if (blockHeader.BlockSize-readUntilNow<UNMEGA) readSz = blockHeader.BlockSize-readUntilNow;
 			else readSz = UNMEGA;
@@ -314,10 +314,10 @@ DWORD PreCache::AtLoadNextBlock()
 		// 
 
 		// alloc memory for norm buf because we needed to know the record number per block
-		if (blockHandle[0].N==NULL) {
+		if (blockHandle[0].NORM==NULL) {
 			for (int i=0;i<PRECACHE_NR_WORK_BUFFERS;i++) {
-				blockHandle[i].N = (pvm_float*) malloc(sizeof(pvm_float)*blockHeader.NrRecords);
-				NULLCHECKMSG(blockHandle[i].N, "could not alloc memory for eq norm buffer");
+				blockHandle[i].NORM = (pvm_float*) malloc(sizeof(pvm_float)*blockHeader.NrRecords);
+				NULLCHECKMSG(blockHandle[i].NORM, "could not alloc memory for eq norm buffer");
 			}				
 		} 
 
@@ -332,12 +332,13 @@ DWORD PreCache::AtLoadNextBlock()
 		ATCHECKMSG(strcmp(normHeader.Magic,EQNORM_FILE_HEADER_MAGIC)==0,"could not verify file header magic for file: %s", atBlockFileName.GetText());		
 
 		// the data read
-		ATCHECKMSG(fileObj.Read(blockHandle[AtIdxLoading].N, sizeof(pvm_float)*blockHeader.NrRecords,&readNow), "could not read from file: %s", atBlockFileName.GetText());		
+		ATCHECKMSG(fileObj.Read(blockHandle[AtIdxLoading].NORM, sizeof(pvm_float)*blockHeader.NrRecords,&readNow), "could not read from file: %s", atBlockFileName.GetText());		
 		ATCHECKMSG(readNow==sizeof(pvm_float)*blockHeader.NrRecords, "could not read from file: %s", atBlockFileName.GetText());
 
 		// fill in the other fields of the handle and return
 		blockHandle[AtIdxLoading].blkNr = AtBlockId;
-		blockHandle[AtIdxLoading].nrRec = blockHeader.NrRecords;		
+		blockHandle[AtIdxLoading].recCount = blockHeader.NrRecords;
+		blockHandle[AtIdxLoading].recStart = blockHeader.RecordStart;
 
 		// reset events 
 		ResetEvent(AtEventWaiting);
@@ -369,8 +370,8 @@ bool PreCache::AtInitLoading()
 	for (int i=0;i<PRECACHE_NR_WORK_BUFFERS;i++) 
 	{
 		// alloc memory 
-		blockHandle[i].K = (pvm_float*) malloc(id.varBlockFileSize*UNMEGA);
-		CHECKMSG(blockHandle[i].K!=NULL, "could not allocate enough memory");	
+		blockHandle[i].KERN = (pvm_float*) malloc(id.varBlockFileSize*UNMEGA);
+		CHECKMSG(blockHandle[i].KERN!=NULL, "could not allocate enough memory");	
 
 		// memory for blockHandle[i].N - eqnorm will be alloc on first encounter
 	}

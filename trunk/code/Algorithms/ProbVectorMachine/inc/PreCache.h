@@ -38,23 +38,6 @@ public:
 		GML::Utils::GString	varBlockFilePrefix;				
 	};
 
-	struct BlockLoadHandle {
-		UInt32 blkNr;
-		UInt32 nrRec;
-		pvm_float* K;
-		pvm_float* N;
-	};
-
-private:
-
-	enum FileType {
-		FileTypeKernel,
-		FileTypeKPrime,
-		FileTypeNorm
-	};
-
-	static DWORD WINAPI ThreadWrapper(LPVOID args);
-
 	struct PreCacheFileHeader {
 		char Magic[PRECACHE_FILE_HEADER_MAGIC_SZ];
 		UInt32 NrRecordsTotal;
@@ -67,7 +50,27 @@ private:
 	struct KPrimePair {
 		pvm_float pos;
 		pvm_float neg;
-	};	
+	};
+
+	struct BlockLoadHandle {
+		UInt32 blkNr;
+		UInt32 recCount;
+		UInt32 recStart;
+
+		pvm_float* KERN;
+		pvm_float* NORM;
+		KPrimePair* KPRM;
+	};
+
+private:
+
+	enum FileType {
+		FileTypeKernel,
+		FileTypeKPrime,
+		FileTypeNorm
+	};
+
+	static DWORD WINAPI ThreadWrapper(LPVOID args);
 
 	struct Map_PreCacheComputeBlock {
 		UInt32 CurrBlockNr;
@@ -96,8 +99,7 @@ private:
 
 	// internal procedures
 	int GetNrRecPerBlock(int MinNr, int MaxNr);
-	int GetSizeOfBlock(int BlockNr);
-	bool GetKernelAt(UInt32 line,UInt32 row, pvm_float* KernelStorage,UInt32 NrRecInBlock, pvm_float *KVal);
+	int GetSizeOfBlock(int BlockNr);	
 	bool GetBlockFileName (UInt32 BlockId, FileType fType, GML::Utils::GString &BlockFileName);
 	
 	// asynchronous block loading procedure
@@ -123,6 +125,8 @@ public:
 	bool SetParentAlg(GML::Algorithm::IMLAlgorithm* _alg);
 	bool PreComputeGram();
 	bool ThreadPrecomputeBlock(GML::Algorithm::MLThreadData &thData);
+
+	bool GetKernelAt(UInt32 line,UInt32 row, pvm_float* KernelStorage,UInt32 NrRecInBlock, pvm_float *KVal);
 
 	// asynchronous block loading interface
 	bool AtInitLoading();
