@@ -39,6 +39,7 @@ private:
 
 		UInt32 winStart;
 		UInt32 winSize;
+		bool updateNeeded;
 		PreCache::BlockLoadHandle *bHandle;
 	};
 

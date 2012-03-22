@@ -335,6 +335,9 @@ bool ProbVectorMachine::IterateBlockTraining()
 		CHECKMSG(PerfomBlockTraining(blkIdx, handle), "error performing training on block: %d", blkIdx);
 	}
 
+	// dump the block state variables to disk
+
+
 	// free all temporary used memory buffers
 	free(alpha);
 	free(sigma);
@@ -382,12 +385,12 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 				update = wu.pn[k] * wu.uALPH[nrRec*k + i];					
 			
 			update *= (pvm_float)varLambda;
-			wu.ALPH[i] = update;
+			wu.ALPH[i] += update;
 		}
 
 		// update sigmas
 		for (k=0;k<wu.winSize;k++)
-			wu.SIGM[handle->recStart+w+k] = (pvm_float)varLambda * wu.pn[k] * wu.uSIGM[k];		
+			wu.SIGM[handle->recStart+w+k] += (pvm_float)varLambda * wu.pn[k] * wu.uSIGM[k];		
 	}
 
 	return true;
@@ -402,6 +405,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 	INFOTHDMSG("perform window update");
 	
 	UInt32 nrRec = con->GetRecordCount();
+	wu.updateNeeded = false;
 
 	for (UInt32 winIt=thData.ThreadID; winIt<wu.winSize; winIt+=threadsCount)
 	{
@@ -417,26 +421,54 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 			sj += wu.ALPH[i] * (ker - kpr);
 		}
 
-		if (wu.SIGM[recIdxGlob] - sj < 0) 
-		{
-			frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
-			for (i=0;i<nrRec;i++) {
-				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-				kpr = (label==1)? wu.bHandle->KPRM[i].pos : wu.bHandle->KPRM[i].neg;
-				wu.uALPH[winIt*nrRec + i] = frac * (ker-kpr);
-			}
-			wu.uSIGM[winIt] = frac;
-			wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
-		} else 
-		{
-			frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
-			for (i=0;i<nrRec;i++) {
-				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-				kpr = (label==1)? wu.bHandle->KPRM[i].pos : wu.bHandle->KPRM[i].neg;
-				wu.uALPH[winIt*nrRec + i] = frac * (kpr-ker);
-			}
-			wu.uSIGM[winIt] = frac;
-			wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+		if (label==1) {
+			if (wu.SIGM[recIdxGlob] - sj < 0) 
+			{
+				wu.updateNeeded = true;
+				frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+				for (i=0;i<nrRec;i++) {
+					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);				
+					kpr = wu.bHandle->KPRM[i].pos;
+					wu.uALPH[winIt*nrRec + i] = frac * (ker-kpr);
+				}
+				wu.uSIGM[winIt] = frac;
+				wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+			} else if (wu.SIGM[recIdxGlob] - sj < 0) 
+			{
+				wu.updateNeeded = true;
+				frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+				for (i=0;i<nrRec;i++) {
+					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+					kpr = wu.bHandle->KPRM[i].pos;
+					wu.uALPH[winIt*nrRec + i] = frac * (kpr-ker);
+				}
+				wu.uSIGM[winIt] = frac;
+				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+			} 
+		} else {
+			if (wu.SIGM[recIdxGlob] - sj < 0) 
+			{
+				wu.updateNeeded = true;
+				frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+				for (i=0;i<nrRec;i++) {
+					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);				
+					kpr = wu.bHandle->KPRM[i].neg;
+					wu.uALPH[winIt*nrRec + i] = frac * (ker-kpr);
+				}
+				wu.uSIGM[winIt] = frac;
+				wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+			} else if (wu.SIGM[recIdxGlob] - sj < 0) 
+			{
+				wu.updateNeeded = true;
+				frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+				for (i=0;i<nrRec;i++) {
+					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+					kpr = wu.bHandle->KPRM[i].neg;
+					wu.uALPH[winIt*nrRec + i] = frac * (kpr-ker);
+				}
+				wu.uSIGM[winIt] = frac;
+				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+			} 
 		}
 	}
 	return true;
