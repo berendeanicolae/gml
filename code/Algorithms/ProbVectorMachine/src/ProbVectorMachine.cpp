@@ -26,6 +26,7 @@ ProbVectorMachine::ProbVectorMachine()
 	LinkPropertyToString("AlgoIterationState",varAlgoIterationState, "", "File from where the current iteration state will be read or none if it's the first iteration");
 	LinkPropertyToDouble("Lambda",varLambda,1.0,"The Lambda parameter for this iteration");
 	LinkPropertyToUInt32("WindowSize",varWindowSize,10,"The Windows size the block solver works with");
+	LinkPropertyToUInt32("IterNr",varIterNr,0,"The current iteration number");
 }
 bool ProbVectorMachine::Init()
 {
@@ -246,7 +247,7 @@ bool ProbVectorMachine::IterateBlockTraining()
 
 	UInt32 nrRec = con->GetRecordCount();
 	UInt32 vectSz = sizeof(pvm_float)*nrRec;
-	UInt64 read;
+	UInt64 read, written;
 
 	PreCache::BlockLoadHandle *handle;
 	PreCache::KPrimePair	  *kprime;
@@ -264,24 +265,27 @@ bool ProbVectorMachine::IterateBlockTraining()
 	NULLCHECKMSG(sigma, "could not alloc memory for sigmaPOrig");
 
 	// initialize state variables with values read from disk or init here
+	fileName.Truncate(0);
+	fileName.AddFormated("%s.state.iter.%03d.block.all", varBlockFilePrefix.GetText(), varIterNr-1);
 
-	if (varAlgoIterationState.Equals("")) {
-		// this is the first iteration, we init here
+	if (!fileObj.OpenRead(fileName)) {
+		// this is the first iteration, we have no state variables
 		memset(alpha, 0, vectSz);
 		memset(sigma, 0, vectSz);		
 	} else {
 		// read state variables from disk
-		GML::Utils::File stateFo;
-		CHECKMSG(stateFo.OpenRead(varAlgoIterationState),"could not open file for reading: %s",varAlgoIterationState.GetText());
+		CHECKMSG(fileObj.OpenRead(varAlgoIterationState),"could not open file for reading: %s",varAlgoIterationState.GetText());
 		
-		CHECKMSG(stateFo.Read(alpha, vectSz, &read), "could not read from state file");
+		CHECKMSG(fileObj.Read(alpha, vectSz, &read), "could not read from state file");
 		CHECKMSG(read==vectSz, "could not read enough from state file");
 
-		CHECKMSG(stateFo.Read(sigma, vectSz, &read), "could not read from state file");
+		CHECKMSG(fileObj.Read(sigma, vectSz, &read), "could not read from state file");
 		CHECKMSG(read==vectSz, "could not read enough from state file");
 	}
-
+	fileObj.Close();
+	
 	// read kprime file
+	
 	fileName.Truncate(0);
 	fileName.Add(varBlockFilePrefix);
 	fileName.Add(".kprime.all");
@@ -298,6 +302,7 @@ bool ProbVectorMachine::IterateBlockTraining()
 
 	CHECKMSG(fileObj.Read(kprime, kpHeader.BlockSize, &read), "could not read from file");
 	CHECKMSG(kpHeader.BlockSize==read,"could not read enough from file");
+	fileObj.Close();
 
 	// alloc memory for local state variables
 	wu.ALPH = (pvm_float*) malloc(vectSz);
@@ -336,7 +341,16 @@ bool ProbVectorMachine::IterateBlockTraining()
 	}
 
 	// dump the block state variables to disk
+	fileName.Truncate(0);
+	fileName.AddFormated("%s.state.iter.%03d.block.%02d", varBlockFilePrefix.GetText(), varIterNr, handle->blkNr);
+	CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
+	
+	CHECKMSG(fileObj.Write(wu.ALPH,vectSz,&written),"could not write to block state file");
+	CHECKMSG(written==vectSz,"could not write enough to the block state file");
 
+	CHECKMSG(fileObj.Write(wu.SIGM,vectSz,&written),"could not write to block state file");
+	CHECKMSG(written==vectSz,"could not write enough to the block state file");
+	fileObj.Close();
 
 	// free all temporary used memory buffers
 	free(alpha);
