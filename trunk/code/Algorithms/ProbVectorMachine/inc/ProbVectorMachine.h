@@ -88,7 +88,7 @@ public:
 	UInt32 varBlockCount;
 
 	double varLambda;
-	UInt32 varWindowSize;
+	UInt32 varWindowSize, varIterNr;
 
 	Int32		varKernelParamInt;
 	pvm_double  varKernelParamDouble;
