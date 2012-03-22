@@ -54,9 +54,6 @@ private:
 		//Add extra commands here
 	};	
 
-	// state of the algorithm read from the disk, or initialized here
-	pvm_float*	alphaOrig,*sigmaOrig;
-
 private:
 	GML::ML::MLRecord		MainRecord;	
 
