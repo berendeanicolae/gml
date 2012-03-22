@@ -19,7 +19,8 @@ namespace GML
 		template <class TemplateObject> class GTVector
 		{
 		private:	
-			UInt32				ElementsCount;
+			TemplateObject		EmptyObj;
+			UInt32				ElementsCount;			
 			UInt32				InitialAlloc;
 			UInt32				AlocatedElements;
 			UInt8				*Data;
@@ -240,8 +241,7 @@ namespace GML
 
 			if ((ElementsCount==0) || (Data==NULL)) 
 			{
-				TemplateObject	tmpObj;
-				return tmpObj;
+				return EmptyObj;
 			}
 			index = PosToIndex(poz);
 			ptr = (PTemplateElement<TemplateObject> *)&Data[index*sizeof(void*)];
