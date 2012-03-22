@@ -254,28 +254,30 @@ bool ProbVectorMachine::IterateBlockTraining()
 	GML::Utils::File				fileObj;
 	GML::Utils::GString				fileName;
 	PreCache::PreCacheFileHeader	kpHeader;
-	
-	alphaOrig = (pvm_float*) malloc(vectSz);
-	NULLCHECKMSG(alphaOrig, "could not alloc memory for alphaOrig");
 
-	sigmaOrig = (pvm_float*) malloc(vectSz);
-	NULLCHECKMSG(sigmaOrig, "could not alloc memory for sigmaPOrig");
+	pvm_float *alpha, *sigma;
+	
+	alpha = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(alpha, "could not alloc memory for alphaOrig");
+
+	sigma = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(sigma, "could not alloc memory for sigmaPOrig");
 
 	// initialize state variables with values read from disk or init here
 
 	if (varAlgoIterationState.Equals("")) {
 		// this is the first iteration, we init here
-		memset(alphaOrig, 0, vectSz);
-		memset(sigmaOrig, 0, vectSz);		
+		memset(alpha, 0, vectSz);
+		memset(sigma, 0, vectSz);		
 	} else {
 		// read state variables from disk
 		GML::Utils::File stateFo;
 		CHECKMSG(stateFo.OpenRead(varAlgoIterationState),"could not open file for reading: %s",varAlgoIterationState.GetText());
 		
-		CHECKMSG(stateFo.Read(alphaOrig, vectSz, &read), "could not read from state file");
+		CHECKMSG(stateFo.Read(alpha, vectSz, &read), "could not read from state file");
 		CHECKMSG(read==vectSz, "could not read enough from state file");
 
-		CHECKMSG(stateFo.Read(sigmaOrig, vectSz, &read), "could not read from state file");
+		CHECKMSG(stateFo.Read(sigma, vectSz, &read), "could not read from state file");
 		CHECKMSG(read==vectSz, "could not read enough from state file");
 	}
 
@@ -297,6 +299,24 @@ bool ProbVectorMachine::IterateBlockTraining()
 	CHECKMSG(fileObj.Read(kprime, kpHeader.BlockSize, &read), "could not read from file");
 	CHECKMSG(kpHeader.BlockSize==read,"could not read enough from file");
 
+	// alloc memory for local state variables
+	wu.ALPH = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(wu.ALPH, "could not alloc memory for alpha");
+
+	wu.SIGM = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(wu.SIGM, "could not alloc memory for sigmaPlus");
+
+	// copy the contents of the state variables read from disk
+	memcpy(wu.ALPH, alpha, vectSz);
+	memcpy(wu.SIGM, sigma, vectSz);	
+
+	// alloc memory for window update structure
+	wu.uALPH  = (pvm_float*) malloc(nrRec*varWindowSize*sizeof(pvm_float));	
+	wu.uSIGM  = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
+	wu.san    = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
+	wu.pn     = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
+	NULLCHECKMSG(wu.uALPH && wu.uSIGM && wu.san && wu.pn, "could not alloc enough memory");
+
 	// start processing blocks
 
 	PreCacheInstInit();
@@ -315,39 +335,27 @@ bool ProbVectorMachine::IterateBlockTraining()
 		CHECKMSG(PerfomBlockTraining(blkIdx, handle), "error performing training on block: %d", blkIdx);
 	}
 
+	// free all temporary used memory buffers
+	free(alpha);
+	free(sigma);
+	free(kprime);
+	free(wu.ALPH);
+	free(wu.SIGM);
+	free(wu.uALPH);
+	free(wu.uSIGM);
+	free(wu.san);
+	free(wu.pn);
+
 	return true;
 }
 
 bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHandle *handle)
 {
 	// algorithm state variables
-	pvm_float *alpha, *sigma, scoreSum, update;
+	pvm_float scoreSum, update;
 	UInt32	  i, w, k;
 
 	UInt32 nrRec = con->GetRecordCount();
-	UInt32 vectSz = sizeof(pvm_float)*nrRec;
-
-	// alloc memory for local state variables
-	alpha = (pvm_float*) malloc(vectSz);
-	NULLCHECKMSG(alpha, "could not alloc memory for alpha");
-
-	sigma = (pvm_float*) malloc(vectSz);
-	NULLCHECKMSG(sigma, "could not alloc memory for sigmaPlus");
-
-	// copy the contents of the state variables read from disk
-	memcpy(alpha, alphaOrig, vectSz);
-	memcpy(sigma, sigmaOrig, vectSz);	
-
-	// put state vars in map structure
-	wu.ALPH = alpha;
-	wu.SIGM = sigma;
-
-	// alloc memory for window update structure
-	wu.uALPH  = (pvm_float*) malloc(nrRec*varWindowSize*sizeof(pvm_float));	
-	wu.uSIGM  = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
-	wu.san    = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
-	wu.pn     = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
-	NULLCHECKMSG(wu.uALPH && wu.uSIGM && wu.san && wu.pn, "could not alloc enough memory");
 
 	wu.bHandle = handle;
 	for (w=0;w<handle->recCount;w+=varWindowSize)
@@ -374,13 +382,12 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 				update = wu.pn[k] * wu.uALPH[nrRec*k + i];					
 			
 			update *= (pvm_float)varLambda;
-			alpha[i] = update;
+			wu.ALPH[i] = update;
 		}
 
 		// update sigmas
 		for (k=0;k<wu.winSize;k++)
-			sigma[handle->recStart+w+k] = (pvm_float)varLambda * wu.pn[k] * wu.uSIGM[k];
-		
+			wu.SIGM[handle->recStart+w+k] = (pvm_float)varLambda * wu.pn[k] * wu.uSIGM[k];		
 	}
 
 	return true;
@@ -406,7 +413,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 		sj = 0;
 		for (i=0;i<nrRec;i++) {							
 			ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-			kpr = (label==1)?wu.bHandle->KPRM[i].pos : wu.bHandle->KPRM[i].neg;
+			kpr = (label==1)? wu.bHandle->KPRM[i].pos : wu.bHandle->KPRM[i].neg;
 			sj += wu.ALPH[i] * (ker - kpr);
 		}
 
@@ -415,7 +422,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 			frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
 			for (i=0;i<nrRec;i++) {
 				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-				kpr = (label==1)?wu.bHandle->KPRM[i].pos : wu.bHandle->KPRM[i].neg;
+				kpr = (label==1)? wu.bHandle->KPRM[i].pos : wu.bHandle->KPRM[i].neg;
 				wu.uALPH[winIt*nrRec + i] = frac * (ker-kpr);
 			}
 			wu.uSIGM[winIt] = frac;
@@ -425,7 +432,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 			frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
 			for (i=0;i<nrRec;i++) {
 				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-				kpr = (label==1)?wu.bHandle->KPRM[i].pos : wu.bHandle->KPRM[i].neg;
+				kpr = (label==1)? wu.bHandle->KPRM[i].pos : wu.bHandle->KPRM[i].neg;
 				wu.uALPH[winIt*nrRec + i] = frac * (kpr-ker);
 			}
 			wu.uSIGM[winIt] = frac;
