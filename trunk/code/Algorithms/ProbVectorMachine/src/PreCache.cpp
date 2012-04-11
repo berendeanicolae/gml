@@ -57,7 +57,10 @@ bool PreCache::PreComputeGram()
 
 	SizePerLine = sizeof(pvm_float)*NrRec;
 	RecPerBlock = GetNrRecPerBlock(0, NrRec);
-	TotalNrBlocks = NrRec/RecPerBlock+1;
+
+	TotalNrBlocks = NrRec/RecPerBlock;
+	if (NrRec%RecPerBlock)
+		TotalNrBlocks++;
 
 	if (id.varBlockCount>=TotalNrBlocks)
 		id.varBlockCount = TotalNrBlocks;
