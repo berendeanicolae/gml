@@ -330,7 +330,7 @@ bool ProbVectorMachine::IterateBlockTraining()
 	// signal the first load because the for will start by waiting
 	InstPreCache.AtSignalStartLoading(varBlockStart);
 
-	for (UInt32 blkIdx=varBlockStart+1; blkIdx<varBlockStart+varBlockCount; blkIdx++)
+	for (UInt32 blkIdx=varBlockStart; blkIdx<varBlockStart+varBlockCount; blkIdx++)
 	{
 		handle = InstPreCache.AtWaitForCompletion();						
 		NULLCHECKMSG(handle,"could not load block file:%d exiting", blkIdx-1);		
@@ -340,9 +340,10 @@ bool ProbVectorMachine::IterateBlockTraining()
 		CHECKMSG(PerfomBlockTraining(blkIdx, handle), "error performing training on block: %d", blkIdx);
 	}
 
-	// dump the block state variables to disk
-	fileName.Truncate(0);
+	// dump the block state variables to disk	
+	fileName.Truncate(0);	
 	fileName.AddFormated("%s.state.iter.%03d.block.%02d", varBlockFilePrefix.GetText(), varIterNr, handle->blkNr);
+
 	CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
 	
 	CHECKMSG(fileObj.Write(wu.ALPH,vectSz,&written),"could not write to block state file");
