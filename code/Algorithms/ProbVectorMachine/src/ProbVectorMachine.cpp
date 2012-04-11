@@ -270,8 +270,12 @@ bool ProbVectorMachine::IterateBlockTraining()
 
 	if (!fileObj.OpenRead(fileName)) {
 		// this is the first iteration, we have no state variables
-		memset(alpha, 0, vectSz);
-		memset(sigma, 0, vectSz);		
+		// set alphas to 1 according to andrei's code review
+		for (UInt32 i=0;i<nrRec;i++)
+			alpha[i] = 1;
+
+		memset(sigma, 0, vectSz);	
+		
 	} else {
 		// read state variables from disk
 		CHECKMSG(fileObj.OpenRead(varAlgoIterationState),"could not open file for reading: %s",varAlgoIterationState.GetText());
