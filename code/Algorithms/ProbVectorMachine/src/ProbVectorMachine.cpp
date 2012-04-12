@@ -271,8 +271,16 @@ bool ProbVectorMachine::IterateBlockTraining()
 	if (!fileObj.OpenRead(fileName)) {
 		// this is the first iteration, we have no state variables
 		// set alphas to 1 according to andrei's code review
-		for (UInt32 i=0;i<nrRec;i++)
+		//for (UInt32 i=0;i<nrRec;i++)
+			//alpha[i] = 1;
+
+		UInt32 i, last_i = nrRec / 2;
+
+		for (i = 0; i < last_i; i++)
 			alpha[i] = 1;
+
+		for (i = last_i; i < nrRec; i++)
+			alpha[i] = -0.5;
 
 		memset(sigma, 0, vectSz);	
 		
@@ -417,15 +425,18 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 
 bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData)
 {
-	UInt32		recIdxGlob, recIdxBlock, i;
+	UInt32		recIdxGlob, recIdxBlock, i, uALPH_it;
 	double		label;
 	pvm_float	sj, ker, kpr, frac;
+	PreCache::KPrimePair  *wu_bHandle_KPRM;
+	pvm_float   *wu_ALPH;
+
 
 	INFOTHDMSG("perform window update");
 	
 	UInt32 nrRec = con->GetRecordCount();
 	wu.updateNeeded = false;
-
+	/*
 	for (UInt32 winIt=thData.ThreadID; winIt<wu.winSize; winIt+=threadsCount)
 	{
 		recIdxBlock = wu.winStart + winIt;
@@ -434,11 +445,26 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 		CHECKMSG(con->GetRecordLabel(label, recIdxGlob),"could not get record label");				
 		
 		sj = 0;
-		for (i=0;i<nrRec;i++) {							
-			ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-			kpr = (label==1)? wu.bHandle->KPRM[i].pos : wu.bHandle->KPRM[i].neg;
-			sj += wu.ALPH[i] * (ker - kpr);
+
+		if (label == 1)
+		{
+			for (i = 0; i < nrRec; i++) 
+			{
+				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+				kpr = wu.bHandle->KPRM[i].pos;
+				sj += wu.ALPH[i] * (ker - kpr);
+			}
 		}
+		else
+		{
+			for (i = 0; i < nrRec; i++) 
+			{							
+				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+				kpr = wu.bHandle->KPRM[i].neg;
+				sj += wu.ALPH[i] * (ker - kpr);
+			}
+		}
+		
 
 		if (label==1) {
 			if (wu.SIGM[recIdxGlob] - sj < 0) 
@@ -452,7 +478,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 				}
 				wu.uSIGM[winIt] = frac;
 				wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
-			} else if (wu.SIGM[recIdxGlob] - sj < 0) 
+			} else if (wu.SIGM[recIdxGlob] + sj < 0) 
 			{
 				wu.updateNeeded = true;
 				frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
@@ -476,7 +502,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 				}
 				wu.uSIGM[winIt] = frac;
 				wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
-			} else if (wu.SIGM[recIdxGlob] - sj < 0) 
+			} else if (wu.SIGM[recIdxGlob] + sj < 0) 
 			{
 				wu.updateNeeded = true;
 				frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
@@ -489,6 +515,94 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
 			} 
 		}
+	}*/	
+	for (UInt32 winIt=thData.ThreadID; winIt<wu.winSize; winIt+=threadsCount)
+	{
+		recIdxBlock = wu.winStart + winIt;
+		recIdxGlob = wu.bHandle->recStart + recIdxBlock; 		
+		
+		CHECKMSG(con->GetRecordLabel(label, recIdxGlob),"could not get record label");				
+		
+		sj = 0;
+
+		if (label == 1)
+		{
+			wu_ALPH = wu.ALPH;
+			wu_bHandle_KPRM = wu.bHandle->KPRM;
+			for (i = 0; i < nrRec; i++, wu_ALPH++, wu_bHandle_KPRM++) 
+			{
+				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+				kpr = wu_bHandle_KPRM->pos;
+				sj += (*wu_ALPH) * (ker - kpr);
+			}
+
+			if (wu.SIGM[recIdxGlob] - sj < 0) 
+			{
+				wu.updateNeeded = true;
+				frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+				wu_bHandle_KPRM = wu.bHandle->KPRM;
+				for (i = 0, uALPH_it = winIt*nrRec; i < nrRec; i++, uALPH_it++, wu_bHandle_KPRM++) 
+				{
+					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);				
+					kpr = wu_bHandle_KPRM->pos;
+					wu.uALPH[uALPH_it] = frac * (ker-kpr);
+				}
+				wu.uSIGM[winIt] = frac;
+				wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+			} else if (wu.SIGM[recIdxGlob] + sj < 0) 
+			{
+				wu.updateNeeded = true;
+				frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+				wu_bHandle_KPRM = wu.bHandle->KPRM;
+				for (i = 0, uALPH_it = winIt*nrRec; i < nrRec; i++, uALPH_it++, wu_bHandle_KPRM++) 
+				{
+					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+					kpr = wu_bHandle_KPRM->pos;
+					wu.uALPH[uALPH_it + i] = frac * (kpr-ker);
+				}
+				wu.uSIGM[winIt] = frac;
+				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+			} 
+		}
+		else
+		{
+			wu_ALPH = wu.ALPH;
+			wu_bHandle_KPRM = wu.bHandle->KPRM;
+			for (i = 0; i < nrRec; i++, wu_ALPH++, wu_bHandle_KPRM++) 
+			{							
+				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+				kpr = wu_bHandle_KPRM->neg;
+				sj += (*wu_ALPH) * (ker - kpr);
+			}
+
+			if (wu.SIGM[recIdxGlob] - sj < 0) 
+			{
+				wu.updateNeeded = true;
+				frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+				wu_bHandle_KPRM = wu.bHandle->KPRM;
+				for (i = 0, uALPH_it = winIt*nrRec; i < nrRec; i++, uALPH_it++, wu_bHandle_KPRM++) 
+				{
+					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);				
+					kpr = wu_bHandle_KPRM->neg;
+					wu.uALPH[uALPH_it] = frac * (ker-kpr);
+				}
+				wu.uSIGM[winIt] = frac;
+				wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+			} else if (wu.SIGM[recIdxGlob] + sj < 0) 
+			{
+				wu.updateNeeded = true;
+				frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+				wu_bHandle_KPRM = wu.bHandle->KPRM;
+				for (i = 0, uALPH_it = winIt*nrRec; i < nrRec; i++, uALPH_it++) 
+				{
+					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+					kpr = wu_bHandle_KPRM->neg;
+					wu.uALPH[uALPH_it] = frac * (kpr-ker);
+				}
+				wu.uSIGM[winIt] = frac;
+				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+			} 
+		}	
 	}
 	return true;
 }
