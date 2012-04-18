@@ -436,86 +436,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 	
 	UInt32 nrRec = con->GetRecordCount();
 	wu.updateNeeded = false;
-	/*
-	for (UInt32 winIt=thData.ThreadID; winIt<wu.winSize; winIt+=threadsCount)
-	{
-		recIdxBlock = wu.winStart + winIt;
-		recIdxGlob = wu.bHandle->recStart + recIdxBlock; 		
-		
-		CHECKMSG(con->GetRecordLabel(label, recIdxGlob),"could not get record label");				
-		
-		sj = 0;
-
-		if (label == 1)
-		{
-			for (i = 0; i < nrRec; i++) 
-			{
-				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-				kpr = wu.bHandle->KPRM[i].pos;
-				sj += wu.ALPH[i] * (ker - kpr);
-			}
-		}
-		else
-		{
-			for (i = 0; i < nrRec; i++) 
-			{							
-				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-				kpr = wu.bHandle->KPRM[i].neg;
-				sj += wu.ALPH[i] * (ker - kpr);
-			}
-		}
-		
-
-		if (label==1) {
-			if (wu.SIGM[recIdxGlob] - sj < 0) 
-			{
-				wu.updateNeeded = true;
-				frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
-				for (i=0;i<nrRec;i++) {
-					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);				
-					kpr = wu.bHandle->KPRM[i].pos;
-					wu.uALPH[winIt*nrRec + i] = frac * (ker-kpr);
-				}
-				wu.uSIGM[winIt] = frac;
-				wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
-			} else if (wu.SIGM[recIdxGlob] + sj < 0) 
-			{
-				wu.updateNeeded = true;
-				frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
-				for (i=0;i<nrRec;i++) {
-					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-					kpr = wu.bHandle->KPRM[i].pos;
-					wu.uALPH[winIt*nrRec + i] = frac * (kpr-ker);
-				}
-				wu.uSIGM[winIt] = frac;
-				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
-			} 
-		} else {
-			if (wu.SIGM[recIdxGlob] - sj < 0) 
-			{
-				wu.updateNeeded = true;
-				frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
-				for (i=0;i<nrRec;i++) {
-					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);				
-					kpr = wu.bHandle->KPRM[i].neg;
-					wu.uALPH[winIt*nrRec + i] = frac * (ker-kpr);
-				}
-				wu.uSIGM[winIt] = frac;
-				wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
-			} else if (wu.SIGM[recIdxGlob] + sj < 0) 
-			{
-				wu.updateNeeded = true;
-				frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
-				for (i=0;i<nrRec;i++) {
-					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-					kpr = wu.bHandle->KPRM[i].neg;
-					wu.uALPH[winIt*nrRec + i] = frac * (kpr-ker);
-				}
-				wu.uSIGM[winIt] = frac;
-				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
-			} 
-		}
-	}*/	
+	
 	for (UInt32 winIt=thData.ThreadID; winIt<wu.winSize; winIt+=threadsCount)
 	{
 		recIdxBlock = wu.winStart + winIt;
@@ -558,7 +479,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 				{
 					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
 					kpr = wu_bHandle_KPRM->pos;
-					wu.uALPH[uALPH_it + i] = frac * (kpr-ker);
+					wu.uALPH[uALPH_it] = frac * (kpr-ker);
 				}
 				wu.uSIGM[winIt] = frac;
 				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
