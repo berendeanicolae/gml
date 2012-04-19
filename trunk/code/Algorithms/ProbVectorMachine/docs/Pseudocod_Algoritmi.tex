@@ -910,6 +910,7 @@ by each of its unsatisfied constraints.
 	\]
 	where \(\lambda_{iter}\in [\delta, 2-\delta]\), \(\delta > 0\), is a relaxation parameter.
 	
+	\subsubsection{Detailing the Equations for a Normal Block}
 	Suppose the constraints within the block are simply constraints which define the deviation associated to a record (like almost all the equations
 in our system), then we can detail the procedure even further. 
 	
@@ -918,14 +919,14 @@ in our system), then we can detail the procedure even further.
 	\begin{itemize}
 		\item If \(x_j\) has a positive label : 
 			\begin{itemize}
-				\item Define its norm as : \(norm_j = 1 + \sum_{x_i\in S} {(K(x_i, x_j) - K^i_+)^2}\)
+				\item Define its norm as : \(norm_j = \sqrt{1 + \sum_{x_i\in S} {(K(x_i, x_j) - K^i_+)^2}}\)
 				\item \(\sigma^j_+ - \sum_{x_i\in S} {\alpha_i (K(x_i, x_j) - K^i_+)} \geq 0\)
 				\item \(\sigma^j_+ + \sum_{x_i\in S} {\alpha_i (K(x_i, x_j) - K^i_+)} \geq 0\)
 			\end{itemize}
 			
 		\item If \(x_j\) has a negative label : 
 			\begin{itemize}
-				\item Define its norm as : \(norm_j = 1 + \sum_{x_i\in S} {(K(x_i, x_j) - K^i_-)^2}\)
+				\item Define its norm as : \(norm_j = \sqrt{1 + \sum_{x_i\in S} {(K(x_i, x_j) - K^i_-)^2}}\)
 				\item \(\sigma^j_- - \sum_{x_i\in S} {\alpha_i (K(x_i, x_j) - K^i_-)} \geq 0\)
 				\item \(\sigma^j_- + \sum_{x_i\in S} {\alpha_i (K(x_i, x_j) - K^i_-)} \geq 0\)
 			\end{itemize}			
@@ -962,7 +963,96 @@ with the convex weights used for obtaining the update given by the scores of the
 	Also note that the processing required for obtaining the update for one window may be done completely parallel, as the suggested updates 
 associated with each unsatisfied equation may be done completely independent from one another. 
 	
-	\clearpage
+	\subsubsection{Detailing the Equations for the Final Block}
+	
+	The final block of equations will is the one that imposes the connection between the average and the average deviation. It also imposes that the averages be strictly positive.
+	
+	Thus, the inequations that this block contains are : 
+	
+	\[\left\{
+		\begin{array}{l}
+				t \cdot (b + \sum_{x_i\in S}{\alpha_i K^i_+}) - \frac{1}{|S_+| - 1} \sum_{x_i\in S_+} {\sigma_+^i} \geq 0\\
+				t \cdot (- b - \sum_{x_i\in S}{\alpha_i K^i_-}) - \frac{1}{|S_-| - 1} \sum_{x_i\in S_-} {\sigma_-^i} \geq 0\\
+				b + \sum_{x_i\in S}{\alpha_i K^i_+} \geq 1\\
+				- b - \sum_{x_i\in S}{\alpha_i K^i_-} \geq 1\\	
+		\end{array} \right.
+	\]
+	
+	In order to perform the window update on this set of equations, we must first determine if an inequation is satisfied and if not, record the score of that inequation and suggest an update for that inequation.
+	
+	First, consider that we must compute and store the norms for these equations. These will not change throughout the iterations of this block.
+	\begin{enumerate}
+		\item \(norm_2 = 1 + (K_+^0)^2 + (K_+^1)^2 + \ldots + (K_+^n)^2\)
+		\item \(norm_3 = 1 + (K_-^0)^2 + (K_-^1)^2 + \ldots + (K_-^n)^2\)
+		\item \(norm_0 = t^2(|S_+| - 1)^2 \cdot norm_2 + (\sigma_+^0)^2 + (\sigma_+^0)^2 +  \ldots + (\sigma_+^n)^2\)
+		\item \(norm_1 = t^2(|S_-| - 1)^2 \cdot norm_3 + (\sigma_-^0)^2 + (\sigma_-^0)^2 +  \ldots + (\sigma_-^n)^2\)
+		
+	\end{enumerate}
+	
+	Secondly, we compute two terms that are common amongst the four inequations (these will need computing at every window update iteration):			
+	\begin{itemize}
+		\item \(term_0 = b + \alpha_0 K_+^0 + \alpha_1 K_+^1 + \ldots \alpha_n K_+^n\)
+		\item \(term_1 = -(b + \alpha_0 K_-^0 + \alpha_1 K_-^1 + \ldots \alpha_n K_-^n)\)
+	\end{itemize}	
+	where \(b\) is the unknown corresponding to the offset of the decision hyperplane.
+	
+	
+	We then process the first inequation:
+	
+	\begin{enumerate}
+		\item Compute \(s_0 = t (|S_+| - 1)\cdot term_0 - (\sigma_+^0 + \sigma_+^1 + \ldots + \sigma_+^n)\), where \(t\) is a constant in the current feasibility system that corresponds to the term used to define the feasibility system, \(FS(t)\) and \(|S_+|\) is the number of positively labeled records (which must exceed 2).
+		\item If \(s_0 < 0\), then the inequality is not satisfied and it will suggest an update:
+		\[
+			u_0 = \frac{-s_0}{norm_0^2}\cdot(K_+^0, K_+^1, \ldots, K_+^n, -1, -1, \ldots, -1, 1)
+		\]		
+		where the first set of \(-1\)'s corresponds to the positions of the \(\sigma_+^i\)s (in total, \(|S_+|\) \(\sigma_+\)s) unknowns and the last \(1\) corresponds to the position of the free term \(b\) unknown.
+		\item If the inequality has not been satisfied, record the score \(\frac{-s_0}{norm_0}\) for it.
+	\end{enumerate}
+	
+	
+	
+	We then process the second inequation:
+	
+	\begin{enumerate}
+		\item Compute \(s_1 = t (|S_-| - 1)\cdot term_1 - (\sigma_-^0 + \sigma_-^1 + \ldots + \sigma_-^n)\), where \(t\) is a constant in the current feasibility system that corresponds to the term used to define the feasibility system, \(FS(t)\) and \(|S_-|\) is the number of negatively labeled records (which must exceed 2).
+		\item If \(s_1 < 0\), then the inequality is not satisfied and it will suggest an update:
+		\[
+			u_1 = \frac{-s_1}{norm_1^2}\cdot(-K_-^0, -K_-^1, \ldots, -K_-^n, -1, -1, \ldots, -1, -1)
+		\]		
+		where the first set of \(-1\)'s corresponds to the positions of the \(\sigma_-^i\)s (in total, \(|S_-|\) \(\sigma_-\)s) unknowns and the last \(-1\) corresponds to the position of the free term \(b\) unknown.
+		\item If the inequality has not been satisfied, record the score \(\frac{-s_1}{norm_1}\) for it.
+	\end{enumerate}
+		
+		
+	The third inequation: 
+	\begin{enumerate}
+		\item We already have calculated \(term_0\).
+		\item If \(term_0 < 1\), then the inequality has not been satisfied and it suggests the update:
+		\[
+		 u_2 = \frac{1 - term_0}{norm_2^2}\cdot(K_+^0, K_+^1, \ldots, K_+^n, 1)
+		\]
+		where the \(K_+\)s correspond to \(alpha\)s positions and the \(1\) corresponds to the free term \(b\) unknown.
+		\item If the inequality has not been satisfied, we record the score for it \(\frac{1 - term_0}{norm_2}\).
+	\end{enumerate}
+	
+	The fourth inequation:
+	\begin{enumerate}
+		\item We already have calculated \(term_1\).
+		\item If \(term_1 < 1\), then the inequality has not been satisfied and it suggests the update:
+		\[
+		 u_3 = \frac{1 - term_1}{norm_3^2}\cdot(-K_-^0, K_-^1, \ldots, K_-^n, -1)
+		\]
+		where the \(-K_-\)s correspond to \(alpha\)s positions and the \(-1\) corresponds to the free term \(b\) unknown.
+		\item If the inequality has not been satisfied, we record the score for it \(\frac{1 - term_1}{norm_3}\).
+	\end{enumerate}	
+	
+	Note that, when not mentioning in a suggested update the term for a certain position, that term is implied to be 0.
+	
+	After all the required update suggestions have been made, the update for the window is computed just as it is for the normal window update in other blocks of equations.
+	
+	\clearpage	
+	
+	
 		
 	\subsection{ComponentAverage}
 	
@@ -977,7 +1067,7 @@ blocks that influence component \(i\).
 	\begin{itemize}
 		\item \textbf{Input} The partial solutions \(x_0, ..., x_k \in \mathbb{R} ^n\)
 		\item \textbf{Output} The current overall iterate \(x = (x^0, x^1,..., x^{n-1})\in \mathbb{R} ^n\)
-	\end{itemize}
+	\end{itemize}	
 	
 	The ComponentAverage procedure is:
 	
@@ -990,6 +1080,8 @@ blocks that influence component \(i\).
 	Simply put, the ComponentAverage computes the average of a coordonate only over the blocks that influence that coordonate.
 		
 	\subsection{SolutionCycles}
+	
+	In case a problem is not feasible, the current solution cycles through values with every iteration. In order to detect wheather the solution is cycling, we would have to compare each iterate with the previous iterates. A different approach 
 	
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
