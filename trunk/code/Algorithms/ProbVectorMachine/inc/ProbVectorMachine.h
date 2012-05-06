@@ -24,7 +24,7 @@ private:
 		int nrRecords;
 		pvm_float * buffer;
 	};
-	
+
 	// data structures to be used by threads during Map sessions
 	MapTestSpeedCompute mapTsc;		
 
@@ -51,16 +51,26 @@ private:
 		COMMAND_PRECOMP_GRAM,
 		COMMAND_MERGE_KPRIME,
 		COMMAND_PRECOMP_NORM,
+		COMMAND_INIT_STATE_VARS,
 		COMMAND_BLOCK_TRAINING,
+		COMMAND_LAST_BLOCK_TRAINING,
 		//Add extra commands here
 	};	
+
+	struct UpdateStr {
+		pvm_float* alpha;
+		pvm_float  sigmaVal;
+		pvm_float  b;
+		pvm_float  score;
+		pvm_float  firstMember;
+	};
 
 private:
 	GML::ML::MLRecord		MainRecord;	
 
 	// related class instances
 	PreCache InstPreCache;
-	void ProbVectorMachine::PreCacheInstInit();
+	void ProbVectorMachine::PreCacheInstanceInit();
 
 	void	OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
 	bool	OnInitThreadData(GML::Algorithm::MLThreadData &thData);
@@ -80,7 +90,8 @@ public:
 	bool	Init();
 	void	OnExecute();    
     bool	ThreadTestCompSpeed(GML::Algorithm::MLThreadData & thData);
-
+	bool	LastBlockTraining();
+	bool DumpDefaultStateVariables();
 	// variables to control the algorithm flow
 	UInt32 varKernelType;
 	UInt32 varBlockFileSize;
@@ -88,6 +99,7 @@ public:
 	UInt32 varBlockCount;
 
 	double varLambda;
+	pvm_float varT;
 	UInt32 varWindowSize, varIterNr;
 
 	Int32		varKernelParamInt;
@@ -95,7 +107,6 @@ public:
 
 	GML::Utils::GString	varBlockFilePrefix;
 	GML::Utils::GString	varFeatureWeightFile;
-	GML::Utils::GString varAlgoIterationState;
 };
 
 #endif
