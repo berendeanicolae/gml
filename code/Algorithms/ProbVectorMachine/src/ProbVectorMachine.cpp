@@ -608,6 +608,7 @@ bool ProbVectorMachine::LastBlockTraining()
 		term0 += alpha[i]*kprime[i].pos;
 		term1 += alpha[i]*kprime[i].neg;
 	}
+	term1 = -term1;
 
 	pvm_float sumSigmaPlus = 0;
 	pvm_float sumSigmaMinus = 0;
@@ -705,27 +706,27 @@ bool ProbVectorMachine::LastBlockTraining()
 				mean += u[j].alpha[i]*u[j].score;
 			}
 		}
-		alpha[i] = mean/nrParticipants;
+		alpha[i] += mean;
 
 		// compute for sigmas
 		con->GetRecordLabel(label, i);
 		mean = 0;
 		if (u[0].alpha!=NULL) {
-			if (label==1) mean += u[0].firstMember * u[0].sigmaVal;
+			if (label==1) mean += u[0].firstMember * u[0].sigmaVal * u[0].score;
 		}
 		if (u[1].alpha!=NULL) {
-			if (label!=1) mean += u[1].firstMember * u[1].sigmaVal;
+			if (label!=1) mean += u[1].firstMember * u[1].sigmaVal * u[1].score;
 		}
-		sigma[i] = mean/nrParticipants;
+		sigma[i] += mean;
 	}
 
 	mean = 0;
 	for (i=0;i<4;i++) {
 		if (u[i].alpha!=NULL) {
-			mean += u[i].b;
+			mean += u[i].b * u[i].score;
 		}
 	}
-	b = mean/nrParticipants;
+	b += mean;
 
 	// write update to disk
 	fileName.Truncate(0);
@@ -770,15 +771,12 @@ bool ProbVectorMachine::DumpDefaultStateVariables()
 	fileName.Truncate(0);
 	fileName.AddFormated("%s.state.iter.000.block.all", varBlockFilePrefix.GetText());
 
-	UInt32 i, last_i = nrRec / 2;
+	UInt32 i;
 
-	for (i = 0; i < last_i; i++)
+	for (i = 0; i < nrRec; i++) {
 		alpha[i] = 1;
-
-	for (i = last_i; i < nrRec; i++)
-		alpha[i] = -0.5;
-
-	memset(sigma, 0, vectSz);
+		sigma[i] = 0;
+	}
 
 	CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
 
