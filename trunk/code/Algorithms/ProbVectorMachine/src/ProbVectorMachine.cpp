@@ -370,6 +370,11 @@ bool ProbVectorMachine::IterateBlockTraining()
 	// write signmas
 	CHECKMSG(fileObj.Write(wu.SIGM,vectSz,&written),"could not write to block state file");
 	CHECKMSG(written==vectSz,"could not write enough to the block state file");
+
+	// write block score for stop condition
+	CHECKMSG(fileObj.Write(&wu.score,sizeof(pvm_float),&written),"could not write to block state file");
+	CHECKMSG(written==sizeof(pvm_float),"could not write enough to the block state file");
+
 	fileObj.Close();
 
 	// free all temporary used memory buffers
@@ -391,8 +396,11 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 	// algorithm state variables
 	pvm_float scoreSum, update;
 	UInt32	  i, w, k;
+	pvm_float maxWindowScore;
 
 	UInt32 nrRec = con->GetRecordCount();
+
+	wu.score = 0;
 
 	wu.bHandle = handle;
 	for (w=0;w<handle->recCount;w+=varWindowSize)
@@ -406,8 +414,16 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 
 		// compute shares for every score
 		scoreSum = 0;
-		for (i=0;i<wu.winSize;i++)		
+		maxWindowScore = FLT_MIN;
+		for (i=0;i<wu.winSize;i++) {
 			scoreSum += wu.san[i];
+
+			// search for max score per window
+			if (maxWindowScore < wu.san[i]) {
+				maxWindowScore = wu.san[i];
+			}
+		}
+		wu.score += maxWindowScore;
 
 		for (i=0;i<wu.winSize;i++)
 			wu.pn[i] = wu.san[i]/scoreSum;
@@ -746,6 +762,14 @@ bool ProbVectorMachine::LastBlockTraining()
 	}
 	b += mean;
 
+	// search for max score over this block for stop condition
+	pvm_float maxScore = FLT_MIN;
+	for (i=0;i<4;i++) {
+		if (maxScore < s[i]) {
+			maxScore = s[i];
+		}
+	}
+
 	// write update to disk
 	fileName.Truncate(0);
 	fileName.AddFormated("%s.state.iter.%03d.block.last", varBlockFilePrefix.GetText(), varIterNr);
@@ -760,8 +784,13 @@ bool ProbVectorMachine::LastBlockTraining()
 	CHECKMSG(vectSz==written,"could not write enough to file");
 
 	// write b
-	CHECKMSG(fileObj.Write(alpha, vectSz, &written), "could not write to file");
-	CHECKMSG(vectSz==written,"could not write enough to file");
+	CHECKMSG(fileObj.Write(&b, sizeof(pvm_float), &written), "could not write to file");
+	CHECKMSG(sizeof(pvm_float)==written,"could not write enough to file");
+
+	// write score for this block
+	CHECKMSG(fileObj.Write(&maxScore, sizeof(pvm_float), &written), "could not write to file");
+	CHECKMSG(sizeof(pvm_float)==written,"could not write enough to file");
+
 
 	fileObj.Close();
 
@@ -845,6 +874,7 @@ bool ProbVectorMachine::GatherBlockStates()
 	GML::Utils::GString				fileName;
 
 	pvm_float *alpha, *sigma, *alphaMean, *sigmaMean;
+	pvm_float scoreSum, score;
 
 	alpha = (pvm_float*) malloc(vectSz);
 	NULLCHECKMSG(alpha, "could not alloc memory");
@@ -863,6 +893,7 @@ bool ProbVectorMachine::GatherBlockStates()
 	fileName.AddFormated("%s.state.iter.%03d.block.???", varBlockFilePrefix.GetText(), varIterNr);
 
 	nrBlocks = 0;
+	scoreSum = 0;
 	hFind = FindFirstFile(fileName.GetText(), &FindFileData);
 	do {
 		INFOMSG(FindFileData.cFileName);
@@ -881,7 +912,13 @@ bool ProbVectorMachine::GatherBlockStates()
 			CHECKMSG(fileObj.Read(sigma, vectSz, &read),"could not read from file: %s", FindFileData.cFileName);
 			CHECKMSG(read==vectSz, "could not read enough from file");
 
+			CHECKMSG(fileObj.Read(&score, sizeof(pvm_float), &read),"could not read from file: %s", FindFileData.cFileName);
+			CHECKMSG(read==sizeof(pvm_float), "could not read enough from file");
+
 			fileObj.Close();
+
+			// sum scores for stop condition
+			scoreSum += score*score;
 
 			for (i=0;i<nrRec;i++) 
 				alphaMean[i] += alpha[i];
@@ -895,7 +932,7 @@ bool ProbVectorMachine::GatherBlockStates()
 	pvm_float b;
 
 	fileName.Truncate(0);
-	fileName.AddFormated("%s.state.iter.%03d.block.all", varBlockFilePrefix.GetText(), varIterNr);
+	fileName.AddFormated("%s.state.iter.%03d.block.last", varBlockFilePrefix.GetText(), varIterNr);
 	// read the file
 	CHECKMSG(fileObj.OpenRead(fileName.GetText()), "could not open file:%s for reading", fileName.GetText());
 	
@@ -911,7 +948,14 @@ bool ProbVectorMachine::GatherBlockStates()
 	CHECKMSG(fileObj.Read(&b, sizeof(pvm_float), &read),"could not read from file: %s", fileName.GetText());
 	CHECKMSG(read==sizeof(pvm_float), "could not read enough from file");
 
+	CHECKMSG(fileObj.Read(&score, sizeof(pvm_float), &read),"could not read from file: %s", FindFileData.cFileName);
+	CHECKMSG(read==sizeof(pvm_float), "could not read enough from file");
+
 	fileObj.Close();
+
+	// sum scores for stop condition
+	scoreSum += score*score;
+	scoreSum = sqrt(scoreSum);
 
 	for (i=0;i<nrRec;i++) {
 		alphaMean[i] += alpha[i];
@@ -924,7 +968,7 @@ bool ProbVectorMachine::GatherBlockStates()
 	}
 
 	fileName.Truncate(0);
-	fileName.AddFormated("%s.state.iter.%03d.block.all", varBlockFilePrefix.GetText(), varIterNr+1);
+	fileName.AddFormated("%s.state.iter.%03d.block.all", varBlockFilePrefix.GetText(), varIterNr);
 
 	CHECKMSG(fileObj.Create(fileName.GetText()),"could not create file:%s ", fileName.GetText());
 	
@@ -939,7 +983,19 @@ bool ProbVectorMachine::GatherBlockStates()
 
 	CHECKMSG(fileObj.Write(&b, sizeof(pvm_float), &written), "could not write to file");
 	CHECKMSG(written==sizeof(pvm_float), "could not write enough to file");
+	fileObj.Close();
 
+	// make string representatin of my score
+	GML::Utils::GString scoreStr;
+	scoreStr.Truncate(0);
+	scoreStr.AddFormated("%.02f\n",scoreSum);
+
+	// write string to .score file as text
+	fileName.Truncate(0);
+	fileName.AddFormated("%s.state.iter.%03d.block.score", varBlockFilePrefix.GetText(), varIterNr);
+	CHECKMSG(fileObj.Create(fileName.GetText()),"could not create file:%s ", fileName.GetText());	
+	CHECKMSG(fileObj.Write(scoreStr.GetText(), sizeof(char)*scoreStr.GetSize(), &written), "could not write to file");
+	CHECKMSG(written==sizeof(char)*scoreStr.GetSize(), "could not write enough to file");
 	fileObj.Close();
 
 	return true;
