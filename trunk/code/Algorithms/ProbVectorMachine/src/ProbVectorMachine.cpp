@@ -8,7 +8,7 @@ ProbVectorMachine::ProbVectorMachine()
 	ObjectName = "ProbVectorMachine";
 
 	//Add extra commands here
-	SetPropertyMetaData("Command","!!LIST:None=0,DebugTest,PreCompGramMatrix,MergeKprimeFiles,PreCompEqNorm,InitStateVars,BlockTraining,LastBlockTraining!!");
+	SetPropertyMetaData("Command","!!LIST:None=0,DebugTest,PreCompGramMatrix,MergeKprimeFiles,PreCompEqNorm,InitStateVars,BlockTraining,LastBlockTraining,GatherBlockStates!!");
 	
 	// kernel choice related variables	
 	LinkPropertyToUInt32("KernelType",varKernelType,KERPOLY,"!!LIST:Poly=0,Scalar,Rbf,PolyParam,ScalarParam,RbfParam!!");
@@ -98,7 +98,10 @@ void ProbVectorMachine::OnExecute()
 			INFOMSG("Starting the training for the last block");
 			LastBlockTraining();
 			break;
-
+		case COMMAND_GATHER_BLOCK_STATES:
+			INFOMSG("Starting to average the states of every block");
+			GatherBlockStates();
+			break;
 		default:
 			notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);
 			break;
@@ -262,6 +265,7 @@ bool ProbVectorMachine::IterateBlockTraining()
 	GML::Utils::File				fileObj;
 	GML::Utils::GString				fileName;
 	PreCache::PreCacheFileHeader	kpHeader;
+	StateFileHeader					stateHeader;
 
 	pvm_float *alpha, *sigma;
 	
@@ -278,6 +282,9 @@ bool ProbVectorMachine::IterateBlockTraining()
 	// read state variables from disk
 	CHECKMSG(fileObj.OpenRead(fileName),"could not open file for reading: %s",fileName.GetText());
 		
+	CHECKMSG(fileObj.Read(&stateHeader, sizeof(StateFileHeader), &read), "could not read from state file");
+	CHECKMSG(read==sizeof(StateFileHeader), "could not read enough from state file");
+
 	CHECKMSG(fileObj.Read(alpha, vectSz, &read), "could not read from state file");
 	CHECKMSG(read==vectSz, "could not read enough from state file");
 
@@ -300,7 +307,7 @@ bool ProbVectorMachine::IterateBlockTraining()
 	// alloc memory for kprime buffer
 	kprime = (PreCache::KPrimePair*) malloc((size_t)kpHeader.BlockSize);
 	NULLCHECKMSG(kprime, "could not alloc memory for sigmaPOrig");
-
+					
 	CHECKMSG(fileObj.Read(kprime, kpHeader.BlockSize, &read), "could not read from file");
 	CHECKMSG(kpHeader.BlockSize==read,"could not read enough from file");
 	fileObj.Close();
@@ -343,13 +350,24 @@ bool ProbVectorMachine::IterateBlockTraining()
 
 	// dump the block state variables to disk	
 	fileName.Truncate(0);	
-	fileName.AddFormated("%s.state.iter.%03d.block.%02d", varBlockFilePrefix.GetText(), varIterNr, handle->blkNr);
+	fileName.AddFormated("%s.state.iter.%03d.block.%03d", varBlockFilePrefix.GetText(), varIterNr, handle->blkNr);
+
+	stateHeader.blkNr = handle->blkNr;
+	stateHeader.recStart = handle->recStart;
+	stateHeader.recCount = handle->recCount;
+	stateHeader.totalRecCount = nrRec;
 
 	CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
-	
+
+	// write header
+	CHECKMSG(fileObj.Write(&stateHeader,sizeof(StateFileHeader),&written),"could not write to block state file");
+	CHECKMSG(written==sizeof(StateFileHeader),"could not write enough to the block state file");
+
+	// write alphas
 	CHECKMSG(fileObj.Write(wu.ALPH,vectSz,&written),"could not write to block state file");
 	CHECKMSG(written==vectSz,"could not write enough to the block state file");
 
+	// write signmas
 	CHECKMSG(fileObj.Write(wu.SIGM,vectSz,&written),"could not write to block state file");
 	CHECKMSG(written==vectSz,"could not write enough to the block state file");
 	fileObj.Close();
@@ -780,6 +798,16 @@ bool ProbVectorMachine::DumpDefaultStateVariables()
 
 	CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
 
+	StateFileHeader stateHeader;
+	stateHeader.blkNr = -1;
+	stateHeader.recStart = 0;
+	stateHeader.recCount = nrRec;
+	stateHeader.totalRecCount = nrRec;
+
+	// write header
+	CHECKMSG(fileObj.Write(&stateHeader, sizeof(StateFileHeader),&written), "could not write to file");
+	CHECKMSG(written==sizeof(StateFileHeader), "could not write enough to file");
+
 	// write alphas
 	CHECKMSG(fileObj.Write(alpha, vectSz,&written), "could not write to file");
 	CHECKMSG(written==vectSz, "could not write enough to file");
@@ -797,6 +825,122 @@ bool ProbVectorMachine::DumpDefaultStateVariables()
 	free(sigma);
 
 	INFOMSG("Default variables dumped to disk succesfully");
+
+	return true;
+}
+
+bool ProbVectorMachine::GatherBlockStates()
+{
+	UInt64 read, written, nrBlocks;
+	UInt32 i;
+	WIN32_FIND_DATA FindFileData;
+	HANDLE hFind;
+
+	StateFileHeader stateHeader;
+
+	UInt32 nrRec = con->GetRecordCount();
+	UInt32 vectSz = sizeof(pvm_float)*nrRec;
+
+	GML::Utils::File				fileObj;
+	GML::Utils::GString				fileName;
+
+	pvm_float *alpha, *sigma, *alphaMean, *sigmaMean;
+
+	alpha = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(alpha, "could not alloc memory");
+	alphaMean = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(alphaMean, "could not alloc memory");
+
+	sigma = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(sigma, "could not alloc memory");
+	sigmaMean = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(sigmaMean, "could not alloc memory");
+
+	memset(alphaMean, 0, vectSz);
+	memset(sigmaMean, 0, vectSz);
+
+	fileName.Truncate(0);
+	fileName.AddFormated("%s.state.iter.%03d.block.???", varBlockFilePrefix.GetText(), varIterNr);
+
+	nrBlocks = 0;
+	hFind = FindFirstFile(fileName.GetText(), &FindFileData);
+	do {
+		INFOMSG(FindFileData.cFileName);
+		if (strstr(FindFileData.cFileName, ".all")==NULL) {
+			nrBlocks ++;
+
+			// read the file
+			CHECKMSG(fileObj.OpenRead(FindFileData.cFileName), "could not open file:%s for reading", FindFileData.cFileName);
+			
+			CHECKMSG(fileObj.Read(&stateHeader, sizeof(StateFileHeader), &read), "could not read from file: %s", FindFileData.cFileName);
+			CHECKMSG(read==sizeof(StateFileHeader), "could not read enough from file");
+			
+			CHECKMSG(fileObj.Read(alpha, vectSz, &read),"could not read from file: %s", FindFileData.cFileName);
+			CHECKMSG(read==vectSz, "could not read enough from file");
+			
+			CHECKMSG(fileObj.Read(sigma, vectSz, &read),"could not read from file: %s", FindFileData.cFileName);
+			CHECKMSG(read==vectSz, "could not read enough from file");
+
+			fileObj.Close();
+
+			for (i=0;i<nrRec;i++) 
+				alphaMean[i] += alpha[i];
+			
+			for (i=stateHeader.recStart;i<stateHeader.recCount;i++)
+				sigmaMean[i] += sigma[i];			
+		}
+
+	} while (FindNextFile(hFind, &FindFileData));
+
+	pvm_float b;
+
+	fileName.Truncate(0);
+	fileName.AddFormated("%s.state.iter.%03d.block.all", varBlockFilePrefix.GetText(), varIterNr);
+	// read the file
+	CHECKMSG(fileObj.OpenRead(fileName.GetText()), "could not open file:%s for reading", fileName.GetText());
+	
+	CHECKMSG(fileObj.Read(&stateHeader, sizeof(StateFileHeader), &read), "could not read from file: %s", fileName.GetText());
+	CHECKMSG(read==sizeof(StateFileHeader), "could not read enough from file");
+	
+	CHECKMSG(fileObj.Read(alpha, vectSz, &read),"could not read from file: %s", fileName.GetText());
+	CHECKMSG(read==vectSz, "could not read enough from file");
+
+	CHECKMSG(fileObj.Read(sigma, vectSz, &read),"could not read from file: %s", fileName.GetText());
+	CHECKMSG(read==vectSz, "could not read enough from file");
+
+	CHECKMSG(fileObj.Read(&b, sizeof(pvm_float), &read),"could not read from file: %s", fileName.GetText());
+	CHECKMSG(read==sizeof(pvm_float), "could not read enough from file");
+
+	fileObj.Close();
+
+	for (i=0;i<nrRec;i++) {
+		alphaMean[i] += alpha[i];
+		alphaMean[i] /= nrBlocks+1;
+	}
+
+	for (i=0;i<nrRec;i++) {
+		sigmaMean[i] += sigma[i];
+		sigmaMean[i] /= 2;
+	}
+
+	fileName.Truncate(0);
+	fileName.AddFormated("%s.state.iter.%03d.block.all", varBlockFilePrefix.GetText(), varIterNr+1);
+
+	CHECKMSG(fileObj.Create(fileName.GetText()),"could not create file:%s ", fileName.GetText());
+	
+	CHECKMSG(fileObj.Write(&stateHeader, sizeof(StateFileHeader), &written), "could not write to file");
+	CHECKMSG(written==sizeof(StateFileHeader), "could not write enough to file");
+
+	CHECKMSG(fileObj.Write(alphaMean, vectSz, &written), "could not write to file");
+	CHECKMSG(written==vectSz, "could not write enough to file");
+
+	CHECKMSG(fileObj.Write(sigmaMean, vectSz, &written), "could not write to file");
+	CHECKMSG(written==vectSz, "could not write enough to file");
+
+	CHECKMSG(fileObj.Write(&b, sizeof(pvm_float), &written), "could not write to file");
+	CHECKMSG(written==sizeof(pvm_float), "could not write enough to file");
+
+	fileObj.Close();
 
 	return true;
 }
