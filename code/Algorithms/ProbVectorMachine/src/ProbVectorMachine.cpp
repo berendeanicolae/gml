@@ -8,7 +8,7 @@ ProbVectorMachine::ProbVectorMachine()
 	ObjectName = "ProbVectorMachine";
 
 	//Add extra commands here
-	SetPropertyMetaData("Command","!!LIST:None=0,DebugTest,PreCompGramMatrix,MergeKprimeFiles,PreCompEqNorm,BlockTraining!!");
+	SetPropertyMetaData("Command","!!LIST:None=0,DebugTest,PreCompGramMatrix,MergeKprimeFiles,PreCompEqNorm,InitStateVars,BlockTraining,LastBlockTraining!!");
 	
 	// kernel choice related variables	
 	LinkPropertyToUInt32("KernelType",varKernelType,KERPOLY,"!!LIST:Poly=0,Scalar,Rbf,PolyParam,ScalarParam,RbfParam!!");
@@ -22,11 +22,11 @@ ProbVectorMachine::ProbVectorMachine()
 	LinkPropertyToUInt32("BlockCount",varBlockCount,0,"The number of blocks to compute here");
 	LinkPropertyToString("BlockFilePrefix",varBlockFilePrefix, "pre-cache", "File pattern where precomputed data to be saved; ex: pre-cache-data.000, pre-cache-data.001");
 
-	// algorithm related variables
-	LinkPropertyToString("AlgoIterationState",varAlgoIterationState, "", "File from where the current iteration state will be read or none if it's the first iteration");
+	// algorithm related variables	
 	LinkPropertyToDouble("Lambda",varLambda,1.0,"The Lambda parameter for this iteration");
+	LinkPropertyToDouble("T",(double&)varT,1.0,"The T algorithm parameter; used for binary search");
 	LinkPropertyToUInt32("WindowSize",varWindowSize,10,"The Windows size the block solver works with");
-	LinkPropertyToUInt32("IterNr",varIterNr,0,"The current iteration number");
+	LinkPropertyToUInt32("IterationNo",varIterNr,0,"The current iteration number");
 }
 bool ProbVectorMachine::Init()
 {
@@ -90,6 +90,15 @@ void ProbVectorMachine::OnExecute()
 			INFOMSG("Starting the training session");
 			IterateBlockTraining();
 			break;
+		case COMMAND_INIT_STATE_VARS:
+			INFOMSG("Dumping default state variables to disk");
+			DumpDefaultStateVariables();
+			break;
+		case COMMAND_LAST_BLOCK_TRAINING:
+			INFOMSG("Starting the training for the last block");
+			LastBlockTraining();
+			break;
+
 		default:
 			notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);
 			break;
@@ -188,7 +197,7 @@ bool ProbVectorMachine::ThreadTestCompSpeed(GML::Algorithm::MLThreadData & thDat
     return true;
 }
 
-void ProbVectorMachine::PreCacheInstInit()
+void ProbVectorMachine::PreCacheInstanceInit()
 {
 	PreCache::InheritData id;
 
@@ -214,7 +223,7 @@ void ProbVectorMachine::PreCacheInstInit()
 bool ProbVectorMachine::PreCacheCall(UInt32 cmd)
 {
 	
-	PreCacheInstInit();
+	PreCacheInstanceInit();
 
 	switch (cmd) {
 	case COMMAND_MERGE_KPRIME:
@@ -243,8 +252,6 @@ bool ProbVectorMachine::IterateBlockTraining()
 	 that are being processed on this machine
 	*/
 
-	// alloc data for the original state variables
-
 	UInt32 nrRec = con->GetRecordCount();
 	UInt32 vectSz = sizeof(pvm_float)*nrRec;
 	UInt64 read, written;
@@ -268,32 +275,14 @@ bool ProbVectorMachine::IterateBlockTraining()
 	fileName.Truncate(0);
 	fileName.AddFormated("%s.state.iter.%03d.block.all", varBlockFilePrefix.GetText(), varIterNr-1);
 
-	if (!fileObj.OpenRead(fileName)) {
-		// this is the first iteration, we have no state variables
-		// set alphas to 1 according to andrei's code review
-		//for (UInt32 i=0;i<nrRec;i++)
-			//alpha[i] = 1;
-
-		UInt32 i, last_i = nrRec / 2;
-
-		for (i = 0; i < last_i; i++)
-			alpha[i] = 1;
-
-		for (i = last_i; i < nrRec; i++)
-			alpha[i] = -0.5;
-
-		memset(sigma, 0, vectSz);	
+	// read state variables from disk
+	CHECKMSG(fileObj.OpenRead(fileName),"could not open file for reading: %s",fileName.GetText());
 		
-	} else {
-		// read state variables from disk
-		CHECKMSG(fileObj.OpenRead(varAlgoIterationState),"could not open file for reading: %s",varAlgoIterationState.GetText());
-		
-		CHECKMSG(fileObj.Read(alpha, vectSz, &read), "could not read from state file");
-		CHECKMSG(read==vectSz, "could not read enough from state file");
+	CHECKMSG(fileObj.Read(alpha, vectSz, &read), "could not read from state file");
+	CHECKMSG(read==vectSz, "could not read enough from state file");
 
-		CHECKMSG(fileObj.Read(sigma, vectSz, &read), "could not read from state file");
-		CHECKMSG(read==vectSz, "could not read enough from state file");
-	}
+	CHECKMSG(fileObj.Read(sigma, vectSz, &read), "could not read from state file");
+	CHECKMSG(read==vectSz, "could not read enough from state file");
 	fileObj.Close();
 	
 	// read kprime file
@@ -336,7 +325,7 @@ bool ProbVectorMachine::IterateBlockTraining()
 
 	// start processing blocks
 
-	PreCacheInstInit();
+	PreCacheInstanceInit();
 	InstPreCache.AtInitLoading();
 
 	// signal the first load because the for will start by waiting
@@ -532,4 +521,284 @@ inline pvm_float ProbVectorMachine::KerAt(UInt32 line,UInt32 row, pvm_float* ker
 {
 	if (line>row) { UInt32 aux = line; line = row; row=aux; }
 	return ker[(line*nrRec - line*(line-1)/2) + row-line];
+}
+
+bool ProbVectorMachine::LastBlockTraining()
+{
+	UInt32 nrRec = con->GetRecordCount(), i;
+	UInt32 vectSz = sizeof(pvm_float)*nrRec;
+	UInt64 read, written;
+
+	PreCache::KPrimePair	  *kprime;
+
+	GML::Utils::File				fileObj;
+	GML::Utils::GString				fileName;
+	PreCache::PreCacheFileHeader	kpHeader;
+
+	pvm_float norm0, norm1, norm2, norm3, term0, term1;
+
+	pvm_float *alpha, *sigma, b;
+
+	alpha = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(alpha, "could not alloc memory for alphaOrig");
+
+	sigma = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(sigma, "could not alloc memory for sigmaPOrig");
+
+	// initialize state variables with values read from disk or init here
+	fileName.Truncate(0);
+	fileName.AddFormated("%s.state.iter.%03d.block.all", varBlockFilePrefix.GetText(), varIterNr-1);
+
+	// read state variables from disk
+	CHECKMSG(fileObj.OpenRead(fileName),"could not open file for reading: %s",fileName.GetText());
+
+	CHECKMSG(fileObj.Read(alpha, vectSz, &read), "could not read from state file");
+	CHECKMSG(read==vectSz, "could not read enough from state file");
+
+	CHECKMSG(fileObj.Read(sigma, vectSz, &read), "could not read from state file");
+	CHECKMSG(read==vectSz, "could not read enough from state file");
+
+	CHECKMSG(fileObj.Read(&b, sizeof(pvm_float), &read), "could not read from state file");
+	CHECKMSG(read==sizeof(pvm_float), "could not read enough from state file");
+
+	fileObj.Close();
+
+	// read kprime file
+
+	fileName.Truncate(0);
+	fileName.Add(varBlockFilePrefix);
+	fileName.Add(".kprime.all");
+
+	CHECKMSG(fileObj.OpenRead(fileName),"could not open file for reading: %s",fileName.GetText());
+	CHECKMSG(fileObj.Read(&kpHeader, sizeof(PreCache::PreCacheFileHeader), &read), "could not read from file");
+	CHECKMSG(sizeof(PreCache::PreCacheFileHeader)==read,"could not read enough from file");
+	CHECKMSG(strcmp(kpHeader.Magic,KPRIME_FILE_HEADER_MAGIC)==0, "could not verify kprime header magic");
+	CHECKMSG(sizeof(PreCache::KPrimePair)*nrRec==kpHeader.BlockSize, "kprime block size does not have the correct size");
+
+	// alloc memory for kprime buffer
+	kprime = (PreCache::KPrimePair*) malloc((size_t)kpHeader.BlockSize);
+	NULLCHECKMSG(kprime, "could not alloc memory for sigmaPOrig");
+
+	CHECKMSG(fileObj.Read(kprime, kpHeader.BlockSize, &read), "could not read from file");
+	CHECKMSG(kpHeader.BlockSize==read,"could not read enough from file");
+	fileObj.Close();
+
+
+	norm2 = 1;
+	norm3 = 1;
+	for (i=0;i<nrRec;i++) {
+		norm2 += kprime[i].pos*kprime[i].pos;
+		norm3 += kprime[i].neg*kprime[i].neg;
+	}
+
+	int Splus, Sminus;
+	double label;
+	Splus = Sminus = 0;
+	for (i=0;i<nrRec;i++) {
+		CHECKMSG(con->GetRecordLabel(label, i), "could not get record:%d label", i);
+		if (label==1) Splus++;
+		else Sminus++;
+	}
+	
+	norm0 = varT*varT * (Splus-1)*(Splus-1) * norm2 + Splus/((Splus-1)*(Splus-1));
+	norm1 = varT*varT * (Sminus-1)*(Sminus-1) * norm3 + Sminus/((Sminus-1)*(Sminus-1));
+
+	term0 = term1 = b;
+	for (i=0;i<nrRec;i++) {
+		term0 += alpha[i]*kprime[i].pos;
+		term1 += alpha[i]*kprime[i].neg;
+	}
+
+	pvm_float sumSigmaPlus = 0;
+	pvm_float sumSigmaMinus = 0;
+	for (i=0;i<nrRec;i++) {
+		CHECKMSG(con->GetRecordLabel(label, i), "could not get record:%d label", i);
+		if (label==1)
+			sumSigmaPlus += sigma[i];
+		else
+			sumSigmaMinus += sigma[i];
+	}
+
+	pvm_float s[4];
+	UpdateStr u[4];
+	memset(u, 0, sizeof(UpdateStr)*4);
+	memset(s, 0, sizeof(pvm_float)*4);
+
+	// first equation
+
+	s[0] = varT * (Splus-1)* term0 - sumSigmaPlus;
+	
+	if (s[0]<0) {
+		u[0].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
+		CHECKMSG(u[0].alpha, "could not alloc memory");
+		u[0].sigmaVal = -1;
+		u[0].b = 1;
+		u[0].score = -s[0]/norm0;
+		u[0].firstMember = -s[0]/(norm0*norm0);
+
+		for (i=0;i<nrRec;i++)
+		   u[0].alpha[i] = u[0].firstMember * kprime[i].pos;
+	}
+
+	// second equation
+
+	s[1] = varT * (Sminus-1)* term1 - sumSigmaMinus;
+	if (s[1]<0) {
+		u[1].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
+		CHECKMSG(u[1].alpha, "could not alloc memory");
+		u[1].sigmaVal = -1;
+		u[1].b = -1;
+		u[1].score = -s[1]/norm1;
+		u[1].firstMember = -s[1]/(norm1*norm1);
+
+		for (i=0;i<nrRec;i++)
+			u[1].alpha[i] = u[1].firstMember * (-kprime[i].neg);
+	}
+
+	// third equation
+
+	if (term0<0) {
+		u[2].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
+		CHECKMSG(u[2].alpha, "could not alloc memory");
+		u[2].sigmaVal = 0;
+		u[2].b = 1;
+		u[2].score = (1-term0)/norm2;
+		u[2].firstMember = (1-term0)/(norm2*norm2);
+
+		for (i=0;i<nrRec;i++)
+			u[2].alpha[i] = u[2].firstMember * (kprime[i].pos);
+	}
+
+	// forth equation
+
+	if (term1<0) {
+		u[3].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
+		CHECKMSG(u[3].alpha, "could not alloc memory");
+		u[3].sigmaVal = 0;
+		u[3].b = -1;
+		u[3].score = (1-term1)/norm3;
+		u[3].firstMember = (1-term1)/(norm3*norm3);
+
+		for (i=0;i<nrRec;i++)
+			u[3].alpha[i] = u[3].firstMember * (-kprime[i].neg);
+	}
+
+	// make the score in [0,1] interval
+	pvm_float scoreSum=0;
+	int nrParticipants=0;
+	for (i=0;i<4;i++) {
+		scoreSum += u[i].score;
+		if (u[i].alpha!=NULL) nrParticipants++;
+	}
+
+	for (i=0;i<4;i++) {
+		u[i].score = u[i].score/scoreSum;
+	}
+
+	// we use as output the exact same buffers used for input
+	pvm_float mean;
+	for (i=0;i<nrRec;i++) {
+		// compute for alphas
+		mean = 0;
+		for (int j=0;j<4;j++) {
+			if (u[j].alpha!=NULL) { // if the eq was not satisfied and it will contribute to the update
+				mean += u[j].alpha[i]*u[j].score;
+			}
+		}
+		alpha[i] = mean/nrParticipants;
+
+		// compute for sigmas
+		con->GetRecordLabel(label, i);
+		mean = 0;
+		if (u[0].alpha!=NULL) {
+			if (label==1) mean += u[0].firstMember * u[0].sigmaVal;
+		}
+		if (u[1].alpha!=NULL) {
+			if (label!=1) mean += u[1].firstMember * u[1].sigmaVal;
+		}
+		sigma[i] = mean/nrParticipants;
+	}
+
+	mean = 0;
+	for (i=0;i<4;i++) {
+		if (u[i].alpha!=NULL) {
+			mean += u[i].b;
+		}
+	}
+	b = mean/nrParticipants;
+
+	// write update to disk
+	fileName.Truncate(0);
+	fileName.AddFormated("%s.state.iter.%03d.block.last", varBlockFilePrefix.GetText(), varIterNr);
+	CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
+
+	// write alphas
+	CHECKMSG(fileObj.Write(alpha, vectSz, &written), "could not write to file");
+	CHECKMSG(vectSz==written,"could not write enough to file");
+
+	// write sigmas
+	CHECKMSG(fileObj.Write(sigma, vectSz, &written), "could not write to file");
+	CHECKMSG(vectSz==written,"could not write enough to file");
+
+	// write b
+	CHECKMSG(fileObj.Write(alpha, vectSz, &written), "could not write to file");
+	CHECKMSG(vectSz==written,"could not write enough to file");
+
+	fileObj.Close();
+
+	return true;			
+}
+
+bool ProbVectorMachine::DumpDefaultStateVariables()
+{
+	UInt32 nrRec = con->GetRecordCount();
+	UInt32 vectSz = sizeof(pvm_float)*nrRec;
+	UInt64 written;
+
+	GML::Utils::File				fileObj;
+	GML::Utils::GString				fileName;
+
+	pvm_float *alpha, *sigma;
+
+	alpha = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(alpha, "could not alloc memory for alphaOrig");
+
+	sigma = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(sigma, "could not alloc memory for sigmaPOrig");
+
+	// initialize state variables with values read from disk or init here
+	fileName.Truncate(0);
+	fileName.AddFormated("%s.state.iter.000.block.all", varBlockFilePrefix.GetText());
+
+	UInt32 i, last_i = nrRec / 2;
+
+	for (i = 0; i < last_i; i++)
+		alpha[i] = 1;
+
+	for (i = last_i; i < nrRec; i++)
+		alpha[i] = -0.5;
+
+	memset(sigma, 0, vectSz);
+
+	CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
+
+	// write alphas
+	CHECKMSG(fileObj.Write(alpha, vectSz,&written), "could not write to file");
+	CHECKMSG(written==vectSz, "could not write enough to file");
+
+	// write sigmas
+	CHECKMSG(fileObj.Write(sigma, vectSz,&written), "could not write to file");
+	CHECKMSG(written==vectSz, "could not write enough to file");
+
+	// write b
+	pvm_float b = 0.0;
+	CHECKMSG(fileObj.Write(&b, sizeof(pvm_float),&written), "could not write to file");
+	CHECKMSG(written==sizeof(pvm_float), "could not write enough to file");
+
+	free(alpha);
+	free(sigma);
+
+	INFOMSG("Default variables dumped to disk succesfully");
+
+	return true;
 }
