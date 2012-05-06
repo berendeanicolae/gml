@@ -346,36 +346,36 @@ bool ProbVectorMachine::IterateBlockTraining()
 
 		CHECKMSG(InstPreCache.AtSignalStartLoading(blkIdx),"could not signal loading of block:%d ", blkIdx);
 		CHECKMSG(PerfomBlockTraining(blkIdx, handle), "error performing training on block: %d", blkIdx);
+
+		// dump the block state variables to disk	
+		fileName.Truncate(0);	
+		fileName.AddFormated("%s.state.iter.%03d.block.%03d", varBlockFilePrefix.GetText(), varIterNr, blkIdx);
+
+		stateHeader.blkNr = blkIdx;
+		stateHeader.recStart = handle->recStart;
+		stateHeader.recCount = handle->recCount;
+		stateHeader.totalRecCount = nrRec;
+
+		CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
+
+		// write header
+		CHECKMSG(fileObj.Write(&stateHeader,sizeof(StateFileHeader),&written),"could not write to block state file");
+		CHECKMSG(written==sizeof(StateFileHeader),"could not write enough to the block state file");
+
+		// write alphas
+		CHECKMSG(fileObj.Write(wu.ALPH,vectSz,&written),"could not write to block state file");
+		CHECKMSG(written==vectSz,"could not write enough to the block state file");
+
+		// write signmas
+		CHECKMSG(fileObj.Write(wu.SIGM,vectSz,&written),"could not write to block state file");
+		CHECKMSG(written==vectSz,"could not write enough to the block state file");
+
+		// write block score for stop condition
+		CHECKMSG(fileObj.Write(&wu.score,sizeof(pvm_float),&written),"could not write to block state file");
+		CHECKMSG(written==sizeof(pvm_float),"could not write enough to the block state file");
+
+		fileObj.Close();
 	}
-
-	// dump the block state variables to disk	
-	fileName.Truncate(0);	
-	fileName.AddFormated("%s.state.iter.%03d.block.%03d", varBlockFilePrefix.GetText(), varIterNr, handle->blkNr);
-
-	stateHeader.blkNr = handle->blkNr;
-	stateHeader.recStart = handle->recStart;
-	stateHeader.recCount = handle->recCount;
-	stateHeader.totalRecCount = nrRec;
-
-	CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
-
-	// write header
-	CHECKMSG(fileObj.Write(&stateHeader,sizeof(StateFileHeader),&written),"could not write to block state file");
-	CHECKMSG(written==sizeof(StateFileHeader),"could not write enough to the block state file");
-
-	// write alphas
-	CHECKMSG(fileObj.Write(wu.ALPH,vectSz,&written),"could not write to block state file");
-	CHECKMSG(written==vectSz,"could not write enough to the block state file");
-
-	// write signmas
-	CHECKMSG(fileObj.Write(wu.SIGM,vectSz,&written),"could not write to block state file");
-	CHECKMSG(written==vectSz,"could not write enough to the block state file");
-
-	// write block score for stop condition
-	CHECKMSG(fileObj.Write(&wu.score,sizeof(pvm_float),&written),"could not write to block state file");
-	CHECKMSG(written==sizeof(pvm_float),"could not write enough to the block state file");
-
-	fileObj.Close();
 
 	// free all temporary used memory buffers
 	free(alpha);
