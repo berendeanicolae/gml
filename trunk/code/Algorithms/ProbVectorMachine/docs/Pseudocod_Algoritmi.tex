@@ -965,7 +965,7 @@ associated with each unsatisfied equation may be done completely independent fro
 	
 	\subsubsection{Detailing the Equations for the Final Block}
 	
-	The final block of equations will is the one that imposes the connection between the average and the average deviation. It also imposes that the averages be strictly positive.
+	The final block of equations is the one that imposes the connection between the average and the average deviation. It also imposes that the averages be strictly positive.
 	
 	Thus, the inequations that this block contains are : 
 	
@@ -984,8 +984,8 @@ associated with each unsatisfied equation may be done completely independent fro
 	\begin{enumerate}
 		\item \(norm_2 = 1 + (K_+^0)^2 + (K_+^1)^2 + \ldots + (K_+^n)^2\)
 		\item \(norm_3 = 1 + (K_-^0)^2 + (K_-^1)^2 + \ldots + (K_-^n)^2\)
-		\item \(norm_0 = t^2(|S_+| - 1)^2 \cdot norm_2 + (\sigma_+^0)^2 + (\sigma_+^0)^2 +  \ldots + (\sigma_+^n)^2\)
-		\item \(norm_1 = t^2(|S_-| - 1)^2 \cdot norm_3 + (\sigma_-^0)^2 + (\sigma_-^0)^2 +  \ldots + (\sigma_-^n)^2\)
+		\item \(norm_0 = t^2(|S_+| - 1)^2 \cdot norm_2 + \frac{|S_+|}{(|S_+| - 1)^2}\)
+		\item \(norm_1 = t^2(|S_-| - 1)^2 \cdot norm_3 + \frac{|S_-|}{(|S_-| - 1)^2}\)
 		
 	\end{enumerate}
 	
@@ -1000,7 +1000,7 @@ associated with each unsatisfied equation may be done completely independent fro
 	We then process the first inequation:
 	
 	\begin{enumerate}
-		\item Compute \(s_0 = t (|S_+| - 1)\cdot term_0 - (\sigma_+^0 + \sigma_+^1 + \ldots + \sigma_+^n)\), where \(t\) is a constant in the current feasibility system that corresponds to the term used to define the feasibility system, \(FS(t)\) and \(|S_+|\) is the number of positively labeled records (which must exceed 2).
+		\item Compute \(s_0 = t (|S_+| - 1)\cdot term_0 - (\sigma_+^0 + \sigma_+^1 + \ldots + \sigma_+^n)\), where \(t\) is a constant in the current feasibility system that corresponds to the term used to define the feasibility system, \(Feas(t)\) and \(|S_+|\) is the number of positively labeled records (which must exceed 2).
 		\item If \(s_0 < 0\), then the inequality is not satisfied and it will suggest an update:
 		\[
 			u_0 = \frac{-s_0}{norm_0^2}\cdot(K_+^0, K_+^1, \ldots, K_+^n, -1, -1, \ldots, -1, 1)
