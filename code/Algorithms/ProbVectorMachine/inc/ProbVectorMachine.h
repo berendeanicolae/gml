@@ -54,6 +54,7 @@ private:
 		COMMAND_INIT_STATE_VARS,
 		COMMAND_BLOCK_TRAINING,
 		COMMAND_LAST_BLOCK_TRAINING,
+		COMMAND_GATHER_BLOCK_STATES,
 		//Add extra commands here
 	};	
 
@@ -64,6 +65,14 @@ private:
 		pvm_float  score;
 		pvm_float  firstMember;
 	};
+
+	struct StateFileHeader {
+		UInt32 blkNr;
+		UInt32 recCount;
+		UInt32 recStart;
+		UInt32 totalRecCount;
+	};
+
 
 private:
 	GML::ML::MLRecord		MainRecord;	
@@ -92,6 +101,7 @@ public:
     bool	ThreadTestCompSpeed(GML::Algorithm::MLThreadData & thData);
 	bool	LastBlockTraining();
 	bool DumpDefaultStateVariables();
+	bool GatherBlockStates();
 	// variables to control the algorithm flow
 	UInt32 varKernelType;
 	UInt32 varBlockFileSize;
