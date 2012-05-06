@@ -994,7 +994,7 @@ bool ProbVectorMachine::GatherBlockStates()
 	fileName.Truncate(0);
 	fileName.AddFormated("%s.state.iter.%03d.block.score", varBlockFilePrefix.GetText(), varIterNr);
 	CHECKMSG(fileObj.Create(fileName.GetText()),"could not create file:%s ", fileName.GetText());	
-	CHECKMSG(fileObj.Write(scoreStr.GetText(), sizeof(char)*scoreStr.GetSize(), &written), "could not write to file");
+	CHECKMSG(fileObj.Write(scoreStr.GetText(), sizeof(char)*(scoreStr.GetSize()+1), &written), "could not write to file");
 	CHECKMSG(written==sizeof(char)*scoreStr.GetSize(), "could not write enough to file");
 	fileObj.Close();
 
