@@ -456,7 +456,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 	PreCache::KPrimePair  *wu_bHandle_KPRM;
 	pvm_float   *wu_ALPH;
 
-
+	pvm_float temp_norm;
 	//INFOTHDMSG("perform window update");
 	
 	UInt32 nrRec = con->GetRecordCount();
@@ -474,6 +474,16 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 
 		if (label == 1)
 		{
+			temp_norm = 1;
+			
+			for (i = 0; i < nrRec; i++) 
+			{
+				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+				kpr = wu.bHandle->KPRM->pos;
+				temp_norm += (ker - kpr) * (ker - kpr);
+			}
+			temp_norm = sqrtl(temp_norm);
+
 			for (i = 0; i < nrRec; i++) 
 			{
 				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
@@ -484,29 +494,33 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 			if (wu.SIGM[recIdxGlob] - sj < 0) 
 			{
 				wu.updateNeeded = true;
-				frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+				//frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+				frac = (sj - wu.SIGM[recIdxGlob]) / (temp_norm * temp_norm);
 				wu_bHandle_KPRM = wu.bHandle->KPRM;
 				for (i = 0, uALPH_it = winIt*nrRec; i < nrRec; i++, uALPH_it++, wu_bHandle_KPRM++) 
 				{
 					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);				
 					kpr = wu_bHandle_KPRM->pos;
-					wu.uALPH[uALPH_it] = frac * (ker-kpr);
+					wu.uALPH[uALPH_it] = frac * (kpr-ker);
 				}
 				wu.uSIGM[winIt] = frac;
-				wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+				//wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+				wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/temp_norm;
 			} else if (wu.SIGM[recIdxGlob] + sj < 0) 
 			{
 				wu.updateNeeded = true;
-				frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+				//frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+				frac = (-sj - wu.SIGM[recIdxGlob]) / (temp_norm * temp_norm);
 				wu_bHandle_KPRM = wu.bHandle->KPRM;
 				for (i = 0, uALPH_it = winIt*nrRec; i < nrRec; i++, uALPH_it++, wu_bHandle_KPRM++) 
 				{
 					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
 					kpr = wu_bHandle_KPRM->pos;
-					wu.uALPH[uALPH_it] = frac * (kpr-ker);
+					wu.uALPH[uALPH_it] = frac * (ker-kpr);
 				}
 				wu.uSIGM[winIt] = frac;
-				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+				//wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/temp_norm;
 			} 
 		}
 		else
@@ -529,7 +543,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 				{
 					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);				
 					kpr = wu_bHandle_KPRM->neg;
-					wu.uALPH[uALPH_it] = frac * (ker-kpr);
+					wu.uALPH[uALPH_it] = frac * (kpr-ker);
 				}
 				wu.uSIGM[winIt] = frac;
 				wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
@@ -542,7 +556,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 				{
 					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
 					kpr = wu_bHandle_KPRM->neg;
-					wu.uALPH[uALPH_it] = frac * (kpr-ker);
+					wu.uALPH[uALPH_it] = frac * (ker-kpr);
 				}
 				wu.uSIGM[winIt] = frac;
 				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
