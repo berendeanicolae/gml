@@ -542,11 +542,12 @@ bool PreCache::PreComputeNorm()
 	// alloc memory for kpBuf
 	kpBuf = (KPrimePair*) malloc((UInt32)kpFh.BlockSize);
 	NULLCHECKMSG(kpBuf, "could not alloc enough memory");
+	//!!!Atentie!!! : nu vad dealocarea pt kpBuf
 
 	CHECKMSG(kprimeFo.Read(kpBuf, kpFh.BlockSize, &read),"could not read from file");
 	CHECKMSG(kpFh.BlockSize==read, "could not read enough");
 
-	blkBuf = normBuf =NULL;
+	blkBuf = normBuf = NULL;
 
 	// loop through the block files that we need to process and compute the norms
 	for (UInt32 blockIdx = id.varBlockStart; blockIdx < id.varBlockStart+id.varBlockCount; blockIdx ++) 
@@ -566,6 +567,7 @@ bool PreCache::PreComputeNorm()
 			normBuf = (pvm_float*) malloc(blockFh.NrRecords*sizeof(pvm_float));
 			NULLCHECKMSG(normBuf, "could not alloc enough memory");
 		}
+		//!!!Atentie!!! : nu vad dealocarea pt blkBuf si normBuf la iesirea din for 
 
 		// read the block file
 		readUnow = 0;
@@ -589,10 +591,11 @@ bool PreCache::PreComputeNorm()
 			for (UInt32 recIdx=0;recIdx<kpFh.NrRecordsTotal;recIdx++) 
 			{
 				CHECKMSG(GetKernelAt(blkRecIdx, recIdx, blkBuf, blockFh.NrRecords, &kval),"could not get kernel value");
-			
-				sum = kval - (recLabel==1) ?kpBuf[recIdx].pos :kpBuf[recIdx].neg;
+				//!!!Atentie!!!: nu stiu prioritatea operatorilor -> am adaugat paranteze			
+				sum = kval - ((recLabel==1) ?kpBuf[recIdx].pos :kpBuf[recIdx].neg);
 				tsum += sum*sum;
 			}
+	
 			normBuf[blkRecIdx] = sqrt(tsum);
 		}
 
