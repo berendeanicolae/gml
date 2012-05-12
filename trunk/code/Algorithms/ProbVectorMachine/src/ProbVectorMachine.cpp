@@ -455,7 +455,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 	pvm_float   *wu_ALPH;
 
 
-	INFOTHDMSG("perform window update");
+	//INFOTHDMSG("perform window update");
 	
 	UInt32 nrRec = con->GetRecordCount();
 	wu.updateNeeded = false;
@@ -775,6 +775,17 @@ bool ProbVectorMachine::LastBlockTraining()
 	fileName.AddFormated("%s.state.iter.%03d.block.last", varBlockFilePrefix.GetText(), varIterNr);
 	CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
 
+	// write state header
+	StateFileHeader stateHeader;
+	stateHeader.blkNr = -1;
+	stateHeader.recCount = nrRec;
+	stateHeader.recStart = 0;
+	stateHeader.totalRecCount = nrRec;
+
+	// write alphas
+	CHECKMSG(fileObj.Write(&stateHeader, sizeof(StateFileHeader), &written), "could not write to file");
+	CHECKMSG(sizeof(StateFileHeader)==written,"could not write enough to file");
+
 	// write alphas
 	CHECKMSG(fileObj.Write(alpha, vectSz, &written), "could not write to file");
 	CHECKMSG(vectSz==written,"could not write enough to file");
@@ -994,8 +1005,8 @@ bool ProbVectorMachine::GatherBlockStates()
 	fileName.Truncate(0);
 	fileName.AddFormated("%s.state.iter.%03d.block.score", varBlockFilePrefix.GetText(), varIterNr);
 	CHECKMSG(fileObj.Create(fileName.GetText()),"could not create file:%s ", fileName.GetText());	
-	CHECKMSG(fileObj.Write(scoreStr.GetText(), sizeof(char)*(scoreStr.GetSize()+1), &written), "could not write to file");
-	CHECKMSG(written==sizeof(char)*scoreStr.GetSize(), "could not write enough to file");
+	CHECKMSG(fileObj.Write(scoreStr.GetText(), sizeof(char)*(scoreStr.GetSize()-1), &written), "could not write to file");
+	CHECKMSG(written==sizeof(char)*(scoreStr.GetSize()-1), "could not write enough to file");
 	fileObj.Close();
 
 	return true;
