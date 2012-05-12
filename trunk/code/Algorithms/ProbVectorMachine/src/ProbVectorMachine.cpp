@@ -24,7 +24,7 @@ ProbVectorMachine::ProbVectorMachine()
 
 	// algorithm related variables	
 	LinkPropertyToDouble("Lambda",varLambda,1.0,"The Lambda parameter for this iteration");
-	LinkPropertyToDouble("T",(double&)varT,1.0,"The T algorithm parameter; used for binary search");
+	LinkPropertyToDouble("T",varT,1.0,"The T algorithm parameter; used for binary search");
 	LinkPropertyToUInt32("WindowSize",varWindowSize,10,"The Windows size the block solver works with");
 	LinkPropertyToUInt32("IterationNo",varIterNr,0,"The current iteration number");
 }
@@ -395,7 +395,7 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 {
 	// algorithm state variables
 	pvm_float scoreSum, update;
-	UInt32	  i, w, k;
+	Int32	  i, w, k;
 	pvm_float maxWindowScore;
 
 	UInt32 nrRec = con->GetRecordCount();
@@ -441,6 +441,8 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 		// update sigmas
 		for (k=0;k<wu.winSize;k++)
 			wu.SIGM[handle->recStart+w+k] += (pvm_float)varLambda * wu.pn[k] * wu.uSIGM[k];		
+
+		if (w==0) w-=varWindowSize;
 	}
 
 	return true;
@@ -468,16 +470,15 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 		CHECKMSG(con->GetRecordLabel(label, recIdxGlob),"could not get record label");				
 		
 		sj = 0;
+		wu.san[winIt] = 0;
 
 		if (label == 1)
 		{
-			wu_ALPH = wu.ALPH;
-			wu_bHandle_KPRM = wu.bHandle->KPRM;
-			for (i = 0; i < nrRec; i++, wu_ALPH++, wu_bHandle_KPRM++) 
+			for (i = 0; i < nrRec; i++) 
 			{
 				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-				kpr = wu_bHandle_KPRM->pos;
-				sj += (*wu_ALPH) * (ker - kpr);
+				kpr = wu.bHandle->KPRM->pos;
+				sj += wu.ALPH[i] * (ker - kpr);
 			}
 
 			if (wu.SIGM[recIdxGlob] - sj < 0) 
@@ -562,12 +563,14 @@ bool ProbVectorMachine::LastBlockTraining()
 	UInt32 nrRec = con->GetRecordCount(), i;
 	UInt32 vectSz = sizeof(pvm_float)*nrRec;
 	UInt64 read, written;
+	pvm_float varTFloat = (pvm_float)varT;
 
 	PreCache::KPrimePair	  *kprime;
 
 	GML::Utils::File				fileObj;
 	GML::Utils::GString				fileName;
 	PreCache::PreCacheFileHeader	kpHeader;
+	StateFileHeader					stateHeader;
 
 	pvm_float norm0, norm1, norm2, norm3, term0, term1;
 
@@ -585,6 +588,9 @@ bool ProbVectorMachine::LastBlockTraining()
 
 	// read state variables from disk
 	CHECKMSG(fileObj.OpenRead(fileName),"could not open file for reading: %s",fileName.GetText());
+
+	CHECKMSG(fileObj.Read(&stateHeader, sizeof(StateFileHeader), &read), "could not read from state file");
+	CHECKMSG(read==sizeof(StateFileHeader), "could not read enough from state file");
 
 	CHECKMSG(fileObj.Read(alpha, vectSz, &read), "could not read from state file");
 	CHECKMSG(read==vectSz, "could not read enough from state file");
@@ -634,8 +640,8 @@ bool ProbVectorMachine::LastBlockTraining()
 		else Sminus++;
 	}
 	
-	norm0 = varT*varT * (Splus-1)*(Splus-1) * norm2 + Splus/((Splus-1)*(Splus-1));
-	norm1 = varT*varT * (Sminus-1)*(Sminus-1) * norm3 + Sminus/((Sminus-1)*(Sminus-1));
+	norm0 = varTFloat*varTFloat * (Splus-1)*(Splus-1) * norm2 + Splus/((Splus-1)*(Splus-1));
+	norm1 = varTFloat*varTFloat * (Sminus-1)*(Sminus-1) * norm3 + Sminus/((Sminus-1)*(Sminus-1));
 
 	term0 = term1 = b;
 	for (i=0;i<nrRec;i++) {
@@ -661,7 +667,7 @@ bool ProbVectorMachine::LastBlockTraining()
 
 	// first equation
 
-	s[0] = varT * (Splus-1)* term0 - sumSigmaPlus;
+	s[0] = varTFloat * (Splus-1)* term0 - sumSigmaPlus;
 	
 	if (s[0]<0) {
 		u[0].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
@@ -677,7 +683,7 @@ bool ProbVectorMachine::LastBlockTraining()
 
 	// second equation
 
-	s[1] = varT * (Sminus-1)* term1 - sumSigmaMinus;
+	s[1] = varTFloat * (Sminus-1)* term1 - sumSigmaMinus;
 	if (s[1]<0) {
 		u[1].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
 		CHECKMSG(u[1].alpha, "could not alloc memory");
@@ -691,7 +697,6 @@ bool ProbVectorMachine::LastBlockTraining()
 	}
 
 	// third equation
-
 	if (term0<0) {
 		u[2].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
 		CHECKMSG(u[2].alpha, "could not alloc memory");
@@ -705,7 +710,6 @@ bool ProbVectorMachine::LastBlockTraining()
 	}
 
 	// forth equation
-
 	if (term1<0) {
 		u[3].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
 		CHECKMSG(u[3].alpha, "could not alloc memory");
@@ -724,6 +728,14 @@ bool ProbVectorMachine::LastBlockTraining()
 	for (i=0;i<4;i++) {
 		scoreSum += u[i].score;
 		if (u[i].alpha!=NULL) nrParticipants++;
+	}
+
+	// search for max score over this block for stop condition
+	pvm_float maxScore = FLT_MIN;
+	for (i=0;i<4;i++) {
+		if (maxScore < u[i].score) {
+			maxScore = u[i].score;
+		}
 	}
 
 	for (i=0;i<4;i++) {
@@ -760,23 +772,14 @@ bool ProbVectorMachine::LastBlockTraining()
 			mean += u[i].b * u[i].score;
 		}
 	}
-	b += mean;
-
-	// search for max score over this block for stop condition
-	pvm_float maxScore = FLT_MIN;
-	for (i=0;i<4;i++) {
-		if (maxScore < s[i]) {
-			maxScore = s[i];
-		}
-	}
+	b += mean;	
 
 	// write update to disk
 	fileName.Truncate(0);
 	fileName.AddFormated("%s.state.iter.%03d.block.last", varBlockFilePrefix.GetText(), varIterNr);
 	CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
 
-	// write state header
-	StateFileHeader stateHeader;
+	// write state header	
 	stateHeader.blkNr = -1;
 	stateHeader.recCount = nrRec;
 	stateHeader.recStart = 0;

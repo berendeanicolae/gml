@@ -110,7 +110,7 @@ public:
 	UInt32 varBlockCount;
 
 	double varLambda;
-	pvm_float varT;
+	double varT;
 	UInt32 varWindowSize, varIterNr;
 
 	Int32		varKernelParamInt;
