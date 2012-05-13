@@ -7,7 +7,7 @@
     <LocalDebuggerCommand>D:\GML\bin\gml.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommandArguments>run 07_pvm-iter_gather.ini</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>run GML_TEMPLATE_1234_iterate.ini</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='AltDebug|Win32'">
     <LocalDebuggerCommandArguments>run 4.pvm-build-train.ini</LocalDebuggerCommandArguments>
