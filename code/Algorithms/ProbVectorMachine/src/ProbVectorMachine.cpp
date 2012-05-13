@@ -410,54 +410,62 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 	pvm_float scoreSum, update;
 	UInt32	  i, w, k;
 	pvm_float maxWindowScore;
+	pvm_float minScoreSum = 1e-10f;
 
 	UInt32 nrRec = con->GetRecordCount();
-
-	wu.score = 0;
-
-	wu.bHandle = handle;
-	for (w=0;w<handle->recCount;w+=varWindowSize)
+	for (int win_iter = 0; win_iter < 25; win_iter++)
 	{
-		wu.winStart = w;
-		if (handle->recCount-w < varWindowSize) wu.winSize = handle->recCount-w;
-		else wu.winSize = varWindowSize;
+		wu.score = 0;
 
-		// compute window update 		
-		ExecuteParalelCommand(THREAD_COMMAND_WINDOW_UPDATE);
+		wu.bHandle = handle;
+		for (w=0;w<handle->recCount;w+=varWindowSize)
+		{
+			wu.winStart = w;
+			if (handle->recCount-w < varWindowSize) wu.winSize = handle->recCount-w;
+			else wu.winSize = varWindowSize;
 
-		// compute shares for every score
-		scoreSum = 0;
-		maxWindowScore = FLT_MIN;
-		for (i=0;i<wu.winSize;i++) {
-			scoreSum += wu.san[i];
+			// compute window update 		
+			ExecuteParalelCommand(THREAD_COMMAND_WINDOW_UPDATE);
 
-			// search for max score per window
-			if (maxWindowScore < wu.san[i]) {
-				maxWindowScore = wu.san[i];
+			// compute shares for every score
+			scoreSum = 0;
+			maxWindowScore = FLT_MIN;
+			for (i=0;i<wu.winSize;i++) {
+				scoreSum += wu.san[i];
+
+				// search for max score per window
+				if (maxWindowScore < wu.san[i]) {
+					maxWindowScore = wu.san[i];
+				}
 			}
-		}
-		wu.score += maxWindowScore;
+			wu.score += maxWindowScore;
 
-		for (i=0;i<wu.winSize;i++)
-			wu.pn[i] = wu.san[i]/scoreSum;
+			if (scoreSum < minScoreSum)
+				scoreSum = minScoreSum;
 
-		// update alphas
-		for (i=0;i<nrRec;i++) {			
-			update = 0;
-			for (k=0;k<wu.winSize;k++) 
-				update = wu.pn[k] * wu.uALPH[nrRec*k + i];					
+			for (i=0;i<wu.winSize;i++)
+				wu.pn[i] = wu.san[i]/scoreSum;
+
+			// update alphas
+			for (i=0;i<nrRec;i++) {			
+				update = 0;
+				for (k=0;k<wu.winSize;k++) 
+					update = wu.pn[k] * wu.uALPH[nrRec*k + i];					
 			
-			update *= (pvm_float)varLambda;
-			wu.ALPH[i] += update;
+				update *= (pvm_float)varLambda;
+				wu.ALPH[i] += update;
+			}
+
+			// update sigmas
+			for (k=0;k<wu.winSize;k++)
+				wu.SIGM[handle->recStart+w+k] += (pvm_float)varLambda * wu.pn[k] * wu.uSIGM[k];		
+
+			//if (w==0) w-=varWindowSize;
 		}
-
-		// update sigmas
-		for (k=0;k<wu.winSize;k++)
-			wu.SIGM[handle->recStart+w+k] += (pvm_float)varLambda * wu.pn[k] * wu.uSIGM[k];		
-
-		//if (w==0) w-=varWindowSize;
+		
+		if (wu.score < 1e-8f)
+			break;
 	}
-
 	return true;
 }
 
@@ -577,8 +585,12 @@ bool ProbVectorMachine::LastBlockTraining()
 	StateFileHeader					stateHeader;
 
 	pvm_float norm0, norm1, norm2, norm3, term0, term1;
+	pvm_float maxScore, temp_mul;
 
 	pvm_float *alpha, *sigma, b;
+
+	pvm_float s[4];
+	UpdateStr u[4];
 
 	alpha = (pvm_float*) malloc(vectSz);
 	NULLCHECKMSG(alpha, "could not alloc memory for alphaOrig");
@@ -644,140 +656,178 @@ bool ProbVectorMachine::LastBlockTraining()
 		else Sminus++;
 	}
 	
-	norm0 = varTFloat*varTFloat * (Splus-1)*(Splus-1) * norm2 + Splus/((Splus-1)*(Splus-1));
-	norm1 = varTFloat*varTFloat * (Sminus-1)*(Sminus-1) * norm3 + Sminus/((Sminus-1)*(Sminus-1));
+	norm0 = varTFloat * varTFloat  * norm2 + Splus / ((Splus-1)*(Splus-1));
+	norm1 = varTFloat * varTFloat  * norm3 + Sminus/ ((Sminus-1)*(Sminus-1));
 
-	term0 = term1 = b;
-	for (i=0;i<nrRec;i++) {
-		term0 += alpha[i]*kprime[i].pos;
-		term1 += alpha[i]*kprime[i].neg;
-	}
-	term1 = -term1;
+	norm0 = sqrt(norm0);
+	norm1 = sqrt(norm1);
+	norm2 = sqrt(norm2);
+	norm3 = sqrt(norm3);
 
-	pvm_float sumSigmaPlus = 0;
-	pvm_float sumSigmaMinus = 0;
-	for (i=0;i<nrRec;i++) {
-		CHECKMSG(con->GetRecordLabel(label, i), "could not get record:%d label", i);
-		if (label==1)
-			sumSigmaPlus += sigma[i];
-		else
-			sumSigmaMinus += sigma[i];
-	}
-
-	pvm_float s[4];
-	UpdateStr u[4];
 	memset(u, 0, sizeof(UpdateStr)*4);
 	memset(s, 0, sizeof(pvm_float)*4);
 
-	// first equation
-
-	s[0] = varTFloat * (Splus-1)* term0 - sumSigmaPlus;
-	
-	if (s[0]<0) {
-		u[0].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
-		CHECKMSG(u[0].alpha, "could not alloc memory");
-		u[0].sigmaVal = -1;
-		u[0].b = 1;
-		u[0].score = -s[0]/norm0;
-		u[0].firstMember = -s[0]/(norm0*norm0);
-
-		for (i=0;i<nrRec;i++)
-		   u[0].alpha[i] = u[0].firstMember * kprime[i].pos;
-	}
-
-	// second equation
-
-	s[1] = varTFloat * (Sminus-1)* term1 - sumSigmaMinus;
-	if (s[1]<0) {
-		u[1].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
-		CHECKMSG(u[1].alpha, "could not alloc memory");
-		u[1].sigmaVal = -1;
-		u[1].b = -1;
-		u[1].score = -s[1]/norm1;
-		u[1].firstMember = -s[1]/(norm1*norm1);
-
-		for (i=0;i<nrRec;i++)
-			u[1].alpha[i] = u[1].firstMember * (-kprime[i].neg);
-	}
-
-	// third equation
-	if (term0<0) {
-		u[2].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
-		CHECKMSG(u[2].alpha, "could not alloc memory");
-		u[2].sigmaVal = 0;
-		u[2].b = 1;
-		u[2].score = (1-term0)/norm2;
-		u[2].firstMember = (1-term0)/(norm2*norm2);
-
-		for (i=0;i<nrRec;i++)
-			u[2].alpha[i] = u[2].firstMember * (kprime[i].pos);
-	}
-
-	// forth equation
-	if (term1<0) {
-		u[3].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
-		CHECKMSG(u[3].alpha, "could not alloc memory");
-		u[3].sigmaVal = 0;
-		u[3].b = -1;
-		u[3].score = (1-term1)/norm3;
-		u[3].firstMember = (1-term1)/(norm3*norm3);
-
-		for (i=0;i<nrRec;i++)
-			u[3].alpha[i] = u[3].firstMember * (-kprime[i].neg);
-	}
-
-	// make the score in [0,1] interval
-	pvm_float scoreSum=0;
-	int nrParticipants=0;
-	for (i=0;i<4;i++) {
-		scoreSum += u[i].score;
-		if (u[i].alpha!=NULL) nrParticipants++;
-	}
-
-	// search for max score over this block for stop condition
-	pvm_float maxScore = FLT_MIN;
-	for (i=0;i<4;i++) {
-		if (maxScore < u[i].score) {
-			maxScore = u[i].score;
+	for (int blk_it = 0; blk_it < 5; blk_it++)
+	{	
+		term0 = term1 = b;
+		for (i=0;i<nrRec;i++) {
+			term0 += alpha[i]*kprime[i].pos;
+			term1 += alpha[i]*kprime[i].neg;
 		}
-	}
+		term1 = -term1;
 
-	for (i=0;i<4;i++) {
-		u[i].score = u[i].score/scoreSum;
-	}
+		pvm_float sumSigmaPlus = 0;
+		pvm_float sumSigmaMinus = 0;
+		for (i=0;i<nrRec;i++) {
+			CHECKMSG(con->GetRecordLabel(label, i), "could not get record:%d label", i);
+			if (label==1)
+				sumSigmaPlus += sigma[i];
+			else
+				sumSigmaMinus += sigma[i];
+		}		
 
-	// we use as output the exact same buffers used for input
-	pvm_float mean;
-	for (i=0;i<nrRec;i++) {
-		// compute for alphas
-		mean = 0;
-		for (int j=0;j<4;j++) {
-			if (u[j].alpha!=NULL) { // if the eq was not satisfied and it will contribute to the update
-				mean += u[j].alpha[i]*u[j].score;
+		// first equation
+
+		temp_mul = (pvm_float)(Splus - 1);
+		s[0] = varTFloat * term0 - sumSigmaPlus / temp_mul;
+	
+		if (s[0] < 0) {
+			if (u[0].alpha == NULL)
+			{
+				u[0].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
+				CHECKMSG(u[0].alpha, "could not alloc memory");
+			}
+
+			u[0].infeas_eq = true;		
+
+			u[0].sigmaVal = -(pvm_float)1.0 / temp_mul;
+			u[0].b = varTFloat;
+			u[0].score = -s[0]/norm0;
+			u[0].firstMember = -s[0]/(norm0*norm0);
+		
+			temp_mul = varTFloat * u[0].firstMember;
+			for (i=0;i<nrRec;i++)
+			   u[0].alpha[i] = temp_mul * kprime[i].pos;
+		}
+
+		// second equation
+
+		temp_mul = (pvm_float)(Sminus-1);
+		s[1] = varTFloat * term1 - sumSigmaMinus / temp_mul;
+		if (s[1]<0) {
+			if (u[1].alpha == NULL)
+			{
+				u[1].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
+				CHECKMSG(u[1].alpha, "could not alloc memory");
+			}
+			u[1].infeas_eq = true;
+
+			u[1].sigmaVal = -(pvm_float)1.0 / temp_mul;
+			u[1].b = -varTFloat;
+			u[1].score = -s[1]/norm1;
+			u[1].firstMember = -s[1]/(norm1*norm1);
+
+			temp_mul = varTFloat * u[1].firstMember;
+			for (i=0;i<nrRec;i++)
+				u[1].alpha[i] = temp_mul * (-kprime[i].neg);
+		}
+
+		// third equation
+		if (term0<0) {
+			if (u[2].alpha == NULL)
+			{
+				u[2].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
+				CHECKMSG(u[2].alpha, "could not alloc memory");
+			}
+
+			u[2].infeas_eq = true;
+
+			u[2].sigmaVal = 0;
+			u[2].b = 1;
+			u[2].score = (1-term0)/norm2;
+			u[2].firstMember = (1-term0)/(norm2*norm2);
+
+			for (i=0;i<nrRec;i++)
+				u[2].alpha[i] = u[2].firstMember * (kprime[i].pos);
+		}
+
+		// forth equation
+		if (term1<0) {
+			if (u[3].alpha == NULL)
+			{
+				u[3].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
+				CHECKMSG(u[3].alpha, "could not alloc memory");
+			}
+			u[3].infeas_eq = true;
+
+			u[3].sigmaVal = 0;
+			u[3].b = -1;
+			u[3].score = (1-term1)/norm3;
+			u[3].firstMember = (1-term1)/(norm3*norm3);
+
+			for (i=0;i<nrRec;i++)
+				u[3].alpha[i] = u[3].firstMember * (-kprime[i].neg);
+		}
+
+		// make the score in [0,1] interval
+		pvm_float scoreSum=0, minScoreSum = 1e-10f;
+		int nrParticipants=0;
+		for (i=0;i<4;i++) {
+			scoreSum += u[i].score;
+			if (u[i].infeas_eq) nrParticipants++;
+		}
+
+		// search for max score over this block for stop condition
+		maxScore = FLT_MIN;
+		for (i=0;i<4;i++) {
+			if (maxScore < u[i].score) {
+				maxScore = u[i].score;
 			}
 		}
-		alpha[i] += mean;
 
-		// compute for sigmas
-		con->GetRecordLabel(label, i);
+		if (scoreSum < minScoreSum)
+			scoreSum = minScoreSum;
+
+		for (i = 0; i < 4; i++)
+			u[i].score /= scoreSum;
+		
+
+
+		// we use as output the exact same buffers used for input
+		pvm_float mean;
+		for (i=0;i<nrRec;i++) {
+			// compute for alphas
+			mean = 0;
+			for (int j=0;j<4;j++) {
+				if (u[j].infeas_eq) { // if the eq was not satisfied and it will contribute to the update
+					mean += u[j].alpha[i]*u[j].score;
+				}
+			}
+			alpha[i] += mean;
+
+			// compute for sigmas
+			con->GetRecordLabel(label, i);
+			mean = 0;
+			if (u[0].infeas_eq) {
+				if (label==1) mean += u[0].firstMember * u[0].sigmaVal * u[0].score;
+			}
+			if (u[1].infeas_eq) {
+				if (label!=1) mean += u[1].firstMember * u[1].sigmaVal * u[1].score;
+			}
+			sigma[i] += mean;
+		}
+
 		mean = 0;
-		if (u[0].alpha!=NULL) {
-			if (label==1) mean += u[0].firstMember * u[0].sigmaVal * u[0].score;
+		for (i=0;i<4;i++) {
+			if (u[i].infeas_eq) {
+				mean += u[i].firstMember * u[i].b * u[i].score;
+			}
 		}
-		if (u[1].alpha!=NULL) {
-			if (label!=1) mean += u[1].firstMember * u[1].sigmaVal * u[1].score;
-		}
-		sigma[i] += mean;
-	}
+		b += mean;	
 
-	mean = 0;
-	for (i=0;i<4;i++) {
-		if (u[i].alpha!=NULL) {
-			mean += u[i].b * u[i].score;
-		}
+		for (i = 0; i < 4; i++)
+			u[i].reset(nrRec);
 	}
-	b += mean;	
-
 	// write update to disk
 	fileName.Truncate(0);
 	fileName.AddFormated("%s.state.iter.%03d.block.last", varBlockFilePrefix.GetText(), varIterNr);
@@ -813,6 +863,14 @@ bool ProbVectorMachine::LastBlockTraining()
 	fileObj.Close();
 
 	return true;			
+}
+
+void ProbVectorMachine::UpdateStr::reset(int recCount)
+{
+	sigmaVal = b = score = firstMember = 0;
+	infeas_eq = false;
+	if (alpha)
+		memset(alpha, 0, recCount * sizeof(pvm_float));	
 }
 
 bool ProbVectorMachine::DumpDefaultStateVariables()
@@ -894,6 +952,8 @@ bool ProbVectorMachine::GatherBlockStates()
 	pvm_float *alpha, *sigma, *alphaMean, *sigmaMean;
 	pvm_float scoreSum, score;
 
+	UInt32 *alpha_count, *sigma_count;
+
 	alpha = (pvm_float*) malloc(vectSz);
 	NULLCHECKMSG(alpha, "could not alloc memory");
 	alphaMean = (pvm_float*) malloc(vectSz);
@@ -904,8 +964,16 @@ bool ProbVectorMachine::GatherBlockStates()
 	sigmaMean = (pvm_float*) malloc(vectSz);
 	NULLCHECKMSG(sigmaMean, "could not alloc memory");
 
+	alpha_count = (UInt32 *)malloc(nrRec * sizeof(UInt32));
+	NULLCHECKMSG(alpha_count, "could not alloc memory");	
+	sigma_count = (UInt32 *)malloc(nrRec * sizeof(UInt32));
+	NULLCHECKMSG(sigma_count, "could not alloc memory");	
+
 	memset(alphaMean, 0, vectSz);
 	memset(sigmaMean, 0, vectSz);
+
+	memset(alpha_count, 0, nrRec * sizeof(UInt32));
+	memset(sigma_count, 0, nrRec * sizeof(UInt32));
 
 	fileName.Truncate(0);
 	fileName.AddFormated("%s.state.iter.%03d.block.???", varBlockFilePrefix.GetText(), varIterNr);
@@ -939,10 +1007,16 @@ bool ProbVectorMachine::GatherBlockStates()
 			scoreSum += score*score;
 
 			for (i=0;i<nrRec;i++) 
+			{
 				alphaMean[i] += alpha[i];
+				alpha_count[i]++;
+			}
 			
 			for (i=stateHeader.recStart;i<stateHeader.recCount;i++)
+			{
 				sigmaMean[i] += sigma[i];			
+				sigma_count[i]++;
+			}
 		}
 
 	} while (FindNextFile(hFind, &FindFileData));
@@ -976,13 +1050,19 @@ bool ProbVectorMachine::GatherBlockStates()
 	scoreSum = sqrt(scoreSum);
 
 	for (i=0;i<nrRec;i++) {
-		alphaMean[i] += alpha[i];
-		alphaMean[i] /= nrBlocks+1;
+		alphaMean[i] += nrBlocks * alpha[i];
+		alphaMean[i] /= (pvm_float)(nrBlocks + alpha_count[i]);
+		CHECKMSG(alpha_count[i] > 0, "unrepresented alpha");
+		//alphaMean[i] /= nrBlocks+1;
+		//CHECKMSG(nrBlocks == alpha_count[i], "dubios number of alphas");
 	}
 
 	for (i=0;i<nrRec;i++) {
-		sigmaMean[i] += sigma[i];
-		sigmaMean[i] /= 2;
+		sigmaMean[i] += nrBlocks * sigma[i];
+		sigmaMean[i] /= (pvm_float)(nrBlocks + sigma_count[i]);
+		CHECKMSG(sigma_count[i] > 0, "unrepresented sigma");
+		//sigmaMean[i] /= 2;
+		//CHECKMSG(1 == sigma_count[i], "dubios number of sigmas");
 	}
 
 	fileName.Truncate(0);

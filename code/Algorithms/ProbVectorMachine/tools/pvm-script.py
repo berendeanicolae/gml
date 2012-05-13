@@ -3,20 +3,20 @@ import os, gmlpy, math, glob, shutil
 def getParameterConfig():
     param = {
         "AlgorithmName" : "ProbVectorMachine",
-        "KernelType" : "Scalar",
-        "KernelParamInt" : 3,
-        "KernelParamDouble" : 0.0,
+        "KernelType" : "Rbf",
+        "KernelParamInt" : 0,
+        "KernelParamDouble" : 0.125,
         
         "BlockFileSize" : 1,
         "BlockStart" : 0,
         "BlockCount" : 5,
         "BlockFilePrefix" : "bitdefender",
         
-        "ThreadsCount" : 1,
+        "ThreadsCount" : 2,
         
         #training related vars
         "Lambda" : 1,
-        "WindowSize" : 10,       
+        "WindowSize" : 4,       
         }
     return param
 
@@ -104,6 +104,8 @@ def IterateTraining (nrIter, varT, nrIterStable):
         score = float(score)
         score_vect.append(score)
         
+        shutil.copy("%s.state.iter.%03d.block.score"%(paramDict["BlockFilePrefix"],it), "%s.state.score.current"%(paramDict["BlockFilePrefix"]))
+        
         # remove garbage
         if it>1:
             files2rem = glob.glob("%s.state.iter.%03d.block.???"%(paramDict["BlockFilePrefix"],it-1))
@@ -111,8 +113,10 @@ def IterateTraining (nrIter, varT, nrIterStable):
             files2rem += glob.glob("%s.state.iter.%03d.block.score"%(paramDict["BlockFilePrefix"],it-1))
             for item in files2rem:
                 print ("removing file: %s"%item)
-                try:pass#os.unlink(item)
+                try:os.unlink(item)#pass#
                 except: pass       
+                
+        
         
         if score == 0:                  
             shutil.copy("%s.state.iter.%03d.block.all"%(paramDict["BlockFilePrefix"],it), "%s.state.vart.%05.05f.all"%(paramDict["BlockFilePrefix"],varT))
@@ -169,6 +173,7 @@ def PerformClassification():
     gmlpy.Run(mydict)
     
 if __name__ == "__main__":
-    #MakeInitialPrep()    
-    BinarySearchTraining()
+    MakeInitialPrep()    
+    #BinarySearchTraining()
     #PerformClassification()
+    IterateTraining(500, 1.0, 50);

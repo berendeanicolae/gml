@@ -66,6 +66,9 @@ private:
 		pvm_float  b;
 		pvm_float  score;
 		pvm_float  firstMember;
+		bool	   infeas_eq;
+
+		void reset(int recCount);
 	};
 
 	struct StateFileHeader {
