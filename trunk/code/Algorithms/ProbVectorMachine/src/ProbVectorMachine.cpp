@@ -8,7 +8,8 @@ ProbVectorMachine::ProbVectorMachine()
 	ObjectName = "ProbVectorMachine";
 
 	//Add extra commands here
-	SetPropertyMetaData("Command","!!LIST:None=0,DebugTest,PreCompGramMatrix,MergeKprimeFiles,PreCompEqNorm,InitStateVars,BlockTraining,LastBlockTraining,GatherBlockStates!!");
+	SetPropertyMetaData("Command","!!LIST:None=0,DebugTest,PreCompGramMatrix,MergeKprimeFiles,PreCompEqNorm,"
+						"InitStateVars,BlockTraining,LastBlockTraining,GatherBlockStates,Clasify!!");
 	
 	// kernel choice related variables	
 	LinkPropertyToUInt32("KernelType",varKernelType,KERPOLY,"!!LIST:Poly=0,Scalar,Rbf,PolyParam,ScalarParam,RbfParam!!");
@@ -27,10 +28,17 @@ ProbVectorMachine::ProbVectorMachine()
 	LinkPropertyToDouble("T",varT,1.0,"The T algorithm parameter; used for binary search");
 	LinkPropertyToUInt32("WindowSize",varWindowSize,10,"The Windows size the block solver works with");
 	LinkPropertyToUInt32("IterationNo",varIterNr,0,"The current iteration number");
+
+	// final classification related vars
+	LinkPropertyToString("ModelFile",varModelFile, "model-file.dat", "File with the algorithm model to be used for classification");
+	LinkPropertyToString("ConnectorTest",varConectorTest,"","Test Connector string");
+
+	conectorTest = NULL;
 }
 bool ProbVectorMachine::Init()
 {
     CHECKMSG(InitConnections(), "Could not initialize connections");
+	CHECKMSG(InitExtraConnections(), "Could not initialize the extra test connector");
     CHECKMSG(InitThreads(), "Could not initialize threads");
     CHECKMSG(con->CreateMlRecord(MainRecord), "Could not create main ML Record");	
 	return true;
@@ -102,6 +110,11 @@ void ProbVectorMachine::OnExecute()
 			INFOMSG("Starting to average the states of every block");
 			GatherBlockStates();
 			break;
+		case COMMAND_CLASSIFY:
+			INFOMSG("Starting classification");
+			ClasifyDataset();
+			break;
+
 		default:
 			notif->Error("[%s] -> Unknown command ID: %d",ObjectName,Command);
 			break;
@@ -395,7 +408,7 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 {
 	// algorithm state variables
 	pvm_float scoreSum, update;
-	Int32	  i, w, k;
+	UInt32	  i, w, k;
 	pvm_float maxWindowScore;
 
 	UInt32 nrRec = con->GetRecordCount();
@@ -953,7 +966,7 @@ bool ProbVectorMachine::GatherBlockStates()
 	CHECKMSG(fileObj.Read(&b, sizeof(pvm_float), &read),"could not read from file: %s", fileName.GetText());
 	CHECKMSG(read==sizeof(pvm_float), "could not read enough from file");
 
-	CHECKMSG(fileObj.Read(&score, sizeof(pvm_float), &read),"could not read from file: %s", FindFileData.cFileName);
+	CHECKMSG(fileObj.Read(&score, sizeof(pvm_float), &read),"could not read from file: %s", fileName.GetText());
 	CHECKMSG(read==sizeof(pvm_float), "could not read enough from file");
 
 	fileObj.Close();
@@ -1003,5 +1016,107 @@ bool ProbVectorMachine::GatherBlockStates()
 	CHECKMSG(written==sizeof(char)*(scoreStr.GetSize()-1), "could not write enough to file");
 	fileObj.Close();
 
+	return true;
+}
+
+bool ProbVectorMachine::ClasifyDataset()
+{
+	UInt64 read;
+	UInt32 i, j;
+
+	StateFileHeader stateHeader;
+
+	UInt32 nrRec = con->GetRecordCount();
+	UInt32 vectSz = sizeof(pvm_float)*nrRec;
+
+	GML::Utils::File				fileObj;
+
+	pvm_float *alpha, *sigma, b;
+
+	// sanity checks
+	UInt32 trainNrFeat, testNrFeat;
+	trainNrFeat = con->GetFeatureCount();
+	testNrFeat  = conectorTest->GetFeatureCount();
+	CHECKMSG(trainNrFeat == testNrFeat, "the test dataset has to have the same number of features as the train dataset");
+
+	// read data from model file
+	alpha = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(alpha, "could not alloc memory");
+
+	sigma = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(sigma, "could not alloc memory");
+
+	CHECKMSG(fileObj.OpenRead(varModelFile.GetText()), "could not open file:%s for reading", varModelFile.GetText());
+
+	CHECKMSG(fileObj.Read(&stateHeader, sizeof(StateFileHeader), &read), "could not read from file: %s", varModelFile.GetText());
+	CHECKMSG(read==sizeof(StateFileHeader), "could not read enough from file");
+
+	CHECKMSG(fileObj.Read(alpha, vectSz, &read),"could not read from file: %s", varModelFile.GetText());
+	CHECKMSG(read==vectSz, "could not read enough from file");
+
+	CHECKMSG(fileObj.Read(sigma, vectSz, &read),"could not read from file: %s", varModelFile.GetText());
+	CHECKMSG(read==vectSz, "could not read enough from file");
+
+	CHECKMSG(fileObj.Read(&b, sizeof(pvm_float), &read),"could not read from file: %s", varModelFile.GetText());
+	CHECKMSG(read==sizeof(pvm_float), "could not read enough from file");
+
+	fileObj.Close();
+
+	UInt32 nrRecordsTest = conectorTest->GetRecordCount();
+	UInt32 nrTestPos, nrTestNeg, nrFalsePos, nrFalseNeg;
+	pvm_float ker, result;
+	double label;
+	GML::ML::MLRecord  mlRecTest, mlRecTrain;
+	ker_f_wrapper kernCompute(con, notif);
+	
+	kernCompute.set_params(varKernelParamDouble, varKernelParamInt, NULL, (KerFuncType)varKernelType);
+
+	nrFalseNeg = nrFalsePos = 0;
+	nrTestNeg  = nrTestPos  = 0;
+
+	CHECKMSG(conectorTest->CreateMlRecord(mlRecTest),"could not create the test ml record");
+	CHECKMSG(con->CreateMlRecord(mlRecTrain),"could not create the train ml record");
+
+	for (i=0;i<nrRecordsTest;i++) {
+		CHECKMSG(conectorTest->GetRecord(mlRecTest, i), "could not get test record at index: %d", i);
+		
+		// check label
+		CHECKMSG(conectorTest->GetRecordLabel(label, i), "could not get test record label at index: %d", i);
+		if (label == 1) nrTestPos++;
+		else nrTestNeg++;
+
+		// compute 
+
+		result = b;
+		for (j=0;j<nrRec;j++) {
+			CHECKMSG(con->GetRecord(mlRecTrain, j), "could not get train record at index: %d", j);
+			
+			ker = (pvm_float)kernCompute.compute_for(mlRecTest, mlRecTrain);
+			result += alpha[j] * ker;
+		}
+
+		// compare with original label
+		if (label==1 && result<0) nrFalseNeg++;
+		if (label!=1 && result>0) nrFalsePos++;
+	}
+
+	INFOMSG("TP : %.02f",(nrTestPos-nrFalseNeg)/nrTestPos*100);
+	INFOMSG("TN : %.02f",(nrTestNeg-nrFalsePos)/nrTestNeg*100);
+
+	INFOMSG("FP : %.02f",(nrFalsePos)/nrTestNeg*100);
+	INFOMSG("FN : %.02f",(nrFalseNeg)/nrTestPos*100);
+
+	INFOMSG("ACC: %.02f",(nrRecordsTest-(nrFalseNeg+nrFalsePos))/nrRecordsTest*100);
+
+	return true;
+}
+
+bool ProbVectorMachine::InitExtraConnections()
+{
+	if ((conectorTest = GML::Builder::CreateConnector(varConectorTest.GetText(),*notif))==NULL)
+	{
+		notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,varConectorTest.GetText());
+		return false;
+	}
 	return true;
 }
