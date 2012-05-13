@@ -56,6 +56,7 @@ private:
 		COMMAND_BLOCK_TRAINING,
 		COMMAND_LAST_BLOCK_TRAINING,
 		COMMAND_GATHER_BLOCK_STATES,
+		COMMAND_CLASSIFY,
 		//Add extra commands here
 	};	
 
@@ -77,9 +78,11 @@ private:
 
 private:
 	GML::ML::MLRecord		MainRecord;	
+	GML::ML::IConnector		*conectorTest;
 
 	// related class instances
 	PreCache InstPreCache;
+
 	void ProbVectorMachine::PreCacheInstanceInit();
 
 	void	OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,UInt32 threadCommand);
@@ -101,8 +104,10 @@ public:
 	void	OnExecute();    
     bool	ThreadTestCompSpeed(GML::Algorithm::MLThreadData & thData);
 	bool	LastBlockTraining();
-	bool DumpDefaultStateVariables();
-	bool GatherBlockStates();
+	bool	DumpDefaultStateVariables();
+	bool	GatherBlockStates();
+	bool	ClasifyDataset();
+	bool	InitExtraConnections();
 	// variables to control the algorithm flow
 	UInt32 varKernelType;
 	UInt32 varBlockFileSize;
@@ -118,6 +123,8 @@ public:
 
 	GML::Utils::GString	varBlockFilePrefix;
 	GML::Utils::GString	varFeatureWeightFile;
+	GML::Utils::GString	varModelFile;
+	GML::Utils::GString	varConectorTest;
 };
 
 #endif
