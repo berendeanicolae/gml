@@ -47,7 +47,7 @@ def ExecuteCommand(cmd, itNumber=0):
     mydict["Command"] = cmd
     mydict["IterationNo"] = itNumber
     
-    gmlpy.Run(mydict)    
+    gmlpy.Run(mydict)        
     
 def MakeInitialPrep():    
     ExecuteCommand("PreCompGramMatrix")
@@ -65,7 +65,7 @@ def IterationTrain (itNumber):
     mydict["Notifier"] = notif
     
     mydict["IterationNo"] = itNumber
-    mydict["T"] = 2.0
+    mydict["T"] = 0.00001
     
     mydict["Command"] = "BlockTraining"
     line50 = '-'*50
