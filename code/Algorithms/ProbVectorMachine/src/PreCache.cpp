@@ -78,6 +78,7 @@ bool PreCache::PreComputeGram()
 
 	// records per Block, useful for computing where we are right now
 	pccb.RecPerBlock = RecPerBlock;
+	pccb.BlockNr = id.varBlockStart;
 
 	// iterate through the Blocks that need to be computed
 	for (UInt32 i=id.varBlockStart;i<id.varBlockStart+id.varBlockCount && i*RecPerBlock<NrRec;i++) {

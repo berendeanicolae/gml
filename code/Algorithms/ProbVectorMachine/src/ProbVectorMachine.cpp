@@ -348,23 +348,63 @@ bool ProbVectorMachine::IterateBlockTraining()
 	PreCacheInstanceInit();
 	InstPreCache.AtInitLoading();
 
+	UInt32 blkIdx;
 	// signal the first load because the for will start by waiting
 	InstPreCache.AtSignalStartLoading(varBlockStart);
 
-	for (UInt32 blkIdx=varBlockStart; blkIdx<varBlockStart+varBlockCount; blkIdx++)
+	for (blkIdx=varBlockStart + 1; blkIdx<varBlockStart+varBlockCount; blkIdx++)
 	{
 		handle = InstPreCache.AtWaitForCompletion();						
 		NULLCHECKMSG(handle,"could not load block file:%d exiting", blkIdx-1);		
 		handle->KPRM = kprime;
 
 		CHECKMSG(InstPreCache.AtSignalStartLoading(blkIdx),"could not signal loading of block:%d ", blkIdx);
-		CHECKMSG(PerfomBlockTraining(blkIdx, handle), "error performing training on block: %d", blkIdx);
+		CHECKMSG(PerfomBlockTraining(blkIdx, handle), "error performing training on block: %d", blkIdx - 1);
 
 		// dump the block state variables to disk	
 		fileName.Truncate(0);	
-		fileName.AddFormated("%s.state.iter.%03d.block.%03d", varBlockFilePrefix.GetText(), varIterNr, blkIdx);
+		fileName.AddFormated("%s.state.iter.%03d.block.%03d", varBlockFilePrefix.GetText(), varIterNr, blkIdx - 1);
 
-		stateHeader.blkNr = blkIdx;
+		stateHeader.blkNr = blkIdx - 1;
+		stateHeader.recStart = handle->recStart;
+		stateHeader.recCount = handle->recCount;
+		stateHeader.totalRecCount = nrRec;
+
+		CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
+
+		// write header
+		CHECKMSG(fileObj.Write(&stateHeader,sizeof(StateFileHeader),&written),"could not write to block state file");
+		CHECKMSG(written==sizeof(StateFileHeader),"could not write enough to the block state file");
+
+		// write alphas
+		CHECKMSG(fileObj.Write(wu.ALPH,vectSz,&written),"could not write to block state file");
+		CHECKMSG(written==vectSz,"could not write enough to the block state file");
+
+		// write signmas
+		CHECKMSG(fileObj.Write(wu.SIGM,vectSz,&written),"could not write to block state file");
+		CHECKMSG(written==vectSz,"could not write enough to the block state file");
+
+		// write block score for stop condition
+		CHECKMSG(fileObj.Write(&wu.score,sizeof(pvm_float),&written),"could not write to block state file");
+		CHECKMSG(written==sizeof(pvm_float),"could not write enough to the block state file");
+
+		fileObj.Close();
+	}
+
+	{
+		//the last block must finish processing, as it was only signaled for loading
+		//carefull : the blockIdx is now equal to varBlockStart+varBlockCount and this must not be changed
+		handle = InstPreCache.AtWaitForCompletion();						
+		NULLCHECKMSG(handle,"could not load block file:%d exiting", blkIdx-1);		
+		handle->KPRM = kprime;
+
+		CHECKMSG(PerfomBlockTraining(blkIdx, handle), "error performing training on block: %d", blkIdx - 1);
+
+		// dump the block state variables to disk	
+		fileName.Truncate(0);	
+		fileName.AddFormated("%s.state.iter.%03d.block.%03d", varBlockFilePrefix.GetText(), varIterNr, blkIdx - 1);
+
+		stateHeader.blkNr = blkIdx - 1;
 		stateHeader.recStart = handle->recStart;
 		stateHeader.recCount = handle->recCount;
 		stateHeader.totalRecCount = nrRec;
@@ -442,10 +482,10 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 
 			if (scoreSum < minScoreSum)
 				scoreSum = minScoreSum;
-
+			
 			for (i=0;i<wu.winSize;i++)
 				wu.pn[i] = wu.san[i]/scoreSum;
-
+						
 			// update alphas
 			for (i=0;i<nrRec;i++) {			
 				update = 0;
@@ -787,11 +827,9 @@ bool ProbVectorMachine::LastBlockTraining()
 
 		if (scoreSum < minScoreSum)
 			scoreSum = minScoreSum;
-
-		for (i = 0; i < 4; i++)
-			u[i].score /= scoreSum;
 		
-
+		for (i = 0; i < 4; i++)
+			u[i].score /= scoreSum;			
 
 		// we use as output the exact same buffers used for input
 		pvm_float mean;
@@ -1012,7 +1050,7 @@ bool ProbVectorMachine::GatherBlockStates()
 				alpha_count[i]++;
 			}
 			
-			for (i=stateHeader.recStart;i<stateHeader.recCount;i++)
+			for (i=stateHeader.recStart;i<stateHeader.recStart + stateHeader.recCount;i++)
 			{
 				sigmaMean[i] += sigma[i];			
 				sigma_count[i]++;
