@@ -226,7 +226,7 @@ bool PreCache::ThreadPrecomputeBlock(GML::Algorithm::MLThreadData &thData)
 
 		double label;
 		for (UInt32 j=0;j<NrRec;j++) {
-			CHECK(GetKernelAt(LineNr,j, pccb.KernelBuffer, pccb.RecCount, &val));		
+			CHECKMSG(GetKernelAt(LineNr,j, pccb.KernelBuffer, pccb.RecCount, &val),"could not get kernel value");		
 			CHECKMSG(id.con->GetRecordLabel(label, j),"could not record label for index %d", j);		
 			if (label==1) KpPos += val;						
 			else KpNeg += val;		

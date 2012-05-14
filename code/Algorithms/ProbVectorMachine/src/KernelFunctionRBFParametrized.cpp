@@ -25,7 +25,7 @@ bool ker_f_rbf_param::set_parameters(pvm_double &src_gamma, GML::Utils::GTVector
 
 	for (i = 0; i < (int)src_params.GetCount(); i++)
 	{
-		DBGSTOP_CHECKMSG(src_params[i] >= 0, "Weights should all be positive")
+		DBGSTOP_CHECKMSG(src_params[i] >= 0, "Weights should all be positive");
 		if (src_params[i] < 0)
 			return false;
 	}

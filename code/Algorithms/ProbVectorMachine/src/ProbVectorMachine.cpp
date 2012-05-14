@@ -29,6 +29,9 @@ ProbVectorMachine::ProbVectorMachine()
 	LinkPropertyToUInt32("WindowSize",varWindowSize,10,"The Windows size the block solver works with");
 	LinkPropertyToUInt32("IterationNo",varIterNr,0,"The current iteration number");
 
+	LinkPropertyToUInt32("NrUpdatesPerNormBlock",varNrUpdatesPerNormBlock,1,"Number of updates to be applied for a normal block");
+	LinkPropertyToUInt32("NrUpdatesPerLastBlock",vadNrUpdatesPerLastBlock,1,"Numnber of updates to be applied for the last block");
+
 	// final classification related vars
 	LinkPropertyToString("ModelFile",varModelFile, "model-file.dat", "File with the algorithm model to be used for classification");
 	LinkPropertyToString("ConnectorTest",varConectorTest,"","Test Connector string");
@@ -448,12 +451,12 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 {
 	// algorithm state variables
 	pvm_float scoreSum, update;
-	UInt32	  i, w, k;
+	UInt32	  i, w, k, updateNr;
 	pvm_float maxWindowScore;
 	pvm_float minScoreSum = 1e-10f;
 
 	UInt32 nrRec = con->GetRecordCount();
-	for (int win_iter = 0; win_iter < 25; win_iter++)
+	for (updateNr = 0; updateNr < varNrUpdatesPerNormBlock; updateNr++)
 	{
 		wu.score = 0;
 
@@ -612,7 +615,7 @@ inline pvm_float ProbVectorMachine::KerAt(UInt32 line,UInt32 row, pvm_float* ker
 
 bool ProbVectorMachine::LastBlockTraining()
 {
-	UInt32 nrRec = con->GetRecordCount(), i;
+	UInt32 nrRec = con->GetRecordCount(), i, updateNr;
 	UInt32 vectSz = sizeof(pvm_float)*nrRec;
 	UInt64 read, written;
 	pvm_float varTFloat = (pvm_float)varT;
@@ -707,7 +710,7 @@ bool ProbVectorMachine::LastBlockTraining()
 	memset(u, 0, sizeof(UpdateStr)*4);
 	memset(s, 0, sizeof(pvm_float)*4);
 
-	for (int blk_it = 0; blk_it < 5; blk_it++)
+	for (updateNr = 0; updateNr < vadNrUpdatesPerLastBlock; updateNr++)
 	{	
 		term0 = term1 = b;
 		for (i=0;i<nrRec;i++) {

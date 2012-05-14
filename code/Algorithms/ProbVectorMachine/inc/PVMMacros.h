@@ -4,19 +4,38 @@
 #include <cstring>
 #include <cstdlib>
 
-#define PVM_DEBUG_MODE 1
+//#define PVM_DEBUG_MODE 1
+//#define MCU_DEBUG_MODE 
 
-#define INFOMSG(...) { {char z123[4096]; sprintf_s(z123,4096, __VA_ARGS__) ;notif->Info("[%s] -> %s",ObjectName, z123);} };
-#define INFOTHDMSG(...) { {char z123[4096]; sprintf_s(z123,4096, __VA_ARGS__) ;notif->Info("[%s] [Th:%d] -> %s",ObjectName, thData.ThreadID, z123);} };
-#define ERRORMSG(...){ {char z123[4096]; sprintf_s(z123,4096, __VA_ARGS__) ;notif->Error("[%s] -> %s",ObjectName, z123);} };
+#ifdef MCU_DEBUG_MODE
+	#define INFOMSG(...) { {char z123[4096]; sprintf_s(z123,4096, __VA_ARGS__) ;notif->Info("[%s] -> %s",ObjectName, z123);} };
+	#define INFOTHDMSG(...) { {char z123[4096]; sprintf_s(z123,4096, __VA_ARGS__) ;notif->Info("[%s] [Th:%d] -> %s",ObjectName, thData.ThreadID, z123);} };
+	#define ERRORMSG(...){ {char z123[4096]; sprintf_s(z123,4096, __VA_ARGS__) ;notif->Error("[%s] -> %s",ObjectName, z123);} };
 
-#define NULLCHECKMSG(val, ...){ if (val==NULL) { ERRORMSG(__VA_ARGS__); return false; } };    
-#define NULLCHECK(val) {if (val==NULL) { return false; }; };
+	#define NULLCHECKMSG(val, ...){ if (val==NULL) { ERRORMSG(__VA_ARGS__); return false; } };    
+	#define NULLCHECK(val) {if (val==NULL) { return false; }; };
 
-#define CHECKMSG(val, ...){ if (val==false) { ERRORMSG(__VA_ARGS__); return false; }; };
-#define CHECK(val){ if (val==false) return false;}; 
+	#define CHECKMSG(val, ...){ if (val==false) { ERRORMSG(__VA_ARGS__); return false; }; };
+	#define CHECK(val){ if (val==false) return false;}; 
 
-#define ATCHECKMSG(val, ...){ if (val==false) { ERRORMSG(__VA_ARGS__); AtKillThread=true; SetEvent(AtEventWorking); return 0xffFFffFF; }; };
+	#define ATCHECKMSG(val, ...){ if (val==false) { ERRORMSG(__VA_ARGS__); AtKillThread=true; SetEvent(AtEventWorking); return 0xffFFffFF; }; };
+#else
+	#define INFOMSG(...)    //
+	#define INFOTHDMSG(...) //
+	#define ERRORMSG(...) //	
+
+	#define NULLCHECKMSG(val, ...) { val; }
+	#define NULLCHECK(val) //
+
+	#define CHECKMSG(val, ...) { val; }
+	#define CHECK(val) { val }
+
+	#define ATCHECKMSG(val, ...) { val; }
+
+	#pragma warning( disable : 4553 )
+	#pragma warning( disable : 4552 )
+
+#endif
 
 #ifdef PVM_DEBUG_MODE
 	#define DBG_NULLCHECKMSG    NULLCHECKMSG

@@ -119,7 +119,7 @@ public:
 
 	double varLambda;
 	double varT;
-	UInt32 varWindowSize, varIterNr;
+	UInt32 varWindowSize, varIterNr, varNrUpdatesPerNormBlock, vadNrUpdatesPerLastBlock;
 
 	Int32		varKernelParamInt;
 	pvm_double  varKernelParamDouble;
