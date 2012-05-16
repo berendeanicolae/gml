@@ -14,6 +14,7 @@ public:
 		THREAD_COMMAND_TEST_PROC_SPEED,
 		THREAD_COMMAND_PRECOMPUTE_BLOCK,
 		THREAD_COMMAND_WINDOW_UPDATE,
+		THREAD_COMMAND_COMPUTE_SCORE,
 		//Add extra thread commands here
 	};	
 
@@ -57,6 +58,7 @@ private:
 		COMMAND_LAST_BLOCK_TRAINING,
 		COMMAND_GATHER_BLOCK_STATES,
 		COMMAND_CLASSIFY,
+		COMMAND_BLOCK_SCORE_COMPUTATION,
 		//Add extra commands here
 	};	
 
@@ -97,6 +99,11 @@ private:
 
 	bool	PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHandle *handle);
 	bool	PerformWindowUpdate(GML::Algorithm::MLThreadData &thData);
+
+	
+	bool	BlockScoreComputation();
+	bool	PrepareAndExecuteBlockScoreComputation(UInt32 blkIdx, PreCache::BlockLoadHandle *handle);
+	bool	ComputeBlockScore(GML::Algorithm::MLThreadData &thData);
 
 	inline  pvm_float KerAt(UInt32 line,UInt32 row, pvm_float* ker, UInt32 nrRec);
 

@@ -9,8 +9,8 @@ ProbVectorMachine::ProbVectorMachine()
 
 	//Add extra commands here
 	SetPropertyMetaData("Command","!!LIST:None=0,DebugTest,PreCompGramMatrix,MergeKprimeFiles,PreCompEqNorm,"
-						"InitStateVars,BlockTraining,LastBlockTraining,GatherBlockStates,Clasify!!");
-	
+						"InitStateVars,BlockTraining,LastBlockTraining,GatherBlockStates,Clasify,BlockScoreComputation!!");
+	/*, BlockScoreComputation*/
 	// kernel choice related variables	
 	LinkPropertyToUInt32("KernelType",varKernelType,KERPOLY,"!!LIST:Poly=0,Scalar,Rbf,PolyParam,ScalarParam,RbfParam!!");
 	LinkPropertyToInt32("KernelParamInt",varKernelParamInt,0,"The Integer parameter of the kernel function");
@@ -61,6 +61,8 @@ void ProbVectorMachine::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,
 		case THREAD_COMMAND_WINDOW_UPDATE:
 			PerformWindowUpdate(thData);
 			return;
+		case THREAD_COMMAND_COMPUTE_SCORE:
+			ComputeBlockScore(thData);
 		default:
 			ERRORMSG("could not find thread comment");
 			return;
@@ -116,6 +118,10 @@ void ProbVectorMachine::OnExecute()
 		case COMMAND_CLASSIFY:
 			INFOMSG("Starting classification");
 			ClasifyDataset();
+			break;
+		case COMMAND_BLOCK_SCORE_COMPUTATION:
+			INFOMSG("Starting block score computation");
+			BlockScoreComputation();
 			break;
 
 		default:
@@ -264,6 +270,189 @@ bool ProbVectorMachine::PreCacheCall(UInt32 cmd)
 	return true;
 }
 
+bool ProbVectorMachine::BlockScoreComputation()
+{
+	/*
+	 Read initial state from the disk; this state is available through all the blocks 
+	 that are being processed on this machine
+	*/
+
+	UInt32 nrRec = con->GetRecordCount();
+	UInt32 vectSz = sizeof(pvm_float)*nrRec;
+	UInt64 read, written;
+
+	PreCache::BlockLoadHandle *handle;
+	PreCache::KPrimePair	  *kprime;
+	
+	GML::Utils::File				fileObj;
+	GML::Utils::GString				fileName;
+	PreCache::PreCacheFileHeader	kpHeader;
+	StateFileHeader					stateHeader;
+
+	pvm_float *alpha, *sigma;
+	
+	alpha = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(alpha, "could not alloc memory for alphaOrig");
+
+	sigma = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(sigma, "could not alloc memory for sigmaPOrig");
+
+	// initialize state variables with values read from disk or init here
+	fileName.Truncate(0);
+	fileName.AddFormated("%s.state.iter.%03d.block.all", varBlockFilePrefix.GetText(), varIterNr-1);
+
+	// read state variables from disk
+	CHECKMSG(fileObj.OpenRead(fileName),"could not open file for reading: %s",fileName.GetText());
+		
+	CHECKMSG(fileObj.Read(&stateHeader, sizeof(StateFileHeader), &read), "could not read from state file");
+	CHECKMSG(read==sizeof(StateFileHeader), "could not read enough from state file");
+
+	CHECKMSG(fileObj.Read(alpha, vectSz, &read), "could not read from state file");
+	CHECKMSG(read==vectSz, "could not read enough from state file");
+
+	CHECKMSG(fileObj.Read(sigma, vectSz, &read), "could not read from state file");
+	CHECKMSG(read==vectSz, "could not read enough from state file");
+	fileObj.Close();
+	
+	// read kprime file
+	
+	fileName.Truncate(0);
+	fileName.Add(varBlockFilePrefix);
+	fileName.Add(".kprime.all");
+
+	CHECKMSG(fileObj.OpenRead(fileName),"could not open file for reading: %s",fileName.GetText());
+	CHECKMSG(fileObj.Read(&kpHeader, sizeof(PreCache::PreCacheFileHeader), &read), "could not read from file");
+	CHECKMSG(sizeof(PreCache::PreCacheFileHeader)==read,"could not read enough from file");
+	CHECKMSG(strcmp(kpHeader.Magic,KPRIME_FILE_HEADER_MAGIC)==0, "could not verify kprime header magic");
+	CHECKMSG(sizeof(PreCache::KPrimePair)*nrRec==kpHeader.BlockSize, "kprime block size does not have the correct size");
+
+	// alloc memory for kprime buffer
+	kprime = (PreCache::KPrimePair*) malloc((size_t)kpHeader.BlockSize);
+	NULLCHECKMSG(kprime, "could not alloc memory for sigmaPOrig");
+					
+	CHECKMSG(fileObj.Read(kprime, kpHeader.BlockSize, &read), "could not read from file");
+	CHECKMSG(kpHeader.BlockSize==read,"could not read enough from file");
+	fileObj.Close();
+
+	// alloc memory for local state variables
+	wu.ALPH = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(wu.ALPH, "could not alloc memory for alpha");
+
+	wu.SIGM = (pvm_float*) malloc(vectSz);
+	NULLCHECKMSG(wu.SIGM, "could not alloc memory for sigmaPlus");
+
+	// copy the contents of the state variables read from disk
+	memcpy(wu.ALPH, alpha, vectSz);
+	memcpy(wu.SIGM, sigma, vectSz);	
+
+	// alloc memory for window update structure
+	wu.uALPH  = (pvm_float*) malloc(nrRec*varWindowSize*sizeof(pvm_float));	
+	wu.uSIGM  = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
+	wu.san    = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
+	wu.pn     = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
+	NULLCHECKMSG(wu.uALPH && wu.uSIGM && wu.san && wu.pn, "could not alloc enough memory");
+
+	// start processing blocks
+
+	PreCacheInstanceInit();
+	InstPreCache.AtInitLoading();
+
+	UInt32 blkIdx;
+	// signal the first load because the for will start by waiting
+	InstPreCache.AtSignalStartLoading(varBlockStart);
+
+	for (blkIdx=varBlockStart + 1; blkIdx<varBlockStart+varBlockCount; blkIdx++)
+	{
+		handle = InstPreCache.AtWaitForCompletion();						
+		NULLCHECKMSG(handle,"could not load block file:%d exiting", blkIdx-1);		
+		handle->KPRM = kprime;
+
+		CHECKMSG(InstPreCache.AtSignalStartLoading(blkIdx),"could not signal loading of block:%d ", blkIdx);
+		CHECKMSG(PrepareAndExecuteBlockScoreComputation(blkIdx, handle), "error performing score computation on block: %d", blkIdx - 1);
+
+		// dump the block state variables to disk	
+		fileName.Truncate(0);	
+		fileName.AddFormated("%s.state.iter.%03d.block.%03d", varBlockFilePrefix.GetText(), varIterNr, blkIdx - 1);
+
+		stateHeader.blkNr = blkIdx - 1;
+		stateHeader.recStart = handle->recStart;
+		stateHeader.recCount = handle->recCount;
+		stateHeader.totalRecCount = nrRec;
+
+		CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
+
+		// write header
+		CHECKMSG(fileObj.Write(&stateHeader,sizeof(StateFileHeader),&written),"could not write to block state file");
+		CHECKMSG(written==sizeof(StateFileHeader),"could not write enough to the block state file");
+
+		// write alphas
+		CHECKMSG(fileObj.Write(wu.ALPH,vectSz,&written),"could not write to block state file");
+		CHECKMSG(written==vectSz,"could not write enough to the block state file");
+
+		// write signmas
+		CHECKMSG(fileObj.Write(wu.SIGM,vectSz,&written),"could not write to block state file");
+		CHECKMSG(written==vectSz,"could not write enough to the block state file");
+
+		// write block score for stop condition
+		CHECKMSG(fileObj.Write(&wu.score,sizeof(pvm_float),&written),"could not write to block state file");
+		CHECKMSG(written==sizeof(pvm_float),"could not write enough to the block state file");
+
+		fileObj.Close();
+	}
+
+	{
+		//the last block must finish processing, as it was only signaled for loading
+		//carefull : the blockIdx is now equal to varBlockStart+varBlockCount and this must not be changed
+		handle = InstPreCache.AtWaitForCompletion();						
+		NULLCHECKMSG(handle,"could not load block file:%d exiting", blkIdx-1);		
+		handle->KPRM = kprime;
+
+		CHECKMSG(PrepareAndExecuteBlockScoreComputation(blkIdx, handle), "error performing score computation on block: %d", blkIdx - 1);
+
+		// dump the block state variables to disk	
+		fileName.Truncate(0);	
+		fileName.AddFormated("%s.state.iter.%03d.block.%03d", varBlockFilePrefix.GetText(), varIterNr, blkIdx - 1);
+
+		stateHeader.blkNr = blkIdx - 1;
+		stateHeader.recStart = handle->recStart;
+		stateHeader.recCount = handle->recCount;
+		stateHeader.totalRecCount = nrRec;
+
+		CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
+
+		// write header
+		CHECKMSG(fileObj.Write(&stateHeader,sizeof(StateFileHeader),&written),"could not write to block state file");
+		CHECKMSG(written==sizeof(StateFileHeader),"could not write enough to the block state file");
+
+		// write alphas
+		CHECKMSG(fileObj.Write(wu.ALPH,vectSz,&written),"could not write to block state file");
+		CHECKMSG(written==vectSz,"could not write enough to the block state file");
+
+		// write signmas
+		CHECKMSG(fileObj.Write(wu.SIGM,vectSz,&written),"could not write to block state file");
+		CHECKMSG(written==vectSz,"could not write enough to the block state file");
+
+		// write block score for stop condition
+		CHECKMSG(fileObj.Write(&wu.score,sizeof(pvm_float),&written),"could not write to block state file");
+		CHECKMSG(written==sizeof(pvm_float),"could not write enough to the block state file");
+
+		fileObj.Close();
+	}
+
+	// free all temporary used memory buffers
+	free(alpha);
+	free(sigma);
+	free(kprime);
+	free(wu.ALPH);
+	free(wu.SIGM);
+	free(wu.uALPH);
+	free(wu.uSIGM);
+	free(wu.san);
+	free(wu.pn);
+
+	return true;
+}
+
 bool ProbVectorMachine::IterateBlockTraining()
 {
 	/*
@@ -362,7 +551,7 @@ bool ProbVectorMachine::IterateBlockTraining()
 		handle->KPRM = kprime;
 
 		CHECKMSG(InstPreCache.AtSignalStartLoading(blkIdx),"could not signal loading of block:%d ", blkIdx);
-		CHECKMSG(PerfomBlockTraining(blkIdx, handle), "error performing training on block: %d", blkIdx - 1);
+		CHECKMSG(PerfomBlockTraining(blkIdx - 1, handle), "error performing training on block: %d", blkIdx - 1);
 
 		// dump the block state variables to disk	
 		fileName.Truncate(0);	
@@ -401,7 +590,7 @@ bool ProbVectorMachine::IterateBlockTraining()
 		NULLCHECKMSG(handle,"could not load block file:%d exiting", blkIdx-1);		
 		handle->KPRM = kprime;
 
-		CHECKMSG(PerfomBlockTraining(blkIdx, handle), "error performing training on block: %d", blkIdx - 1);
+		CHECKMSG(PerfomBlockTraining(blkIdx - 1, handle), "error performing training on block: %d", blkIdx - 1);
 
 		// dump the block state variables to disk	
 		fileName.Truncate(0);	
@@ -447,13 +636,26 @@ bool ProbVectorMachine::IterateBlockTraining()
 	return true;
 }
 
+bool ProbVectorMachine::PrepareAndExecuteBlockScoreComputation(UInt32 blkIdx, PreCache::BlockLoadHandle *handle)
+{
+	wu.score = 0;
+
+	wu.bHandle = handle;
+	wu.winStart = 0;
+	wu.winSize = handle->recCount;
+
+	ExecuteParalelCommand(THREAD_COMMAND_COMPUTE_SCORE);
+
+	return true;
+}
+
 bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHandle *handle)
 {
 	// algorithm state variables
 	pvm_float scoreSum, update;
 	UInt32	  i, w, k, updateNr;
 	pvm_float maxWindowScore;
-	pvm_float minScoreSum = 1e-10f;
+	pvm_float minScoreSum = (pvm_float)1e-10;
 
 	UInt32 nrRec = con->GetRecordCount();
 	for (updateNr = 0; updateNr < varNrUpdatesPerNormBlock; updateNr++)
@@ -1127,7 +1329,7 @@ bool ProbVectorMachine::GatherBlockStates()
 	// make string representatin of my score
 	GML::Utils::GString scoreStr;
 	scoreStr.Truncate(0);
-	scoreStr.AddFormated("%.02f\n",scoreSum);
+	scoreStr.AddFormated("%.06f\n",scoreSum);
 
 	// write string to .score file as text
 	fileName.Truncate(0);
@@ -1239,5 +1441,63 @@ bool ProbVectorMachine::InitExtraConnections()
 		notif->Error("[%s] -> Unable to create Conector (%s)",ObjectName,varConectorTest.GetText());
 		return false;
 	}
+	return true;
+}
+
+bool ProbVectorMachine::ComputeBlockScore(GML::Algorithm::MLThreadData &thData)
+{
+	UInt32		recIdxGlob, recIdxBlock, i;
+	double		label;
+	pvm_float	sj, ker, kpr;
+
+	//INFOTHDMSG("perform window update");
+	
+	UInt32 nrRec = con->GetRecordCount();
+	wu.updateNeeded = false;
+	
+	
+	for (UInt32 winIt=thData.ThreadID; winIt<wu.bHandle->recCount; winIt+=threadsCount)
+	{
+		recIdxBlock = wu.winStart + winIt;
+		recIdxGlob = wu.bHandle->recStart + recIdxBlock; 		
+		
+		CHECKMSG(con->GetRecordLabel(label, recIdxGlob),"could not get record label");				
+		
+		sj = 0;	
+
+		if (label == 1)
+		{		
+			for (i = 0; i < nrRec; i++) 
+			{
+				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+				kpr = wu.bHandle->KPRM[i].pos;
+				sj += wu.ALPH[i] * (ker - kpr);
+			}
+
+			if (wu.SIGM[recIdxGlob] - sj < 0) 
+				sj = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]);
+			else if (wu.SIGM[recIdxGlob] + sj < 0) 
+				sj = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]);
+		}
+		else
+		{
+			for (i = 0; i < nrRec; i++) 
+			{							
+				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+				kpr = wu.bHandle->KPRM[i].neg;
+				sj += wu.ALPH[i] * (ker - kpr);
+			}
+
+			if (wu.SIGM[recIdxGlob] - sj < 0) 			
+				sj = (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];							
+			else if (wu.SIGM[recIdxGlob] + sj < 0) 
+				sj = (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];				
+						
+		}	
+
+		if (wu.score < sj)
+			wu.score = sj;
+	}
+
 	return true;
 }
