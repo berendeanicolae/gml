@@ -1,8 +1,10 @@
 import os, sys, shutil, subprocess, time, tempfile, glob
 
-slaves = [ ( "127.0.0.1", {"ThreadsCount":2, "BlockStart":0, "BlockCount": 5, "WindowSize":100} ) ]
+slaves = [ ( "127.0.0.1"    , {"ThreadsCount":2, "BlockStart":0, "BlockCount": 2, "WindowSize":100} ),
+           ( "192.168.1.132", {"ThreadsCount":2, "BlockStart":2, "BlockCount": 3, "WindowSize":100} ) 
+        ]
 
-
+workPackage = r"D:\GML\package"
 #-----------------------------------------------------------------------------------------------------------
 
 def rmdir(d):
@@ -42,18 +44,17 @@ def netuse (ip):
 	os.system(r"net use \\%s /del 1>nul 2>nul"%ip)
 	os.system(r"net use \\%s /user:gml gml 1>nul 2>nul"%ip)	
 
-def copyPackage():
-	if len(sys.argv)<=1: 
-		print ("please provide the source folder")
+def upload():
 	for ip,config in slaves:		
 		print ("provisioning %s with the work package"%(ip))
 		netuse(ip)
-		remoteDir = r"\\%s\gml"%(ip)
-		localdir  = sys.argv[1]
-		recursiveCopy(localdir, remoteDir)
+		remoteDir = r"\\%s\gml"%(ip)		
+		recursiveCopy(workPackage, remoteDir)
+		print "-"*50
 
 def stopLoopScript():
-	for ip,config in slaves:		
+	for ip,config in slaves:
+		print ("-"*100)
 		print ("trying to stop loop script for: %s"%(ip))
 		os.system(r"pskill \\%s -u gml -p gml python3.exe"%ip)
 
@@ -137,16 +138,28 @@ def removeDoneCmds(ip):
 	for d in dones:
 		os.unlink(d)
 
-def putCmd (cmd):	
+def putCmd (cmd, local=False,itNumber=0):	
 	print ("putting command: %s for every slave"%(cmd))
 	cmdFiles = []
-	for ip, config in slaves:
+
+	# if a local cmd only, get config for local ip
+	if local:
+		for ip, config in slaves:
+			if ip == "127.0.0.1":
+				ipuple = [("127.0.0.1", config)]
+	else:
+		ipuple = slaves
+		
+	# execute command on all slaves
+	for ip, config in ipuple:
 		print (str("-"*50) + "\nhandling ip: %s"%(ip))
 		netuse(ip)
 		removeDoneCmds(ip)
 		
-		if cmd in ["InitStateVars","PreCompGramMatrix"]:
-			cmdDict = {"Command":cmd}
+		if cmd in ["PreCompGramMatrix","MergeKprimeFiles","PreCompEqNorm",
+		           "InitStateVars","BlockTraining","LastBlockTraining",
+		           "GatherBlockStates","Clasify","BlockScoreComputation"]:
+			cmdDict = {"Command":cmd,"IterationNo":itNumber}
 		else:
 			print ("unrecognized command: %s"%(cmd))
 			return
@@ -170,7 +183,7 @@ def putCmd (cmd):
 	timeStart = time.time()
 	while len(cmdFiles)>0:
 		time.sleep(5)
-		print ("-"*100)
+		print ("-"*50)
 		timeNow = time.time()
 		if timeNow - timeStart >= time2wait: break
 		
@@ -190,7 +203,58 @@ def putCmd (cmd):
 			if os.path.exists(cmdFile):
 				print ("idle: %s"%(cmdFile))
 		
+def copySlaves2Local(pattern):
+	print ("-"*100)
+	print ("copying files with pattern : %s from all slaves to local"%(pattern))	
+	localIp = "127.0.0.1"
+	for ip, config in slaves:
+		if ip == localIp: continue
+		netuse(ip)
+		print "-"*50
+		print "copying from ip: %s"%(ip)
+		files = glob.glob(r"\\%s\gml\work\%s"%(ip, pattern))
+		localBase = r"\\%s\gml\work"%(localIp)
+		for f in files:
+			localPath = os.path.join(localBase, os.path.basename(f))
+			print ("\t%s -> %s"%(f, localPath))
+			shutil.copy(f, localPath)
+
+def copyLocal2Slaves(pattern):
+	print ("-"*100)
+	print ("copying files with pattern : %s to all slaves"%(pattern))
+	localIp = "127.0.0.1"
+	files = glob.glob(r"\\%s\gml\work\%s"%(localIp, pattern))
+	for ip, config in slaves:		
+		if ip == localIp: continue
+		netuse(ip)
+		print ("copying to ip: %s"%(ip))
+		for f in files:
+			remoteFile = f.replace(localIp,ip)
+			try:
+				os.unlink(remoteFile)
+			except:pass
+			shutil.copy(f, remoteFile)
+			print ("\t%s -> %s"%(f, remoteFile))
 			
+def deleteFromSlaves(pattern):	
+	print ("-"*100)
+	print ("deleting files with pattern : %s from all slaves"%(pattern))		
+	for ip, config in slaves:		
+		netuse(ip)
+		print "-"*50
+		print "removing from from ip: %s"%(ip)
+		files = glob.glob(r"\\%s\gml\work\%s"%(ip, pattern))		
+		for f in files:
+			print ("\t%s"%(f))
+			os.unlink(f)
+	
+def putMergeKPrimeFiles():
+	copySlaves2Local("*.kprime.??")
+	copySlaves2Local("*.eqnorm.??")
+	putCmd("MergeKprimeFiles",local=True)
+	copyLocal2Slaves("*.kprime.all")
+	copyLocal2Slaves("*.eqnorm.all")
+		
 #-----------------------------------------------------------------------------------------------------------
 def test():
 	#copyPackage()
@@ -202,6 +266,16 @@ def test():
 #test()
 #print (makeCmdFile(getDefaultParams()))
 
-#startLoopScript()
+#upload()
+
 putCmd ("PreCompGramMatrix")
+putCmd ("PreCompEqNorm")
+putMergeKPrimeFiles()
+putCmd ("InitStateVars")
+putCmd ("BlockTraining",itNumber=1)
+#copyLocal2Slaves("pvm.kernel.??")
+
 #stopLoopScript()
+#startLoopScript()
+#deleteFromSlaves("pvm.kprime.*")
+#putMergeKPrimeFiles()
