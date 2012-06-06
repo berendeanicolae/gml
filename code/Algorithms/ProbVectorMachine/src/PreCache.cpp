@@ -56,7 +56,8 @@ bool PreCache::PreComputeGram()
 	}
 
 	SizePerLine = sizeof(pvm_float)*NrRec;
-	RecPerBlock = GetNrRecPerBlock(0, NrRec);
+	//RecPerBlock = GetNrRecPerBlock(0, NrRec);
+	RecPerBlock = GetNrRecPerBlockNonRecursive(NrRec);
 
 	TotalNrBlocks = NrRec/RecPerBlock;
 	if (NrRec%RecPerBlock)
@@ -154,6 +155,27 @@ bool PreCache::PreComputeGram()
 	return true;
 }
 
+int PreCache::GetNrRecPerBlockNonRecursive(int MaxNr)
+{
+	UInt32 SzPerBlock = id.varBlockFileSize*UNMEGA;
+	UInt32 SzForAll = (NrRec*NrRec - (NrRec*(NrRec-1))/2)*sizeof(pvm_float);
+
+	// what if the database is smaller than UNMEGA
+	if (SzForAll<SzPerBlock) return MaxNr;
+
+	//obviously, we have to split
+	//this requires from us to solve a second degree equation
+
+	pvm_float c = (float)SzPerBlock / (float)sizeof(pvm_float);
+	pvm_float b = NrRec + (pvm_float)0.5;
+	pvm_float delta = b * b - 2 * c;
+
+	if (delta < 0)//this should not happen, as it has already been previously checked
+		return MaxNr;	
+
+	return (UInt32)(b - sqrtf(delta));
+}
+
 int PreCache::GetNrRecPerBlock(int MinNr, int MaxNr)
 {
 	// binary search for the nr of records per Block
@@ -162,7 +184,7 @@ int PreCache::GetNrRecPerBlock(int MinNr, int MaxNr)
 	UInt32 SzPerBlock = id.varBlockFileSize*UNMEGA;
 	UInt32 SzForAll = (NrRec*NrRec - (NrRec*(NrRec-1))/2)*sizeof(pvm_float);
 
-	// what if we the database is smaller than UNMEGA
+	// what if the database is smaller than UNMEGA
 	if (SzForAll<SzPerBlock) return MaxNr;
 
 	// the searched element condition
@@ -194,7 +216,7 @@ bool PreCache::ThreadPrecomputeBlock(GML::Algorithm::MLThreadData &thData)
 	CHECKMSG(id.con->CreateMlRecord(one),"could not create MLRecord");
 	CHECKMSG(id.con->CreateMlRecord(two),"could not create MLRecord");
 
-	if (ThreadId == 0) id.notif->StartProcent("[%s] -> Computing Block number %03d ... ",ObjectName, pccb.CurrBlockNr);	
+	if (ThreadId == 0) id.notif->StartProcent("[%s] -> Computing Block number %04d ... ",ObjectName, pccb.CurrBlockNr);	
 
 	ker_f_wrapper kernel(con, notif);	
 	CHECKMSG(kernel.set_params(id.varKernelParamDouble, id.varKernelParamInt, NULL, (KerFuncType)id.varKernelType),"could not set kernel parameters");
@@ -466,13 +488,24 @@ bool PreCache::MergeKPrimeFiles()
 	finalPcfh.NrFeatures = NrFts;
 	finalPcfh.RecordStart = 0;	
 	finalPcfh.BlockSize = 0; // to be added to this value later
+
+	SizePerLine = sizeof(pvm_float)*NrRec;
+	//RecPerBlock = GetNrRecPerBlock(0, NrRec);
+	RecPerBlock = GetNrRecPerBlockNonRecursive(NrRec);
+
+	TotalNrBlocks = NrRec/RecPerBlock;
+	
+	if (NrRec%RecPerBlock)
+		TotalNrBlocks++;
 		
 	memset(finalPcfh.Magic, 0, PRECACHE_FILE_HEADER_MAGIC_SZ);
 	sprintf_s((char*)finalPcfh.Magic,strlen(KPRIME_FILE_HEADER_MAGIC)+1,KPRIME_FILE_HEADER_MAGIC);
 
 	iterBuf = buffer;
 	totalSize = 0;
-	for (UInt32 i=id.varBlockStart;i<id.varBlockStart+id.varBlockCount;i++) {
+	//for (UInt32 i=id.varBlockStart;i<id.varBlockStart+id.varBlockCount;i++) {
+	for (UInt32 i = 0; i < TotalNrBlocks; i++) //!!!we must have ALL the blocks in order for this to succeed
+	{
 		
 		CHECKMSG(GetBlockFileName(i, FileTypeKPrime, blockFileName),"could not compose block file name");
 		INFOMSG("reading from file: %s", blockFileName.GetText());
@@ -546,7 +579,13 @@ bool PreCache::PreComputeNorm()
 
 	CHECKMSG(kprimeFo.Read(kpBuf, kpFh.BlockSize, &read),"could not read from file");
 	CHECKMSG(kpFh.BlockSize==read, "could not read enough");
+	
+	/*kpBuf = (KPrimePair*) malloc((UInt32)kpFh.NrRecordsTotal * sizeof(KPrimePair));
+	NULLCHECKMSG(kpBuf, "could not alloc enough memory");
 
+	CHECKMSG(kprimeFo.Read(kpBuf, (UInt32)kpFh.NrRecordsTotal * sizeof(KPrimePair), &read),"could not read from file");
+	CHECKMSG((UInt32)kpFh.NrRecordsTotal * sizeof(KPrimePair)==read, "could not read enough");
+	  */
 	blkBuf = normBuf =NULL;
 
 	// loop through the block files that we need to process and compute the norms
