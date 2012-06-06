@@ -299,7 +299,7 @@ bool ProbVectorMachine::BlockScoreComputation()
 
 	// initialize state variables with values read from disk or init here
 	fileName.Truncate(0);
-	fileName.AddFormated("%s.state.iter.%03d.block.all", varBlockFilePrefix.GetText(), varIterNr-1);
+	fileName.AddFormated("%s.state.iter.%04d.block.all", varBlockFilePrefix.GetText(), varIterNr-1);
 
 	// read state variables from disk
 	CHECKMSG(fileObj.OpenRead(fileName),"could not open file for reading: %s",fileName.GetText());
@@ -372,7 +372,7 @@ bool ProbVectorMachine::BlockScoreComputation()
 
 		// dump the block state variables to disk	
 		fileName.Truncate(0);	
-		fileName.AddFormated("%s.state.iter.%03d.block.%03d", varBlockFilePrefix.GetText(), varIterNr, blkIdx - 1);
+		fileName.AddFormated("%s.state.iter.%04d.block.%04d", varBlockFilePrefix.GetText(), varIterNr, blkIdx - 1);
 
 		stateHeader.blkNr = blkIdx - 1;
 		stateHeader.recStart = handle->recStart;
@@ -411,7 +411,7 @@ bool ProbVectorMachine::BlockScoreComputation()
 
 		// dump the block state variables to disk	
 		fileName.Truncate(0);	
-		fileName.AddFormated("%s.state.iter.%03d.block.%03d", varBlockFilePrefix.GetText(), varIterNr, blkIdx - 1);
+		fileName.AddFormated("%s.state.iter.%04d.block.%04d", varBlockFilePrefix.GetText(), varIterNr, blkIdx - 1);
 
 		stateHeader.blkNr = blkIdx - 1;
 		stateHeader.recStart = handle->recStart;
@@ -482,7 +482,7 @@ bool ProbVectorMachine::IterateBlockTraining()
 
 	// initialize state variables with values read from disk or init here
 	fileName.Truncate(0);
-	fileName.AddFormated("%s.state.iter.%03d.block.all", varBlockFilePrefix.GetText(), varIterNr-1);
+	fileName.AddFormated("%s.state.iter.%04d.block.all", varBlockFilePrefix.GetText(), varIterNr-1);
 
 	// read state variables from disk
 	CHECKMSG(fileObj.OpenRead(fileName),"could not open file for reading: %s",fileName.GetText());
@@ -555,7 +555,7 @@ bool ProbVectorMachine::IterateBlockTraining()
 
 		// dump the block state variables to disk	
 		fileName.Truncate(0);	
-		fileName.AddFormated("%s.state.iter.%03d.block.%03d", varBlockFilePrefix.GetText(), varIterNr, blkIdx - 1);
+		fileName.AddFormated("%s.state.iter.%04d.block.%04d", varBlockFilePrefix.GetText(), varIterNr, blkIdx - 1);
 
 		stateHeader.blkNr = blkIdx - 1;
 		stateHeader.recStart = handle->recStart;
@@ -594,7 +594,7 @@ bool ProbVectorMachine::IterateBlockTraining()
 
 		// dump the block state variables to disk	
 		fileName.Truncate(0);	
-		fileName.AddFormated("%s.state.iter.%03d.block.%03d", varBlockFilePrefix.GetText(), varIterNr, blkIdx - 1);
+		fileName.AddFormated("%s.state.iter.%04d.block.%04d", varBlockFilePrefix.GetText(), varIterNr, blkIdx - 1);
 
 		stateHeader.blkNr = blkIdx - 1;
 		stateHeader.recStart = handle->recStart;
@@ -845,7 +845,7 @@ bool ProbVectorMachine::LastBlockTraining()
 
 	// initialize state variables with values read from disk or init here
 	fileName.Truncate(0);
-	fileName.AddFormated("%s.state.iter.%03d.block.all", varBlockFilePrefix.GetText(), varIterNr-1);
+	fileName.AddFormated("%s.state.iter.%04d.block.all", varBlockFilePrefix.GetText(), varIterNr-1);
 
 	// read state variables from disk
 	CHECKMSG(fileObj.OpenRead(fileName),"could not open file for reading: %s",fileName.GetText());
@@ -1073,7 +1073,7 @@ bool ProbVectorMachine::LastBlockTraining()
 	}
 	// write update to disk
 	fileName.Truncate(0);
-	fileName.AddFormated("%s.state.iter.%03d.block.last", varBlockFilePrefix.GetText(), varIterNr);
+	fileName.AddFormated("%s.state.iter.%04d.block.last", varBlockFilePrefix.GetText(), varIterNr);
 	CHECKMSG(fileObj.Create(fileName), "could not create file: %s", fileName.GetText());
 
 	// write state header	
@@ -1135,7 +1135,7 @@ bool ProbVectorMachine::DumpDefaultStateVariables()
 
 	// initialize state variables with values read from disk or init here
 	fileName.Truncate(0);
-	fileName.AddFormated("%s.state.iter.000.block.all", varBlockFilePrefix.GetText());
+	fileName.AddFormated("%s.state.iter.%04d.block.all", varBlockFilePrefix.GetText(), 0);
 
 	UInt32 i;
 
@@ -1219,14 +1219,16 @@ bool ProbVectorMachine::GatherBlockStates()
 	memset(sigma_count, 0, nrRec * sizeof(UInt32));
 
 	fileName.Truncate(0);
-	fileName.AddFormated("%s.state.iter.%03d.block.???", varBlockFilePrefix.GetText(), varIterNr);
+	fileName.AddFormated("%s.state.iter.%04d.block.????", varBlockFilePrefix.GetText(), varIterNr);
 
 	nrBlocks = 0;
 	scoreSum = 0;
 	hFind = FindFirstFile(fileName.GetText(), &FindFileData);
 	do {
 		INFOMSG(FindFileData.cFileName);
-		if (strstr(FindFileData.cFileName, ".all")==NULL) {
+		if (strstr(FindFileData.cFileName, ".all")==NULL &&
+			strstr(FindFileData.cFileName, ".last")==NULL ) 
+		{
 			nrBlocks ++;
 
 			// read the file
@@ -1267,7 +1269,7 @@ bool ProbVectorMachine::GatherBlockStates()
 	pvm_float b;
 
 	fileName.Truncate(0);
-	fileName.AddFormated("%s.state.iter.%03d.block.last", varBlockFilePrefix.GetText(), varIterNr);
+	fileName.AddFormated("%s.state.iter.%04d.block.last", varBlockFilePrefix.GetText(), varIterNr);
 	// read the file
 	CHECKMSG(fileObj.OpenRead(fileName.GetText()), "could not open file:%s for reading", fileName.GetText());
 	
@@ -1309,7 +1311,7 @@ bool ProbVectorMachine::GatherBlockStates()
 	}
 
 	fileName.Truncate(0);
-	fileName.AddFormated("%s.state.iter.%03d.block.all", varBlockFilePrefix.GetText(), varIterNr);
+	fileName.AddFormated("%s.state.iter.%04d.block.all", varBlockFilePrefix.GetText(), varIterNr);
 
 	CHECKMSG(fileObj.Create(fileName.GetText()),"could not create file:%s ", fileName.GetText());
 	
@@ -1333,7 +1335,7 @@ bool ProbVectorMachine::GatherBlockStates()
 
 	// write string to .score file as text
 	fileName.Truncate(0);
-	fileName.AddFormated("%s.state.iter.%03d.block.score", varBlockFilePrefix.GetText(), varIterNr);
+	fileName.AddFormated("%s.state.iter.%04d.block.score", varBlockFilePrefix.GetText(), varIterNr);
 	CHECKMSG(fileObj.Create(fileName.GetText()),"could not create file:%s ", fileName.GetText());	
 	CHECKMSG(fileObj.Write(scoreStr.GetText(), sizeof(char)*(scoreStr.GetSize()-1), &written), "could not write to file");
 	CHECKMSG(written==sizeof(char)*(scoreStr.GetSize()-1), "could not write enough to file");

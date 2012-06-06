@@ -99,6 +99,7 @@ private:
 
 	// internal procedures
 	int GetNrRecPerBlock(int MinNr, int MaxNr);
+	int GetNrRecPerBlockNonRecursive(int MaxNr);
 	int GetSizeOfBlock(int BlockNr);	
 	bool GetBlockFileName (UInt32 BlockId, FileType fType, GML::Utils::GString &BlockFileName);
 	

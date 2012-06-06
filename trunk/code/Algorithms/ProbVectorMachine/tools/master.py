@@ -1,7 +1,7 @@
 import os, sys, shutil, subprocess, time, tempfile, glob
 
-slaves = [ ( "127.0.0.1"    , {"ThreadsCount":2, "BlockStart":0, "BlockCount": 2, "WindowSize":100} ),
-           ( "192.168.1.132", {"ThreadsCount":2, "BlockStart":2, "BlockCount": 3, "WindowSize":100} ) 
+slaves = [ ( "127.0.0.1"    , {"ThreadsCount":2, "BlockStart":0, "BlockCount": 2, "WindowSize":4} ),
+           ( "192.168.1.109", {"ThreadsCount":2, "BlockStart":2, "BlockCount": 3, "WindowSize":4} ) 
         ]
 
 workPackage = r"D:\GML\package"
@@ -61,7 +61,8 @@ def stopLoopScript():
 def startLoopScript():
 	for ip,config in slaves:
 		print ("trying to start loop script for: %s"%(ip))
-		startCommand = r'psexec \\%s -d -u gml -p gml -n 5 -w "\\%s\gml\work" "\\%s\gml\bin\python\python3.exe" "\\%s\gml\bin\python\slave.py"'%(ip,ip,ip,ip)
+		netuse(ip)
+		startCommand = r'psexec.exe \\%s -d -u gml -p gml -n 5 -w "\\%s\gml\work" "\\%s\gml\bin\python\python3.exe" "\\%s\gml\bin\python\slave.py"'%(ip,ip,ip,ip)
 		print ('issuing: %s'%(startCommand))
 		os.system(startCommand)
 
@@ -98,7 +99,7 @@ def getDefault():
 	        "Type": "FileNotifier",
 	        "FileName": "notifier.log"
 	    },
-	    
+	    "T" : 1.0
 	    # to be put in by the scheduler
 	    #Command = "PreCompGramMatrix"
 	    #IterationNo = 0
@@ -138,9 +139,12 @@ def removeDoneCmds(ip):
 	for d in dones:
 		os.unlink(d)
 
-def putCmd (cmd, local=False,itNumber=0):	
+def putCmd (cmd, local=False,itNumber=0, varT=1):	
 	print ("putting command: %s for every slave"%(cmd))
 	cmdFiles = []
+	
+	if cmd in ["MergeKprimeFiles"]:
+		local = True	
 
 	# if a local cmd only, get config for local ip
 	if local:
@@ -159,7 +163,7 @@ def putCmd (cmd, local=False,itNumber=0):
 		if cmd in ["PreCompGramMatrix","MergeKprimeFiles","PreCompEqNorm",
 		           "InitStateVars","BlockTraining","LastBlockTraining",
 		           "GatherBlockStates","Clasify","BlockScoreComputation"]:
-			cmdDict = {"Command":cmd,"IterationNo":itNumber}
+			cmdDict = {"Command":cmd,"IterationNo":itNumber, "T":varT}
 		else:
 			print ("unrecognized command: %s"%(cmd))
 			return
@@ -247,14 +251,18 @@ def deleteFromSlaves(pattern):
 		for f in files:
 			print ("\t%s"%(f))
 			os.unlink(f)
-	
-def putMergeKPrimeFiles():
-	copySlaves2Local("*.kprime.??")
+#-----------------------------------------------------------------------------------------------------------
+def putMergeEqNormFiles():
 	copySlaves2Local("*.eqnorm.??")
 	putCmd("MergeKprimeFiles",local=True)
-	copyLocal2Slaves("*.kprime.all")
+	deleteFromSlaves("*.eqnorm.??")
 	copyLocal2Slaves("*.eqnorm.all")
-		
+#-----------------------------------------------------------------------------------------------------------
+def putMergeKPrimeFiles():
+	copySlaves2Local("*.kprime.??")
+	putCmd("MergeKprimeFiles",local=True)	
+	deleteFromSlaves("*.kprime.??")	
+	copyLocal2Slaves("*.kprime.all")		
 #-----------------------------------------------------------------------------------------------------------
 def test():
 	#copyPackage()
@@ -262,20 +270,116 @@ def test():
 	startLoopScript()
 	time.sleep(5)
 	stopLoopScript()
+#-----------------------------------------------------------------------------------------------------------	
+def initial_computation():
+	putCmd("PreCompGramMatrix")
+	putMergeKPrimeFiles()
+	putCmd("PreCompEqNorm")	
+	putCmd("InitStateVars")
+#-----------------------------------------------------------------------------------------------------------	
+def iterate(iterNo, varT):
+	putCmd("BlockTraining", False, iterNo, varT)
+	putCmd("LastBlockTraining", True, iterNo, varT)
+	copySlaves2Local("pvm.state.iter.%04d.block.????"%(iterNo))	
+	deleteFromSlaves("pvm.state.iter.%04d.block.all"%(iterNo - 1))
+		
+	putCmd("GatherBlockStates", True, iterNo, varT)
 	
+	deleteFromSlaves("pvm.state.iter.%04d.block.????"%(iterNo))		
+	files2rem = glob.glob("%s.state.iter.%04d.block.????"%(getDefault()["BlockFilePrefix"],iterNo - 1))
+	files2rem += glob.glob("%s.state.iter.%04d.block.???"%(getDefault()["BlockFilePrefix"],iterNo - 1))
+	for item in files2rem:			
+		try : os.unlink(item)
+		except : pass	
+			
+	copyLocal2Slaves("pvm.state.iter.%04d.block.all"%(iterNo))
+#-----------------------------------------------------------------------------------------------------------	
+def solve_for_T(varT, nrIterMax, nrIterStable):
+	score_vect = []
+	
+		
+	print("Performing training for T = %.05f"%varT)
+	
+	copyLocal2Slaves("pvm.state.iter.%04d.block.all"%0)
+	
+	for it in range(1, nrIterMax):
+		iterate(it, varT)
+		
+		score = open("%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it)).read().strip()
+		score = float(score)
+		score_vect.append(score)
+			
+		shutil.copy("%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it), "%s.state.score.current"%(getDefault()["BlockFilePrefix"]))
+		
+		if it > 1:
+			try : os.unlink("%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it-1))
+			except : pass
+			
+		if score == 0:
+			shutil.copy("%s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],it), "%s.state.vart.%05.05f.all"%(getDefault()["BlockFilePrefix"],varT))
+		elif it > nrIterStable:
+			if min(score_vect[0:len(score_vect)-nrIterStable]) - min(score_vect[-nrIterStable:]) < 0.001:
+				break
+			
+	files2rem = glob.glob("%s.state.iter.????.block.all"%(getDefault()["BlockFilePrefix"],it-1))
+	
+	if min(score_vect[0:len(score_vect)]) < 0.001:
+		return True
+			
+	return False	
+#-----------------------------------------------------------------------------------------------------------	
+def solve(nrIterMax, nrIterStable):
+	varTright = 0.0	
+	found_one = False
+	for it in range(1, 30):
+		varTleft = varTright
+		varTright = (varTleft + 1)*2
+		
+		if (solve_for_T(varTright, 9999, 75)):
+			found_one = True
+			break
+		
+	if found_one == False:		
+		return False
+	
+	try : shutil.copy("%s.state.vart.%05.05f.all"%(getDefault()["BlockFilePrefix"],varTright), "%s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],0))
+	except : pass	
+	
+	while varTright - varTleft > 0.001:
+		varTcenter = (varTleft + varTright)/2
+		if solve_for_T(varTcenter, 9999, 75):
+			varTright = varTcenter			
+		else:
+			varTleft = varTcenter
+			
+		try : shutil.copy("%s.state.vart.%05.05f.all"%(getDefault()["BlockFilePrefix"],varTright), "%s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],0))
+		except : pass
+
+#-----------------------------------------------------------------------------------------------------------	
+def complete_run():
+	upload()
+	startLoopScript()
+	initial_computation()
+	solve(2000, 70)	
+	stopLoopScript()
+#-----------------------------------------------------------------------------------------------------------		
 #test()
 #print (makeCmdFile(getDefaultParams()))
 
+#stopLoopScript()
 #upload()
 
-putCmd ("PreCompGramMatrix")
-putCmd ("PreCompEqNorm")
-putMergeKPrimeFiles()
-putCmd ("InitStateVars")
-putCmd ("BlockTraining",itNumber=1)
-#copyLocal2Slaves("pvm.kernel.??")
 
-#stopLoopScript()
 #startLoopScript()
 #deleteFromSlaves("pvm.kprime.*")
 #putMergeKPrimeFiles()
+	
+#initial_computation()
+#putCmd ("PreCompGramMatrix")
+#putCmd ("PreCompEqNorm")
+#putMergeKPrimeFiles()
+#putCmd ("InitStateVars")
+#putCmd ("BlockTraining",itNumber=1)
+#copyLocal2Slaves("pvm.kernel.??")
+solve(2000, 70)
+#complete_run()
