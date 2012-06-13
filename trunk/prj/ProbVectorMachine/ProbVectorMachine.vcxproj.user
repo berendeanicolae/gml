@@ -7,7 +7,7 @@
     <LocalDebuggerCommand>D:\GML\bin\gml.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommandArguments>run pvm-MergeBlocks.ini</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>run 07_gatherBlockStates.ini</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='AltDebug|Win32'">
     <LocalDebuggerCommandArguments>run 4.pvm-build-train.ini</LocalDebuggerCommandArguments>
