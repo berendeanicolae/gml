@@ -95,11 +95,11 @@ def getDefault():
 	    # connectors
 	    "Connector" : {
 	        "DataFileName":trainDataSet,
-	        "Type":"BitConnector"
+	        "Type":"TypeFloatConnector"
 	        },  	    
 	    "ConnectorTest" : {
 	        "DataFileName":testDataSet,
-	        "Type":"BitConnector"
+	        "Type":"TypeFloatConnector"
 	        },
 
 	    "Notifier" : {
