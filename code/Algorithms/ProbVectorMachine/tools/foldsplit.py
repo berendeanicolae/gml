@@ -62,6 +62,36 @@ def shuffleDb(dbInput, dbOutput):
 	}	
 	gmlpy.Run(d)	
 	
+def bitConnector2FullCacheConnector (dbInput, dbOutput):	
+	d = {
+        "AlgorithmName":"CacheBuilder",
+        "CacheName":dbOutput,
+        "Command":"CreateCache",
+        "Connector":{
+            "Type":"TypeFloatConnector",
+            "StoreFeatureName":False,
+            "StoreRecordHash":False,          		        
+            "Connector" : {	    
+                "Type" : "ShuffleConnector",
+                "Method" : "Random",	        
+                "StoreFeatureName":False,
+                "StoreRecordHash":False,    	    	            		            	        
+                "Connector" : {
+                    "Type": "BitConnector",                
+                    "DataFileName": dbInput,
+                    "StoreFeatureName":False,
+                    "StoreRecordHash":False,
+                },        
+            },
+        },
+        "Notifier":{
+            "Type":"FileNotifier",
+            "FileName": "notifier.log",
+            "UseColors":False
+        }		
+    }	
+	gmlpy.Run(d)	
+	
 def splitDatabaseInFolds (database, nrOfFolds):	
 
 	shuffledDatabase = database + ".shuffle"
@@ -77,11 +107,13 @@ def splitDatabaseInFolds (database, nrOfFolds):
 		generateDbFraction(shuffledDatabase, "%s-%dof%d-train.cache"%(database, x+1, nrOfFolds), procStart2, procCount2)
 		
 		
+	
 def main ():
 	if len(sys.argv) < 2:
 		print ("usage: foldsplit.py DatabaseFileName")
 		return
 	database = sys.argv[1]
 	splitDatabaseInFolds(database, 5)
-	
+
+bitConnector2FullCacheConnector(sys.argv[1], sys.argv[2])	
 main()
