@@ -1,7 +1,7 @@
 import os, sys, shutil, subprocess, time, tempfile, glob
 
 slaves = [ ( "127.0.0.1"    , {"ThreadsCount":2, "BlockStart":0, "BlockCount": 2, "WindowSize":4} ),
-           ( "192.168.1.109", {"ThreadsCount":2, "BlockStart":2, "BlockCount": 3, "WindowSize":4} ) 
+           ( "192.168.1.109", {"ThreadsCount":6, "BlockStart":2, "BlockCount": 3, "WindowSize":12} ) 
         ]
 
 workPackage = r"D:\GML\package"
@@ -81,8 +81,8 @@ def getDefault():
         #training related vars
         "Lambda" : 1.1,
         "WindowSize" : 10,
-	    "NrUpdatesPerLastBlock": 5,
-	    "NrUpdatesPerNormBlock": 25,
+	    "NrUpdatesPerLastBlock": 10,
+	    "NrUpdatesPerNormBlock": 50,
 	    
 	    # connectors
 	    "Connector" : {
@@ -305,23 +305,23 @@ def solve_for_T(varT, nrIterMax, nrIterStable):
 	for it in range(1, nrIterMax):
 		iterate(it, varT)
 		
-		score = open("%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it)).read().strip()
+		score = open("..\..\work\%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it)).read().strip()
 		score = float(score)
 		score_vect.append(score)
 			
-		shutil.copy("%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it), "%s.state.score.current"%(getDefault()["BlockFilePrefix"]))
+		shutil.copy("..\..\work\%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it), "..\..\work\%s.state.score.current"%(getDefault()["BlockFilePrefix"]))
 		
 		if it > 1:
-			try : os.unlink("%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it-1))
+			try : os.unlink("..\..\work\%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it-1))
 			except : pass
 			
 		if score == 0:
-			shutil.copy("%s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],it), "%s.state.vart.%05.05f.all"%(getDefault()["BlockFilePrefix"],varT))
+			shutil.copy("%..\..\work\s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],it), "..\..\work\%s.state.vart.%05.05f.all"%(getDefault()["BlockFilePrefix"],varT))
 		elif it > nrIterStable:
 			if min(score_vect[0:len(score_vect)-nrIterStable]) - min(score_vect[-nrIterStable:]) < 0.001:
 				break
 			
-	files2rem = glob.glob("%s.state.iter.????.block.all"%(getDefault()["BlockFilePrefix"],it-1))
+	#files2rem = glob.glob("%s.state.iter.????.block.all"%(getDefault()["BlockFilePrefix"],it-1))
 	
 	if min(score_vect[0:len(score_vect)]) < 0.001:
 		return True
@@ -369,7 +369,6 @@ def complete_run():
 #stopLoopScript()
 #upload()
 
-
 #startLoopScript()
 #deleteFromSlaves("pvm.kprime.*")
 #putMergeKPrimeFiles()
@@ -381,5 +380,7 @@ def complete_run():
 #putCmd ("InitStateVars")
 #putCmd ("BlockTraining",itNumber=1)
 #copyLocal2Slaves("pvm.kernel.??")
-solve(2000, 70)
+#startLoopScript()
+#initial_computation()
+#solve(2000, 70)
 #complete_run()
