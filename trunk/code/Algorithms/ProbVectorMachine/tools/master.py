@@ -1,7 +1,7 @@
-import os, sys, shutil, subprocess, time, tempfile, glob, gmlpy, foldsplit
+import os, sys, shutil, subprocess, time, tempfile, glob
 
-slaves = [ ( "127.0.0.1"    , {"ThreadsCount":2, "BlockStart":0, "BlockCount": 2, "WindowSize":4} ),
-           ( "192.168.1.109", {"ThreadsCount":6, "BlockStart":2, "BlockCount": 3, "WindowSize":12} ) 
+slaves = [ ( "127.0.0.1"    , {"ThreadsCount":2, "BlockStart":0, "BlockCount": 5, "WindowSize":4} ),
+           #( "192.168.1.109", {"ThreadsCount":6, "BlockStart":2, "BlockCount": 3, "WindowSize":12} ) 
            ]
 
 workPackage = r"D:\GML\package"
@@ -306,18 +306,18 @@ def solveForT(varT, nrIterMax, nrIterStable):
 	for it in range(1, nrIterMax):
 		iterate(it, varT)
 
-		score = open("..\..\work\%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it)).read().strip()
+		score = open(r"\\127.0.0.l\gml\work\%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it)).read().strip()
 		score = float(score)
 		score_vect.append(score)
 
-		shutil.copy("..\..\work\%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it), "..\..\work\%s.state.score.current"%(getDefault()["BlockFilePrefix"]))
+		shutil.copy(r"\\127.0.0.l\gml\work\%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it), r"\\127.0.0.l\gml\work\%s.state.score.current"%(getDefault()["BlockFilePrefix"]))
 
 		if it > 1:
-			try : os.unlink("..\..\work\%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it-1))
+			try : os.unlink(r"\\127.0.0.l\gml\work\%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it-1))
 			except : pass
 
 		if score == 0:
-			shutil.copy("%..\..\work\s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],it), "..\..\work\%s.state.vart.%05.05f.all"%(getDefault()["BlockFilePrefix"],varT))
+			shutil.copy(r"\\127.0.0.l\gml\work\s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],it), r"\\127.0.0.l\gml\work\%s.state.vart.%05.05f.all"%(getDefault()["BlockFilePrefix"],varT))
 		elif it > nrIterStable:
 			if min(score_vect[0:len(score_vect)-nrIterStable]) - min(score_vect[-nrIterStable:]) < 0.001:
 				break
@@ -386,28 +386,15 @@ def wrapper5fold ():
 		putCmd("Clasify", True)
 		notifierFile = defaultNotifierFile
 	
+
+#-----------------------------------------------------------------------------------------------------------		
+#initEnv()
+startLoopScript()
 wrapper5fold()
-	
+stopLoopScript()
+#uninitEnv()	
 	
 #-----------------------------------------------------------------------------------------------------------		
 #test()
 #print (makeCmdFile(getDefaultParams()))
 
-#stopLoopScript()
-#upload()
-
-#startLoopScript()
-#deleteFromSlaves("pvm.kprime.*")
-#putMergeKPrimeFiles()
-
-#initial_computation()
-#putCmd ("PreCompGramMatrix")
-#putCmd ("PreCompEqNorm")
-#putMergeKPrimeFiles()
-#putCmd ("InitStateVars")
-#putCmd ("BlockTraining",itNumber=1)
-#copyLocal2Slaves("pvm.kernel.??")
-#startLoopScript()
-#initial_computation()
-#solve(2000, 70)
-#complete_run()

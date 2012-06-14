@@ -63,8 +63,9 @@ void ProbVectorMachine::OnRunThreadCommand(GML::Algorithm::MLThreadData &thData,
 			return;
 		case THREAD_COMMAND_COMPUTE_SCORE:
 			ComputeBlockScore(thData);
+			return;
 		default:
-			ERRORMSG("could not find thread comment");
+			ERRORMSG("could not find thread command");
 			return;
 
 		// add extra thread command processes here
