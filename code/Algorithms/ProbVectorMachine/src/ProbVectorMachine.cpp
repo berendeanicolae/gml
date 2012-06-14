@@ -657,12 +657,14 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 	UInt32	  i, w, k, updateNr;
 	pvm_float maxWindowScore;
 	pvm_float minScoreSum = (pvm_float)1e-10;
+	pvm_float temp_score;
 
 	UInt32 nrRec = con->GetRecordCount();
-	for (updateNr = 0; updateNr < varNrUpdatesPerNormBlock; updateNr++)
-	{
-		wu.score = 0;
 
+	wu.score = 0;//the score will be added on for every iteration
+	for (updateNr = 0; updateNr < varNrUpdatesPerNormBlock; updateNr++)
+	{	
+		temp_score = 0;
 		wu.bHandle = handle;
 		for (w=0;w<handle->recCount;w+=varWindowSize)
 		{
@@ -684,7 +686,7 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 					maxWindowScore = wu.san[i];
 				}
 			}
-			wu.score += maxWindowScore;
+			temp_score += maxWindowScore;
 
 			if (scoreSum < minScoreSum)
 				scoreSum = minScoreSum;
@@ -709,9 +711,13 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 			//if (w==0) w-=varWindowSize;
 		}
 		
-		if (wu.score < 1e-8f)
+		if (temp_score < 1e-8f)
 			break;
-	}
+
+		if (updateNr == 0)
+			wu.score = temp_score * (pvm_float)varLambda;
+	}	
+
 	return true;
 }
 
@@ -822,6 +828,8 @@ bool ProbVectorMachine::LastBlockTraining()
 	UInt32 vectSz = sizeof(pvm_float)*nrRec;
 	UInt64 read, written;
 	pvm_float varTFloat = (pvm_float)varT;
+
+	pvm_float totalUpdateScore = 0;
 
 	PreCache::KPrimePair	  *kprime;
 
@@ -1031,6 +1039,9 @@ bool ProbVectorMachine::LastBlockTraining()
 			}
 		}
 
+		if (updateNr == 0)
+			totalUpdateScore = maxScore;
+
 		if (scoreSum < minScoreSum)
 			scoreSum = minScoreSum;
 		
@@ -1100,7 +1111,7 @@ bool ProbVectorMachine::LastBlockTraining()
 	CHECKMSG(sizeof(pvm_float)==written,"could not write enough to file");
 
 	// write score for this block
-	CHECKMSG(fileObj.Write(&maxScore, sizeof(pvm_float), &written), "could not write to file");
+	CHECKMSG(fileObj.Write(&totalUpdateScore, sizeof(pvm_float), &written), "could not write to file");
 	CHECKMSG(sizeof(pvm_float)==written,"could not write enough to file");
 
 
@@ -1478,9 +1489,11 @@ bool ProbVectorMachine::ComputeBlockScore(GML::Algorithm::MLThreadData &thData)
 			}
 
 			if (wu.SIGM[recIdxGlob] - sj < 0) 
-				sj = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]);
+				sj = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]);					 
 			else if (wu.SIGM[recIdxGlob] + sj < 0) 
-				sj = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]);
+				sj = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]);				   
+			else
+				sj = 0;
 		}
 		else
 		{
@@ -1494,7 +1507,9 @@ bool ProbVectorMachine::ComputeBlockScore(GML::Algorithm::MLThreadData &thData)
 			if (wu.SIGM[recIdxGlob] - sj < 0) 			
 				sj = (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];							
 			else if (wu.SIGM[recIdxGlob] + sj < 0) 
-				sj = (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];				
+				sj = (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+			else
+				sj = 0;
 						
 		}	
 
