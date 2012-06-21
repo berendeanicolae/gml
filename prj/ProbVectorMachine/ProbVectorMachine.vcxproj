@@ -298,6 +298,7 @@
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\MathFunctions.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PreCache.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\ProbVectorMachine.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesConstants.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesInclude.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesKeywords.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesTypes.h" />
