@@ -1400,7 +1400,7 @@ bool ProbVectorMachine::ClasifyDataset()
 	fileObj.Close();
 
 	UInt32 nrRecordsTest = conectorTest->GetRecordCount();
-	UInt32 nrTestPos, nrTestNeg, nrFalsePos, nrFalseNeg;
+	pvm_float nrTestPos, nrTestNeg, nrFalsePos, nrFalseNeg;
 	pvm_float ker, result;
 	double label;
 	GML::ML::MLRecord  mlRecTest, mlRecTrain;
@@ -1436,7 +1436,7 @@ bool ProbVectorMachine::ClasifyDataset()
 		if (label==1 && result<0) nrFalseNeg++;
 		if (label!=1 && result>0) nrFalsePos++;
 	}
-
+			/*
 	INFOMSG("TP : %.02f",(nrTestPos-nrFalseNeg)/nrTestPos*100);
 	INFOMSG("TN : %.02f",(nrTestNeg-nrFalsePos)/nrTestNeg*100);
 
@@ -1444,7 +1444,16 @@ bool ProbVectorMachine::ClasifyDataset()
 	INFOMSG("FN : %.02f",(nrFalseNeg)/nrTestPos*100);
 
 	INFOMSG("ACC: %.02f",(nrRecordsTest-(nrFalseNeg+nrFalsePos))/nrRecordsTest*100);
+		  */
 
+	printf("TP : %.02f\n",(nrTestPos-nrFalseNeg)/nrTestPos*100);
+	printf("TN : %.02f\n",(nrTestNeg-nrFalsePos)/nrTestNeg*100);
+
+	printf("FP : %.02f\n",(nrFalsePos)/nrTestNeg*100);
+	printf("FN : %.02f\n",(nrFalseNeg)/nrTestPos*100);
+
+	printf("ACC: %.02f\n",(nrRecordsTest-(nrFalseNeg+nrFalsePos))/nrRecordsTest*100);
+	
 	return true;
 }
 
