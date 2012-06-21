@@ -29,7 +29,13 @@ pvm_inline pvm_double ker_f_poly::compute_for(pvm_double *x, pvm_double *y, int 
 	pvm_double res = t;
 	DBGSTOP_CHECKMSG((x && y), "One of the pointers is NULL");
 	for (i = 0; i < count; i++, x++, y++) 
+	{
+#ifdef MISSING_VALUES_ALLOWED
+		if (*x <= MISSING_VALUES_BOUND || *y <= MISSING_VALUES_BOUND)
+			continue;
+#endif//MISSING_VALUES_ALLOWED	
 		res += (*x) * (*y);
+	}
 	
 	return PVMMathFunctions::pow_i(res, d);;
 }

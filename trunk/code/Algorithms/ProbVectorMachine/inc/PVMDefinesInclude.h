@@ -4,6 +4,6 @@
 #include "PVMDefinesTypes.h"
 #include "PVMMacros.h"
 #include "PVMDefinesKeywords.h"
+#include "PVMDefinesConstants.h"
 //-----------------------------------------------------------------------------
-
 #endif//__PVM_DEFINES_INCLUDE_H__

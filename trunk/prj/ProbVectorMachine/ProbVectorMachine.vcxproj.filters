@@ -87,6 +87,9 @@
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PreCache.h">
       <Filter>Working Mihai\PreCache</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesConstants.h">
+      <Filter>PVMDefines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Working Andrei">
