@@ -5,7 +5,7 @@
 #include <cstdlib>
 
 #define PVM_DEBUG_MODE 1
-#define MCU_DEBUG_MODE 
+//#define MCU_DEBUG_MODE 
 
 #ifdef MCU_DEBUG_MODE
 	#define INFOMSG(...) { {char z123[4096]; sprintf_s(z123,4096, __VA_ARGS__) ;notif->Info("[%s] -> %s",ObjectName, z123);} };

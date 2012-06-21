@@ -20,7 +20,14 @@ pvm_inline pvm_double ker_f_scalar::compute_for(pvm_double *x, pvm_double *y, in
 	pvm_double res = 0.0;
 	DBGSTOP_CHECKMSG((x && y), "One of the pointers is NULL");
 	for (i = 0; i < count; i++, x++, y++)
+	{
+#ifdef MISSING_VALUES_ALLOWED
+		if (*x <= MISSING_VALUES_BOUND || *y <= MISSING_VALUES_BOUND)
+			continue;
+#endif//MISSING_VALUES_ALLOWED
+		
 		res += (*x) * (*y);
+	}
 
 	return res;
 }
