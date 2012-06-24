@@ -86,7 +86,7 @@ void ProbVectorMachine::OnExecute()
 			break;
         case COMMAND_DEBUG_TESTS:
             INFOMSG("Computing machine speed");            
-            PreCacheCall(Command);
+            DebugTesting();
             break;
 		case COMMAND_PRECOMP_GRAM:
 			INFOMSG("Precomputing Kernel Values");
@@ -145,7 +145,7 @@ bool ProbVectorMachine::TestMachineSpeed()
     mapTsc.nrRecords = nrRec;
 
     // allocated the necessary memory
-    pvm_float* Buffer = (pvm_float*) malloc(UNGIGA);
+    pvm_float* Buffer = (pvm_float*) pvm_malloc(UNGIGA);
     NULLCHECKMSG(Buffer, "Could not allocate enough memory");
     mapTsc.buffer = Buffer;  
 
@@ -292,10 +292,10 @@ bool ProbVectorMachine::BlockScoreComputation()
 
 	pvm_float *alpha, *sigma;
 	
-	alpha = (pvm_float*) malloc(vectSz);
+	alpha = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(alpha, "could not alloc memory for alphaOrig");
 
-	sigma = (pvm_float*) malloc(vectSz);
+	sigma = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(sigma, "could not alloc memory for sigmaPOrig");
 
 	// initialize state variables with values read from disk or init here
@@ -328,7 +328,7 @@ bool ProbVectorMachine::BlockScoreComputation()
 	CHECKMSG(sizeof(PreCache::KPrimePair)*nrRec==kpHeader.BlockSize, "kprime block size does not have the correct size");
 
 	// alloc memory for kprime buffer
-	kprime = (PreCache::KPrimePair*) malloc((size_t)kpHeader.BlockSize);
+	kprime = (PreCache::KPrimePair*) pvm_malloc((size_t)kpHeader.BlockSize);
 	NULLCHECKMSG(kprime, "could not alloc memory for sigmaPOrig");
 					
 	CHECKMSG(fileObj.Read(kprime, kpHeader.BlockSize, &read), "could not read from file");
@@ -336,10 +336,10 @@ bool ProbVectorMachine::BlockScoreComputation()
 	fileObj.Close();
 
 	// alloc memory for local state variables
-	wu.ALPH = (pvm_float*) malloc(vectSz);
+	wu.ALPH = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(wu.ALPH, "could not alloc memory for alpha");
 
-	wu.SIGM = (pvm_float*) malloc(vectSz);
+	wu.SIGM = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(wu.SIGM, "could not alloc memory for sigmaPlus");
 
 	// copy the contents of the state variables read from disk
@@ -347,10 +347,10 @@ bool ProbVectorMachine::BlockScoreComputation()
 	memcpy(wu.SIGM, sigma, vectSz);	
 
 	// alloc memory for window update structure
-	wu.uALPH  = (pvm_float*) malloc(nrRec*varWindowSize*sizeof(pvm_float));	
-	wu.uSIGM  = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
-	wu.san    = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
-	wu.pn     = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
+	wu.uALPH  = (pvm_float*) pvm_malloc(nrRec*varWindowSize*sizeof(pvm_float));	
+	wu.uSIGM  = (pvm_float*) pvm_malloc(varWindowSize*sizeof(pvm_float));
+	wu.san    = (pvm_float*) pvm_malloc(varWindowSize*sizeof(pvm_float));
+	wu.pn     = (pvm_float*) pvm_malloc(varWindowSize*sizeof(pvm_float));
 	NULLCHECKMSG(wu.uALPH && wu.uSIGM && wu.san && wu.pn, "could not alloc enough memory");
 
 	// start processing blocks
@@ -475,10 +475,10 @@ bool ProbVectorMachine::IterateBlockTraining()
 
 	pvm_float *alpha, *sigma;
 	
-	alpha = (pvm_float*) malloc(vectSz);
+	alpha = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(alpha, "could not alloc memory for alphaOrig");
 
-	sigma = (pvm_float*) malloc(vectSz);
+	sigma = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(sigma, "could not alloc memory for sigmaPOrig");
 
 	// initialize state variables with values read from disk or init here
@@ -511,7 +511,7 @@ bool ProbVectorMachine::IterateBlockTraining()
 	CHECKMSG(sizeof(PreCache::KPrimePair)*nrRec==kpHeader.BlockSize, "kprime block size does not have the correct size");
 
 	// alloc memory for kprime buffer
-	kprime = (PreCache::KPrimePair*) malloc((size_t)kpHeader.BlockSize);
+	kprime = (PreCache::KPrimePair*) pvm_malloc((size_t)kpHeader.BlockSize);
 	NULLCHECKMSG(kprime, "could not alloc memory for sigmaPOrig");
 					
 	CHECKMSG(fileObj.Read(kprime, kpHeader.BlockSize, &read), "could not read from file");
@@ -519,10 +519,10 @@ bool ProbVectorMachine::IterateBlockTraining()
 	fileObj.Close();
 
 	// alloc memory for local state variables
-	wu.ALPH = (pvm_float*) malloc(vectSz);
+	wu.ALPH = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(wu.ALPH, "could not alloc memory for alpha");
 
-	wu.SIGM = (pvm_float*) malloc(vectSz);
+	wu.SIGM = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(wu.SIGM, "could not alloc memory for sigmaPlus");
 
 	// copy the contents of the state variables read from disk
@@ -530,10 +530,10 @@ bool ProbVectorMachine::IterateBlockTraining()
 	memcpy(wu.SIGM, sigma, vectSz);	
 
 	// alloc memory for window update structure
-	wu.uALPH  = (pvm_float*) malloc(nrRec*varWindowSize*sizeof(pvm_float));	
-	wu.uSIGM  = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
-	wu.san    = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
-	wu.pn     = (pvm_float*) malloc(varWindowSize*sizeof(pvm_float));
+	wu.uALPH  = (pvm_float*) pvm_malloc(nrRec*varWindowSize*sizeof(pvm_float));	
+	wu.uSIGM  = (pvm_float*) pvm_malloc(varWindowSize*sizeof(pvm_float));
+	wu.san    = (pvm_float*) pvm_malloc(varWindowSize*sizeof(pvm_float));
+	wu.pn     = (pvm_float*) pvm_malloc(varWindowSize*sizeof(pvm_float));
 	NULLCHECKMSG(wu.uALPH && wu.uSIGM && wu.san && wu.pn, "could not alloc enough memory");
 
 	// start processing blocks
@@ -846,10 +846,10 @@ bool ProbVectorMachine::LastBlockTraining()
 	pvm_float s[4];
 	UpdateStr u[4];
 
-	alpha = (pvm_float*) malloc(vectSz);
+	alpha = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(alpha, "could not alloc memory for alphaOrig");
 
-	sigma = (pvm_float*) malloc(vectSz);
+	sigma = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(sigma, "could not alloc memory for sigmaPOrig");
 
 	// initialize state variables with values read from disk or init here
@@ -886,7 +886,7 @@ bool ProbVectorMachine::LastBlockTraining()
 	CHECKMSG(sizeof(PreCache::KPrimePair)*nrRec==kpHeader.BlockSize, "kprime block size does not have the correct size");
 
 	// alloc memory for kprime buffer
-	kprime = (PreCache::KPrimePair*) malloc((size_t)kpHeader.BlockSize);
+	kprime = (PreCache::KPrimePair*) pvm_malloc((size_t)kpHeader.BlockSize);
 	NULLCHECKMSG(kprime, "could not alloc memory for sigmaPOrig");
 
 	CHECKMSG(fileObj.Read(kprime, kpHeader.BlockSize, &read), "could not read from file");
@@ -948,7 +948,7 @@ bool ProbVectorMachine::LastBlockTraining()
 		if (s[0] < 0) {
 			if (u[0].alpha == NULL)
 			{
-				u[0].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
+				u[0].alpha = (pvm_float*) pvm_malloc(nrRec*sizeof(pvm_float));
 				CHECKMSG(u[0].alpha, "could not alloc memory");
 			}
 
@@ -971,7 +971,7 @@ bool ProbVectorMachine::LastBlockTraining()
 		if (s[1]<0) {
 			if (u[1].alpha == NULL)
 			{
-				u[1].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
+				u[1].alpha = (pvm_float*) pvm_malloc(nrRec*sizeof(pvm_float));
 				CHECKMSG(u[1].alpha, "could not alloc memory");
 			}
 			u[1].infeas_eq = true;
@@ -990,7 +990,7 @@ bool ProbVectorMachine::LastBlockTraining()
 		if (term0<0) {
 			if (u[2].alpha == NULL)
 			{
-				u[2].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
+				u[2].alpha = (pvm_float*) pvm_malloc(nrRec*sizeof(pvm_float));
 				CHECKMSG(u[2].alpha, "could not alloc memory");
 			}
 
@@ -1009,7 +1009,7 @@ bool ProbVectorMachine::LastBlockTraining()
 		if (term1<0) {
 			if (u[3].alpha == NULL)
 			{
-				u[3].alpha = (pvm_float*) malloc(nrRec*sizeof(pvm_float));
+				u[3].alpha = (pvm_float*) pvm_malloc(nrRec*sizeof(pvm_float));
 				CHECKMSG(u[3].alpha, "could not alloc memory");
 			}
 			u[3].infeas_eq = true;
@@ -1139,10 +1139,10 @@ bool ProbVectorMachine::DumpDefaultStateVariables()
 
 	pvm_float *alpha, *sigma;
 
-	alpha = (pvm_float*) malloc(vectSz);
+	alpha = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(alpha, "could not alloc memory for alphaOrig");
 
-	sigma = (pvm_float*) malloc(vectSz);
+	sigma = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(sigma, "could not alloc memory for sigmaPOrig");
 
 	// initialize state variables with values read from disk or init here
@@ -1209,19 +1209,19 @@ bool ProbVectorMachine::GatherBlockStates()
 
 	UInt32 *alpha_count, *sigma_count;
 
-	alpha = (pvm_float*) malloc(vectSz);
+	alpha = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(alpha, "could not alloc memory");
-	alphaMean = (pvm_float*) malloc(vectSz);
+	alphaMean = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(alphaMean, "could not alloc memory");
 
-	sigma = (pvm_float*) malloc(vectSz);
+	sigma = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(sigma, "could not alloc memory");
-	sigmaMean = (pvm_float*) malloc(vectSz);
+	sigmaMean = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(sigmaMean, "could not alloc memory");
 
-	alpha_count = (UInt32 *)malloc(nrRec * sizeof(UInt32));
+	alpha_count = (UInt32 *)pvm_malloc(nrRec * sizeof(UInt32));
 	NULLCHECKMSG(alpha_count, "could not alloc memory");	
-	sigma_count = (UInt32 *)malloc(nrRec * sizeof(UInt32));
+	sigma_count = (UInt32 *)pvm_malloc(nrRec * sizeof(UInt32));
 	NULLCHECKMSG(sigma_count, "could not alloc memory");	
 
 	memset(alphaMean, 0, vectSz);
@@ -1367,6 +1367,7 @@ bool ProbVectorMachine::ClasifyDataset()
 	UInt32 vectSz = sizeof(pvm_float)*nrRec;
 
 	GML::Utils::File				fileObj;
+	GML::Utils::GString				fileName;
 
 	pvm_float *alpha, *sigma, b;
 
@@ -1377,10 +1378,10 @@ bool ProbVectorMachine::ClasifyDataset()
 	CHECKMSG(trainNrFeat == testNrFeat, "the test dataset has to have the same number of features as the train dataset");
 
 	// read data from model file
-	alpha = (pvm_float*) malloc(vectSz);
+	alpha = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(alpha, "could not alloc memory");
 
-	sigma = (pvm_float*) malloc(vectSz);
+	sigma = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(sigma, "could not alloc memory");
 
 	CHECKMSG(fileObj.OpenRead(varModelFile.GetText()), "could not open file:%s for reading", varModelFile.GetText());
@@ -1436,23 +1437,31 @@ bool ProbVectorMachine::ClasifyDataset()
 		if (label==1 && result<0) nrFalseNeg++;
 		if (label!=1 && result>0) nrFalsePos++;
 	}
-			/*
-	INFOMSG("TP : %.02f",(nrTestPos-nrFalseNeg)/nrTestPos*100);
-	INFOMSG("TN : %.02f",(nrTestNeg-nrFalsePos)/nrTestNeg*100);
 
-	INFOMSG("FP : %.02f",(nrFalsePos)/nrTestNeg*100);
-	INFOMSG("FN : %.02f",(nrFalseNeg)/nrTestPos*100);
+	pvm_float tp = (nrTestPos-nrFalseNeg)/nrTestPos*100;
+	INFOMSG("TP : %.02f\n",tp);
 
-	INFOMSG("ACC: %.02f",(nrRecordsTest-(nrFalseNeg+nrFalsePos))/nrRecordsTest*100);
-		  */
+	pvm_float tn = (nrTestNeg-nrFalsePos)/nrTestNeg*100;
+	INFOMSG("TN : %.02f\n",tn);
 
-	printf("TP : %.02f\n",(nrTestPos-nrFalseNeg)/nrTestPos*100);
-	printf("TN : %.02f\n",(nrTestNeg-nrFalsePos)/nrTestNeg*100);
+	pvm_float fp = (nrFalsePos)/nrTestNeg*100;
+	INFOMSG("FP : %.02f\n",fp);
 
-	printf("FP : %.02f\n",(nrFalsePos)/nrTestNeg*100);
-	printf("FN : %.02f\n",(nrFalseNeg)/nrTestPos*100);
+	pvm_float fn = (nrFalseNeg)/nrTestPos*100;
+	INFOMSG("FN : %.02f\n",fn);
 
-	printf("ACC: %.02f\n",(nrRecordsTest-(nrFalseNeg+nrFalsePos))/nrRecordsTest*100);
+	pvm_float acc = (nrRecordsTest-(nrFalseNeg+nrFalsePos))/nrRecordsTest*100;
+	INFOMSG("ACC: %.02f\n",acc);
+
+	GML::Utils::GString msg;
+	msg.AddFormated("{'tp':%.03f, 'tn':%.03f,, 'fp':%.03f,, 'fn':%.03f,, 'acc':%.03f,}\n", tp, tn, fp, fn, acc);
+
+	fileName.Truncate(0);
+	fileName.AddFormated("%s-classification-result.txt", varBlockFilePrefix);
+
+	fileObj.OpenReadWrite(fileName.GetText());
+	fileObj.Write(msg.GetText(), msg.GetSize());
+	fileObj.Close();
 	
 	return true;
 }
@@ -1527,4 +1536,37 @@ bool ProbVectorMachine::ComputeBlockScore(GML::Algorithm::MLThreadData &thData)
 	}
 
 	return true;
+}
+
+void ProbVectorMachine::DebugTesting()
+{
+	GML::Utils::File fileObj;
+	GML::Utils::GString fileName;
+
+	fileName.Add("test.txt");
+
+	pvm_float tp = 1.0;
+	INFOMSG("TP : %.02f\n",tp);
+
+	pvm_float tn = 2.0;
+	INFOMSG("TN : %.02f\n",tn);
+
+	pvm_float fp = 3.0;
+	INFOMSG("FP : %.02f\n",fp);
+
+	pvm_float fn = 4.0;
+	INFOMSG("FN : %.02f\n",fn);
+
+	pvm_float acc = 5.0;
+	INFOMSG("ACC: %.02f\n",acc);
+
+	GML::Utils::GString msg;
+	msg.AddFormated("{'tp':%.03f, 'tn':%.03f, 'fp':%.03f, 'fn':%.03f, 'acc':%.03f}\n", tp, tn, fp, fn, acc);
+
+	fileName.Truncate(0);
+	fileName.AddFormated("%s-classification-result.txt", varBlockFilePrefix);
+
+	fileObj.Create(fileName.GetText());
+	fileObj.Write(msg.GetText(), msg.GetSize());
+	fileObj.Close();
 }

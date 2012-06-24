@@ -67,12 +67,12 @@ bool PreCache::PreComputeGram()
 		id.varBlockCount = TotalNrBlocks;
 
 	// allocate memory for output buffer
-	kernelBuffer = (unsigned char*) malloc (id.varBlockFileSize*UNMEGA);
+	kernelBuffer = (unsigned char*) pvm_malloc (id.varBlockFileSize*UNMEGA);
 	NULLCHECKMSG(kernelBuffer, "could not allocate enough memory for kernel output buffer");
 	pccb.KernelBuffer = (pvm_float*) kernelBuffer;
 	memset(kernelBuffer, 0, id.varBlockFileSize*UNMEGA);
 
-	kprimeBuffer = (KPrimePair*) malloc (RecPerBlock*sizeof(KPrimePair));
+	kprimeBuffer = (KPrimePair*) pvm_malloc (RecPerBlock*sizeof(KPrimePair));
 	NULLCHECKMSG(kprimeBuffer, "could not allocate enough memory for kprime output buffer");
 	pccb.KPrimeBuffer = kprimeBuffer;
 	memset(kprimeBuffer, 0, RecPerBlock*sizeof(KPrimePair));
@@ -342,7 +342,7 @@ DWORD PreCache::AtLoadNextBlock()
 		// alloc memory for norm buf because we needed to know the record number per block
 		if (blockHandle[0].NORM==NULL) {
 			for (int i=0;i<PRECACHE_NR_WORK_BUFFERS;i++) {
-				blockHandle[i].NORM = (pvm_float*) malloc(sizeof(pvm_float)*blockHeader.NrRecords);
+				blockHandle[i].NORM = (pvm_float*) pvm_malloc(sizeof(pvm_float)*blockHeader.NrRecords);
 				NULLCHECKMSG(blockHandle[i].NORM, "could not alloc memory for eq norm buffer");
 			}				
 		} 
@@ -396,7 +396,7 @@ bool PreCache::AtInitLoading()
 	for (int i=0;i<PRECACHE_NR_WORK_BUFFERS;i++) 
 	{
 		// alloc memory 
-		blockHandle[i].KERN = (pvm_float*) malloc(id.varBlockFileSize*UNMEGA);
+		blockHandle[i].KERN = (pvm_float*) pvm_malloc(id.varBlockFileSize*UNMEGA);
 		CHECKMSG(blockHandle[i].KERN!=NULL, "could not allocate enough memory");	
 
 		// memory for blockHandle[i].N - eqnorm will be alloc on first encounter
@@ -474,7 +474,7 @@ bool PreCache::MergeKPrimeFiles()
 	UInt64	readNow, written, totalSize;
 
 	// allocate buffer
-	buffer = (unsigned char*)malloc(NrRec*sizeof(KPrimePair));
+	buffer = (unsigned char*)pvm_malloc(NrRec*sizeof(KPrimePair));
 	CHECKMSG(buffer, "could not alloc enough memory for merged files");
 
 	outFileName.Truncate(0);
@@ -574,13 +574,13 @@ bool PreCache::PreComputeNorm()
 	CHECKMSG(sizeof(kpFh)==read, "could not read enough");
 
 	// alloc memory for kpBuf
-	kpBuf = (KPrimePair*) malloc((UInt32)kpFh.BlockSize);
+	kpBuf = (KPrimePair*) pvm_malloc((UInt32)kpFh.BlockSize);
 	NULLCHECKMSG(kpBuf, "could not alloc enough memory");
 
 	CHECKMSG(kprimeFo.Read(kpBuf, kpFh.BlockSize, &read),"could not read from file");
 	CHECKMSG(kpFh.BlockSize==read, "could not read enough");
 	
-	/*kpBuf = (KPrimePair*) malloc((UInt32)kpFh.NrRecordsTotal * sizeof(KPrimePair));
+	/*kpBuf = (KPrimePair*) pvm_malloc((UInt32)kpFh.NrRecordsTotal * sizeof(KPrimePair));
 	NULLCHECKMSG(kpBuf, "could not alloc enough memory");
 
 	CHECKMSG(kprimeFo.Read(kpBuf, (UInt32)kpFh.NrRecordsTotal * sizeof(KPrimePair), &read),"could not read from file");
@@ -599,11 +599,11 @@ bool PreCache::PreComputeNorm()
 
 		// we need to alloc mem now?
 		if (blkBuf==NULL || normBuf==NULL) {
-			blkBuf = (pvm_float*) malloc((UInt32)blockFh.BlockSize);
+			blkBuf = (pvm_float*) pvm_malloc((UInt32)blockFh.BlockSize);
 			NULLCHECKMSG(blkBuf, "could not alloc enough memory");
 
 			// alloc memory for norms
-			normBuf = (pvm_float*) malloc(blockFh.NrRecords*sizeof(pvm_float));
+			normBuf = (pvm_float*) pvm_malloc(blockFh.NrRecords*sizeof(pvm_float));
 			NULLCHECKMSG(normBuf, "could not alloc enough memory");
 		}
 
