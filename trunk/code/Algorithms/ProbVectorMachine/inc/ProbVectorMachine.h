@@ -118,6 +118,7 @@ public:
 	bool	GatherBlockStates();
 	bool	ClasifyDataset();
 	bool	InitExtraConnections();
+	void DebugTesting();
 	// variables to control the algorithm flow
 	UInt32 varKernelType;
 	UInt32 varBlockFileSize;

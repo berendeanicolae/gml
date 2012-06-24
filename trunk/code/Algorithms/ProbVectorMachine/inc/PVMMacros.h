@@ -5,7 +5,7 @@
 #include <cstdlib>
 
 #define PVM_DEBUG_MODE 1
-//#define MCU_DEBUG_MODE 
+//#define MCU_DEBUG_MODE 1
 
 #ifdef MCU_DEBUG_MODE
 	#define INFOMSG(...) { {char z123[4096]; sprintf_s(z123,4096, __VA_ARGS__) ;notif->Info("[%s] -> %s",ObjectName, z123);} };
@@ -19,6 +19,14 @@
 	#define CHECK(val){ if (val==false) return false;}; 
 
 	#define ATCHECKMSG(val, ...){ if (val==false) { ERRORMSG(__VA_ARGS__); AtKillThread=true; SetEvent(AtEventWorking); return 0xffFFffFF; }; };
+
+	void* pvm_malloc_func (int val);
+	void pvm_free_func (void* __ptr__);
+
+	extern void* __ptr__;
+	#define pvm_malloc(val) (__ptr__ = malloc(val)); INFOMSG("malloc-> ptr: %08x; size: %.05f MB; at file: %s line: %d", __ptr__, float(val)/(1024.0*1024.0),__FILE__, __LINE__);
+	#define ptr_free(val) free(val); INFOMSG("free-> ptr: %08x; at file: %s line: %d", val, __FILE__, __LINE__);
+
 #else
 	#define INFOMSG(...)    //
 	#define INFOTHDMSG(...) //
@@ -34,6 +42,9 @@
 
 	#pragma warning( disable : 4553 )
 	#pragma warning( disable : 4552 )
+
+	#define pvm_malloc(val) malloc(val);
+	#define pvm_free(ptr) free(ptr);
 
 #endif
 
