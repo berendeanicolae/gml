@@ -549,7 +549,7 @@ bool ProbVectorMachine::IterateBlockTraining()
 	{
 		handle = InstPreCache.AtWaitForCompletion();						
 		NULLCHECKMSG(handle,"could not load block file:%d exiting", blkIdx-1);		
-		handle->KPRM = kprime;
+		handle->KPRM = kprime;		
 
 		CHECKMSG(InstPreCache.AtSignalStartLoading(blkIdx),"could not signal loading of block:%d ", blkIdx);
 		CHECKMSG(PerfomBlockTraining(blkIdx - 1, handle), "error performing training on block: %d", blkIdx - 1);

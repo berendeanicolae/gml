@@ -4,7 +4,7 @@
 #include <cstring>
 #include <cstdlib>
 
-#define PVM_DEBUG_MODE 1
+//#define PVM_DEBUG_MODE 1
 //#define MCU_DEBUG_MODE 1
 
 #ifdef MCU_DEBUG_MODE
@@ -19,6 +19,7 @@
 	#define CHECK(val){ if (val==false) return false;}; 
 
 	#define ATCHECKMSG(val, ...){ if (val==false) { ERRORMSG(__VA_ARGS__); AtKillThread=true; SetEvent(AtEventWorking); return 0xffFFffFF; }; };
+	#define ATCHECKMSG_INT3(val, ...){ if (val==false) { ERRORMSG(__VA_ARGS__); AtKillThread=true; SetEvent(AtEventWorking); DebugBreak(); }; };
 
 	void* pvm_malloc_func (int val);
 	void pvm_free_func (void* __ptr__);
