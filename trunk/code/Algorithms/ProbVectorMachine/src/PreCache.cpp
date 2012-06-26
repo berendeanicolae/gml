@@ -117,17 +117,15 @@ bool PreCache::PreComputeGram()
 		pcfh.BlockSize = sizeOfBlock;
 
 		//write the header of the PreCache file
-		CHECKMSG(kernelFileObj.Write(0, &pcfh, sizeof(PreCacheFileHeader), &written), "failed to write kernel values file header");
+		CHECKMSG(kernelFileObj.Write(&pcfh, sizeof(PreCacheFileHeader), &written), "failed to write kernel values file header");
 
 		// the write loop
 		writtenSoFar = written;
 		while (writtenSoFar < sizeOfBlock+sizeof(PreCacheFileHeader)) {			
-			// figure how much to write to this block
-			//if (SzOfBlock-WrittenSoFar < UNMEGA) BlockSize = SzOfBlock-WrittenSoFar;
-			//else BlockSize = UNMEGA;
-		
+
 			// the write operation
-			CHECKMSG(kernelFileObj.Write(writtenSoFar, writeBuffer, UNMEGA, &written), "failed to write kernel values buffer");
+			CHECKMSG(kernelFileObj.Write(writeBuffer, UNMEGA, &written), "failed to write kernel values buffer");
+			writeBuffer += written;
 			writtenSoFar += written;
 		}
 
@@ -295,7 +293,7 @@ DWORD PreCache::AtLoadNextBlock()
 	GML::Utils::GString atBlockFileName;
 
 	UInt64	readUntilNow, readNow, readSz;
-	pvm_float* iterBuf;
+	unsigned char* iterBuf;
 	PreCacheFileHeader blockHeader, normHeader;
 
 	// looping until somebody requests to terminate by setting KillThread = true
@@ -322,7 +320,7 @@ DWORD PreCache::AtLoadNextBlock()
 
 		// reading file from disk
 		readUntilNow = 0;		
-		iterBuf = blockHandle[AtIdxLoading].KERN;
+		iterBuf = (unsigned char*)blockHandle[AtIdxLoading].KERN;
 		while (readUntilNow<blockHeader.BlockSize) {
 			if (blockHeader.BlockSize-readUntilNow<UNMEGA) readSz = blockHeader.BlockSize-readUntilNow;
 			else readSz = UNMEGA;
@@ -555,7 +553,8 @@ bool PreCache::PreComputeNorm()
 	PreCacheFileHeader normFh;
 
 	UInt64	read, readUnow, readSz, written;
-	pvm_float  *blkBuf, *blkBufIt, *normBuf;
+	pvm_float  *blkBuf, *normBuf;
+	unsigned char *blkBufIt;
 	KPrimePair *kpBuf;
 
 	double  recLabel;
@@ -609,7 +608,7 @@ bool PreCache::PreComputeNorm()
 
 		// read the block file
 		readUnow = 0;
-		blkBufIt = blkBuf;
+		blkBufIt = (unsigned char*)blkBuf;
 		while (readUnow < blockFh.BlockSize) {
 			readSz = UNMEGA;
 			if (blockFh.BlockSize-readUnow < UNMEGA) readSz = blockFh.BlockSize-readUnow;
@@ -617,6 +616,7 @@ bool PreCache::PreComputeNorm()
 			CHECKMSG(blockFo.Read(blkBufIt, readSz, &read), "could not read from file");
 			CHECKMSG(readSz==read, "could not read enough");
 
+			blkBufIt += read;
 			readUnow += read;
 		}
 
