@@ -253,6 +253,9 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\imp_assert.cpp" />
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\imp_memory.cpp" />
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\imp_msgbox.cpp" />
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionDBG.cpp" />
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionPoly.cpp" />
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelFunctionPolyParametrized.cpp" />
@@ -263,6 +266,7 @@
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\KernelWrapper.cpp" />
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\PreCache.cpp" />
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\ProbVectorMachine.cpp" />
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\PVMMacros.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='AltDebug|Win32'">false</CompileAsManaged>
@@ -285,6 +289,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\BoundingBox.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\imp_assert.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\imp_defines.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\imp_memory.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\imp_msgbox.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunction.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionDBG.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionInclude.h" />
@@ -295,6 +304,7 @@
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionScalar.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelFunctionScalarParametrized.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\KernelWrapper.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\List.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\MathFunctions.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PreCache.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\ProbVectorMachine.h" />
@@ -303,6 +313,18 @@
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesKeywords.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesTypes.h" />
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMMacros.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\TemplateFunctions.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\TemplateStructures.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\Tuple.h" />
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\Vector.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\code\Algorithms\ProbVectorMachine\src\BoundingBox.inl" />
+    <None Include="..\..\code\Algorithms\ProbVectorMachine\src\List.inl" />
+    <None Include="..\..\code\Algorithms\ProbVectorMachine\src\TemplateFunctions.inl" />
+    <None Include="..\..\code\Algorithms\ProbVectorMachine\src\TemplateStructures.inl" />
+    <None Include="..\..\code\Algorithms\ProbVectorMachine\src\Tuple.inl" />
+    <None Include="..\..\code\Algorithms\ProbVectorMachine\src\Vector.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -7,7 +7,7 @@
     <LocalDebuggerCommand>D:\GML\bin\gml.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommandArguments>run clasify.ini</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>run GML_TEMPLATE_f00_4feb32b1_1de84f8.ini</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='AltDebug|Win32'">
     <LocalDebuggerCommandArguments>run 4.pvm-build-train.ini</LocalDebuggerCommandArguments>

@@ -34,6 +34,16 @@
     <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\PreCache.cpp">
       <Filter>Working Mihai\PreCache</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\imp_assert.cpp">
+      <Filter>Working Andrei\memDbg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\imp_memory.cpp">
+      <Filter>Working Andrei\memDbg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\imp_msgbox.cpp">
+      <Filter>Working Andrei\memDbg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\code\Algorithms\ProbVectorMachine\src\PVMMacros.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesTypes.h">
@@ -90,6 +100,36 @@
     <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\PVMDefinesConstants.h">
       <Filter>PVMDefines</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\imp_assert.h">
+      <Filter>Working Andrei\memDbg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\imp_defines.h">
+      <Filter>Working Andrei\memDbg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\imp_memory.h">
+      <Filter>Working Andrei\memDbg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\imp_msgbox.h">
+      <Filter>Working Andrei\memDbg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\BoundingBox.h">
+      <Filter>Working Andrei\Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\List.h">
+      <Filter>Working Andrei\Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\TemplateFunctions.h">
+      <Filter>Working Andrei\Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\TemplateStructures.h">
+      <Filter>Working Andrei\Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\Tuple.h">
+      <Filter>Working Andrei\Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\code\Algorithms\ProbVectorMachine\inc\Vector.h">
+      <Filter>Working Andrei\Templates</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Working Andrei">
@@ -125,5 +165,31 @@
     <Filter Include="Main Algorithm">
       <UniqueIdentifier>{07698e43-f005-4fb6-9f85-fb069e3d1c47}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Working Andrei\memDbg">
+      <UniqueIdentifier>{4e2d8936-3d47-45d7-8c16-fe5b1e96b641}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Working Andrei\Templates">
+      <UniqueIdentifier>{bc9940a7-c5c3-432b-b423-5c39ccf97d1e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\code\Algorithms\ProbVectorMachine\src\BoundingBox.inl">
+      <Filter>Working Andrei\Templates</Filter>
+    </None>
+    <None Include="..\..\code\Algorithms\ProbVectorMachine\src\List.inl">
+      <Filter>Working Andrei\Templates</Filter>
+    </None>
+    <None Include="..\..\code\Algorithms\ProbVectorMachine\src\TemplateFunctions.inl">
+      <Filter>Working Andrei\Templates</Filter>
+    </None>
+    <None Include="..\..\code\Algorithms\ProbVectorMachine\src\TemplateStructures.inl">
+      <Filter>Working Andrei\Templates</Filter>
+    </None>
+    <None Include="..\..\code\Algorithms\ProbVectorMachine\src\Tuple.inl">
+      <Filter>Working Andrei\Templates</Filter>
+    </None>
+    <None Include="..\..\code\Algorithms\ProbVectorMachine\src\Vector.inl">
+      <Filter>Working Andrei\Templates</Filter>
+    </None>
   </ItemGroup>
 </Project>

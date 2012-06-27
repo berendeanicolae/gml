@@ -2,6 +2,7 @@
 #include "KernelFunctionDBG.h"
 
 #include "KernelWrapper.h"
+#include "TemplateFunctions.inl"
 
 ProbVectorMachine::ProbVectorMachine()
 {
@@ -552,7 +553,15 @@ bool ProbVectorMachine::IterateBlockTraining()
 		handle->KPRM = kprime;		
 
 		CHECKMSG(InstPreCache.AtSignalStartLoading(blkIdx),"could not signal loading of block:%d ", blkIdx);
-		CHECKMSG(PerfomBlockTraining(blkIdx - 1, handle), "error performing training on block: %d", blkIdx - 1);
+
+#ifdef EXACT_SCORE_ONLY
+		pvm_float real_score;
+		CHECKMSG(PrepareAndExecuteBlockScoreComputation(blkIdx - 1, handle), "error performing score computation on block: %d", blkIdx - 1);
+		real_score = wu.score;
+
+		INFOMSG("REAL BLOCK SCORE : %f \n", real_score);
+#endif
+		CHECKMSG(PerformBlockTraining(blkIdx - 1, handle), "error performing training on block: %d", blkIdx - 1);
 
 		// dump the block state variables to disk	
 		fileName.Truncate(0);	
@@ -578,7 +587,11 @@ bool ProbVectorMachine::IterateBlockTraining()
 		CHECKMSG(written==vectSz,"could not write enough to the block state file");
 
 		// write block score for stop condition
+#ifdef EXACT_SCORE_ONLY
+		CHECKMSG(fileObj.Write(&real_score,sizeof(pvm_float),&written),"could not write to block state file");
+#else
 		CHECKMSG(fileObj.Write(&wu.score,sizeof(pvm_float),&written),"could not write to block state file");
+#endif
 		CHECKMSG(written==sizeof(pvm_float),"could not write enough to the block state file");
 
 		fileObj.Close();
@@ -591,7 +604,13 @@ bool ProbVectorMachine::IterateBlockTraining()
 		NULLCHECKMSG(handle,"could not load block file:%d exiting", blkIdx-1);		
 		handle->KPRM = kprime;
 
-		CHECKMSG(PerfomBlockTraining(blkIdx - 1, handle), "error performing training on block: %d", blkIdx - 1);
+#ifdef EXACT_SCORE_ONLY
+		pvm_float real_score;
+		CHECKMSG(PrepareAndExecuteBlockScoreComputation(blkIdx - 1, handle), "error performing score computation on block: %d", blkIdx - 1);
+		real_score = wu.score;
+		INFOMSG("REAL BLOCK SCORE : %f \n", real_score);
+#endif
+		CHECKMSG(PerformBlockTraining(blkIdx - 1, handle), "error performing training on block: %d", blkIdx - 1);
 
 		// dump the block state variables to disk	
 		fileName.Truncate(0);	
@@ -617,7 +636,11 @@ bool ProbVectorMachine::IterateBlockTraining()
 		CHECKMSG(written==vectSz,"could not write enough to the block state file");
 
 		// write block score for stop condition
+#ifdef EXACT_SCORE_ONLY
+		CHECKMSG(fileObj.Write(&real_score,sizeof(pvm_float),&written),"could not write to block state file");
+#else
 		CHECKMSG(fileObj.Write(&wu.score,sizeof(pvm_float),&written),"could not write to block state file");
+#endif
 		CHECKMSG(written==sizeof(pvm_float),"could not write enough to the block state file");
 
 		fileObj.Close();
@@ -640,17 +663,20 @@ bool ProbVectorMachine::IterateBlockTraining()
 bool ProbVectorMachine::PrepareAndExecuteBlockScoreComputation(UInt32 blkIdx, PreCache::BlockLoadHandle *handle)
 {
 	wu.score = 0;
+	scoreUpdates.resize(threadsCount);
+	scoreUpdates.zero_all();
 
 	wu.bHandle = handle;
 	wu.winStart = 0;
-	wu.winSize = handle->recCount;
 
 	ExecuteParalelCommand(THREAD_COMMAND_COMPUTE_SCORE);
+
+	wu.score = scoreUpdates.sum();
 
 	return true;
 }
 
-bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHandle *handle)
+bool ProbVectorMachine::PerformBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHandle *handle)
 {
 	// algorithm state variables
 	pvm_float scoreSum, update;
@@ -658,8 +684,14 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 	pvm_float maxWindowScore;
 	pvm_float minScoreSum = (pvm_float)1e-10;
 	pvm_float temp_score;
+	pvm_float varLambdaFl = (pvm_float)varLambda;
+
+	pvm_float *wuPnIt, *uAlphaIt, *alphaIt, *uSigmaIt, *sigmaIt;
+	pvm_float update_temp;
 
 	UInt32 nrRec = con->GetRecordCount();
+
+	PrepareKerHelper(handle->KERN, handle->recCount, nrRec);
 
 	wu.score = 0;//the score will be added on for every iteration
 	for (updateNr = 0; updateNr < varNrUpdatesPerNormBlock; updateNr++)
@@ -672,7 +704,7 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 			if (handle->recCount-w < varWindowSize) wu.winSize = handle->recCount-w;
 			else wu.winSize = varWindowSize;
 
-			// compute window update 		
+			// compute window update 	
 			ExecuteParalelCommand(THREAD_COMMAND_WINDOW_UPDATE);
 
 			// compute shares for every score
@@ -685,37 +717,76 @@ bool ProbVectorMachine::PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHa
 				if (maxWindowScore < wu.san[i]) {
 					maxWindowScore = wu.san[i];
 				}
-			}
-			temp_score += maxWindowScore;
+			}			
 
 			if (scoreSum < minScoreSum)
-				scoreSum = minScoreSum;
+				continue;
 			
+			temp_score += maxWindowScore;
+
 			for (i=0;i<wu.winSize;i++)
 				wu.pn[i] = wu.san[i]/scoreSum;
-						
+				  /*
+			// update alphas
+			for (i = 0, alphaIt = wu.ALPH;
+				 i < nrRec;
+				 i++, alphaIt++) {
+				
+				update = 0;	  	
+				update_temp = 0;
+				
+				for (k = 0, wuPnIt = wu.pn, uAlphaIt = wu.uALPH + i;
+					k < wu.winSize;
+					k++, wuPnIt++, uAlphaIt += nrRec)
+				{
+					imp_assert(wu.pn[k] == (*wuPnIt) && wu.uALPH[nrRec*k + i] == (*uAlphaIt));				
+					update_temp += (*wuPnIt) * (*uAlphaIt);					
+					update += wu.pn[k] * wu.uALPH[nrRec*k + i];
+
+					imp_assert(update == update_temp);
+				}			
+				
+				imp_assert(alphaIt == wu.ALPH + i);
+				imp_assert(update == update_temp);
+				//*alphaIt += update_temp * varLambdaFl;
+				wu.ALPH[i] += update;
+			}	
+			 	*/							
+			   
 			// update alphas
 			for (i=0;i<nrRec;i++) {			
 				update = 0;
 				for (k=0;k<wu.winSize;k++) 
-					update = wu.pn[k] * wu.uALPH[nrRec*k + i];					
+					update += wu.pn[k] * wu.uALPH[nrRec*k + i];					
 			
 				update *= (pvm_float)varLambda;
 				wu.ALPH[i] += update;
 			}
 
 			// update sigmas
-			for (k=0;k<wu.winSize;k++)
-				wu.SIGM[handle->recStart+w+k] += (pvm_float)varLambda * wu.pn[k] * wu.uSIGM[k];		
+			wuPnIt = wu.pn;
+			uSigmaIt  = wu.uSIGM;
+			sigmaIt = wu.SIGM + (handle->recStart+w);
 
-			//if (w==0) w-=varWindowSize;
+			for (k = 0; k < wu.winSize; 
+				k++, sigmaIt++, uSigmaIt++, wuPnIt++)
+			{
+				imp_assert(sigmaIt == wu.SIGM + handle->recStart+w+k);
+				imp_assert( varLambdaFl * (*wuPnIt) * (*uSigmaIt) == (pvm_float)varLambda * wu.pn[k] * wu.uSIGM[k]);
+				*sigmaIt += varLambdaFl * (*wuPnIt) * (*uSigmaIt);	 
+			}
+
+/*			// update sigmas
+			for (k=0;k<wu.winSize;k++)
+				wu.SIGM[handle->recStart+w+k] += (pvm_float)varLambda * wu.pn[k] * wu.uSIGM[k];	*/	
+							  
 		}
 		
 		if (temp_score < 1e-8f)
 			break;
 
 		if (updateNr == 0)
-			wu.score = temp_score * (pvm_float)varLambda;
+			wu.score = temp_score * varLambdaFl;
 	}	
 
 	return true;
@@ -725,7 +796,14 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 {
 	UInt32		recIdxGlob, recIdxBlock, i, uALPH_it;
 	double		label;
-	pvm_float	sj, ker, kpr, frac;
+	pvm_float	sj, frac, ker, kpr;
+	
+	UInt32		nrRecTemp;
+	pvm_float	*kprimeTemp, *kerVal;
+	pvm_float	*wuAlphaIt;
+
+	imp_assert(sizeof(PreCache::KPrimePair) == 2 * sizeof(pvm_float));
+
 
 	//INFOTHDMSG("perform window update");
 	
@@ -741,7 +819,68 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 		
 		sj = 0;
 		wu.san[winIt] = 0;
+					  /*
+		kerVal = wu.bHandle->KERN + recIdxBlock;
+		nrRecTemp = nrRec - 1;
+		
+		wuAlphaIt = wu.ALPH;
 
+		if (label == 1)
+			kprimeTemp = &(wu.bHandle->KPRM[0].pos);
+		else
+			kprimeTemp = &(wu.bHandle->KPRM[0].neg);
+
+		for (i = 0; i < recIdxBlock; 
+			i++, kerVal += nrRecTemp, nrRecTemp--, kprimeTemp += 2, wuAlphaIt++)
+			sj += (*wuAlphaIt) * (*kerVal - *kprimeTemp);
+
+		for(; i < nrRec;
+			i++, kerVal++, kprimeTemp += 2, wuAlphaIt++)
+			sj += (*wuAlphaIt) * (*kerVal - *kprimeTemp);
+
+		
+		
+		if (label == 1)
+			kprimeTemp = &(wu.bHandle->KPRM[0].pos);
+		else
+			kprimeTemp = &(wu.bHandle->KPRM[0].neg);
+
+		kerVal = wu.bHandle->KERN + recIdxBlock;
+		nrRecTemp = nrRec - 1;			
+		wuAlphaIt = wu.uALPH + winIt*nrRec;
+
+		if (wu.SIGM[recIdxGlob] - sj < 0) 
+		{
+			wu.updateNeeded = true;		
+
+			wu.san[winIt] = (sj - wu.SIGM[recIdxGlob]) / wu.bHandle->NORM[recIdxBlock];
+			wu.uSIGM[winIt] = frac = wu.san[winIt] / wu.bHandle->NORM[recIdxBlock];
+
+			for (i = 0; i < recIdxBlock;
+				i++, kerVal += nrRecTemp, nrRecTemp--, kprimeTemp += 2, wuAlphaIt++)
+				*wuAlphaIt = frac * ((*kprimeTemp) - (*kerVal));
+
+			for (; i < nrRec;
+				i++, kerVal++, kprimeTemp += 2, wuAlphaIt++)
+				*wuAlphaIt = frac * ((*kprimeTemp) - (*kerVal));
+		}
+		else if (wu.SIGM[recIdxGlob] + sj < 0)
+		{
+			wu.updateNeeded = true;
+
+			wu.san[winIt] = (-sj - wu.SIGM[recIdxGlob]) / wu.bHandle->NORM[recIdxBlock];
+			wu.uSIGM[winIt] = frac = wu.san[winIt] / wu.bHandle->NORM[recIdxBlock];			
+
+			for (i = 0; i < recIdxBlock;
+				i++, kerVal += nrRecTemp, nrRecTemp--, kprimeTemp += 2, wuAlphaIt++)
+				*wuAlphaIt = frac * ((*kerVal) - (*kprimeTemp));
+
+			for (; i < nrRec;
+				i++, kerVal++, kprimeTemp += 2, wuAlphaIt++)
+				*wuAlphaIt = frac * ((*kerVal) - (*kprimeTemp));		
+		}			*/ 
+
+			  	
 		if (label == 1)
 		{		
 			for (i = 0; i < nrRec; i++) 
@@ -811,15 +950,31 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 				wu.uSIGM[winIt] = frac;
 				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
 			} 
-		}	
+		}	 
 	}
 	return true;
+}
+
+void ProbVectorMachine::PrepareKerHelper(pvm_float *ker_src, int line_count, int nrRec)
+{
+	__int64 i, line_count_i64 = line_count, nrRec_i64 = nrRec;
+
+	kerHelper.resize(line_count);
+
+	for (i = 0; i < line_count_i64; i++)
+		kerHelper[(int)i] = ker_src + i * nrRec_i64 - (i*(i - 1)) / 2;
+	
 }
 
 inline pvm_float ProbVectorMachine::KerAt(UInt32 line,UInt32 row, pvm_float* ker, UInt32 nrRec)
 {
 	if (line>row) { UInt32 aux = line; line = row; row=aux; }
 	return ker[(line*nrRec - line*(line-1)/2) + row-line];
+}
+
+inline	pvm_float ProbVectorMachine::KerAtHelper(UInt32 line, UInt32 row)
+{
+	return line > row ? kerHelper[row][line - row] : kerHelper[line][row - line];
 }
 
 bool ProbVectorMachine::LastBlockTraining()
@@ -1040,7 +1195,15 @@ bool ProbVectorMachine::LastBlockTraining()
 		}
 
 		if (updateNr == 0)
+#ifdef EXACT_SCORE_ONLY
+			totalUpdateScore = u[0].score * u[0].score +
+							   u[1].score * u[1].score +
+							   u[2].score * u[2].score +
+							   u[3].score * u[3].score;							
+#else
 			totalUpdateScore = maxScore;
+#endif
+
 
 		if (scoreSum < minScoreSum)
 			scoreSum = minScoreSum;
@@ -1261,7 +1424,7 @@ bool ProbVectorMachine::GatherBlockStates()
 			fileObj.Close();
 
 			// sum scores for stop condition
-			scoreSum += score*score;
+			scoreSum += score;
 
 			for (i=0;i<nrRec;i++) 
 			{
@@ -1303,7 +1466,7 @@ bool ProbVectorMachine::GatherBlockStates()
 	fileObj.Close();
 
 	// sum scores for stop condition
-	scoreSum += score*score;
+	scoreSum += score;
 	scoreSum = sqrt(scoreSum);
 
 	for (i=0;i<nrRec;i++) {
@@ -1482,15 +1645,11 @@ bool ProbVectorMachine::ComputeBlockScore(GML::Algorithm::MLThreadData &thData)
 	double		label;
 	pvm_float	sj, ker, kpr;
 
-	//INFOTHDMSG("perform window update");
-	
 	UInt32 nrRec = con->GetRecordCount();
-	wu.updateNeeded = false;
-	
 	
 	for (UInt32 winIt=thData.ThreadID; winIt<wu.bHandle->recCount; winIt+=threadsCount)
 	{
-		recIdxBlock = wu.winStart + winIt;
+		recIdxBlock = winIt;
 		recIdxGlob = wu.bHandle->recStart + recIdxBlock; 		
 		
 		CHECKMSG(con->GetRecordLabel(label, recIdxGlob),"could not get record label");				
@@ -1531,8 +1690,12 @@ bool ProbVectorMachine::ComputeBlockScore(GML::Algorithm::MLThreadData &thData)
 						
 		}	
 
+#ifdef EXACT_SCORE_ONLY
+		scoreUpdates[thData.ThreadID] += sj * sj;
+#else
 		if (wu.score < sj)
 			wu.score = sj;
+#endif
 	}
 
 	return true;
