@@ -58,6 +58,10 @@ bool PreCache::PreComputeGram()
 	SizePerLine = sizeof(pvm_float)*NrRec;
 	//RecPerBlock = GetNrRecPerBlock(0, NrRec);
 	RecPerBlock = GetNrRecPerBlockNonRecursive(NrRec);
+	
+	if (RecPerBlock > NrRec / id.varBlockCount + 1)
+		RecPerBlock = NrRec / id.varBlockCount + 1;
+	
 
 	TotalNrBlocks = NrRec/RecPerBlock;
 	if (NrRec%RecPerBlock)
@@ -66,11 +70,12 @@ bool PreCache::PreComputeGram()
 	if (id.varBlockCount>=TotalNrBlocks)
 		id.varBlockCount = TotalNrBlocks;
 
+	size_t allocSize = id.varBlockFileSize*UNMEGA;
 	// allocate memory for output buffer
-	kernelBuffer = (unsigned char*) pvm_malloc (id.varBlockFileSize*UNMEGA);
+	kernelBuffer = (unsigned char*) pvm_malloc (allocSize);
 	NULLCHECKMSG(kernelBuffer, "could not allocate enough memory for kernel output buffer");
 	pccb.KernelBuffer = (pvm_float*) kernelBuffer;
-	memset(kernelBuffer, 0, id.varBlockFileSize*UNMEGA);
+	memset(kernelBuffer, 0, allocSize);
 
 	kprimeBuffer = (KPrimePair*) pvm_malloc (RecPerBlock*sizeof(KPrimePair));
 	NULLCHECKMSG(kprimeBuffer, "could not allocate enough memory for kprime output buffer");
@@ -155,7 +160,8 @@ bool PreCache::PreComputeGram()
 
 int PreCache::GetNrRecPerBlockNonRecursive(int MaxNr)
 {
-	UInt32 SzPerBlock = id.varBlockFileSize*UNMEGA;
+	size_t allocSize = id.varBlockFileSize*UNMEGA;
+	UInt32 SzPerBlock = allocSize;
 	UInt32 SzForAll = (NrRec*NrRec - (NrRec*(NrRec-1))/2)*sizeof(pvm_float);
 
 	// what if the database is smaller than UNMEGA
@@ -179,7 +185,8 @@ int PreCache::GetNrRecPerBlock(int MinNr, int MaxNr)
 	// binary search for the nr of records per Block
 	UInt32 MidNr = MinNr + (MaxNr-MinNr)/2;
 	UInt32 SzForMid = (MidNr*NrRec - (MidNr*(MidNr-1))/2)*sizeof(pvm_float);
-	UInt32 SzPerBlock = id.varBlockFileSize*UNMEGA;
+	size_t allocSize = id.varBlockFileSize*UNMEGA;
+	UInt32 SzPerBlock = allocSize;
 	UInt32 SzForAll = (NrRec*NrRec - (NrRec*(NrRec-1))/2)*sizeof(pvm_float);
 
 	// what if the database is smaller than UNMEGA
@@ -394,7 +401,8 @@ bool PreCache::AtInitLoading()
 	for (int i=0;i<PRECACHE_NR_WORK_BUFFERS;i++) 
 	{
 		// alloc memory 
-		blockHandle[i].KERN = (pvm_float*) pvm_malloc(id.varBlockFileSize*UNMEGA);
+		size_t allocSize = id.varBlockFileSize*UNMEGA;
+		blockHandle[i].KERN = (pvm_float*) pvm_malloc(allocSize);
 		CHECKMSG(blockHandle[i].KERN!=NULL, "could not allocate enough memory");	
 
 		// memory for blockHandle[i].N - eqnorm will be alloc on first encounter
@@ -490,6 +498,9 @@ bool PreCache::MergeKPrimeFiles()
 	SizePerLine = sizeof(pvm_float)*NrRec;
 	//RecPerBlock = GetNrRecPerBlock(0, NrRec);
 	RecPerBlock = GetNrRecPerBlockNonRecursive(NrRec);
+
+	if (RecPerBlock > NrRec / id.varBlockCount + 1)
+		RecPerBlock = NrRec / id.varBlockCount + 1;
 
 	TotalNrBlocks = NrRec/RecPerBlock;
 	

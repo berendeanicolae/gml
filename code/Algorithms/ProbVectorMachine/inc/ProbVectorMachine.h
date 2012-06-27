@@ -4,6 +4,8 @@
 #include "gmllib.h"
 #include "PVMDefinesInclude.h"
 #include "PreCache.h"
+#include "TemplateStructures.h"
+
 
 class ProbVectorMachine: public GML::Algorithm::IMLAlgorithm
 {
@@ -80,6 +82,10 @@ private:
 		UInt32 totalRecCount;
 	};
 
+	pvmFloatVectorT scoreUpdates;
+	pvmFloatRefVectorT kerHelper;
+
+
 
 private:
 	GML::ML::MLRecord		MainRecord;	
@@ -97,7 +103,7 @@ private:
 	bool	PreCacheCall(UInt32 cmd);
 	bool	IterateBlockTraining();
 
-	bool	PerfomBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHandle *handle);
+	bool	PerformBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHandle *handle);
 	bool	PerformWindowUpdate(GML::Algorithm::MLThreadData &thData);
 
 	
@@ -105,7 +111,9 @@ private:
 	bool	PrepareAndExecuteBlockScoreComputation(UInt32 blkIdx, PreCache::BlockLoadHandle *handle);
 	bool	ComputeBlockScore(GML::Algorithm::MLThreadData &thData);
 
-	inline  pvm_float KerAt(UInt32 line,UInt32 row, pvm_float* ker, UInt32 nrRec);
+	void	PrepareKerHelper(pvm_float *ker_src, int line_count, int nrRec);
+	inline  pvm_float KerAt(UInt32 line,UInt32 row, pvm_float *ker, UInt32 nrRec);
+	inline	pvm_float KerAtHelper(UInt32 line, UInt32 row);
 
 public:
 	ProbVectorMachine();

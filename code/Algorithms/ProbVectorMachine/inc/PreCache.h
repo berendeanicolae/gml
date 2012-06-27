@@ -7,6 +7,7 @@
 #include "PVMDefinesTypes.h"
 #include "KernelWrapper.h"
 
+#include "TemplateFunctions.h"
 #include <cstring>
 #include <cmath>
 
@@ -17,6 +18,10 @@
 #define PRECACHE_FILE_HEADER_MAGIC_SZ	32
 #define PRECACHE_NR_WORK_BUFFERS		2
 
+//---------------------------------------------------------------------------
+typedef IMP::Vector<float> pvmFloatVectorT;
+typedef IMP::Vector<float *> pvmFloatRefVectorT;
+//---------------------------------------------------------------------------
 using namespace GML::Utils;
 
 class PreCache : GML::Utils::GMLObject {
@@ -52,14 +57,23 @@ public:
 		pvm_float neg;
 	};
 
+	typedef IMP::Vector<KPrimePair> KPrimePairVectorT;
+
 	struct BlockLoadHandle {
 		UInt32 blkNr;
 		UInt32 recCount;
 		UInt32 recStart;
+								  /*
+		pvmFloatVectorT  KERN;
+		pvmFloatVectorT  NORM;
+		KPrimePairVectorT *KPRM;*/
 
+		
 		pvm_float* KERN;
 		pvm_float* NORM;
 		KPrimePair* KPRM;
+
+		//pvm_float** KERN_det; //soon we will change the way ker values are accesed
 	};
 
 private:
