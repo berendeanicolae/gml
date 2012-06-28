@@ -689,10 +689,6 @@ bool ProbVectorMachine::PerformBlockTraining(UInt32 blkIdx, PreCache::BlockLoadH
 	pvm_float *wuPnIt, *uAlphaIt, *alphaIt, *uSigmaIt, *sigmaIt;
 	pvm_float update_temp;
 
-#ifdef LOCAL_OPERATOR_AVERAGE
-	pvm_float fixed_weight = (pvm_float)1.0 / (float)(wu.winSize);
-#endif// LOCAL_OPERATOR_AVERAGE
-
 	UInt32 nrRec = con->GetRecordCount();
 
 	PrepareKerHelper(handle->KERN, handle->recCount, nrRec);
@@ -707,6 +703,10 @@ bool ProbVectorMachine::PerformBlockTraining(UInt32 blkIdx, PreCache::BlockLoadH
 			wu.winStart = w;
 			if (handle->recCount-w < varWindowSize) wu.winSize = handle->recCount-w;
 			else wu.winSize = varWindowSize;
+
+#ifdef LOCAL_OPERATOR_AVERAGE
+			pvm_float fixed_weight = (pvm_float)1.0 / (float)(wu.winSize);
+#endif// LOCAL_OPERATOR_AVERAGE
 
 			// compute window update 	
 			ExecuteParalelCommand(THREAD_COMMAND_WINDOW_UPDATE);
@@ -735,8 +735,7 @@ bool ProbVectorMachine::PerformBlockTraining(UInt32 blkIdx, PreCache::BlockLoadH
 			for (i=0;i<wu.winSize;i++)
 				wu.pn[i] = wu.san[i]/scoreSum;			
 
-#endif//LOCAL_OPERATOR_AVERAGE
-			 						
+#endif//LOCAL_OPERATOR_AVERAGE	 						
 			// update alphas	   
 			for (i=0, alphaIt = wu.ALPH;
 				i<nrRec;i++, alphaIt++) 
@@ -873,6 +872,8 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 		else
 		{
 			memset(wuAlphaIt, 0, nrRec * sizeof(pvm_float));
+			wu.uSIGM[winIt] = 0;
+			wu.san[winIt] = 0;
 		}
 #endif//LOCAL_OPERATOR_AVERAGE
 
@@ -1146,8 +1147,12 @@ bool ProbVectorMachine::LastBlockTraining()
 		if (scoreSum < minScoreSum)
 			scoreSum = minScoreSum;
 		
+#ifdef LOCAL_OPERATOR_AVERAGE
+		u[0].score = u[1].score = u[2].score = u[3].score = 0.25;
+#else//LOCAL_OPERATOR_AVERAGE
 		for (i = 0; i < 4; i++)
 			u[i].score /= scoreSum;			
+#endif// LOCAL_OPERATOR_AVERAGE
 
 		// we use as output the exact same buffers used for input
 		pvm_float mean;
