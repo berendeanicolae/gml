@@ -112,7 +112,7 @@ private:
 	bool	ComputeBlockScore(GML::Algorithm::MLThreadData &thData);
 
 	void	PrepareKerHelper(pvm_float *ker_src, int line_count, int nrRec);
-	inline  pvm_float KerAt(UInt32 line,UInt32 row, pvm_float *ker, UInt32 nrRec);
+	inline  pvm_float KerAt(UInt32 line,UInt32 row, pvm_float *ker, UInt32 nrRec, UInt32 blockRecStart);
 	inline	pvm_float KerAtHelper(UInt32 line, UInt32 row);
 
 public:
@@ -126,7 +126,8 @@ public:
 	bool	GatherBlockStates();
 	bool	ClasifyDataset();
 	bool	InitExtraConnections();
-	void DebugTesting();
+	void	DebugTesting1();
+	void	DebugTesting(PreCache::BlockLoadHandle *handle, UInt32 nrRecords);
 	// variables to control the algorithm flow
 	UInt32 varKernelType;
 	UInt32 varBlockFileSize;

@@ -63,17 +63,10 @@ public:
 		UInt32 blkNr;
 		UInt32 recCount;
 		UInt32 recStart;
-								  /*
-		pvmFloatVectorT  KERN;
-		pvmFloatVectorT  NORM;
-		KPrimePairVectorT *KPRM;*/
 
-		
 		pvm_float* KERN;
 		pvm_float* NORM;
 		KPrimePair* KPRM;
-
-		//pvm_float** KERN_det; //soon we will change the way ker values are accesed
 	};
 
 private:
@@ -141,7 +134,7 @@ public:
 	bool PreComputeGram();
 	bool ThreadPrecomputeBlock(GML::Algorithm::MLThreadData &thData);
 
-	bool GetKernelAt(UInt32 line,UInt32 row, pvm_float* KernelStorage,UInt32 NrRecInBlock, pvm_float *KVal);
+	bool GetKernelAt(UInt32 line,UInt32 row, pvm_float* KernelStorage,UInt32 NrRecInBlock, UInt32 RecStart, pvm_float *KVal);
 
 	// asynchronous block loading interface
 	bool AtInitLoading();

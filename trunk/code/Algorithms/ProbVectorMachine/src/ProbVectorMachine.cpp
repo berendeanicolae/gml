@@ -87,7 +87,7 @@ void ProbVectorMachine::OnExecute()
 			break;
         case COMMAND_DEBUG_TESTS:
             INFOMSG("Computing machine speed");            
-            DebugTesting();
+            //DebugTesting();
             break;
 		case COMMAND_PRECOMP_GRAM:
 			INFOMSG("Precomputing Kernel Values");
@@ -783,9 +783,9 @@ bool ProbVectorMachine::PerformBlockTraining(UInt32 blkIdx, PreCache::BlockLoadH
 
 bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData)
 {
-	UInt32		recIdxGlob, recIdxBlock, i, uALPH_it;
+	UInt32		recIdxGlob, recIdxBlock, i;
 	double		label;
-	pvm_float	sj, frac, ker, kpr;
+	pvm_float	sj, frac;
 	
 	UInt32		nrRecTemp;
 	pvm_float	*kprimeTemp, *kprimeInit, *kerVal;
@@ -798,6 +798,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 	
 	UInt32 nrRec = con->GetRecordCount();
 	wu.updateNeeded = false;
+	kerVal = wu.bHandle->KERN;
 	
 	for (UInt32 winIt=thData.ThreadID; winIt<wu.winSize; winIt+=threadsCount)
 	{
@@ -809,7 +810,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 		sj = 0;
 		wu.san[winIt] = 0;
 					
-		kerVal = wu.bHandle->KERN + recIdxBlock;
+		
 		nrRecTemp = nrRec - 1;
 		
 		wuAlphaIt = wu.ALPH;
@@ -820,12 +821,12 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 			kprimeInit = kprimeTemp = &(wu.bHandle->KPRM[0].neg);
 
 		for (i = 0; i < recIdxBlock; 
-			i++, kerVal += nrRecTemp, nrRecTemp--, kprimeTemp += 2, wuAlphaIt++)
-			sj += (*wuAlphaIt) * (*kerVal - *kprimeTemp);
+			i++, kprimeTemp += 2, wuAlphaIt++)
+			sj += (*wuAlphaIt) * (KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec, wu.bHandle->recStart) - *kprimeTemp);
 
 		for(; i < nrRec;
-			i++, kerVal++, kprimeTemp += 2, wuAlphaIt++)
-			sj += (*wuAlphaIt) * (*kerVal - *kprimeTemp);
+			i++, kprimeTemp += 2, wuAlphaIt++)
+			sj += (*wuAlphaIt) * (KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec, wu.bHandle->recStart) - *kprimeTemp);
 		
 		if (label == 1)
 			kprimeTemp = &(wu.bHandle->KPRM[0].pos);
@@ -833,52 +834,40 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 			kprimeTemp = &(wu.bHandle->KPRM[0].neg);
 
 
-
-		kerVal = wu.bHandle->KERN + recIdxBlock;
 		nrRecTemp = nrRec - 1;			
 		wuAlphaIt = wu.uALPH + winIt*nrRec;
 
 		if (wu.SIGM[recIdxGlob] - sj < 0) 
 		{
 			wu.updateNeeded = true;		
-			/*
-			frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
-			wu.uSIGM[winIt] = frac;
-			wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];			
-			*/	
-			
+
 			wu.san[winIt] = (sj - wu.SIGM[recIdxGlob]) / wu.bHandle->NORM[recIdxBlock];
 			wu.uSIGM[winIt] = frac = wu.san[winIt] / wu.bHandle->NORM[recIdxBlock];
 			
 			for (i = 0; i < recIdxBlock;
-				i++, kerVal += nrRecTemp, nrRecTemp--, kprimeTemp += 2, wuAlphaIt++)
-				*wuAlphaIt = frac * ((*kprimeTemp) - (*kerVal));
+				i++, kprimeTemp += 2, wuAlphaIt++)
+				*wuAlphaIt = frac * ((*kprimeTemp) - KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec, wu.bHandle->recStart));
 
 			for (; i < nrRec;
-				i++, kerVal++, kprimeTemp += 2, wuAlphaIt++)
-				*wuAlphaIt = frac * ((*kprimeTemp) - (*kerVal));
+				i++, kprimeTemp += 2, wuAlphaIt++)
+				*wuAlphaIt = frac * ((*kprimeTemp) - KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec, wu.bHandle->recStart));
 
 		}
 
 		else if (wu.SIGM[recIdxGlob] + sj < 0)
 		{
-			wu.updateNeeded = true;
-			  /*
-			frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);												
-			wu.uSIGM[winIt] = frac;
-			wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
-			*/
+			wu.updateNeeded = true;		
 				
 			wu.san[winIt] = (-sj - wu.SIGM[recIdxGlob]) / wu.bHandle->NORM[recIdxBlock];
 			wu.uSIGM[winIt] = frac = wu.san[winIt] / wu.bHandle->NORM[recIdxBlock];			
 			   
 			for (i = 0; i < recIdxBlock;
-				i++, kerVal += nrRecTemp, nrRecTemp--, kprimeTemp += 2, wuAlphaIt++)
-				*wuAlphaIt = frac * ((*kerVal) - (*kprimeTemp));
+				i++, kprimeTemp += 2, wuAlphaIt++)
+				*wuAlphaIt = frac * (KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec, wu.bHandle->recStart) - (*kprimeTemp));
 
 			for (; i < nrRec;
-				i++, kerVal++, kprimeTemp += 2, wuAlphaIt++)
-				*wuAlphaIt = frac * ((*kerVal) - (*kprimeTemp));		
+				i++, kprimeTemp += 2, wuAlphaIt++)
+				*wuAlphaIt = frac * (KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec, wu.bHandle->recStart) - (*kprimeTemp));		
 		}
 #ifdef LOCAL_OPERATOR_AVERAGE
 		else
@@ -902,10 +891,23 @@ void ProbVectorMachine::PrepareKerHelper(pvm_float *ker_src, int line_count, int
 	
 }
 
-inline pvm_float ProbVectorMachine::KerAt(UInt32 line,UInt32 row, pvm_float* ker, UInt32 nrRec)
+inline pvm_float ProbVectorMachine::KerAt(UInt32 line,UInt32 row, pvm_float* ker, UInt32 nrRec, UInt32 blockRecStart)
 {
-	if (line>row) { UInt32 aux = line; line = row; row=aux; }
-	return ker[(line*nrRec - line*(line-1)/2) + row-line];
+	int OutPos = 0;
+	if ( row < blockRecStart ) {		
+		OutPos = (line*nrRec - line*(line-1)/2) + row;		
+	} 
+	else {	
+		if ( row < line+blockRecStart ) {
+			UInt32 nline = row - blockRecStart;
+			UInt32 nrow  = line + blockRecStart;
+			line = nline;
+			row = nrow;		
+		}
+		OutPos = (line*nrRec - line*(line-1)/2) + row - line;
+	}
+
+	return ker[OutPos];
 }
 
 inline	pvm_float ProbVectorMachine::KerAtHelper(UInt32 line, UInt32 row)
@@ -1583,6 +1585,8 @@ bool ProbVectorMachine::ComputeBlockScore(GML::Algorithm::MLThreadData &thData)
 
 	UInt32 nrRec = con->GetRecordCount();
 	
+	//imp_assert(0);
+
 	for (UInt32 winIt=thData.ThreadID; winIt<wu.bHandle->recCount; winIt+=threadsCount)
 	{
 		recIdxBlock = winIt;
@@ -1596,7 +1600,7 @@ bool ProbVectorMachine::ComputeBlockScore(GML::Algorithm::MLThreadData &thData)
 		{		
 			for (i = 0; i < nrRec; i++) 
 			{
-				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec, wu.bHandle->recStart);
 				kpr = wu.bHandle->KPRM[i].pos;
 				sj += wu.ALPH[i] * (ker - kpr);
 			}
@@ -1612,7 +1616,7 @@ bool ProbVectorMachine::ComputeBlockScore(GML::Algorithm::MLThreadData &thData)
 		{
 			for (i = 0; i < nrRec; i++) 
 			{							
-				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
+				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec, wu.bHandle->recStart);
 				kpr = wu.bHandle->KPRM[i].neg;
 				sj += wu.ALPH[i] * (ker - kpr);
 			}
@@ -1637,7 +1641,7 @@ bool ProbVectorMachine::ComputeBlockScore(GML::Algorithm::MLThreadData &thData)
 	return true;
 }
 
-void ProbVectorMachine::DebugTesting()
+void ProbVectorMachine::DebugTesting1()
 {
 	GML::Utils::File fileObj;
 	GML::Utils::GString fileName;
@@ -1668,4 +1672,33 @@ void ProbVectorMachine::DebugTesting()
 	fileObj.Create(fileName.GetText());
 	fileObj.Write(msg.GetText(), msg.GetSize());
 	fileObj.Close();
+}
+
+void ProbVectorMachine::DebugTesting(PreCache::BlockLoadHandle *handle, UInt32 nrRecords)
+{
+	UInt32 i, j;
+	pvm_float res;
+	GML::ML::MLRecord one, two;
+	pvm_float sum;
+
+	ker_f_wrapper kernel(con, notif);	
+	CHECKMSG(kernel.set_params(varKernelParamDouble, varKernelParamInt, NULL, (KerFuncType)varKernelType),"could not set kernel parameters");
+
+	CHECKMSG(con->CreateMlRecord(one),"could not create MLRecord");
+	CHECKMSG(con->CreateMlRecord(two),"could not create MLRecord");
+
+	for (i = 0; i < handle->recCount; i++) {
+		CHECKMSG(con->GetRecord(one, i+handle->recStart),"could not get ml record from connector");
+
+		for (j = 0; j < nrRecords; j++)
+		{
+			CHECKMSG(con->GetRecord(two, j),"could not get ml record from connector");
+			//InstPreCache.GetKernelAt(i, j, handle->KERN, handle->recCount, handle->recStart, &res);
+			res = KerAt(i,j, handle->KERN, nrRecords, handle->recStart);
+			sum = (pvm_float)kernel.compute_for(one, two);
+
+			if (handle->blkNr==1 && j>handle->recStart)
+				imp_assert(false);
+		}
+	}
 }

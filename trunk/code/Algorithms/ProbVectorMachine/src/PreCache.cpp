@@ -227,24 +227,31 @@ bool PreCache::ThreadPrecomputeBlock(GML::Algorithm::MLThreadData &thData)
 	CHECKMSG(kernel.set_params(id.varKernelParamDouble, id.varKernelParamInt, NULL, (KerFuncType)id.varKernelType),"could not set kernel parameters");
 	
 	// the outer loop where every thread alternated and takes a record
-	for (UInt32 i=pccb.RecStart+ThreadId; i<pccb.RecStart+pccb.RecCount; i+=alg->threadsCount) {
-
-		LineNr = i-pccb.RecStart;
+	for (UInt32 i=pccb.RecStart+ThreadId; i<pccb.RecStart+pccb.RecCount; i+=alg->threadsCount) {		
 
 		// get ml record from connector
 		CHECKMSG(id.con->GetRecord(one, i),"could not get ml record from connector");
+		LineNr = i-pccb.RecStart;
 
-		// iterate through all records
-		for (UInt32 j=LineNr;j<NrRec;j++) {
-
+		for (UInt32 j=0; j<pccb.RecStart; j++) {
 			// get second ml record here
 			CHECKMSG(id.con->GetRecord(two, j),"could not get ml record from connector");
-			
 			// the kernel computation
 			sum = (pvm_float)kernel.compute_for(one, two);
 
 			// put the kernel value to its out place			
-			OutPos = (LineNr*NrRec - LineNr*(LineNr-1)/2) + j-LineNr;
+			OutPos = (LineNr*NrRec - LineNr*(LineNr-1)/2) + j;
+			pccb.KernelBuffer[OutPos] = sum;			
+		}
+
+		for (UInt32 j=i; j<NrRec; j++) {
+			// get second ml record here
+			CHECKMSG(id.con->GetRecord(two, j),"could not get ml record from connector");
+			// the kernel computation
+			sum = (pvm_float)kernel.compute_for(one, two);
+
+			// put the kernel value to its out place			
+			OutPos = (LineNr*NrRec - LineNr*(LineNr-1)/2) + pccb.RecStart + (j - i);
 			pccb.KernelBuffer[OutPos] = sum;			
 		}
 
@@ -253,7 +260,7 @@ bool PreCache::ThreadPrecomputeBlock(GML::Algorithm::MLThreadData &thData)
 
 		double label;
 		for (UInt32 j=0;j<NrRec;j++) {
-			CHECKMSG(GetKernelAt(LineNr,j, pccb.KernelBuffer, pccb.RecCount, &val),"could not get kernel value");		
+			CHECKMSG(GetKernelAt(LineNr,j, pccb.KernelBuffer, pccb.RecCount, pccb.RecStart, &val),"could not get kernel value");		
 			CHECKMSG(id.con->GetRecordLabel(label, j),"could not record label for index %d", j);		
 			if (label==1) KpPos += val;						
 			else KpNeg += val;		
@@ -283,13 +290,25 @@ int PreCache::GetSizeOfBlock(int BlockNr)
 	return (RecHere*NrRec - (RecHere*(RecHere-1))/2)*sizeof(pvm_float);
 }
 
-bool PreCache::GetKernelAt(UInt32 line,UInt32 row, pvm_float* KernelStorage,UInt32 NrRecInBlock, pvm_float *KVal)
-{
+bool PreCache::GetKernelAt(UInt32 line,UInt32 row, pvm_float* KernelStorage,UInt32 NrRecInBlock, UInt32 RecStart, pvm_float *KVal)
+{	
 	CHECKMSG(line<NrRecInBlock, "GetKernelAt line nr out of bounds");
 	CHECKMSG(row<NrRec,"GetKernelAt row out of bounds");
-	if (line>row) { int aux = line; line = row; row=aux; }
-	
-	int OutPos = (line*NrRec - line*(line-1)/2) + row-line;
+
+	int OutPos = 0;
+	if ( row < RecStart ) {		
+		OutPos = (line*NrRec - line*(line-1)/2) + row;		
+	} 
+	else {	
+		if ( row < line+RecStart ) {
+			UInt32 nline = row - RecStart;
+			UInt32 nrow  = line + RecStart;
+			line = nline;
+			row = nrow;		
+		}
+		OutPos = (line*NrRec - line*(line-1)/2) + row - line;
+	}
+			
 	*KVal = KernelStorage[OutPos];
 	return true;
 }
@@ -639,7 +658,7 @@ bool PreCache::PreComputeNorm()
 			sum  = 0;
 			for (UInt32 recIdx=0;recIdx<kpFh.NrRecordsTotal;recIdx++) 
 			{
-				CHECKMSG(GetKernelAt(blkRecIdx, recIdx, blkBuf, blockFh.NrRecords, &kval),"could not get kernel value");
+				CHECKMSG(GetKernelAt(blkRecIdx, recIdx, blkBuf, blockFh.NrRecords, blockFh.RecordStart, &kval),"could not get kernel value");
 
 				sum = kval - ((recLabel==1) ?kpBuf[recIdx].pos :kpBuf[recIdx].neg);
 				tsum += sum*sum;
