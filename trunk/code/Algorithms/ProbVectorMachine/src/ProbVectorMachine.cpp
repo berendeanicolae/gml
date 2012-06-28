@@ -725,44 +725,29 @@ bool ProbVectorMachine::PerformBlockTraining(UInt32 blkIdx, PreCache::BlockLoadH
 			temp_score += maxWindowScore;
 
 			for (i=0;i<wu.winSize;i++)
-				wu.pn[i] = wu.san[i]/scoreSum;
-				  /*
-			// update alphas
-			for (i = 0, alphaIt = wu.ALPH;
-				 i < nrRec;
-				 i++, alphaIt++) {
-				
-				update = 0;	  	
-				update_temp = 0;
-				
-				for (k = 0, wuPnIt = wu.pn, uAlphaIt = wu.uALPH + i;
-					k < wu.winSize;
-					k++, wuPnIt++, uAlphaIt += nrRec)
-				{
-					imp_assert(wu.pn[k] == (*wuPnIt) && wu.uALPH[nrRec*k + i] == (*uAlphaIt));				
-					update_temp += (*wuPnIt) * (*uAlphaIt);					
-					update += wu.pn[k] * wu.uALPH[nrRec*k + i];
-
-					imp_assert(update == update_temp);
-				}			
-				
-				imp_assert(alphaIt == wu.ALPH + i);
-				imp_assert(update == update_temp);
-				//*alphaIt += update_temp * varLambdaFl;
-				wu.ALPH[i] += update;
-			}	
-			 	*/							
-			   
-			// update alphas
-			for (i=0;i<nrRec;i++) {			
-				update = 0;
-				for (k=0;k<wu.winSize;k++) 
-					update += wu.pn[k] * wu.uALPH[nrRec*k + i];					
+				wu.pn[i] = wu.san[i]/scoreSum;			
+			 						
+			// update alphas	   
+			for (i=0, alphaIt = wu.ALPH;
+				i<nrRec;i++, alphaIt++) 
+			{			
 			
-				update *= (pvm_float)varLambda;
-				wu.ALPH[i] += update;
-			}
+				update = 0;
+				update_temp = 0;
 
+				wuPnIt = wu.pn, uAlphaIt = wu.uALPH + i;
+				
+				for (k=0;
+					k<wu.winSize;
+					k++, wuPnIt++, uAlphaIt += nrRec) 
+				{
+					update_temp += (*wuPnIt) * (*uAlphaIt);								
+
+				}		
+				update_temp *= (pvm_float)varLambda;		
+				*alphaIt += update_temp;
+			}
+						
 			// update sigmas
 			wuPnIt = wu.pn;
 			uSigmaIt  = wu.uSIGM;
@@ -771,14 +756,8 @@ bool ProbVectorMachine::PerformBlockTraining(UInt32 blkIdx, PreCache::BlockLoadH
 			for (k = 0; k < wu.winSize; 
 				k++, sigmaIt++, uSigmaIt++, wuPnIt++)
 			{
-				imp_assert(sigmaIt == wu.SIGM + handle->recStart+w+k);
-				imp_assert( varLambdaFl * (*wuPnIt) * (*uSigmaIt) == (pvm_float)varLambda * wu.pn[k] * wu.uSIGM[k]);
 				*sigmaIt += varLambdaFl * (*wuPnIt) * (*uSigmaIt);	 
 			}
-
-/*			// update sigmas
-			for (k=0;k<wu.winSize;k++)
-				wu.SIGM[handle->recStart+w+k] += (pvm_float)varLambda * wu.pn[k] * wu.uSIGM[k];	*/	
 							  
 		}
 		
@@ -799,7 +778,7 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 	pvm_float	sj, frac, ker, kpr;
 	
 	UInt32		nrRecTemp;
-	pvm_float	*kprimeTemp, *kerVal;
+	pvm_float	*kprimeTemp, *kprimeInit, *kerVal;
 	pvm_float	*wuAlphaIt;
 
 	imp_assert(sizeof(PreCache::KPrimePair) == 2 * sizeof(pvm_float));
@@ -819,16 +798,16 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 		
 		sj = 0;
 		wu.san[winIt] = 0;
-					  /*
+					
 		kerVal = wu.bHandle->KERN + recIdxBlock;
 		nrRecTemp = nrRec - 1;
 		
 		wuAlphaIt = wu.ALPH;
 
 		if (label == 1)
-			kprimeTemp = &(wu.bHandle->KPRM[0].pos);
+			kprimeInit = kprimeTemp = &(wu.bHandle->KPRM[0].pos);
 		else
-			kprimeTemp = &(wu.bHandle->KPRM[0].neg);
+			kprimeInit = kprimeTemp = &(wu.bHandle->KPRM[0].neg);
 
 		for (i = 0; i < recIdxBlock; 
 			i++, kerVal += nrRecTemp, nrRecTemp--, kprimeTemp += 2, wuAlphaIt++)
@@ -837,13 +816,13 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 		for(; i < nrRec;
 			i++, kerVal++, kprimeTemp += 2, wuAlphaIt++)
 			sj += (*wuAlphaIt) * (*kerVal - *kprimeTemp);
-
-		
 		
 		if (label == 1)
 			kprimeTemp = &(wu.bHandle->KPRM[0].pos);
 		else
 			kprimeTemp = &(wu.bHandle->KPRM[0].neg);
+
+
 
 		kerVal = wu.bHandle->KERN + recIdxBlock;
 		nrRecTemp = nrRec - 1;			
@@ -852,10 +831,15 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 		if (wu.SIGM[recIdxGlob] - sj < 0) 
 		{
 			wu.updateNeeded = true;		
-
+			/*
+			frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
+			wu.uSIGM[winIt] = frac;
+			wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];			
+			*/	
+			
 			wu.san[winIt] = (sj - wu.SIGM[recIdxGlob]) / wu.bHandle->NORM[recIdxBlock];
 			wu.uSIGM[winIt] = frac = wu.san[winIt] / wu.bHandle->NORM[recIdxBlock];
-
+			
 			for (i = 0; i < recIdxBlock;
 				i++, kerVal += nrRecTemp, nrRecTemp--, kprimeTemp += 2, wuAlphaIt++)
 				*wuAlphaIt = frac * ((*kprimeTemp) - (*kerVal));
@@ -863,14 +847,21 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 			for (; i < nrRec;
 				i++, kerVal++, kprimeTemp += 2, wuAlphaIt++)
 				*wuAlphaIt = frac * ((*kprimeTemp) - (*kerVal));
+
 		}
+
 		else if (wu.SIGM[recIdxGlob] + sj < 0)
 		{
 			wu.updateNeeded = true;
-
+			  /*
+			frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);												
+			wu.uSIGM[winIt] = frac;
+			wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
+			*/
+				
 			wu.san[winIt] = (-sj - wu.SIGM[recIdxGlob]) / wu.bHandle->NORM[recIdxBlock];
 			wu.uSIGM[winIt] = frac = wu.san[winIt] / wu.bHandle->NORM[recIdxBlock];			
-
+			   
 			for (i = 0; i < recIdxBlock;
 				i++, kerVal += nrRecTemp, nrRecTemp--, kprimeTemp += 2, wuAlphaIt++)
 				*wuAlphaIt = frac * ((*kerVal) - (*kprimeTemp));
@@ -878,79 +869,8 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 			for (; i < nrRec;
 				i++, kerVal++, kprimeTemp += 2, wuAlphaIt++)
 				*wuAlphaIt = frac * ((*kerVal) - (*kprimeTemp));		
-		}			*/ 
-
-			  	
-		if (label == 1)
-		{		
-			for (i = 0; i < nrRec; i++) 
-			{
-				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-				kpr = wu.bHandle->KPRM[i].pos;
-				sj += wu.ALPH[i] * (ker - kpr);
-			}
-
-			if (wu.SIGM[recIdxGlob] - sj < 0) 
-			{
-				wu.updateNeeded = true;
-				frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);				
-				for (i = 0, uALPH_it = winIt*nrRec; i < nrRec; i++, uALPH_it++) 
-				{
-					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);				
-					kpr = wu.bHandle->KPRM[i].pos;
-					wu.uALPH[uALPH_it] = frac * (kpr-ker);
-				}
-				wu.uSIGM[winIt] = frac;
-				wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];			
-			} else if (wu.SIGM[recIdxGlob] + sj < 0) 
-			{
-				wu.updateNeeded = true;
-				frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);								
-				for (i = 0, uALPH_it = winIt*nrRec; i < nrRec; i++, uALPH_it++) 
-				{
-					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-					kpr = wu.bHandle->KPRM[i].pos;
-					wu.uALPH[uALPH_it] = frac * (ker-kpr);
-				}
-				wu.uSIGM[winIt] = frac;
-				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];			
-			} 
 		}
-		else
-		{
-			for (i = 0; i < nrRec; i++) 
-			{							
-				ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-				kpr = wu.bHandle->KPRM[i].neg;
-				sj += wu.ALPH[i] * (ker - kpr);
-			}
 
-			if (wu.SIGM[recIdxGlob] - sj < 0) 
-			{
-				wu.updateNeeded = true;
-				frac = (sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);
-				for (i = 0, uALPH_it = winIt*nrRec; i < nrRec; i++, uALPH_it++) 
-				{
-					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);				
-					kpr = wu.bHandle->KPRM[i].neg;
-					wu.uALPH[uALPH_it] = frac * (kpr-ker);
-				}
-				wu.uSIGM[winIt] = frac;
-				wu.san[winIt]	= (sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
-			} else if (wu.SIGM[recIdxGlob] + sj < 0) 
-			{
-				wu.updateNeeded = true;
-				frac = (-sj - wu.SIGM[recIdxGlob]) / (wu.bHandle->NORM[recIdxBlock]*wu.bHandle->NORM[recIdxBlock]);				
-				for (i = 0, uALPH_it = winIt*nrRec; i < nrRec; i++, uALPH_it++) 
-				{
-					ker = KerAt(recIdxBlock, i, wu.bHandle->KERN, nrRec);
-					kpr = wu.bHandle->KPRM[i].neg;
-					wu.uALPH[uALPH_it] = frac * (ker-kpr);
-				}
-				wu.uSIGM[winIt] = frac;
-				wu.san[winIt]	= (-sj - wu.SIGM[recIdxGlob])/wu.bHandle->NORM[recIdxBlock];
-			} 
-		}	 
 	}
 	return true;
 }
