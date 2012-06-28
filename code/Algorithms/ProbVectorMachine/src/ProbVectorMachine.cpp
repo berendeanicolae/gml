@@ -689,6 +689,10 @@ bool ProbVectorMachine::PerformBlockTraining(UInt32 blkIdx, PreCache::BlockLoadH
 	pvm_float *wuPnIt, *uAlphaIt, *alphaIt, *uSigmaIt, *sigmaIt;
 	pvm_float update_temp;
 
+#ifdef LOCAL_OPERATOR_AVERAGE
+	pvm_float fixed_weight = (pvm_float)1.0 / (float)(wu.winSize);
+#endif// LOCAL_OPERATOR_AVERAGE
+
 	UInt32 nrRec = con->GetRecordCount();
 
 	PrepareKerHelper(handle->KERN, handle->recCount, nrRec);
@@ -724,8 +728,14 @@ bool ProbVectorMachine::PerformBlockTraining(UInt32 blkIdx, PreCache::BlockLoadH
 			
 			temp_score += maxWindowScore;
 
+#ifdef LOCAL_OPERATOR_AVERAGE
+			for (i = 0; i < wu.winSize; i++)
+				wu.pn[i] = fixed_weight;
+#else //LOCAL_OPERATOR_AVERAGE
 			for (i=0;i<wu.winSize;i++)
 				wu.pn[i] = wu.san[i]/scoreSum;			
+
+#endif//LOCAL_OPERATOR_AVERAGE
 			 						
 			// update alphas	   
 			for (i=0, alphaIt = wu.ALPH;
@@ -870,6 +880,12 @@ bool ProbVectorMachine::PerformWindowUpdate(GML::Algorithm::MLThreadData &thData
 				i++, kerVal++, kprimeTemp += 2, wuAlphaIt++)
 				*wuAlphaIt = frac * ((*kerVal) - (*kprimeTemp));		
 		}
+#ifdef LOCAL_OPERATOR_AVERAGE
+		else
+		{
+			memset(wuAlphaIt, 0, nrRec * sizeof(pvm_float));
+		}
+#endif//LOCAL_OPERATOR_AVERAGE
 
 	}
 	return true;
