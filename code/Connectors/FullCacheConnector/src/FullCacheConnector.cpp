@@ -1,6 +1,6 @@
 #include "FullCacheConnector.h"
 
-#define CACHE_SIG_NAME "FullCacheConnectorV2"
+#define CACHE_SIG_NAME "FullCacheConnectorV3"
 
 FullCacheConnector::FullCacheConnector()
 {
@@ -23,7 +23,6 @@ FullCacheConnector::~FullCacheConnector()
 	Records = NULL;
 	Labels = NULL;
 }
-
 
 bool   FullCacheConnector::GetRecord( MLRecord &record,UInt32 index,UInt32 recordMask )
 {
@@ -62,8 +61,14 @@ bool   FullCacheConnector::OnInitConnectionToDataBase()
 		notifier->Error("[%s] -> Unable to allocate %ud bytes for labels !",ObjectName,nrRecords*sizeof(double));
 		return false;
 	}
+	if ((Weights = new double[nrRecords])==NULL)
+	{
+		notifier->Error("[%s] -> Unable to allocate %ud bytes for weights !",ObjectName,nrRecords*sizeof(double));
+		return false;
+	}
 	memset(Records,0,nrRecords*columns.nrFeatures*sizeof(double));
 	memset(Labels,0,nrRecords*sizeof(double));
+	memset(Weights,1,nrRecords*sizeof(double));
 	// sunt exact la inceput
 	cPoz = Records;
 
@@ -145,6 +150,8 @@ bool   FullCacheConnector::Save(char *fileName)
 			break;
 		if (file.Write(Labels,nrRecords*sizeof(double))==false)
 			break;
+		if (file.Write(Weights,nrRecords*sizeof(double))==false)
+			break;
 		if (SaveRecordHashesAndFeatureNames()==false)
 			break;
 		CloseCacheFile();
@@ -162,24 +169,38 @@ bool   FullCacheConnector::Load(char *fileName)
 	{
 		if (OpeanCacheFile(fileName,CACHE_SIG_NAME,&h,sizeof(h))==false)
 			break;
+
 		if (Records!=NULL)
 			delete Records;
 		if (Labels!=NULL)
 			delete Labels;
+		if (Weights!=NULL)
+			delete Weights;
 		Records = NULL;
 		Labels = NULL;
+		Weights = NULL;
+
 		if ((Records = new double[nrRecords*columns.nrFeatures*sizeof(double)])==NULL)
 		{
 			notifier->Error("[%s] -> Unable to allocate %ud bytes for data indexes !",ObjectName,nrRecords*columns.nrFeatures*sizeof(double));
 			break;
 		}
+
+		// alloc memory for labels
 		if ((Labels = new double[nrRecords*sizeof(double)])==NULL)
 		{
 			notifier->Error("[%s] -> Unable to allocate %ud bytes for labels !",ObjectName,nrRecords*sizeof(double));
 			break;
 		}
 
-		// actually read from file 
+		// alloc memory for weights
+		if ((Weights = new double[nrRecords*sizeof(double)])==NULL)
+		{
+			notifier->Error("[%s] -> Unable to allocate %ud bytes for weights !",ObjectName,nrRecords*sizeof(double));
+			break;
+		}
+
+		// read records from file
 		UInt64 ReadSz;
 		if (file.Read(Records, nrRecords*columns.nrFeatures*sizeof(double), &ReadSz)==false) {
 			notifier->Error("[%s] -> Unable to read records data!",ObjectName);
@@ -189,7 +210,19 @@ bool   FullCacheConnector::Load(char *fileName)
 			notifier->Error("[%s] -> Unable to read enough from file!",ObjectName);
 			break;
 		}
+
+		// read labels from file
 		if (file.Read(Labels, nrRecords*sizeof(double), &ReadSz)==false) {
+			notifier->Error("[%s] -> Unable to read labels data!",ObjectName);
+			break;
+		}
+		if (ReadSz!=nrRecords*sizeof(double)) {
+			notifier->Error("[%s] -> Unable to read enough from file!",ObjectName);
+			break;
+		}
+
+		// read weights from file
+		if (file.Read(Weights, nrRecords*sizeof(double), &ReadSz)==false) {
 			notifier->Error("[%s] -> Unable to read labels data!",ObjectName);
 			break;
 		}
@@ -210,8 +243,24 @@ bool   FullCacheConnector::Load(char *fileName)
 		delete Records;
 	if (Labels!=NULL)
 		delete Labels;
+	if (Weights!=NULL)
+		delete Weights;
 	Records = NULL;
 	Labels = NULL;
+	Weights = NULL;
 
 	return false;
+}
+
+bool FullCacheConnector::GetRecordWeight( UInt32 index,double &weight )
+{
+	if (index >= nrRecords) 
+	{
+		notifier->Error("[%s] -> index is out of range, it has to be less than %d", nrRecords);
+		return false;
+	}
+
+
+	weight = Weights[index];
+	return true;	
 }

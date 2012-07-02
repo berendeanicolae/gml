@@ -14,6 +14,7 @@ class FullCacheConnector: public IConnector
 private:
 	double		*Records;
 	double		*Labels;
+	double		*Weights;
 		
 
 	bool		OnInitConnectionToDataBase();
@@ -26,6 +27,7 @@ public:
 	bool		FreeMLRecord( MLRecord &record );
 	bool		Close();
 	bool		GetRecordLabel(double &label,UInt32 index);
+	bool		GetRecordWeight(UInt32 index,double &weight);
 
 	bool		Save(char *fileName);
 	bool		Load(char *fileName);
