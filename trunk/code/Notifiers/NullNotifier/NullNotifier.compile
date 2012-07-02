@@ -1,0 +1,6 @@
+sources = NullNotifier.cpp
+gmlplugin = yes
+libname = NullNotifier
+owner = GDT
+comments = Redirects all debug to Null
+
