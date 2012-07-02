@@ -180,21 +180,21 @@ bool   FullCacheConnector::Load(char *fileName)
 		Labels = NULL;
 		Weights = NULL;
 
-		if ((Records = new double[nrRecords*columns.nrFeatures*sizeof(double)])==NULL)
+		if ((Records = new double[nrRecords*columns.nrFeatures])==NULL)
 		{
 			notifier->Error("[%s] -> Unable to allocate %ud bytes for data indexes !",ObjectName,nrRecords*columns.nrFeatures*sizeof(double));
 			break;
 		}
 
 		// alloc memory for labels
-		if ((Labels = new double[nrRecords*sizeof(double)])==NULL)
+		if ((Labels = new double[nrRecords])==NULL)
 		{
 			notifier->Error("[%s] -> Unable to allocate %ud bytes for labels !",ObjectName,nrRecords*sizeof(double));
 			break;
 		}
 
 		// alloc memory for weights
-		if ((Weights = new double[nrRecords*sizeof(double)])==NULL)
+		if ((Weights = new double[nrRecords])==NULL)
 		{
 			notifier->Error("[%s] -> Unable to allocate %ud bytes for weights !",ObjectName,nrRecords*sizeof(double));
 			break;
