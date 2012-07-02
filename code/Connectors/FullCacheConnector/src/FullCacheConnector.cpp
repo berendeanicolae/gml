@@ -6,6 +6,7 @@ FullCacheConnector::FullCacheConnector()
 {
 	 Records = NULL;
 	 Labels  = NULL;	 
+	 Weights = NULL;
 
 	 ObjectName = "FullCacheConnector";
 	
@@ -18,6 +19,9 @@ FullCacheConnector::~FullCacheConnector()
 		delete Records;
 
 	if (Labels!= NULL)
+		delete Labels;
+
+	if (Weights!= NULL)
 		delete Labels;
 
 	Records = NULL;
