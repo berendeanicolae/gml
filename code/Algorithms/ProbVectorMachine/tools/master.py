@@ -1,19 +1,39 @@
 import os, sys, shutil, subprocess, time, tempfile, glob
-
-slaves = [ ( "127.0.0.1"    , {"ThreadsCount":2, "BlockStart":0, "BlockCount": 5, "WindowSize":4} ),
-           #( "192.168.1.109", {"ThreadsCount":6, "BlockStart":2, "BlockCount": 3, "WindowSize":12} ) 
+#-----------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------
+trainDataSet = ""
+testDataSet = ""
+connectorType = ""
+KernelParamDouble = 0.0
+KernelParamInt = 0
+defaultWindowSize = 8
+defaultThreadsCount = 1
+defaultBlockFilePrefix = "pvm"
+running_file_obj = None
+feasability_score = 0.00001
+defaultLambda = 1.5
+defaultT = 2.0
+defaultBlockCount = 5
+#-----------------------------------------------------------------------------------------------------------
+slaves = [ ( "127.0.0.1"    , {"ThreadsCount":defaultThreadsCount, "BlockStart":0, "BlockCount": defaultBlockCount, "WindowSize":defaultWindowSize} ),
+           ( "192.168.1.101", {"ThreadsCount":defaultThreadsCount, "BlockStart":2, "BlockCount": defaultBlockCount, "WindowSize":defaultWindowSize} ) 
            ]
 
 workPackage = r"D:\GML\package"
-
-trainDataSet = None
-testDataSet = None
-
+#-----------------------------------------------------------------------------------------------------------
 defaultNotifierFile = "notifier.log"
 notifierFile = defaultNotifierFile
-
 #-----------------------------------------------------------------------------------------------------------
-
+def debug_print (msg):
+	global running_file_obj
+	dct = getParameterConfig()
+	if not running_file_obj:
+		running_file_obj = open (dct["BlockFilePrefix"]+"-running.winsize=%d.log"%(dct["WindowSize"]), "wt")
+	
+	timestamp = time.time()
+	running_file_obj.write("time:"+str(int(timestamp)) + ":" + msg+"\n")
+	running_file_obj.flush()
+#-----------------------------------------------------------------------------------------------------------
 def rmdir(d):
 	try:
 		for path in (os.path.join(d,f) for f in os.listdir(d)):
@@ -23,7 +43,7 @@ def rmdir(d):
 				os.unlink(path)
 	except Exception as exc:
 		print (repr(exc))
-
+#-----------------------------------------------------------------------------------------------------------
 def copyDirectoryTree(directory, destination, preserveSymlinks=True):
 	for entry in os.listdir(directory):
 		entryPath = os.path.join(directory, entry)
@@ -40,17 +60,17 @@ def copyDirectoryTree(directory, destination, preserveSymlinks=True):
 				shutil.copy(entryPath, directory)
 			else:
 				shutil.copy(os.path.realpath(entryPath), directory)    
-
+#-----------------------------------------------------------------------------------------------------------
 def recursiveCopy(src, dst):
 	# remove everything from dest folder
 	print ("copying from %s to %s"%(src, dst))        
 	rmdir(dst)    
 	copyDirectoryTree(src, dst)
-
+#-----------------------------------------------------------------------------------------------------------
 def netuse (ip):
 	os.system(r"net use \\%s /del 1>nul 2>nul"%ip)
 	os.system(r"net use \\%s /user:gml gml 1>nul 2>nul"%ip)	
-
+#-----------------------------------------------------------------------------------------------------------
 def upload():
 	for ip,config in slaves:		
 		print ("provisioning %s with the work package"%(ip))
@@ -58,13 +78,13 @@ def upload():
 		remoteDir = r"\\%s\gml"%(ip)		
 		recursiveCopy(workPackage, remoteDir)
 		print "-"*50
-
+#-----------------------------------------------------------------------------------------------------------
 def stopLoopScript():
 	for ip,config in slaves:
 		print ("-"*100)
 		print ("trying to stop loop script for: %s"%(ip))
 		os.system(r"pskill \\%s -u gml -p gml python3.exe"%ip)
-
+#-----------------------------------------------------------------------------------------------------------
 def startLoopScript():
 	for ip,config in slaves:
 		print ("trying to start loop script for: %s"%(ip))
@@ -74,40 +94,41 @@ def startLoopScript():
 		os.system(startCommand)
 
 #-----------------------------------------------------------------------------------------------------------
-
 def getDefault():
 	global trainDataSet, testDataSet
 	default = {
 	    "AlgorithmName" : "ProbVectorMachine",
 	    "KernelType" : "Scalar",
-	    "KernelParamInt" : 3,
-	    "KernelParamDouble" : 0.0,
+	    "KernelParamInt" : KernelParamInt,
+	    "KernelParamDouble" : KernelParamDouble,
 
 	    "BlockFileSize" : 1, # in MB
-	    "BlockFilePrefix" : "pvm",
+	    "BlockFilePrefix" : defaultBlockFilePrefix,
 
 	    #training related vars
-	    "Lambda" : 1.1,
-	    "WindowSize" : 10,
-	    "NrUpdatesPerLastBlock": 10,
-	    "NrUpdatesPerNormBlock": 50,
+	    "Lambda" : defaultLambda,
+	    "ThreadsCount" : defaultThreadsCount,
+	    "NrUpdatesPerLastBlock": 5,
+	    "NrUpdatesPerNormBlock": 20,
 
 	    # connectors
 	    "Connector" : {
 	        "DataFileName":trainDataSet,
-	        "Type":"TypeFloatConnector"
+	        "Type":connectorType
 	        },  	    
 	    "ConnectorTest" : {
 	        "DataFileName":testDataSet,
-	        "Type":"TypeFloatConnector"
+	        "Type":connectorType
 	        },
 
 	    "Notifier" : {
 	        "UseColors": True,
 	        "Type": "FileNotifier",
 	        "FileName": "notifier.log"
-	        },
-	    "T" : 1.0
+	        },	    
+	    "T" : defaultT,
+	    
+	    "BlockCount" : defaultBlockCount
 	    # to be put in by the scheduler
 	    #Command = "PreCompGramMatrix"
 	    #IterationNo = 0
@@ -115,7 +136,7 @@ def getDefault():
 
 	}
 	return default
-
+#-----------------------------------------------------------------------------------------------------------
 def makeCmdFile(paramDict):
 	cmd = ""
 	for key, val in paramDict.items():
@@ -133,25 +154,25 @@ def makeCmdFile(paramDict):
 					cmd += "\t" + k + " = " + str(v) + "\n"
 			cmd += "}\n"
 	return cmd
-
+#-----------------------------------------------------------------------------------------------------------
 def getCmdString(paramList):
 	param = dict()
 	for x in paramList:
 		for k,v in x.items():
 			param[k] = v
 	return makeCmdFile(param)
-
+#-----------------------------------------------------------------------------------------------------------
 def removeDoneCmds(ip):
 	dones = glob.glob(r"\\%s\gml\cmd\*.done"%(ip))
 	dones += glob.glob(r"\\%s\gml\cmd\*.cmd"%(ip))
 	for d in dones:
 		os.unlink(d)
-
+#-----------------------------------------------------------------------------------------------------------
 def putCmd (cmd, local=False,itNumber=0, varT=1):	
 	print ("putting command: %s for every slave"%(cmd))
 	cmdFiles = []
 
-	if cmd in ["MergeKprimeFiles"]:
+	if cmd in ["MergeKprimeFiles", "Clasify"]:
 		local = True	
 
 	# if a local cmd only, get config for local ip
@@ -214,7 +235,7 @@ def putCmd (cmd, local=False,itNumber=0, varT=1):
 		for cmdFile in cmdFiles:			
 			if os.path.exists(cmdFile):
 				print ("idle: %s"%(cmdFile))
-
+#-----------------------------------------------------------------------------------------------------------
 def copySlaves2Local(pattern):
 	print ("-"*100)
 	print ("copying files with pattern : %s from all slaves to local"%(pattern))	
@@ -230,7 +251,7 @@ def copySlaves2Local(pattern):
 			localPath = os.path.join(localBase, os.path.basename(f))
 			print ("\t%s -> %s"%(f, localPath))
 			shutil.copy(f, localPath)
-
+#-----------------------------------------------------------------------------------------------------------
 def copyLocal2Slaves(pattern):
 	print ("-"*100)
 	print ("copying files with pattern : %s to all slaves"%(pattern))
@@ -247,7 +268,7 @@ def copyLocal2Slaves(pattern):
 			except:pass
 			shutil.copy(f, remoteFile)
 			print ("\t%s -> %s"%(f, remoteFile))
-
+#-----------------------------------------------------------------------------------------------------------
 def deleteFromSlaves(pattern):	
 	print ("-"*100)
 	print ("deleting files with pattern : %s from all slaves"%(pattern))		
@@ -281,19 +302,19 @@ def initialComputation():
 def iterate(iterNo, varT):
 	putCmd("BlockTraining", False, iterNo, varT)
 	putCmd("LastBlockTraining", True, iterNo, varT)
-	copySlaves2Local("pvm.state.iter.%04d.block.????"%(iterNo))	
-	deleteFromSlaves("pvm.state.iter.%04d.block.all"%(iterNo - 1))
+	copySlaves2Local("%s.state.iter.%04d.block.????"%(getDefault()["BlockFilePrefix"],(iterNo)))
+	deleteFromSlaves("%s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],(iterNo - 1)))
 
 	putCmd("GatherBlockStates", True, iterNo, varT)
 
-	deleteFromSlaves("pvm.state.iter.%04d.block.????"%(iterNo))		
+	deleteFromSlaves("%s.state.iter.%04d.block.????"%(getDefault()["BlockFilePrefix"],(iterNo)))
 	files2rem = glob.glob("%s.state.iter.%04d.block.????"%(getDefault()["BlockFilePrefix"],iterNo - 1))
 	files2rem += glob.glob("%s.state.iter.%04d.block.???"%(getDefault()["BlockFilePrefix"],iterNo - 1))
 	for item in files2rem:			
 		try : os.unlink(item)
 		except : pass	
 
-	copyLocal2Slaves("pvm.state.iter.%04d.block.all"%(iterNo))
+	copyLocal2Slaves("%s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],(iterNo)))
 #-----------------------------------------------------------------------------------------------------------	
 def solveForT(varT, nrIterMax, nrIterStable):
 	score_vect = []
@@ -301,7 +322,13 @@ def solveForT(varT, nrIterMax, nrIterStable):
 
 	print("Performing training for T = %.05f"%varT)
 
-	copyLocal2Slaves("pvm.state.iter.%04d.block.all"%0)
+	copyLocal2Slaves("%s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],0))
+
+	retValue = False
+	lastIt = 0
+	score_decrease_rate = 0.0000001
+	it = 0
+	current_min = 0
 
 	for it in range(1, nrIterMax):
 		iterate(it, varT)
@@ -309,60 +336,89 @@ def solveForT(varT, nrIterMax, nrIterStable):
 		score = open(r"\\127.0.0.l\gml\work\%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it)).read().strip()
 		score = float(score)
 		score_vect.append(score)
+		
+		current_min = score
 
 		shutil.copy(r"\\127.0.0.l\gml\work\%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it), r"\\127.0.0.l\gml\work\%s.state.score.current"%(getDefault()["BlockFilePrefix"]))
 
 		if it > 1:
 			try : os.unlink(r"\\127.0.0.l\gml\work\%s.state.iter.%04d.block.score"%(getDefault()["BlockFilePrefix"],it-1))
 			except : pass
+						
+		if (it > 1):
+			if (score < min(score_vect[0:len(score_vect)])):
+				shutil.copy(r"\\127.0.0.l\gml\work\s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],it), r"\\127.0.0.l\gml\work\%s.state.iter.%04d.block.all.best"%(paramDict["BlockFilePrefix"], 0))							
 
-		if score == 0:
-			shutil.copy(r"\\127.0.0.l\gml\work\s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],it), r"\\127.0.0.l\gml\work\%s.state.vart.%05.05f.all"%(getDefault()["BlockFilePrefix"],varT))
+		if score < feasability_score:                  
+			shutil.copy("%s.state.iter.%04d.block.all"%(paramDict["BlockFilePrefix"],it), "%s.state.vart.%05.05f.all"%(paramDict["BlockFilePrefix"],varT))
+			debug_print ("yyeeeeeyyyy")
+			retValue = True
+			break
 		elif it > nrIterStable:
-			if min(score_vect[0:len(score_vect)-nrIterStable]) - min(score_vect[-nrIterStable:]) < 0.001:
-				break
+			current_min = min(score_vect)
+			score_decrease_rate = (min(score_vect[0:len(score_vect)-nrIterStable]) - current_min)/ float(nrIterStable)
+			
+			if score_decrease_rate * (nrIter - it) < (current_min - feasability_score):
+					break
+
+			estimated_iters = 0
+
+			if score_decrease_rate < feasability_score:
+				score_decrease_rate = feasability_score
+
+			estimated_iters = it + (current_min - feasability_score) / score_decrease_rate
+			debug_print("iteration:%04d;score:%.07f;estiters:%06d"%(it,score,estimated_iters))
+
+	
+	if score_decrease_rate * (nrIter - it) < current_min - feasability_score:
+			if score_decrease_rate < feasability_score:
+				score_decrease_rate = feasability_score
+			it += (current_min - feasability_score) / (score_decrease_rate)			
 
 	#files2rem = glob.glob("%s.state.iter.????.block.all"%(getDefault()["BlockFilePrefix"],it-1))
 
-	if min(score_vect[0:len(score_vect)]) < 0.001:
-		return True
+	if min(score_vect[0:len(score_vect)]) < feasability_score:
+		shutil.copy(r"\\127.0.0.l\gml\work\%s.state.iter.%04d.block.all.best"%(paramDict["BlockFilePrefix"], 0), r"\\127.0.0.l\gml\work\%s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],0))
+		retValue = True
 
-	return False	
+	try : os.unlink(r"\\127.0.0.l\gml\work\%s.state.iter.%04d.block.all.best"%(paramDict["BlockFilePrefix"], 0))
+	except : pass	
+	
+	return retValue	
 #-----------------------------------------------------------------------------------------------------------	
 def solve(nrIterMax, nrIterStable):
 	varTright = 0.0	
 	found_one = False
 	for it in range(1, 30):
 		varTleft = varTright
-		varTright = (varTleft + 1)*2
+		varTright = varTleft * 2 + 1
 
-		if (solveForT(varTright, 9999, 75)):
+		if (solveForT(varTright, nrIterMax, nrIterStable)):
 			found_one = True
 			break
 
 	if found_one == False:		
 		return False
-
-	shutil.copy("%s.state.vart.%05.05f.all"%(getDefault()["BlockFilePrefix"],varTright), "%s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],0))	
-
+	
 	while varTright - varTleft > 0.001:
 		varTcenter = (varTleft + varTright)/2
-		if solveForT(varTcenter, 9999, 75):
+		if solveForT(varTcenter, nrIterMax, nrIterStable):
 			varTright = varTcenter			
 		else:
 			varTleft = varTcenter
-
-		shutil.copy("%s.state.vart.%05.05f.all"%(getDefault()["BlockFilePrefix"],varTright), "%s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],0))		
-
+			
+	shutil.copy(r"\\127.0.0.l\gml\work\%s.state.iter.%04d.block.all"%(getDefault()["BlockFilePrefix"],0), r"\\127.0.0.l\gml\work\%s.state.final.%04d.block.all"%(getDefault()["BlockFilePrefix"],0))
+	
+	return True
 #-----------------------------------------------------------------------------------------------------------	
 	
 def initEnv():
 	upload()
 	startLoopScript()	
-
+#-----------------------------------------------------------------------------------------------------------
 def uninitEnv():
 	stopLoopScript()
-	
+#-----------------------------------------------------------------------------------------------------------
 def wrapper5fold ():
 	global trainDataSet, testDataSet, notifierFile, defaultNotifierFile
 	
@@ -379,22 +435,45 @@ def wrapper5fold ():
 		copyLocal2Slaves(testDataSet)
 
 		initialComputation()
-		solve (2000, 70)
+		if solve(4000, 50):		
+			# perform testing 
+			notifierFile = "%s-%dof%d-test.result"%(database, x+1, nrOfFolds)
+			putCmd("Clasify", True)
+			notifierFile = defaultNotifierFile
 		
-		# perform testing 
-		notifierFile = "%s-%dof%d-test.result"%(database, x+1, nrOfFolds)
-		putCmd("Clasify", True)
-		notifierFile = defaultNotifierFile
+#-----------------------------------------------------------------------------------------------------------		
+def mainTest():
+	#initEnv()
+	startLoopScript()
+	initialComputation()
+	solve(4000, 50)
+	uninitEnv()
+	#stopLoopScript()
+#-----------------------------------------------------------------------------------------------------------		
+if __name__ == "__main__":	
+		
+	trainDataSet = sys.argv[1]
+	testDataSet = sys.argv[2]
+	
+	if trainDataSet.lower().endswith("fullcache"):
+		connectorType = "FullCacheConnector"
+	elif trainDataSet.lower().endswith("typefloat"):
+		connectorType = "TypeFloatConnector"
+	else:
+		print ("could not identify connector type")
+		exit(1)
+	
+	
+	mainTest()
 	
 
 #-----------------------------------------------------------------------------------------------------------		
-#initEnv()
-startLoopScript()
-wrapper5fold()
-stopLoopScript()
+initEnv()
+#startLoopScript()
+#wrapper5fold()
+#stopLoopScript()
 #uninitEnv()	
 	
 #-----------------------------------------------------------------------------------------------------------		
-#test()
 #print (makeCmdFile(getDefaultParams()))
 
