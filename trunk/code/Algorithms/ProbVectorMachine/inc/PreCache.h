@@ -39,6 +39,7 @@ public:
 		UInt32 varBlockFileSize;
 		UInt32 varBlockStart;
 		UInt32 varBlockCount;
+		UInt32 varBlockCountTotal;
 
 		GML::Utils::GString	varBlockFilePrefix;				
 	};

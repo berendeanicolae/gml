@@ -64,11 +64,13 @@ public:
 	T sum(int start_idx, int stop_idx);
 	T min_val(int &pos);
 	T max_val(int &pos);
+	T dotProd(const Vector<T> &src);
 	void add(const T &val);
 	void add(const T &val, int start_idx, int stop_idx);
 	void substract(const T &val);
 	void substract(const Vector<T> &src);
 	void sum(const Vector<T> &src);
+	void sum(const Vector<T> &src, T &val);
 	void sum_circular(const Vector<T> &src, int offset);
 	void multiply(const T &val);
 	T norm_l_1();
