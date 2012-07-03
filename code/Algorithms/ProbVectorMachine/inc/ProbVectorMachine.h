@@ -115,6 +115,10 @@ private:
 	inline  pvm_float KerAt(UInt32 line,UInt32 row, pvm_float *ker, UInt32 nrRec, UInt32 blockRecStart);
 	inline	pvm_float KerAtHelper(UInt32 line, UInt32 row);
 
+	bool	ProjectSolutionToValidAverages(pvm_float *alpha, pvm_float *sigma, pvm_float &b, PreCache::KPrimePair *kprime);
+	bool	ProjectSolutionToHypeplanes(pvmFloatVectorT &w0, pvm_float b0, pvmFloatVectorT &w1, pvm_float b1, pvmFloatVectorT &x);
+	bool	DistanceToSemiSpace(pvmFloatVectorT &w, pvm_float b, pvmFloatVectorT &xSol, double &dist);
+
 public:
 	ProbVectorMachine();
 
@@ -122,6 +126,7 @@ public:
 	void	OnExecute();    
     bool	ThreadTestCompSpeed(GML::Algorithm::MLThreadData & thData);
 	bool	LastBlockTraining();
+	bool	LastBlockTrainingDirectProjection();
 	bool	DumpDefaultStateVariables();
 	bool	GatherBlockStates();
 	bool	ClasifyDataset();
@@ -133,6 +138,7 @@ public:
 	UInt32 varBlockFileSize;
 	UInt32 varBlockStart;
 	UInt32 varBlockCount;
+	UInt32 varBlockCountTotal;
 
 	double varLambda;
 	double varT;

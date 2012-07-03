@@ -1,6 +1,7 @@
 
 #include "PreCache.h"
 #include "ProbVectorMachine.h"
+#include "TemplateStructures.inl"
 
 PreCache::PreCache()
 {
@@ -18,6 +19,7 @@ bool PreCache::SetInheritData(PreCache::InheritData &inhData)
 	this->id.notif = inhData.notif;
 	
 	this->id.varBlockCount = inhData.varBlockCount;
+	this->id.varBlockCountTotal = inhData.varBlockCountTotal;
 	this->id.varBlockFileSize = inhData.varBlockFileSize;
 	this->id.varBlockStart = inhData.varBlockStart;
 	
@@ -58,11 +60,13 @@ bool PreCache::PreComputeGram()
 	SizePerLine = sizeof(pvm_float)*NrRec;
 	//RecPerBlock = GetNrRecPerBlock(0, NrRec);
 	RecPerBlock = GetNrRecPerBlockNonRecursive(NrRec);
-	
+	  /*
 	if (RecPerBlock > NrRec / id.varBlockCount + 1)
 		RecPerBlock = NrRec / id.varBlockCount + 1;
+	*/
+	if (RecPerBlock > NrRec / id.varBlockCountTotal + 1)
+		RecPerBlock = NrRec / id.varBlockCountTotal + 1;
 	
-
 	TotalNrBlocks = NrRec/RecPerBlock;
 	if (NrRec%RecPerBlock)
 		TotalNrBlocks++;
@@ -217,6 +221,8 @@ bool PreCache::ThreadPrecomputeBlock(GML::Algorithm::MLThreadData &thData)
 	int ThreadId = thData.ThreadID, OutPos, LineNr;
 	GML::ML::MLRecord one, two;
 	pvm_float sum;
+	double weight, weightSumPos, weightSumNeg;
+	double maxDiff = 0, tempDiff;
 
 	CHECKMSG(id.con->CreateMlRecord(one),"could not create MLRecord");
 	CHECKMSG(id.con->CreateMlRecord(two),"could not create MLRecord");
@@ -258,17 +264,43 @@ bool PreCache::ThreadPrecomputeBlock(GML::Algorithm::MLThreadData &thData)
 		// compute the kprime values for this Block			
 		pvm_float KpPos = 0, KpNeg = 0, val;
 
+		weightSumPos = 0;
+		weightSumNeg = 0;
+
 		double label;
 		for (UInt32 j=0;j<NrRec;j++) {
 			CHECKMSG(GetKernelAt(LineNr,j, pccb.KernelBuffer, pccb.RecCount, pccb.RecStart, &val),"could not get kernel value");		
 			CHECKMSG(id.con->GetRecordLabel(label, j),"could not record label for index %d", j);		
-			if (label==1) KpPos += val;						
-			else KpNeg += val;		
+#ifdef USE_RECORD_WEIGHTS
+			CHECKMSG(id.con->GetRecordWeight(j, weight),"could not record weight for index %d", j);		
+
+			imp_assert(weight >= 0);
+
+			if (label==1) KpPos += (pvm_float)weight * val, weightSumPos += weight;
+			else KpNeg += (pvm_float)weight * val, weightSumNeg += weight;
+#else//USE_RECORD_WEIGHTS
+			if (label==1) KpPos += val;
+			else KpNeg += val;
+#endif//USE_RECORD_WEIGHTS		
 		}
 
-		//todo: we have to divide by sub of weights, now divide by nr of records
-		pccb.KPrimeBuffer[LineNr].pos = KpPos/NrPosRec;
-		pccb.KPrimeBuffer[LineNr].neg = KpNeg/NrNegRec;
+
+#ifdef USE_RECORD_WEIGHTS
+		imp_assert(weightSumPos > 1 && weightSumNeg > 1);
+
+		pccb.KPrimeBuffer[LineNr].pos = KpPos/(pvm_float)weightSumPos;
+		pccb.KPrimeBuffer[LineNr].neg = KpNeg/(pvm_float)weightSumNeg;
+#else//USE_RECORD_WEIGHTS
+		pccb.KPrimeBuffer[LineNr].pos = KpPos/(pvm_float)NrPosRec;
+		pccb.KPrimeBuffer[LineNr].neg = KpNeg/(pvm_float)NrNegRec;
+#endif//USE_RECORD_WEIGHTS
+
+		tempDiff = pccb.KPrimeBuffer[LineNr].pos - pccb.KPrimeBuffer[LineNr].neg;
+		if (tempDiff < 0)
+			tempDiff = -tempDiff;
+
+		if (maxDiff < tempDiff)
+			maxDiff = tempDiff;
 
 		if (ThreadId == 0 && (i-pccb.RecStart)%10==0) id.notif->SetProcent(i-pccb.RecStart, pccb.RecCount);
 	}
@@ -517,10 +549,13 @@ bool PreCache::MergeKPrimeFiles()
 	SizePerLine = sizeof(pvm_float)*NrRec;
 	//RecPerBlock = GetNrRecPerBlock(0, NrRec);
 	RecPerBlock = GetNrRecPerBlockNonRecursive(NrRec);
-
+													   /*
 	if (RecPerBlock > NrRec / id.varBlockCount + 1)
-		RecPerBlock = NrRec / id.varBlockCount + 1;
-
+		RecPerBlock = NrRec / id.varBlockCount + 1;	 */
+	
+	if (RecPerBlock > NrRec / id.varBlockCountTotal + 1)
+		RecPerBlock = NrRec / id.varBlockCountTotal + 1;
+	
 	TotalNrBlocks = NrRec/RecPerBlock;
 	
 	if (NrRec%RecPerBlock)

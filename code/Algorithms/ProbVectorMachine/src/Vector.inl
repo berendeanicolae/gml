@@ -174,7 +174,8 @@ __imp_inline IMP::Vector<T>& IMP::Vector<T>::operator = (const IMP::Vector<T> &b
 template <typename T>
 __imp_inline void IMP::Vector<T>::assign(T* classic_vector, int number_of_elements)
 {
-	imp_assert(count >= number_of_elements);
+	reserve(number_of_elements);
+	imp_assert(count >= number_of_elements);	
 	memcpy(v, classic_vector, number_of_elements * sizeof(T));
 }
 //------------------------------------------------------------------------
@@ -388,6 +389,31 @@ __imp_inline void IMP::Vector<T>::sum(const IMP::Vector<T> &src)
 	int i, last_i = count;
 	if (last_i > src.count) last_i = src.count;
 	for (i = 0; i < last_i; i++) v[i] += src.v[i];
+}
+//------------------------------------------------------------------------
+template <typename T>
+__imp_inline void IMP::Vector<T>::sum(const Vector<T> &src, T &val)
+{
+	int i;
+	imp_assert(count == src.count);
+	
+	for (i = 0; i < count; i++)
+		v[i] += val * src.v[i];
+}
+//------------------------------------------------------------------------
+template <typename T>
+__imp_inline T IMP::Vector<T>::dotProd(const Vector<T> &src)
+{
+	int i;
+	T res;
+	imp_assert(count == src.count && count >= 1);
+
+	res = v[0] * src.v[0];
+
+	for (i = 1; i < count; i++)
+		res += v[1] * src.v[1];
+
+	return res;
 }
 //------------------------------------------------------------------------
 template <typename T>
