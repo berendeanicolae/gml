@@ -93,8 +93,6 @@ namespace GML
 			GML::Utils::ThreadParalelUnit				*tpu;
 			
 			bool						AllocRecordsWeight(UInt32 dataWeightType);
-			bool						SetRecordWeight(UInt32 index,double weight);
-			bool						GetRecordWeight(UInt32 index,double &weight);
 			void						ClearColumnIndexes();
 			bool						UpdateDoubleValue(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr,Int32 index,double &value);
 			bool						UpdateTwoClassLabelValue(double value,bool &label);
@@ -150,6 +148,9 @@ namespace GML
 			virtual bool				GetRecordLabel(double &label,UInt32 index)=0;
 			virtual bool				GetRecordHash(GML::DB::RecordHash &recHash,UInt32 index);
 			virtual bool				GetFeatureName(GML::Utils::GString &str,UInt32 index);
+			virtual bool				SetRecordWeight(UInt32 index,double weight);
+			virtual bool				GetRecordWeight(UInt32 index,double &weight);
+
 
 			virtual UInt32				GetFeatureCount();
 			virtual UInt32				GetRecordCount();	

@@ -16,6 +16,7 @@ public:
 		THREAD_COMMAND_TEST_PROC_SPEED,
 		THREAD_COMMAND_PRECOMPUTE_BLOCK,
 		THREAD_COMMAND_WINDOW_UPDATE,
+		THREAD_COMMAND_WINDOW_UPDATE_DIRECT_PROJECT,
 		THREAD_COMMAND_COMPUTE_SCORE,
 		//Add extra thread commands here
 	};	
@@ -106,6 +107,9 @@ private:
 	bool	PerformBlockTraining(UInt32 blkIdx, PreCache::BlockLoadHandle *handle);
 	bool	PerformWindowUpdate(GML::Algorithm::MLThreadData &thData);
 
+	bool	PerformBlockTrainingDirectProjection(UInt32 blkIdx, PreCache::BlockLoadHandle *handle);	
+	bool	PerformWindowUpdateDirectProjection(GML::Algorithm::MLThreadData &thData);
+
 	
 	bool	BlockScoreComputation();
 	bool	PrepareAndExecuteBlockScoreComputation(UInt32 blkIdx, PreCache::BlockLoadHandle *handle);
@@ -116,7 +120,7 @@ private:
 	inline	pvm_float KerAtHelper(UInt32 line, UInt32 row);
 
 	bool	ProjectSolutionToValidAverages(pvm_float *alpha, pvm_float *sigma, pvm_float &b, PreCache::KPrimePair *kprime);
-	bool	ProjectSolutionToHypeplanes(pvmFloatVectorT &w0, pvm_float b0, pvmFloatVectorT &w1, pvm_float b1, pvmFloatVectorT &x);
+	bool	ProjectSolutionToHypeplanes(pvmFloatVectorT &w0, pvm_float b0, pvmFloatVectorT &w1, pvm_float b1, pvmFloatVectorT &x, int prefOff);
 	bool	DistanceToSemiSpace(pvmFloatVectorT &w, pvm_float b, pvmFloatVectorT &xSol, double &dist);
 
 public:
@@ -129,6 +133,7 @@ public:
 	bool	LastBlockTrainingDirectProjection();
 	bool	DumpDefaultStateVariables();
 	bool	GatherBlockStates();
+	bool	GatherBlockStatesDirectProjection();
 	bool	ClasifyDataset();
 	bool	InitExtraConnections();
 	void	DebugTesting1();

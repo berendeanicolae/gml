@@ -27,7 +27,7 @@ pvm_inline pvm_float PVMMathFunctions::pow_i(pvm_float x, int p)
 	return res;
 }
 //-----------------------------------------------------------------------------
-pvm_inline pvm_double PVMMathFunctions::pow_i(pvm_double x, int p)
+/*pvm_inline pvm_double PVMMathFunctions::pow_i(pvm_double x, int p)
 {
 	pvm_double res = 1.0, c_x = x;
 	
@@ -39,6 +39,6 @@ pvm_inline pvm_double PVMMathFunctions::pow_i(pvm_double x, int p)
 	};
 
 	return res;
-}
+}								*/	
 //-----------------------------------------------------------------------------
 #endif//__PVM_MATH_FUNCTIONS_H__
