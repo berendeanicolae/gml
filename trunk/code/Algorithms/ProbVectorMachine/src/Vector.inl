@@ -392,6 +392,16 @@ __imp_inline void IMP::Vector<T>::sum(const IMP::Vector<T> &src)
 }
 //------------------------------------------------------------------------
 template <typename T>
+__imp_inline void IMP::Vector<T>::sum(const Vector<T> &src, T &val, int limit)
+{
+	int i;
+	imp_assert(count == src.count && limit > 0 && limit <= count);
+	
+	for (i = 0; i < limit; i++)
+		v[i] += val * src.v[i];
+}
+//------------------------------------------------------------------------
+template <typename T>
 __imp_inline void IMP::Vector<T>::sum(const Vector<T> &src, T &val)
 {
 	int i;
@@ -411,7 +421,22 @@ __imp_inline T IMP::Vector<T>::dotProd(const Vector<T> &src)
 	res = v[0] * src.v[0];
 
 	for (i = 1; i < count; i++)
-		res += v[1] * src.v[1];
+		res += v[i] * src.v[i];
+
+	return res;
+}
+//------------------------------------------------------------------------
+template <typename T>
+__imp_inline T IMP::Vector<T>::dotProd(const Vector<T> &src, int limit)
+{
+	int i;
+	T res;
+	imp_assert(count == src.count && count >= 1 && limit > 0 && limit <= count);
+
+	res = v[0] * src.v[0];
+
+	for (i = 1; i < limit; i++)
+		res += v[i] * src.v[i];
 
 	return res;
 }
