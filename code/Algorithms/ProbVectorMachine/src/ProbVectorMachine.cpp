@@ -1000,8 +1000,9 @@ inline	pvm_float ProbVectorMachine::KerAtHelper(UInt32 line, UInt32 row)
 //------------------------------------------------------------------------
 bool ProbVectorMachine::ProjectSolutionToHypeplanes(pvmFloatVectorT &w0, pvm_float b0, pvmFloatVectorT &w1, pvm_float b1, pvmFloatVectorT &x, int prefOff)
 {
-	int i;
+//	int i;
 	pvm_float norm0, norm1;
+//	pvm_float normRed0, normRed1;
 	pvm_float term0, term1;
 	pvmFloatVectorT ux;
 	pvm_float temp;
@@ -1013,35 +1014,33 @@ bool ProbVectorMachine::ProjectSolutionToHypeplanes(pvmFloatVectorT &w0, pvm_flo
 
 	if (term0 < b0)
 	{//we project on the first hyperplane
-		norm0 = w0.dotProd(w0);
+		norm0 = w0.dotProd(w0, prefOff);
 
 		imp_assert(norm0 > PVM_EPS);
 
 		term0 = (b0 - term0) / norm0;
-		x.sum(w0, term0);		
-
-		temp = x.dotProd(w0) - b0;
+		x.sum(w0, term0, prefOff);		
 
 		term1 = w1.dotProd(x);
 
 		if (term1 < b1)
 		{	//first compute the update
-			norm1 = w1.dotProd(w1);
+			norm1 = w1.dotProd(w1, prefOff);
 			imp_assert(norm1 > PVM_EPS);
 			
-			term1 = (b1 - term1)/ norm1;
+			term1 = (b1 - term1) / norm1;
 			
-			ux.from(w1);
+			ux.resize(w1.size());
+			ux.from(w1, 0, prefOff);
 			ux.multiply(term1);
 			
 			temp = w0.dotProd(ux);
-			temp = w0.dotProd(x);
-			//remove the component that would take us out of the first hyperplane
-			term1 = (-w0.dotProd(ux)) / norm0;
-			ux.sum(w0, term1);
-			
-			temp = w0.dotProd(ux);				
-
+			if (temp < 0)
+			{
+				//remove the component that would take us out of the first hyperplane
+				term1 = (-w0.dotProd(ux)) / norm0;
+				ux.sum(w0, term1, prefOff);
+			}
 			//add the update such that we satisfy the second hyperplane
 			term0 = ux.dotProd(w1);
 
@@ -1113,6 +1112,42 @@ bool ProbVectorMachine::DistanceToSemiSpace(pvmFloatVectorT &w, pvm_float b, pvm
 		dist = (b - temp) / norm;
 	}
 
+	return true;
+}
+//------------------------------------------------------------------------
+bool ProbVectorMachine::ScaleSolution(pvmFloatVectorT &w0, pvm_float b0, pvmFloatVectorT &w1, pvm_float b1, pvmFloatVectorT &x)
+{
+	pvm_float minScale;
+	pvm_float term0, term1;
+	
+	term0 = w0.dotProd(x);
+	term1 = w1.dotProd(x);
+
+	if (term0 < b0 - PVM_EPS)
+		return false;
+
+	if (term1 < b1 - PVM_EPS)
+		return false;
+
+	term0 /= b0;
+	term1 /= b1;
+
+	if (term0 < 0)
+		term0 = -term0;
+
+	if (term1 < 0)
+		term1 = -term1;
+
+	minScale = term0;
+	if (minScale > term1)
+		minScale = term1;
+
+	if (minScale < PVM_EPS)
+		return false;
+
+	minScale = 1 / minScale;
+
+	x.multiply(minScale);
 	return true;
 }
 //------------------------------------------------------------------------
@@ -1225,12 +1260,12 @@ bool ProbVectorMachine::LastBlockTrainingDirectProjection()
 		if (label==1) 
 		{
 			Splus++, weightSPlus += weight;
-			w0[wIdx] = (pvm_float)weight;
+			w0[wIdx] = -(pvm_float)weight;
 		}
 		else 
 		{
 			Sminus++, weightSMinus += weight;
-			w1[wIdx] = (pvm_float)weight;
+			w1[wIdx] = -(pvm_float)weight;
 		}
 
 		xSol[wIdx] = sigma[i];
@@ -1244,28 +1279,104 @@ bool ProbVectorMachine::LastBlockTrainingDirectProjection()
 	for (i = nrRec + 1; i < (nrRec*2) + 1; i++)
 		w0[i] /= (pvm_float)weightSPlus, w1[i] /= (pvm_float)weightSMinus;
 
-	pvmFloatVectorT w2, w3, xSol2;
+	pvmFloatVectorT w2, w3;
 	double s2, s3;
+
+	w2.resize(nrRec * 2 + 1);
+	w3.resize(nrRec * 2 + 1);
+	w2.zero_all();
+	w3.zero_all();
+
 	w2.from(w0, 0, nrRec + 1);
 	w3.from(w1, 0, nrRec + 1);
 	w2.multiply(1 / varTFloat);
 	w3.multiply(1 / varTFloat);
-	xSol2.resize(nrRec + 1);
-	xSol2.assign(alpha, nrRec);
-	xSol2.back() = b;
+
+	w2.resize(nrRec * 2 + 1);//attention : implementation specific here!
+	w3.resize(nrRec * 2 + 1);//attention : implementation specific here!
 	//compute score
 	DistanceToSemiSpace(w0, 0, xSol, s0);
 	DistanceToSemiSpace(w1, 0, xSol, s1);
 	score = s0 * s0 + s1 * s1;
 
-	DistanceToSemiSpace(w2, 1, xSol2, s2);
-	DistanceToSemiSpace(w3, 1, xSol2, s3);
+	DistanceToSemiSpace(w2, 1, xSol, s2);
+	DistanceToSemiSpace(w3, 1, xSol, s3);
 	score += s2 * s2 + s3 * s3;
 
 	scorePvmFloat = (pvm_float)score;
+
+	//debug begin
+	//imp_assert(0);
+	double avg_pos = w2.dotProd(xSol), avg_neg = w3.dotProd(xSol), sigma_pos = 0, sigma_neg = 0;
+
+	for (i = nrRec + 1; i < w0.count; i++)
+	{
+		sigma_pos += w0[i] * xSol[i];
+		sigma_neg += w1[i] * xSol[i];
+	}
+
+	sigma_pos = -sigma_pos;
+	sigma_neg = -sigma_neg;
+
+	FILE *f;
+	fopen_s(&f, "CurrentMeas.txt", "w");
+	fprintf_s(f, "Positive Average : %lf\n", avg_pos);
+	fprintf_s(f, "Negative Average : %lf\n", avg_neg);
+	fprintf_s(f, "Positive Sigma : %lf\n", sigma_pos);
+	fprintf_s(f, "Negative Sigma : %lf\n", sigma_neg);
+	//debug end
+															   /*
+	if (w2.dotProd(xSol) < 1 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w2, 1, w3, 1, xSol, nrRec);
+	else if (w3.dotProd(xSol) < 1 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w3, 1, w2, 1, xSol, nrRec);
+
+	//project to w0, w1
+	if (w0.dotProd(xSol) < 0 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w0, 0, w1, 0, xSol, nrRec);
+	else if (w1.dotProd(xSol) < 0 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w1, 0, w0, 0, xSol, nrRec);
+
+	if (w2.dotProd(xSol) < 1 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w2, 1, w3, 1, xSol, nrRec);
+	else if (w3.dotProd(xSol) < 1 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w3, 1, w2, 1, xSol, nrRec);*/
+
+	//ScaleSolution(w2, 1, w3, 1, xSol);
+	
+
+	if (w0.dotProd(xSol) < 0 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w0, 0, w1, 0, xSol, 2 * nrRec + 1);
+	else if (w1.dotProd(xSol) < 0 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w1, 0, w0, 0, xSol, 2 * nrRec + 1);
+
+	//project to w0, w2
+	if (w2.dotProd(xSol) < 1 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w2, 1, w0, 0, xSol, 2 * nrRec + 1);
+
+	//project to w0, w3
+	if (w2.dotProd(xSol) < 1 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w3, 1, w0, 0, xSol, 2 * nrRec + 1);
+
+	//project to w1, w2
+	if (w1.dotProd(xSol) < 0 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w1, 0, w2, 1, xSol, 2 * nrRec + 1);
+	else if (w2.dotProd(xSol) < 1 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w2, 1, w1, 0, xSol, 2 * nrRec + 1);
+
+	if (w3.dotProd(xSol) < 1 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w3, 1, w1, 0, xSol, 2 * nrRec + 1);
+
+	if (w2.dotProd(xSol) < 1 - PVM_EPS)
+		ret = ret && ProjectSolutionToHypeplanes(w2, 1, w3, 1, xSol, 2 * nrRec + 1);
+
+	//ScaleSolution(w2, 1, w3, 1, xSol);
+	
+	xSol.fill_memory_location(alpha, nrRec);
+	b = xSol[nrRec];
 	
 	//project to intersection of E_+ >= 1 and E_- >= -1 semispaces
-	ret = ret & ProjectSolutionToValidAverages(alpha, sigma, b, kprime);
+	/*ret = ret & ProjectSolutionToValidAverages(alpha, sigma, b, kprime);
 
 	xSol.assign(alpha, nrRec);
 	xSol[nrRec] = b;
@@ -1288,7 +1399,7 @@ bool ProbVectorMachine::LastBlockTrainingDirectProjection()
 	memcpy(xSol.v + nrRec + 1, sigma, nrRec * sizeof(pvm_float));
 
 	//project back to intersection of E_+ >= 1 and E_- >= -1 semispaces 
-	ret = ret & ProjectSolutionToValidAverages(alpha, sigma, b, kprime);
+	ret = ret & ProjectSolutionToValidAverages(alpha, sigma, b, kprime);*/
 
 	// write update to disk
 	fileName.Truncate(0);
@@ -1743,17 +1854,27 @@ bool ProbVectorMachine::GatherBlockStatesDirectProjection()
 	GML::Utils::GString				fileName;
 
 	pvm_float *alpha, *sigma, *alphaMean, *sigmaMean;
+	pvm_float *alphaLast, *sigmaLast;
 	pvm_float scoreSum, score;
+	pvm_float b, bLast;
+	bool allFound, lastFound;
 
 	UInt32 *alpha_count, *sigma_count;
 
 	alpha = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(alpha, "could not alloc memory");
+	alphaLast = (pvm_float*) pvm_malloc(vectSz);
+	NULLCHECKMSG(alphaLast, "could not alloc memory");
+	
 	alphaMean = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(alphaMean, "could not alloc memory");
 
+
 	sigma = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(sigma, "could not alloc memory");
+	sigmaLast = (pvm_float*) pvm_malloc(vectSz);
+	NULLCHECKMSG(sigmaLast, "could not alloc memory");
+
 	sigmaMean = (pvm_float*) pvm_malloc(vectSz);
 	NULLCHECKMSG(sigmaMean, "could not alloc memory");
 
@@ -1773,7 +1894,11 @@ bool ProbVectorMachine::GatherBlockStatesDirectProjection()
 
 	nrBlocks = 0;
 	scoreSum = 0;
+	lastFound = false;
+	allFound = false;
+
 	hFind = FindFirstFile(fileName.GetText(), &FindFileData);
+
 	do {
 		INFOMSG(FindFileData.cFileName);
 		if (strstr(FindFileData.cFileName, ".all")==NULL &&
@@ -1799,7 +1924,7 @@ bool ProbVectorMachine::GatherBlockStatesDirectProjection()
 			fileObj.Close();
 
 			// sum scores for stop condition
-			scoreSum += score;
+			scoreSum += 0;
 
 			for (i=0;i<nrRec;i++) 
 			{
@@ -1812,52 +1937,92 @@ bool ProbVectorMachine::GatherBlockStatesDirectProjection()
 				sigmaMean[i] += sigma[i];			
 				sigma_count[i]++;
 			}
+		}		
+		else if (strstr(FindFileData.cFileName, ".last") != NULL) 
+		{
+			lastFound = true;
+
+			fileName.Truncate(0);
+			fileName.AddFormated("%s.state.iter.%04d.block.last", varBlockFilePrefix.GetText(), varIterNr);
+			// read the file
+			CHECKMSG(fileObj.OpenRead(fileName.GetText()), "could not open file:%s for reading", fileName.GetText());
+	
+			CHECKMSG(fileObj.Read(&stateHeader, sizeof(StateFileHeader), &read), "could not read from file: %s", fileName.GetText());
+			CHECKMSG(read==sizeof(StateFileHeader), "could not read enough from file");
+	
+			CHECKMSG(fileObj.Read(alpha, vectSz, &read),"could not read from file: %s", fileName.GetText());
+			CHECKMSG(read==vectSz, "could not read enough from file");
+
+			CHECKMSG(fileObj.Read(sigma, vectSz, &read),"could not read from file: %s", fileName.GetText());
+			CHECKMSG(read==vectSz, "could not read enough from file");
+
+			CHECKMSG(fileObj.Read(&b, sizeof(pvm_float), &read),"could not read from file: %s", fileName.GetText());
+			CHECKMSG(read==sizeof(pvm_float), "could not read enough from file");
+
+			CHECKMSG(fileObj.Read(&score, sizeof(pvm_float), &read),"could not read from file: %s", fileName.GetText());
+			CHECKMSG(read==sizeof(pvm_float), "could not read enough from file");
+
+			fileObj.Close();
+
+			scoreSum = sqrt(score);
+			
+			for (i = 0; i < nrRec; i++)
+				alphaMean[i] = alpha[i];
 		}
 
-	} while (FindNextFile(hFind, &FindFileData));
-
-	pvm_float b;
+	} while (FindNextFile(hFind, &FindFileData));	
 
 	fileName.Truncate(0);
-	fileName.AddFormated("%s.state.iter.%04d.block.last", varBlockFilePrefix.GetText(), varIterNr);
-	// read the file
-	CHECKMSG(fileObj.OpenRead(fileName.GetText()), "could not open file:%s for reading", fileName.GetText());
-	
-	CHECKMSG(fileObj.Read(&stateHeader, sizeof(StateFileHeader), &read), "could not read from file: %s", fileName.GetText());
-	CHECKMSG(read==sizeof(StateFileHeader), "could not read enough from file");
-	
-	CHECKMSG(fileObj.Read(alpha, vectSz, &read),"could not read from file: %s", fileName.GetText());
-	CHECKMSG(read==vectSz, "could not read enough from file");
+	fileName.AddFormated("%s.state.iter.%04d.block.????", varBlockFilePrefix.GetText(), varIterNr - 1);
 
-	CHECKMSG(fileObj.Read(sigma, vectSz, &read),"could not read from file: %s", fileName.GetText());
-	CHECKMSG(read==vectSz, "could not read enough from file");
+	hFind = FindFirstFile(fileName.GetText(), &FindFileData);	
+	do
+	{
+		if (strstr(FindFileData.cFileName, ".all") != NULL)
+		{
+			allFound = true;
+			CHECKMSG(fileObj.OpenRead(FindFileData.cFileName), "could not open file:%s for reading", FindFileData.cFileName);
 
-	CHECKMSG(fileObj.Read(&b, sizeof(pvm_float), &read),"could not read from file: %s", fileName.GetText());
-	CHECKMSG(read==sizeof(pvm_float), "could not read enough from file");
+			CHECKMSG(fileObj.Read(&stateHeader, sizeof(StateFileHeader), &read), "could not read from file: %s", fileName.GetText());
+			CHECKMSG(read==sizeof(StateFileHeader), "could not read enough from file");
 
-	CHECKMSG(fileObj.Read(&score, sizeof(pvm_float), &read),"could not read from file: %s", fileName.GetText());
-	CHECKMSG(read==sizeof(pvm_float), "could not read enough from file");
+			CHECKMSG(fileObj.Read(alphaLast, vectSz, &read),"could not read from file: %s", fileName.GetText());
+			CHECKMSG(read==vectSz, "could not read enough from file");
 
-	fileObj.Close();
+			CHECKMSG(fileObj.Read(sigmaLast, vectSz, &read),"could not read from file: %s", fileName.GetText());
+			CHECKMSG(read==vectSz, "could not read enough from file");
 
-	// sum scores for stop condition
-	scoreSum += score;
-	scoreSum = sqrt(scoreSum);
+			CHECKMSG(fileObj.Read(&bLast, sizeof(pvm_float), &read),"could not read from file: %s", fileName.GetText());
+			CHECKMSG(read==sizeof(pvm_float), "could not read enough from file");			
 
-	pvm_float lastBlockWeight = 1.0;
-
-	for (i=0;i<nrRec;i++) {
-		alphaMean[i] = alpha[i];					
-	}
-
-	for (i=0;i<nrRec;i++) {
-		sigmaMean[i] += sigma[i];
-		sigmaMean[i] /= (pvm_float)(1 + sigma_count[i]);		
-	}
+			fileObj.Close();
+		}
+	}while (FindNextFile(hFind, &FindFileData));
 
 	fileName.Truncate(0);
-	fileName.AddFormated("%s.state.iter.%04d.block.all", varBlockFilePrefix.GetText(), varIterNr);
+	if (nrBlocks && !lastFound && allFound)
+	{
+		for (i = 0; i < nrRec; i++)
+		{		
+			alphaMean[i] /= (pvm_float)alpha_count[i];
+			sigmaMean[i] /= (pvm_float)sigma_count[i];
+		}
 
+		b = bLast;
+
+		fileName.AddFormated("%s.state.iter.%04d.block.all", varBlockFilePrefix.GetText(), varIterNr - 1);
+	}
+	else if (!nrBlocks && lastFound && allFound)
+	{
+		for (i = 0; i < nrRec; i++)
+		{
+			alphaMean[i] = alpha[i];
+			sigmaMean[i] = sigmaLast[i];
+		}
+
+		fileName.AddFormated("%s.state.iter.%04d.block.all", varBlockFilePrefix.GetText(), varIterNr);	
+	}
+	
 	CHECKMSG(fileObj.Create(fileName.GetText()),"could not create file:%s ", fileName.GetText());
 	
 	CHECKMSG(fileObj.Write(&stateHeader, sizeof(StateFileHeader), &written), "could not write to file");
