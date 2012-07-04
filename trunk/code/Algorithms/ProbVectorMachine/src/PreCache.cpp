@@ -174,14 +174,14 @@ int PreCache::GetNrRecPerBlockNonRecursive(int MaxNr)
 	//obviously, we have to split
 	//this requires from us to solve a second degree equation
 
-	pvm_float c = (float)SzPerBlock / (float)sizeof(pvm_float);
+	pvm_float c = (pvm_float)SzPerBlock / (pvm_float)sizeof(pvm_float);
 	pvm_float b = NrRec + (pvm_float)0.5;
 	pvm_float delta = b * b - 2 * c;
 
 	if (delta < 0)//this should not happen, as it has already been previously checked
 		return MaxNr;	
 
-	return (UInt32)(b - sqrtf(delta));
+	return (UInt32)(b - (pvm_float)sqrtf(delta));
 }
 
 int PreCache::GetNrRecPerBlock(int MinNr, int MaxNr)

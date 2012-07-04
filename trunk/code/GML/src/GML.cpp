@@ -108,7 +108,7 @@ int  Run(char *templateName)
 		return 7;
 	}
 	alg->Wait();
-	printf("Algorithm '%s' done !\n",algName.GetText());
+	//printf("Algorithm '%s' done !\n",algName.GetText());
 	return 0;
 }
 int  Template(char *objectName,char *templateName)

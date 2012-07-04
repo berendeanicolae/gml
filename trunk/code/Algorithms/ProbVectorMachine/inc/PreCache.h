@@ -19,8 +19,8 @@
 #define PRECACHE_NR_WORK_BUFFERS		2
 
 //---------------------------------------------------------------------------
-typedef IMP::Vector<float> pvmFloatVectorT;
-typedef IMP::Vector<float *> pvmFloatRefVectorT;
+typedef IMP::Vector<pvm_float> pvmFloatVectorT;
+typedef IMP::Vector<pvm_float *> pvmFloatRefVectorT;
 //---------------------------------------------------------------------------
 using namespace GML::Utils;
 
