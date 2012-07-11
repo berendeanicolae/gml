@@ -540,7 +540,6 @@ bool Distances::SaveNegativePositive(char *fileName)
 
 	if (f.Create(fileName) == false)		
 		return false;
-
 	negativeCount = indexesNegative.Len();	
 	for (i=0; i<negativeCount; i++)
 	{
@@ -556,7 +555,6 @@ bool Distances::SaveNegativePositive(char *fileName)
 			ptr[indexesNegative.Get(i)] = 1;
 			ptr[indexesPozitive.Get(positivePoints[i].firstPoints[j])] = 1;
 		}
-		
 		NodPoint *p = positivePoints[i].prim;
 		while(p!=NULL)
 		{
@@ -566,12 +564,12 @@ bool Distances::SaveNegativePositive(char *fileName)
 				return false;
 			}
 			ptr[indexesNegative.Get(i)] = 1;
-			ptr[indexesPozitive.Get(positivePoints[i].firstPoints[j])] = 1;
+			//ptr[indexesPozitive.Get(positivePoints[i].firstPoints[j])] = 1;
+			ptr[indexesPozitive.Get(p->index)] = 1;
 			p = p->urm;
 		}
 	}
 	f.Close();
-
 	return true;
 }
 bool Distances::MergeDistances()
