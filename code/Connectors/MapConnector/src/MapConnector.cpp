@@ -11,6 +11,8 @@ MapConnector::MapConnector()
 														);
 	LinkPropertyToDouble("StartInterval",startMapInterval,0.0,"Value for the start of the interval");
 	LinkPropertyToDouble("EndInterval",endMapInterval,1.0,"Value for the end of the interval");
+	
+	AddStoreProperties();
 }
 
 bool	MapConnector::CreateNameIndexes()
