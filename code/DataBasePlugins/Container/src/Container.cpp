@@ -307,7 +307,7 @@ bool Container::BeginIteration()
 }
 bool Container::OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
-	UInt32		size,read, cnt=0;
+	UInt32		size,read;
 	UInt8		id;
 	UInt32		vIndex,fIndex,value,tr;
 	UInt32		*params;
@@ -364,7 +364,6 @@ bool Container::OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectP
 			// setez valoarea
 			//notifier->Info("CID = %d, FID = %d , Value:0x%08X , id:%d, fIndex:%d , vIndex:%d",(UInt32)(fi.Key >> 32),(UInt32)(fi.Key & 0xFFFFFFFF),value,id,fIndex,vIndex);
             for (; left_location<=right_location; ++left_location) {
-                // printf("%d\n", ++cnt);
                 cfi = FInfo.GetPtrToObject(left_location);
                 params = ParamValues.GetPtrToObject(cfi->ParamsStartIndex);
                 switch (cfi->Op)
