@@ -34,6 +34,7 @@ namespace GML
 			void*			Get(unsigned int index);
 
 			int				BinarySearch(void *Element,_BinarySearchCompFunction cmpFunc);
+			bool			EqualRange(void *Element,_BinarySearchCompFunction cmpFunc,int *left_location,int *right_location);
 			void			Sort(_BinarySearchCompFunction cmpFunc,bool ascendet);
 			void			Sort(_ContextCompFunction cmpFunc,bool ascendet,void *Context);
 
