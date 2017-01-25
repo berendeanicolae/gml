@@ -70,11 +70,23 @@ static OP_INFO OpInfo[] =
 	{"OUT",			Container::OP_OUT,				1,	0xFFFF},
 };
 //============================================
+int FInfoCmp(FeatInfo &f1,FeatInfo &f2)
+{
+	if (f1.Key>f2.Key)
+		return 1;
+	if (f1.Key<f2.Key)
+		return -1;
+	return 0;
+}
 int FInfoSort(FeatInfo &f1,FeatInfo &f2)
 {
 	if (f1.Key>f2.Key)
 		return 1;
 	if (f1.Key<f2.Key)
+		return -1;
+	if (f1.Op>f2.Op)
+		return 1;
+	if (f1.Op<f2.Op)
 		return -1;
 	return 0;
 }
@@ -295,13 +307,13 @@ bool Container::BeginIteration()
 }
 bool Container::OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectPtr)
 {
-	UInt32		size,read;
+	UInt32		size,read, cnt=0;
 	UInt8		id;
 	UInt32		vIndex,fIndex,value,tr;
 	UInt32		*params;
 	FeatInfo	fi;
 	FeatInfo	*cfi;
-	int			found;
+	int			left_location,right_location;
 
 	VectPtr[1].Value.DoubleVal = Label;
 	if (file.ReadUInt32(CurentPos,size)==false)
@@ -345,84 +357,87 @@ bool Container::OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectP
 			value = ((value & 0xFF000000) >> 24) | ((value & 0xFF) << 24) | ((value & 0x00FF0000) >> 8) | ((value & 0x0000FF00) << 8);
 			VectPtr[0].Value.Hash.Hash.dwValue[fi.Key-0xF00001388] = value;
 			continue;
-		}		
+		}
 		// analiza pe valoarea
-		if ((found = FInfo.BinarySearch(fi,FInfoSort))>=0)
+		if (FInfo.EqualRange(fi,FInfoCmp,&left_location,&right_location))
 		{
 			// setez valoarea
 			//notifier->Info("CID = %d, FID = %d , Value:0x%08X , id:%d, fIndex:%d , vIndex:%d",(UInt32)(fi.Key >> 32),(UInt32)(fi.Key & 0xFFFFFFFF),value,id,fIndex,vIndex);
-			cfi = FInfo.GetPtrToObject(found);			
-			params = ParamValues.GetPtrToObject(cfi->ParamsStartIndex);
-			switch (cfi->Op)
-			{
-				case OP_NONE:
-					if (cfi->Type != GML::DB::TYPES::BOOLEAN)
-						VectPtr[cfi->ColumnIndex].Value.UInt32Val = value;
-					else
-						VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
-					break;
-				case OP_BIGGER:
-					if (value>(*params))
-						VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
-					break;
-				case OP_BIGGER_EQ:
-					if (value>=(*params))
-						VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
-					break;
-				case OP_SMALLER:
-					if (value<(*params))
-						VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
-					break;
-				case OP_SMALLER_EQ:
-					if (value<=(*params))
-						VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
-					break;
-				case OP_EQ:
-					if (value==(*params))
-						VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
-					break;
-				case OP_DIFF:
-					if (value!=(*params))
-						VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
-					break;
-				case OP_INSIDE:
-					if ((value>=params[0]) && (value<=params[1]))
-						VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
-					break;
-				case OP_OUTSIDE:
-					if ((value<params[0]) || (value>params[1]))
-						VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
-					break;
-				case OP_MASK:
-					if ((value & (*params))!=0)
-						VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
-					break;
-				case OP_MASK_EQ:
-					if ((value & params[0])==params[1])
-						VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
-					break;
-				case OP_IN:
-					for (tr=0;tr<cfi->Params;tr++,params++)
-					{
-						if (value==(*params))
-						{
-							VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
-							break;
-						}
-					}
-					break;
-				case OP_OUT:
-					for (tr=0;tr<cfi->Params;tr++,params++)
-					{
-						if (value==(*params))						
-							break;
-					}
-					if (tr==cfi->Params)
-						VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
-					break;
-				default:
-					return false;
-			}
+            for (; left_location<=right_location; ++left_location) {
+                // printf("%d\n", ++cnt);
+                cfi = FInfo.GetPtrToObject(left_location);
+                params = ParamValues.GetPtrToObject(cfi->ParamsStartIndex);
+                switch (cfi->Op)
+                {
+                    case OP_NONE:
+                        if (cfi->Type != GML::DB::TYPES::BOOLEAN)
+                            VectPtr[cfi->ColumnIndex].Value.UInt32Val = value;
+                        else
+                            VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
+                        break;
+                    case OP_BIGGER:
+                        if (value>(*params))
+                            VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
+                        break;
+                    case OP_BIGGER_EQ:
+                        if (value>=(*params))
+                            VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
+                        break;
+                    case OP_SMALLER:
+                        if (value<(*params))
+                            VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
+                        break;
+                    case OP_SMALLER_EQ:
+                        if (value<=(*params))
+                            VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
+                        break;
+                    case OP_EQ:
+                        if (value==(*params))
+                            VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
+                        break;
+                    case OP_DIFF:
+                        if (value!=(*params))
+                            VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
+                        break;
+                    case OP_INSIDE:
+                        if ((value>=params[0]) && (value<=params[1]))
+                            VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
+                        break;
+                    case OP_OUTSIDE:
+                        if ((value<params[0]) || (value>params[1]))
+                            VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
+                        break;
+                    case OP_MASK:
+                        if ((value & (*params))!=0)
+                            VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
+                        break;
+                    case OP_MASK_EQ:
+                        if ((value & params[0])==params[1])
+                            VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
+                        break;
+                    case OP_IN:
+                        for (tr=0;tr<cfi->Params;tr++,params++)
+                        {
+                            if (value==(*params))
+                            {
+                                VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
+                                break;
+                            }
+                        }
+                        break;
+                    case OP_OUT:
+                        for (tr=0;tr<cfi->Params;tr++,params++)
+                        {
+                            if (value==(*params))						
+                                break;
+                        }
+                        if (tr==cfi->Params)
+                            VectPtr[cfi->ColumnIndex].Value.BoolVal = true;
+                        break;
+                    default:
+                        return false;
+                }
+            }
 		}
 		
 	}
