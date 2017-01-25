@@ -44,6 +44,7 @@ namespace GML
 			//------ Soft & Find --------------------------------------------------------------------------
 			void						Sort(int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2),bool ascendent=true);
 			int							BinarySearch(TemplateObject &element,int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2));
+			int							EqualRange(TemplateObject &element,int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2),int *left_location,int *right_location);
 
 			//------ Info --------------------------------------------------------------------------
 			bool						Exists();
@@ -151,6 +152,10 @@ namespace GML
 		template <class TemplateObject> int	 GTFVector<TemplateObject>::BinarySearch(TemplateObject &element,int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2))
 		{
 			return elements.BinarySearch(&element,(_BinarySearchCompFunction)_CmpFunc);
+		}
+		template <class TemplateObject> int	 GTFVector<TemplateObject>::EqualRange(TemplateObject &element,int (*_CmpFunc)(TemplateObject &e1,TemplateObject &e2),int *left_location,int *right_location)
+		{
+			return elements.EqualRange(&element,(_BinarySearchCompFunction)_CmpFunc,left_location,right_location);
 		}
 	}
 }
