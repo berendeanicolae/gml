@@ -445,6 +445,33 @@ int  GML::Utils::Vector::BinarySearch (void *ElementToFind,_BinarySearchCompFunc
 	else
 		return _Do_BinarySearch(Data,ElementSize,ElementToFind,compFnc,0,NrElemente-1);
 }
+bool  GML::Utils::Vector::EqualRange (void *ElementToFind,_BinarySearchCompFunction compFnc,int *left_location,int *right_location)
+{
+    int poz;
+    
+	if ((ElementToFind==NULL) || (Data==NULL) || (NrElemente==0))
+		return false;
+    if ((poz=_Do_BinarySearch(Data,ElementSize,ElementToFind,compFnc,0,NrElemente-1))==-1)
+        return false;
+        
+    if (left_location!=NULL)
+    {
+        *left_location = poz-1;
+        while (((*left_location)>=0) && (compFnc(&Data[*left_location*ElementSize],ElementToFind)==0))
+            (*left_location)--;
+        (*left_location)++;
+    }
+    // merg in dreapta daca e nevoie
+    if (right_location!=NULL)
+    {
+        *right_location = poz+1;
+        while (((*right_location)<(Int32)NrElemente) && (compFnc(&Data[*right_location*ElementSize],ElementToFind)==0))
+            (*right_location)++;
+        (*right_location)--;
+    }
+    
+    return true;
+}
 void GML::Utils::Vector::Sort(_BinarySearchCompFunction cmpFunc,bool ascendet)
 {
 	if (NrElemente>0)
