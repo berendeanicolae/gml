@@ -70,23 +70,11 @@ static OP_INFO OpInfo[] =
 	{"OUT",			Container::OP_OUT,				1,	0xFFFF},
 };
 //============================================
-int FInfoCmp(FeatInfo &f1,FeatInfo &f2)
-{
-	if (f1.Key>f2.Key)
-		return 1;
-	if (f1.Key<f2.Key)
-		return -1;
-	return 0;
-}
 int FInfoSort(FeatInfo &f1,FeatInfo &f2)
 {
 	if (f1.Key>f2.Key)
 		return 1;
 	if (f1.Key<f2.Key)
-		return -1;
-	if (f1.Op>f2.Op)
-		return 1;
-	if (f1.Op<f2.Op)
 		return -1;
 	return 0;
 }
@@ -359,7 +347,7 @@ bool Container::OnReadNextRecord(GML::Utils::GTFVector<GML::DB::DBRecord> &VectP
 			continue;
 		}
 		// analiza pe valoarea
-		if (FInfo.EqualRange(fi,FInfoCmp,&left_location,&right_location))
+		if (FInfo.EqualRange(fi,FInfoSort,&left_location,&right_location))
 		{
 			// setez valoarea
 			//notifier->Info("CID = %d, FID = %d , Value:0x%08X , id:%d, fIndex:%d , vIndex:%d",(UInt32)(fi.Key >> 32),(UInt32)(fi.Key & 0xFFFFFFFF),value,id,fIndex,vIndex);
