@@ -127,7 +127,7 @@ bool Container::ProcessExpression(GML::Utils::GString &expr,FeatInfo &fi)
 		{
 			if ((fi.Params<OpInfo[tr].MinParams) || (fi.Params>OpInfo[tr].MaxParams))
 			{
-				notifier->Error("[%s] -> Invalid number of parameters (%d) for operation '%s' in %s",ObjectName,fi.Params,expr.GetText());
+				fier->Error("[%s] -> Invalid number of parameters (%d) for operation '%s' in %s",ObjectName,fi.Params,opName.GetText(),expr.GetText());
 				return false;
 			}
 			fi.Op = OpInfo[tr].ID;
