@@ -76,7 +76,7 @@ bool FeaturesStatistics::Init()
 	{
 		if ((ComputedData[tr].fnValue = new double[statFuncCount])==NULL)
 		{
-			notif->Error("[%s] -> Unable to alloc data for CompuedData Values",ObjectName);
+			notif->Error("[%s] -> Unable to alloc data for ComputedData Values",ObjectName);
 			return false;		
 		}
 	}
