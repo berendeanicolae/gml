@@ -273,7 +273,7 @@ void DecisionTreeFeatureStatistics::OnCompute()
 	out.Write(tmp.GetText(),tmp.Len());
 	if (WriteFlags(out) == false)
 	{
-		notif->Error("[%s] -> Unable to write leafs to file: %s",ObjectName,ResultFileName.GetText());
+		notif->Error("[%s] -> Unable to write flags to file: %s",ObjectName,ResultFileName.GetText());
 		return;		
 	}
 	tmp.Set("=========================================================\n");
